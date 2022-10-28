@@ -1,0 +1,6 @@
+{
+    "eslint.packageManager": "yarn",
+    "eslint.workingDirectories": [
+        "./monoid-ui",
+    ]
+}
