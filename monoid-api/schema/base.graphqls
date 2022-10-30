@@ -8,4 +8,5 @@ type Workspace {
 
 type Query {
   workspaces: [Workspace]
+  workspace(id: ID!): Workspace
 }

@@ -1,0 +1,45 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type Datapoint { 
+    id: ID! 
+    silo: SiloDefinition! 
+    categories: [Category]
+    purposes: [Purpose]
+    description: String 
+}
+
+type SiloDefinition { 
+    id: ID! 
+    description: String 
+    siloSpecification: SiloSpecification
+}
+
+type SiloSpecification {
+    id: ID! 
+    connector: Connector 
+    name: String! 
+    logoUrl: String
+}
+
+type Category { 
+    id: ID! 
+    name: String! 
+}
+
+type Purpose { 
+    id: ID! 
+    name: String!
+}
+
+type Connector { 
+    id: ID!
+}
+
+extend type Query {
+    silo(id: ID!): SiloDefinition
+    datapoint(id: ID!): Datapoint
+    silos(wsId: ID!): [SiloDefinition]!
+    datapoints(wsId: ID!): [Datapoint]!
+}

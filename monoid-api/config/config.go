@@ -3,13 +3,11 @@ package config
 import (
 	"net/http"
 
-	"github.com/brist-ai/monoid/persistence"
 	"gorm.io/gorm"
 )
 
 type BaseConfig struct {
 	DB          *gorm.DB
-	Persistence persistence.Persistence
 	TokenSecret string
 	ApiURL      string
 	WebURL      string

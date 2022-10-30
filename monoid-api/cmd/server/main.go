@@ -9,7 +9,6 @@ import (
 	"github.com/brist-ai/monoid/cmd"
 	"github.com/brist-ai/monoid/generated"
 	"github.com/brist-ai/monoid/model"
-	"github.com/brist-ai/monoid/persistence/database"
 	"github.com/brist-ai/monoid/resolver"
 	"github.com/gorilla/mux"
 )
@@ -24,6 +23,13 @@ func main() {
 
 	conf := cmd.GetBaseConfig(true, []interface{}{
 		model.Workspace{},
+		model.Category{},
+		model.Connector{},
+		model.Datapoint{},
+		model.Purpose{},
+		model.SiloDefinition{},
+		model.SiloSpecification{},
+		model.Subject{},
 	})
 
 	router := mux.NewRouter()
@@ -31,10 +37,6 @@ func main() {
 	router.Use(func(h http.Handler) http.Handler {
 		return conf.PreFlightHandler(h)
 	})
-
-	conf.Persistence = &database.DBPersistence{
-		DB: conf.DB,
-	}
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(
 		generated.Config{
