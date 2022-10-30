@@ -45,12 +45,24 @@ func (r *mutationResolver) UpdateSiloSpecification(ctx context.Context, input *m
 
 // DeleteSiloDefinition is the resolver for the deleteSiloDefinition field.
 func (r *mutationResolver) DeleteSiloDefinition(ctx context.Context, id string) (*string, error) {
-	panic(fmt.Errorf("not implemented: DeleteSiloDefinition - deleteSiloDefinition"))
+	siloDefinition := &model.SiloDefinition{}
+
+	if err := r.Conf.DB.Where("id = ?", id).First(siloDefinition).Error; err != nil {
+		log.Err(err).Msg("Error finding silo definition")
+		return nil, gqlerror.Errorf("Error finding silo definition.")
+	}
+
+	if err := r.Conf.DB.Select("Datapoint", "Subjects").Delete(siloDefinition).Error; err != nil {
+		log.Err(err).Msg("Error deleting silo definition")
+		return nil, gqlerror.Errorf("Error deleting silo definition.")
+	}
+
+	return &id, nil
 }
 
 // DeleteDatapoint is the resolver for the deleteDatapoint field.
 func (r *mutationResolver) DeleteDatapoint(ctx context.Context, id string) (*string, error) {
-	panic(fmt.Errorf("not implemented: DeleteDatapoint - deleteDatapoint"))
+	panic(fmt.Errorf("not implemented: DeleteSiloSpecification - deleteSiloSpecification"))
 }
 
 // DeleteSiloSpecification is the resolver for the deleteSiloSpecification field.
@@ -104,12 +116,25 @@ func (r *queryResolver) Datapoints(ctx context.Context, wsID string) ([]*model.D
 
 // SiloSpecification is the resolver for the siloSpecification field.
 func (r *queryResolver) SiloSpecification(ctx context.Context, id string) (*model.SiloSpecification, error) {
-	panic(fmt.Errorf("not implemented: SiloSpecification - siloSpecification"))
+	siloSpecification := &model.SiloSpecification{}
+
+	if err := r.Conf.DB.Where("id = ?", id).First(siloSpecification).Error; err != nil {
+		log.Err(err).Msg("Error finding silo specification")
+		return nil, gqlerror.Errorf("Error finding silo specification.")
+	}
+
+	return siloSpecification, nil
 }
 
 // SiloSpecifications is the resolver for the siloSpecifications field.
 func (r *queryResolver) SiloSpecifications(ctx context.Context, wsID string) ([]*model.SiloSpecification, error) {
-	panic(fmt.Errorf("not implemented: SiloSpecifications - siloSpecifications"))
+	siloSpecifications := []*model.SiloSpecification{}
+	if err := r.Conf.DB.Where("workspace_id = ? OR workspace_id IS NULL", wsID).Find(&siloSpecifications).Error; err != nil {
+		log.Err(err).Msg("Error finding silo specifications")
+		return nil, gqlerror.Errorf("Error finding silo specifications.")
+	}
+
+	return siloSpecifications, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.
