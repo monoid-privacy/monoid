@@ -4,7 +4,7 @@
 
 type Datapoint { 
     id: ID! 
-    silo: SiloDefinition! 
+    siloDefinition: SiloDefinition! 
     categories: [Category]
     purposes: [Purpose]
     description: String 
@@ -37,9 +37,65 @@ type Connector {
     id: ID!
 }
 
+input CreateSiloDefinitionInput { 
+    description: String 
+    siloSpecificationID: ID!
+}
+
+input CreateSiloSpecificationInput { 
+    connectorID: ID! 
+    name: String! 
+    logoURL: String
+}
+
+input CreateDatapointInput {
+    siloDefinitionID: ID! 
+    categoryIDs: [ID]
+    purposeIDs: [ID]
+    description: String
+}
+
+input UpdateSiloDefinitionInput { 
+    id: ID! 
+    description: String 
+    siloSpecificationID: ID
+}
+
+input UpdateSiloSpecificationInput {
+    id: ID! 
+    connectorID: ID 
+    name: String
+    logoUrl: String
+}
+
+input UpdateDatapointInput {
+    id: ID! 
+    siloDefinitionID: ID 
+    categories: [ID]
+    purposes: [ID]
+    description: String 
+}
+
 extend type Query {
-    silo(id: ID!): SiloDefinition
+    siloDefinition(id: ID!): SiloDefinition
     datapoint(id: ID!): Datapoint
-    silos(wsId: ID!): [SiloDefinition]!
+    siloDefinitions(wsId: ID!): [SiloDefinition]!
     datapoints(wsId: ID!): [Datapoint]!
+    siloSpecification(id: ID!): SiloSpecification 
+    siloSpecifications(wsId: ID!): [SiloSpecification]!
+}
+
+extend type Mutation { 
+    createSiloDefinition(input: CreateSiloDefinitionInput): SiloDefinition
+    createDatapoint(input: CreateDatapointInput): Datapoint
+    createSiloSpecification(input: CreateSiloSpecificationInput): SiloSpecification
+
+    updateSiloDefinition(input: UpdateSiloDefinitionInput): SiloDefinition
+    updateDatapoint(input: UpdateDatapointInput): Datapoint 
+    updateSiloSpecification(input: UpdateSiloSpecificationInput): SiloSpecification
+
+    deleteSiloDefinition(id: ID!): ID 
+    deleteDatapoint(id: ID!): ID 
+    deleteSiloSpecification(id: ID!): ID 
+    
 }
