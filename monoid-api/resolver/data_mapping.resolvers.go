@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	generated1 "github.com/brist-ai/monoid/generated"
 	"github.com/brist-ai/monoid/model"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )
@@ -16,6 +16,7 @@ import (
 // CreateSiloDefinition is the resolver for the createSiloDefinition field.
 func (r *mutationResolver) CreateSiloDefinition(ctx context.Context, input *model.CreateSiloDefinitionInput) (*string, error) {
 	siloDefinition := model.SiloDefinition{
+		ID:                  uuid.NewString(),
 		WorkspaceID:         input.WorkspaceID,
 		Description:         input.Description,
 		SiloSpecificationID: input.SiloSpecificationID,
@@ -33,6 +34,7 @@ func (r *mutationResolver) CreateSiloDefinition(ctx context.Context, input *mode
 // CreateDatapoint is the resolver for the createDatapoint field.
 func (r *mutationResolver) CreateDatapoint(ctx context.Context, input *model.CreateDatapointInput) (*string, error) {
 	datapoint := model.Datapoint{
+		ID:               uuid.NewString(),
 		SiloDefinitionID: input.SiloDefinitionID,
 		Description:      input.Description,
 		Categories:       []model.Category{},
@@ -50,6 +52,7 @@ func (r *mutationResolver) CreateDatapoint(ctx context.Context, input *model.Cre
 // CreateSiloSpecification is the resolver for the createSiloSpecification field.
 func (r *mutationResolver) CreateSiloSpecification(ctx context.Context, input *model.CreateSiloSpecificationInput) (*string, error) {
 	siloSpecification := model.SiloSpecification{
+		ID:          uuid.NewString(),
 		Name:        input.Name,
 		LogoURL:     input.LogoURL,
 		WorkspaceID: input.WorkspaceID,
@@ -282,8 +285,3 @@ func (r *queryResolver) SiloSpecifications(ctx context.Context, wsID string) ([]
 
 	return siloSpecifications, nil
 }
-
-// Mutation returns generated1.MutationResolver implementation.
-func (r *Resolver) Mutation() generated1.MutationResolver { return &mutationResolver{r} }
-
-type mutationResolver struct{ *Resolver }

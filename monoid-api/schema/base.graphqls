@@ -10,3 +10,8 @@ type Query {
   workspaces: [Workspace]
   workspace(id: ID!): Workspace
 }
+
+extend type Mutation {
+  createWorkspace: ID
+  deleteWorkspace(id: ID): ID
+}

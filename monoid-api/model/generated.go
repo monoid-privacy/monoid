@@ -16,7 +16,6 @@ type CreateSiloDefinitionInput struct {
 }
 
 type CreateSiloSpecificationInput struct {
-	ConnectorID string  `json:"connectorID"`
 	Name        string  `json:"name"`
 	LogoURL     *string `json:"logoURL"`
 	DockerImage *string `json:"dockerImage"`

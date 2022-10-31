@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/brist-ai/monoid/cmd"
 	"github.com/brist-ai/monoid/generated"
 	"github.com/brist-ai/monoid/model"
@@ -47,6 +48,7 @@ func main() {
 	))
 
 	// http.Handle("/", playground.Handler("GraphQL playground", "/query"))
+	router.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	router.Handle("/query", srv)
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)

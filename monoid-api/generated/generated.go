@@ -61,9 +61,11 @@ type ComplexityRoot struct {
 		CreateDatapoint         func(childComplexity int, input *model.CreateDatapointInput) int
 		CreateSiloDefinition    func(childComplexity int, input *model.CreateSiloDefinitionInput) int
 		CreateSiloSpecification func(childComplexity int, input *model.CreateSiloSpecificationInput) int
+		CreateWorkspace         func(childComplexity int) int
 		DeleteDatapoint         func(childComplexity int, id string) int
 		DeleteSiloDefinition    func(childComplexity int, id string) int
 		DeleteSiloSpecification func(childComplexity int, id string) int
+		DeleteWorkspace         func(childComplexity int, wsID *string) int
 		UpdateDatapoint         func(childComplexity int, input *model.UpdateDatapointInput) int
 		UpdateSiloDefinition    func(childComplexity int, input *model.UpdateSiloDefinitionInput) int
 		UpdateSiloSpecification func(childComplexity int, input *model.UpdateSiloSpecificationInput) int
@@ -106,6 +108,8 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
+	CreateWorkspace(ctx context.Context) (*string, error)
+	DeleteWorkspace(ctx context.Context, wsID *string) (*string, error)
 	CreateSiloDefinition(ctx context.Context, input *model.CreateSiloDefinitionInput) (*string, error)
 	CreateDatapoint(ctx context.Context, input *model.CreateDatapointInput) (*string, error)
 	CreateSiloSpecification(ctx context.Context, input *model.CreateSiloSpecificationInput) (*string, error)
@@ -227,6 +231,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateSiloSpecification(childComplexity, args["input"].(*model.CreateSiloSpecificationInput)), true
 
+	case "Mutation.createWorkspace":
+		if e.complexity.Mutation.CreateWorkspace == nil {
+			break
+		}
+
+		return e.complexity.Mutation.CreateWorkspace(childComplexity), true
+
 	case "Mutation.deleteDatapoint":
 		if e.complexity.Mutation.DeleteDatapoint == nil {
 			break
@@ -262,6 +273,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteSiloSpecification(childComplexity, args["id"].(string)), true
+
+	case "Mutation.deleteWorkspace":
+		if e.complexity.Mutation.DeleteWorkspace == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteWorkspace_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteWorkspace(childComplexity, args["wsId"].(*string)), true
 
 	case "Mutation.updateDatapoint":
 		if e.complexity.Mutation.UpdateDatapoint == nil {
@@ -559,6 +582,11 @@ type Workspace {
 type Query {
   workspaces: [Workspace]
   workspace(id: ID!): Workspace
+}
+
+extend type Mutation {
+  createWorkspace: ID
+  deleteWorkspace(wsId: ID): ID
 }`, BuiltIn: false},
 	{Name: "../schema/data_mapping.graphqls", Input: `# GraphQL schema example
 #
@@ -604,7 +632,6 @@ input CreateSiloDefinitionInput {
 }
 
 input CreateSiloSpecificationInput { 
-    connectorID: ID! 
     name: String! 
     logoURL: String
     dockerImage: String 
@@ -757,6 +784,21 @@ func (ec *executionContext) field_Mutation_deleteSiloSpecification_args(ctx cont
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteWorkspace_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["wsId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("wsId"))
+		arg0, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["wsId"] = arg0
 	return args, nil
 }
 
@@ -1280,6 +1322,99 @@ func (ec *executionContext) fieldContext_Datapoint_description(ctx context.Conte
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createWorkspace(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createWorkspace(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateWorkspace(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createWorkspace(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteWorkspace(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteWorkspace(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteWorkspace(rctx, fc.Args["wsId"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteWorkspace(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteWorkspace_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -4815,21 +4950,13 @@ func (ec *executionContext) unmarshalInputCreateSiloSpecificationInput(ctx conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"connectorID", "name", "logoURL", "dockerImage", "workspaceID"}
+	fieldsInOrder := [...]string{"name", "logoURL", "dockerImage", "workspaceID"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "connectorID":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("connectorID"))
-			it.ConnectorID, err = ec.unmarshalNID2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		case "name":
 			var err error
 
@@ -5141,6 +5268,18 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
+		case "createWorkspace":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createWorkspace(ctx, field)
+			})
+
+		case "deleteWorkspace":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteWorkspace(ctx, field)
+			})
+
 		case "createSiloDefinition":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {

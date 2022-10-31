@@ -42,7 +42,6 @@ input CreateSiloDefinitionInput {
 }
 
 input CreateSiloSpecificationInput { 
-    connectorID: ID! 
     name: String! 
     logoURL: String
     dockerImage: String 
