@@ -9,14 +9,14 @@ type SiloSpecification struct {
 	ConnectorID string
 	Connector   Connector
 	Name        string
-	LogoURL     string
+	LogoURL     *string
 	WorkspaceID string
 }
 
 type SiloDefinition struct {
 	ID                  string
 	WorkspaceID         string
-	Description         string
+	Description         *string
 	SiloSpecificationID string
 	SiloSpecification   SiloSpecification
 	Subjects            []Subject `gorm:"many2many:silo_definition_subjects;"`
@@ -28,7 +28,7 @@ type Datapoint struct {
 	SiloDefinition   SiloDefinition
 	Categories       []Category `gorm:"many2many:datapoint_categories;"`
 	Purposes         []Purpose  `gorm:"many2many:datapoint_purposes;"`
-	Description      string
+	Description      *string
 }
 
 type Subject struct {

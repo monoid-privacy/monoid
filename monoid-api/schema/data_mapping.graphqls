@@ -40,12 +40,14 @@ type Connector {
 input CreateSiloDefinitionInput { 
     description: String 
     siloSpecificationID: ID!
+    workspaceID: ID! 
 }
 
 input CreateSiloSpecificationInput { 
     connectorID: ID! 
     name: String! 
     logoURL: String
+    workspaceID: ID!
 }
 
 input CreateDatapointInput {
@@ -86,9 +88,9 @@ extend type Query {
 }
 
 extend type Mutation { 
-    createSiloDefinition(input: CreateSiloDefinitionInput): SiloDefinition
-    createDatapoint(input: CreateDatapointInput): Datapoint
-    createSiloSpecification(input: CreateSiloSpecificationInput): SiloSpecification
+    createSiloDefinition(input: CreateSiloDefinitionInput): ID
+    createDatapoint(input: CreateDatapointInput): ID
+    createSiloSpecification(input: CreateSiloSpecificationInput): ID
 
     updateSiloDefinition(input: UpdateSiloDefinitionInput): SiloDefinition
     updateDatapoint(input: UpdateDatapointInput): Datapoint 

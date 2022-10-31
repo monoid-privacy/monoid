@@ -12,12 +12,14 @@ type CreateDatapointInput struct {
 type CreateSiloDefinitionInput struct {
 	Description         *string `json:"description"`
 	SiloSpecificationID string  `json:"siloSpecificationID"`
+	WorkspaceID         string  `json:"workspaceID"`
 }
 
 type CreateSiloSpecificationInput struct {
 	ConnectorID string  `json:"connectorID"`
 	Name        string  `json:"name"`
 	LogoURL     *string `json:"logoURL"`
+	WorkspaceID string  `json:"workspaceID"`
 }
 
 type UpdateDatapointInput struct {

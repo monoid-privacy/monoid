@@ -108,9 +108,9 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	CreateSiloDefinition(ctx context.Context, input *model.CreateSiloDefinitionInput) (*model.SiloDefinition, error)
-	CreateDatapoint(ctx context.Context, input *model.CreateDatapointInput) (*model.Datapoint, error)
-	CreateSiloSpecification(ctx context.Context, input *model.CreateSiloSpecificationInput) (*model.SiloSpecification, error)
+	CreateSiloDefinition(ctx context.Context, input *model.CreateSiloDefinitionInput) (*string, error)
+	CreateDatapoint(ctx context.Context, input *model.CreateDatapointInput) (*string, error)
+	CreateSiloSpecification(ctx context.Context, input *model.CreateSiloSpecificationInput) (*string, error)
 	UpdateSiloDefinition(ctx context.Context, input *model.UpdateSiloDefinitionInput) (*model.SiloDefinition, error)
 	UpdateDatapoint(ctx context.Context, input *model.UpdateDatapointInput) (*model.Datapoint, error)
 	UpdateSiloSpecification(ctx context.Context, input *model.UpdateSiloSpecificationInput) (*model.SiloSpecification, error)
@@ -597,12 +597,14 @@ type Connector {
 input CreateSiloDefinitionInput { 
     description: String 
     siloSpecificationID: ID!
+    workspaceID: ID! 
 }
 
 input CreateSiloSpecificationInput { 
     connectorID: ID! 
     name: String! 
     logoURL: String
+    workspaceID: ID!
 }
 
 input CreateDatapointInput {
@@ -643,9 +645,9 @@ extend type Query {
 }
 
 extend type Mutation { 
-    createSiloDefinition(input: CreateSiloDefinitionInput): SiloDefinition
-    createDatapoint(input: CreateDatapointInput): Datapoint
-    createSiloSpecification(input: CreateSiloSpecificationInput): SiloSpecification
+    createSiloDefinition(input: CreateSiloDefinitionInput): ID
+    createDatapoint(input: CreateDatapointInput): ID
+    createSiloSpecification(input: CreateSiloSpecificationInput): ID
 
     updateSiloDefinition(input: UpdateSiloDefinitionInput): SiloDefinition
     updateDatapoint(input: UpdateDatapointInput): Datapoint 
@@ -1301,9 +1303,9 @@ func (ec *executionContext) _Datapoint_description(ctx context.Context, field gr
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalOString2string(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Datapoint_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1342,9 +1344,9 @@ func (ec *executionContext) _Mutation_createSiloDefinition(ctx context.Context, 
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.SiloDefinition)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalOSiloDefinition2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloDefinition(ctx, field.Selections, res)
+	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createSiloDefinition(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1354,15 +1356,7 @@ func (ec *executionContext) fieldContext_Mutation_createSiloDefinition(ctx conte
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_SiloDefinition_id(ctx, field)
-			case "description":
-				return ec.fieldContext_SiloDefinition_description(ctx, field)
-			case "siloSpecification":
-				return ec.fieldContext_SiloDefinition_siloSpecification(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type SiloDefinition", field.Name)
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	defer func() {
@@ -1402,9 +1396,9 @@ func (ec *executionContext) _Mutation_createDatapoint(ctx context.Context, field
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.Datapoint)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalODatapoint2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDatapoint(ctx, field.Selections, res)
+	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createDatapoint(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1414,19 +1408,7 @@ func (ec *executionContext) fieldContext_Mutation_createDatapoint(ctx context.Co
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Datapoint_id(ctx, field)
-			case "siloDefinition":
-				return ec.fieldContext_Datapoint_siloDefinition(ctx, field)
-			case "categories":
-				return ec.fieldContext_Datapoint_categories(ctx, field)
-			case "purposes":
-				return ec.fieldContext_Datapoint_purposes(ctx, field)
-			case "description":
-				return ec.fieldContext_Datapoint_description(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Datapoint", field.Name)
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	defer func() {
@@ -1466,9 +1448,9 @@ func (ec *executionContext) _Mutation_createSiloSpecification(ctx context.Contex
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.SiloSpecification)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalOSiloSpecification2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloSpecification(ctx, field.Selections, res)
+	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createSiloSpecification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1478,17 +1460,7 @@ func (ec *executionContext) fieldContext_Mutation_createSiloSpecification(ctx co
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_SiloSpecification_id(ctx, field)
-			case "connector":
-				return ec.fieldContext_SiloSpecification_connector(ctx, field)
-			case "name":
-				return ec.fieldContext_SiloSpecification_name(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_SiloSpecification_logoUrl(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type SiloSpecification", field.Name)
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	defer func() {
@@ -2613,9 +2585,9 @@ func (ec *executionContext) _SiloDefinition_description(ctx context.Context, fie
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalOString2string(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SiloDefinition_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2838,9 +2810,9 @@ func (ec *executionContext) _SiloSpecification_logoUrl(ctx context.Context, fiel
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalOString2string(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SiloSpecification_logoUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4732,7 +4704,7 @@ func (ec *executionContext) unmarshalInputCreateSiloDefinitionInput(ctx context.
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"description", "siloSpecificationID"}
+	fieldsInOrder := [...]string{"description", "siloSpecificationID", "workspaceID"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -4755,6 +4727,14 @@ func (ec *executionContext) unmarshalInputCreateSiloDefinitionInput(ctx context.
 			if err != nil {
 				return it, err
 			}
+		case "workspaceID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workspaceID"))
+			it.WorkspaceID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -4768,7 +4748,7 @@ func (ec *executionContext) unmarshalInputCreateSiloSpecificationInput(ctx conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"connectorID", "name", "logoURL"}
+	fieldsInOrder := [...]string{"connectorID", "name", "logoURL", "workspaceID"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -4796,6 +4776,14 @@ func (ec *executionContext) unmarshalInputCreateSiloSpecificationInput(ctx conte
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("logoURL"))
 			it.LogoURL, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "workspaceID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workspaceID"))
+			it.WorkspaceID, err = ec.unmarshalNID2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6465,16 +6453,6 @@ func (ec *executionContext) marshalOSiloSpecification2ᚖgithubᚗcomᚋbristᚑ
 		return graphql.Null
 	}
 	return ec._SiloSpecification(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {
-	res, err := graphql.UnmarshalString(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOString2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	res := graphql.MarshalString(v)
-	return res
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

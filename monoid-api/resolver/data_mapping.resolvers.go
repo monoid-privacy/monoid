@@ -14,18 +14,54 @@ import (
 )
 
 // CreateSiloDefinition is the resolver for the createSiloDefinition field.
-func (r *mutationResolver) CreateSiloDefinition(ctx context.Context, input *model.CreateSiloDefinitionInput) (*model.SiloDefinition, error) {
-	panic(fmt.Errorf("not implemented: CreateSiloDefinition - createSiloDefinition"))
+func (r *mutationResolver) CreateSiloDefinition(ctx context.Context, input *model.CreateSiloDefinitionInput) (*string, error) {
+	siloDefinition := model.SiloDefinition{
+		WorkspaceID:         input.WorkspaceID,
+		Description:         input.Description,
+		SiloSpecificationID: input.SiloSpecificationID,
+		Subjects:            []model.Subject{}, // TODO: Many2many creation for subjects? Pass array of ID's or array of subjects?
+	}
+
+	if err := r.Conf.DB.Create(&siloDefinition).Error; err != nil {
+		log.Err(err).Msg("Error creating silo definition")
+		return nil, gqlerror.Errorf("Error creating silo definition.")
+	}
+
+	return &siloDefinition.ID, nil
 }
 
 // CreateDatapoint is the resolver for the createDatapoint field.
-func (r *mutationResolver) CreateDatapoint(ctx context.Context, input *model.CreateDatapointInput) (*model.Datapoint, error) {
-	panic(fmt.Errorf("not implemented: CreateDatapoint - createDatapoint"))
+func (r *mutationResolver) CreateDatapoint(ctx context.Context, input *model.CreateDatapointInput) (*string, error) {
+	datapoint := model.Datapoint{
+		SiloDefinitionID: input.SiloDefinitionID,
+		Description:      input.Description,
+		Categories:       []model.Category{},
+		Purposes:         []model.Purpose{}, // TODO: Many2many creation for categories and purposes? Pass array of ID's or array of objects?
+	}
+
+	if err := r.Conf.DB.Create(&datapoint).Error; err != nil {
+		log.Err(err).Msg("Error creating datapoint")
+		return nil, gqlerror.Errorf("Error creating datapoint.")
+	}
+
+	return &datapoint.ID, nil
 }
 
 // CreateSiloSpecification is the resolver for the createSiloSpecification field.
-func (r *mutationResolver) CreateSiloSpecification(ctx context.Context, input *model.CreateSiloSpecificationInput) (*model.SiloSpecification, error) {
-	panic(fmt.Errorf("not implemented: CreateSiloSpecification - createSiloSpecification"))
+func (r *mutationResolver) CreateSiloSpecification(ctx context.Context, input *model.CreateSiloSpecificationInput) (*string, error) {
+	siloSpecification := model.SiloSpecification{
+		ConnectorID: input.ConnectorID,
+		Name:        input.Name,
+		LogoURL:     input.LogoURL,
+		WorkspaceID: input.WorkspaceID,
+	}
+
+	if err := r.Conf.DB.Create(&siloSpecification).Error; err != nil {
+		log.Err(err).Msg("Error creating silo specification")
+		return nil, gqlerror.Errorf("Error creating silo specification.")
+	}
+
+	return &siloSpecification.ID, nil
 }
 
 // UpdateSiloDefinition is the resolver for the updateSiloDefinition field.
@@ -62,7 +98,19 @@ func (r *mutationResolver) DeleteSiloDefinition(ctx context.Context, id string) 
 
 // DeleteDatapoint is the resolver for the deleteDatapoint field.
 func (r *mutationResolver) DeleteDatapoint(ctx context.Context, id string) (*string, error) {
-	panic(fmt.Errorf("not implemented: DeleteSiloSpecification - deleteSiloSpecification"))
+	datapoint := &model.Datapoint{}
+
+	if err := r.Conf.DB.Where("id = ?", id).First(datapoint).Error; err != nil {
+		log.Err(err).Msg("Error finding datapoint")
+		return nil, gqlerror.Errorf("Error finding datapoint.")
+	}
+
+	if err := r.Conf.DB.Select("Categories", "Purposes").Delete(datapoint).Error; err != nil {
+		log.Err(err).Msg("Error deleting datapoint")
+		return nil, gqlerror.Errorf("Error deleting datapoint.")
+	}
+
+	return &id, nil
 }
 
 // DeleteSiloSpecification is the resolver for the deleteSiloSpecification field.
