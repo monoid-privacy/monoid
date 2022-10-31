@@ -19,15 +19,16 @@ type CreateSiloSpecificationInput struct {
 	ConnectorID string  `json:"connectorID"`
 	Name        string  `json:"name"`
 	LogoURL     *string `json:"logoURL"`
+	DockerImage *string `json:"dockerImage"`
 	WorkspaceID string  `json:"workspaceID"`
 }
 
 type UpdateDatapointInput struct {
-	ID               string    `json:"id"`
-	SiloDefinitionID *string   `json:"siloDefinitionID"`
-	Categories       []*string `json:"categories"`
-	Purposes         []*string `json:"purposes"`
-	Description      *string   `json:"description"`
+	ID               string   `json:"id"`
+	SiloDefinitionID *string  `json:"siloDefinitionID"`
+	Categories       []string `json:"categories"`
+	Purposes         []string `json:"purposes"`
+	Description      *string  `json:"description"`
 }
 
 type UpdateSiloDefinitionInput struct {
@@ -38,7 +39,8 @@ type UpdateSiloDefinitionInput struct {
 
 type UpdateSiloSpecificationInput struct {
 	ID          string  `json:"id"`
-	ConnectorID *string `json:"connectorID"`
+	DockerImage *string `json:"dockerImage"`
+	Schema      *string `json:"schema"`
 	Name        *string `json:"name"`
 	LogoURL     *string `json:"logoUrl"`
 }

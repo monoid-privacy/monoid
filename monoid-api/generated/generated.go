@@ -49,10 +49,6 @@ type ComplexityRoot struct {
 		Name func(childComplexity int) int
 	}
 
-	Connector struct {
-		ID func(childComplexity int) int
-	}
-
 	Datapoint struct {
 		Categories     func(childComplexity int) int
 		Description    func(childComplexity int) int
@@ -97,10 +93,11 @@ type ComplexityRoot struct {
 	}
 
 	SiloSpecification struct {
-		Connector func(childComplexity int) int
-		ID        func(childComplexity int) int
-		LogoURL   func(childComplexity int) int
-		Name      func(childComplexity int) int
+		DockerImage func(childComplexity int) int
+		ID          func(childComplexity int) int
+		LogoURL     func(childComplexity int) int
+		Name        func(childComplexity int) int
+		Schema      func(childComplexity int) int
 	}
 
 	Workspace struct {
@@ -158,13 +155,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Category.Name(childComplexity), true
-
-	case "Connector.id":
-		if e.complexity.Connector.ID == nil {
-			break
-		}
-
-		return e.complexity.Connector.ID(childComplexity), true
 
 	case "Datapoint.categories":
 		if e.complexity.Datapoint.Categories == nil {
@@ -442,12 +432,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.SiloDefinition.SiloSpecification(childComplexity), true
 
-	case "SiloSpecification.connector":
-		if e.complexity.SiloSpecification.Connector == nil {
+	case "SiloSpecification.dockerImage":
+		if e.complexity.SiloSpecification.DockerImage == nil {
 			break
 		}
 
-		return e.complexity.SiloSpecification.Connector(childComplexity), true
+		return e.complexity.SiloSpecification.DockerImage(childComplexity), true
 
 	case "SiloSpecification.id":
 		if e.complexity.SiloSpecification.ID == nil {
@@ -469,6 +459,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.SiloSpecification.Name(childComplexity), true
+
+	case "SiloSpecification.schema":
+		if e.complexity.SiloSpecification.Schema == nil {
+			break
+		}
+
+		return e.complexity.SiloSpecification.Schema(childComplexity), true
 
 	case "Workspace.id":
 		if e.complexity.Workspace.ID == nil {
@@ -584,7 +581,8 @@ type SiloDefinition {
 
 type SiloSpecification {
     id: ID! 
-    connector: Connector 
+    dockerImage: String
+    schema: String
     name: String! 
     logoUrl: String
 }
@@ -599,10 +597,6 @@ type Purpose {
     name: String!
 }
 
-type Connector { 
-    id: ID!
-}
-
 input CreateSiloDefinitionInput { 
     description: String 
     siloSpecificationID: ID!
@@ -613,6 +607,7 @@ input CreateSiloSpecificationInput {
     connectorID: ID! 
     name: String! 
     logoURL: String
+    dockerImage: String 
     workspaceID: ID!
 }
 
@@ -631,7 +626,8 @@ input UpdateSiloDefinitionInput {
 
 input UpdateSiloSpecificationInput {
     id: ID! 
-    connectorID: ID 
+    dockerImage: String 
+    schema: String
     name: String
     logoUrl: String
 }
@@ -639,8 +635,8 @@ input UpdateSiloSpecificationInput {
 input UpdateDatapointInput {
     id: ID! 
     siloDefinitionID: ID 
-    categories: [ID]
-    purposes: [ID]
+    categories: [ID!]
+    purposes: [ID!]
     description: String 
 }
 
@@ -1050,50 +1046,6 @@ func (ec *executionContext) fieldContext_Category_name(ctx context.Context, fiel
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Connector_id(ctx context.Context, field graphql.CollectedField, obj *model.Connector) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Connector_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Connector_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Connector",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1652,8 +1604,10 @@ func (ec *executionContext) fieldContext_Mutation_updateSiloSpecification(ctx co
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_SiloSpecification_id(ctx, field)
-			case "connector":
-				return ec.fieldContext_SiloSpecification_connector(ctx, field)
+			case "dockerImage":
+				return ec.fieldContext_SiloSpecification_dockerImage(ctx, field)
+			case "schema":
+				return ec.fieldContext_SiloSpecification_schema(ctx, field)
 			case "name":
 				return ec.fieldContext_SiloSpecification_name(ctx, field)
 			case "logoUrl":
@@ -2317,8 +2271,10 @@ func (ec *executionContext) fieldContext_Query_siloSpecification(ctx context.Con
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_SiloSpecification_id(ctx, field)
-			case "connector":
-				return ec.fieldContext_SiloSpecification_connector(ctx, field)
+			case "dockerImage":
+				return ec.fieldContext_SiloSpecification_dockerImage(ctx, field)
+			case "schema":
+				return ec.fieldContext_SiloSpecification_schema(ctx, field)
 			case "name":
 				return ec.fieldContext_SiloSpecification_name(ctx, field)
 			case "logoUrl":
@@ -2382,8 +2338,10 @@ func (ec *executionContext) fieldContext_Query_siloSpecifications(ctx context.Co
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_SiloSpecification_id(ctx, field)
-			case "connector":
-				return ec.fieldContext_SiloSpecification_connector(ctx, field)
+			case "dockerImage":
+				return ec.fieldContext_SiloSpecification_dockerImage(ctx, field)
+			case "schema":
+				return ec.fieldContext_SiloSpecification_schema(ctx, field)
 			case "name":
 				return ec.fieldContext_SiloSpecification_name(ctx, field)
 			case "logoUrl":
@@ -2658,8 +2616,10 @@ func (ec *executionContext) fieldContext_SiloDefinition_siloSpecification(ctx co
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_SiloSpecification_id(ctx, field)
-			case "connector":
-				return ec.fieldContext_SiloSpecification_connector(ctx, field)
+			case "dockerImage":
+				return ec.fieldContext_SiloSpecification_dockerImage(ctx, field)
+			case "schema":
+				return ec.fieldContext_SiloSpecification_schema(ctx, field)
 			case "name":
 				return ec.fieldContext_SiloSpecification_name(ctx, field)
 			case "logoUrl":
@@ -2768,8 +2728,8 @@ func (ec *executionContext) fieldContext_SiloSpecification_id(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _SiloSpecification_connector(ctx context.Context, field graphql.CollectedField, obj *model.SiloSpecification) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SiloSpecification_connector(ctx, field)
+func (ec *executionContext) _SiloSpecification_dockerImage(ctx context.Context, field graphql.CollectedField, obj *model.SiloSpecification) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SiloSpecification_dockerImage(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2782,7 +2742,7 @@ func (ec *executionContext) _SiloSpecification_connector(ctx context.Context, fi
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Connector, nil
+		return obj.DockerImage, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2791,23 +2751,60 @@ func (ec *executionContext) _SiloSpecification_connector(ctx context.Context, fi
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(model.Connector)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalOConnector2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐConnector(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SiloSpecification_connector(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SiloSpecification_dockerImage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SiloSpecification",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Connector_id(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Connector", field.Name)
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SiloSpecification_schema(ctx context.Context, field graphql.CollectedField, obj *model.SiloSpecification) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SiloSpecification_schema(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Schema, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SiloSpecification_schema(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SiloSpecification",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4818,7 +4815,7 @@ func (ec *executionContext) unmarshalInputCreateSiloSpecificationInput(ctx conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"connectorID", "name", "logoURL", "workspaceID"}
+	fieldsInOrder := [...]string{"connectorID", "name", "logoURL", "dockerImage", "workspaceID"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -4846,6 +4843,14 @@ func (ec *executionContext) unmarshalInputCreateSiloSpecificationInput(ctx conte
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("logoURL"))
 			it.LogoURL, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "dockerImage":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dockerImage"))
+			it.DockerImage, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4897,7 +4902,7 @@ func (ec *executionContext) unmarshalInputUpdateDatapointInput(ctx context.Conte
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categories"))
-			it.Categories, err = ec.unmarshalOID2ᚕᚖstring(ctx, v)
+			it.Categories, err = ec.unmarshalOID2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4905,7 +4910,7 @@ func (ec *executionContext) unmarshalInputUpdateDatapointInput(ctx context.Conte
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("purposes"))
-			it.Purposes, err = ec.unmarshalOID2ᚕᚖstring(ctx, v)
+			it.Purposes, err = ec.unmarshalOID2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4974,7 +4979,7 @@ func (ec *executionContext) unmarshalInputUpdateSiloSpecificationInput(ctx conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "connectorID", "name", "logoUrl"}
+	fieldsInOrder := [...]string{"id", "dockerImage", "schema", "name", "logoUrl"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -4989,11 +4994,19 @@ func (ec *executionContext) unmarshalInputUpdateSiloSpecificationInput(ctx conte
 			if err != nil {
 				return it, err
 			}
-		case "connectorID":
+		case "dockerImage":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("connectorID"))
-			it.ConnectorID, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dockerImage"))
+			it.DockerImage, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "schema":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("schema"))
+			it.Schema, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5047,34 +5060,6 @@ func (ec *executionContext) _Category(ctx context.Context, sel ast.SelectionSet,
 		case "name":
 
 			out.Values[i] = ec._Category_name(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var connectorImplementors = []string{"Connector"}
-
-func (ec *executionContext) _Connector(ctx context.Context, sel ast.SelectionSet, obj *model.Connector) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, connectorImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Connector")
-		case "id":
-
-			out.Values[i] = ec._Connector_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -5524,9 +5509,13 @@ func (ec *executionContext) _SiloSpecification(ctx context.Context, sel ast.Sele
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "connector":
+		case "dockerImage":
 
-			out.Values[i] = ec._SiloSpecification_connector(ctx, field, obj)
+			out.Values[i] = ec._SiloSpecification_dockerImage(ctx, field, obj)
+
+		case "schema":
+
+			out.Values[i] = ec._SiloSpecification_schema(ctx, field, obj)
 
 		case "name":
 
@@ -6387,10 +6376,6 @@ func (ec *executionContext) marshalOCategory2ᚕgithubᚗcomᚋbristᚑaiᚋmono
 	return ret
 }
 
-func (ec *executionContext) marshalOConnector2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐConnector(ctx context.Context, sel ast.SelectionSet, v model.Connector) graphql.Marshaler {
-	return ec._Connector(ctx, sel, &v)
-}
-
 func (ec *executionContext) unmarshalOCreateDatapointInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCreateDatapointInput(ctx context.Context, v interface{}) (*model.CreateDatapointInput, error) {
 	if v == nil {
 		return nil, nil
@@ -6467,6 +6452,44 @@ func (ec *executionContext) marshalODatapoint2ᚖgithubᚗcomᚋbristᚑaiᚋmon
 		return graphql.Null
 	}
 	return ec._Datapoint(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOID2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNID2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOID2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNID2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalOID2ᚕᚖstring(ctx context.Context, v interface{}) ([]*string, error) {

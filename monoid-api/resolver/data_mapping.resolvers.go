@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/brist-ai/monoid/generated"
+	generated1 "github.com/brist-ai/monoid/generated"
 	"github.com/brist-ai/monoid/model"
 	"github.com/rs/zerolog/log"
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -50,10 +50,10 @@ func (r *mutationResolver) CreateDatapoint(ctx context.Context, input *model.Cre
 // CreateSiloSpecification is the resolver for the createSiloSpecification field.
 func (r *mutationResolver) CreateSiloSpecification(ctx context.Context, input *model.CreateSiloSpecificationInput) (*string, error) {
 	siloSpecification := model.SiloSpecification{
-		ConnectorID: input.ConnectorID,
 		Name:        input.Name,
 		LogoURL:     input.LogoURL,
 		WorkspaceID: input.WorkspaceID,
+		DockerImage: input.DockerImage,
 	}
 
 	if err := r.Conf.DB.Create(&siloSpecification).Error; err != nil {
@@ -66,17 +66,95 @@ func (r *mutationResolver) CreateSiloSpecification(ctx context.Context, input *m
 
 // UpdateSiloDefinition is the resolver for the updateSiloDefinition field.
 func (r *mutationResolver) UpdateSiloDefinition(ctx context.Context, input *model.UpdateSiloDefinitionInput) (*model.SiloDefinition, error) {
-	panic(fmt.Errorf("not implemented: UpdateSiloDefinition - updateSiloDefinition"))
+	siloDefinition := model.SiloDefinition{}
+
+	if err := r.Conf.DB.Where("id = ?", input.ID).First(&siloDefinition).Error; err != nil {
+		log.Err(err).Msg("Error finding silo definition")
+		return nil, gqlerror.Errorf("Error finding silo definition.")
+	}
+
+	if input.Description != nil {
+		siloDefinition.Description = input.Description
+	}
+
+	if input.SiloSpecificationID != nil {
+		siloDefinition.SiloSpecificationID = *input.SiloSpecificationID
+	}
+
+	if err := r.Conf.DB.Save(&siloDefinition).Error; err != nil {
+		log.Err(err).Msg("Error updating silo definition")
+		return nil, gqlerror.Errorf("Error updating silo definition.")
+	}
+
+	return &siloDefinition, nil
 }
 
 // UpdateDatapoint is the resolver for the updateDatapoint field.
 func (r *mutationResolver) UpdateDatapoint(ctx context.Context, input *model.UpdateDatapointInput) (*model.Datapoint, error) {
-	panic(fmt.Errorf("not implemented: UpdateDatapoint - updateDatapoint"))
+	datapoint := model.Datapoint{}
+
+	if err := r.Conf.DB.Where("id = ?", input.ID).First(&datapoint).Error; err != nil {
+		log.Err(err).Msg("Error finding datapoint")
+		return nil, gqlerror.Errorf("Error finding datapoint.")
+	}
+
+	if input.Description != nil {
+		datapoint.Description = input.Description
+	}
+
+	if input.SiloDefinitionID != nil {
+		datapoint.SiloDefinitionID = *input.SiloDefinitionID
+	}
+
+	if input.Categories != nil {
+		// TODO: Handle category changes
+		panic(fmt.Errorf("not implemented: category update handling in UpdateDatapoint"))
+	}
+
+	if input.Purposes != nil {
+		// TODO: Handle purpose changes
+		panic(fmt.Errorf("not implemented: purpose update handling in UpdateDatapoint"))
+	}
+
+	if err := r.Conf.DB.Save(&datapoint).Error; err != nil {
+		log.Err(err).Msg("Error updating datapoint")
+		return nil, gqlerror.Errorf("Error updating datapoint.")
+	}
+
+	return &datapoint, nil
 }
 
 // UpdateSiloSpecification is the resolver for the updateSiloSpecification field.
 func (r *mutationResolver) UpdateSiloSpecification(ctx context.Context, input *model.UpdateSiloSpecificationInput) (*model.SiloSpecification, error) {
-	panic(fmt.Errorf("not implemented: UpdateSiloSpecification - updateSiloSpecification"))
+	siloSpecification := model.SiloSpecification{}
+
+	if err := r.Conf.DB.Where("id = ?", input.ID).First(&siloSpecification).Error; err != nil {
+		log.Err(err).Msg("Error finding silo specification ")
+		return nil, gqlerror.Errorf("Error finding silo specification.")
+	}
+
+	if input.DockerImage != nil {
+		siloSpecification.DockerImage = input.DockerImage
+	}
+
+	if input.Name != nil {
+		siloSpecification.Name = *input.Name
+	}
+
+	if input.LogoURL != nil {
+		siloSpecification.LogoURL = input.LogoURL
+	}
+
+	if input.Schema != nil {
+		siloSpecification.Schema = input.Schema
+	}
+
+	if err := r.Conf.DB.Save(&siloSpecification).Error; err != nil {
+		log.Err(err).Msg("Error updating silo specification")
+		return nil, gqlerror.Errorf("Error updating silo specification.")
+	}
+
+	return &siloSpecification, nil
 }
 
 // DeleteSiloDefinition is the resolver for the deleteSiloDefinition field.
@@ -88,6 +166,7 @@ func (r *mutationResolver) DeleteSiloDefinition(ctx context.Context, id string) 
 		return nil, gqlerror.Errorf("Error finding silo definition.")
 	}
 
+	// TODO: Properly handle cascading delete
 	if err := r.Conf.DB.Select("Datapoint", "Subjects").Delete(siloDefinition).Error; err != nil {
 		log.Err(err).Msg("Error deleting silo definition")
 		return nil, gqlerror.Errorf("Error deleting silo definition.")
@@ -105,6 +184,7 @@ func (r *mutationResolver) DeleteDatapoint(ctx context.Context, id string) (*str
 		return nil, gqlerror.Errorf("Error finding datapoint.")
 	}
 
+	// TODO: Properly handle cascading delete
 	if err := r.Conf.DB.Select("Categories", "Purposes").Delete(datapoint).Error; err != nil {
 		log.Err(err).Msg("Error deleting datapoint")
 		return nil, gqlerror.Errorf("Error deleting datapoint.")
@@ -115,7 +195,25 @@ func (r *mutationResolver) DeleteDatapoint(ctx context.Context, id string) (*str
 
 // DeleteSiloSpecification is the resolver for the deleteSiloSpecification field.
 func (r *mutationResolver) DeleteSiloSpecification(ctx context.Context, id string) (*string, error) {
-	panic(fmt.Errorf("not implemented: DeleteSiloSpecification - deleteSiloSpecification"))
+	siloSpecification := &model.SiloSpecification{}
+
+	if err := r.Conf.DB.Where("id = ?", id).First(siloSpecification).Error; err != nil {
+		log.Err(err).Msg("Error finding silo specification")
+		return nil, gqlerror.Errorf("Error finding silo specification.")
+	}
+
+	if err := r.Conf.DB.Delete(siloSpecification).Error; err != nil {
+		log.Err(err).Msg("Error deleting silo specification")
+		return nil, gqlerror.Errorf("Error deleting silo specification.")
+	}
+
+	if err := r.Conf.DB.Model(&model.SiloDefinition{}).
+		Where("silo_specification_id = ?", siloSpecification.ID).Update("silo_specification_id", nil).Error; err != nil {
+		log.Err(err).Msg("Error deleting silo specification from silo definitions")
+		return nil, gqlerror.Errorf("Error deleting silo specification from silo definitions.")
+	}
+
+	return &id, nil
 }
 
 // SiloDefinition is the resolver for the siloDefinition field.
@@ -185,7 +283,7 @@ func (r *queryResolver) SiloSpecifications(ctx context.Context, wsID string) ([]
 	return siloSpecifications, nil
 }
 
-// Mutation returns generated.MutationResolver implementation.
-func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
+// Mutation returns generated1.MutationResolver implementation.
+func (r *Resolver) Mutation() generated1.MutationResolver { return &mutationResolver{r} }
 
 type mutationResolver struct{ *Resolver }

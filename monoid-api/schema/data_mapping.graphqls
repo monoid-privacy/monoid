@@ -19,7 +19,8 @@ type SiloDefinition {
 
 type SiloSpecification {
     id: ID! 
-    connector: Connector 
+    dockerImage: String
+    schema: String
     name: String! 
     logoUrl: String
 }
@@ -34,10 +35,6 @@ type Purpose {
     name: String!
 }
 
-type Connector { 
-    id: ID!
-}
-
 input CreateSiloDefinitionInput { 
     description: String 
     siloSpecificationID: ID!
@@ -48,6 +45,7 @@ input CreateSiloSpecificationInput {
     connectorID: ID! 
     name: String! 
     logoURL: String
+    dockerImage: String 
     workspaceID: ID!
 }
 
@@ -66,7 +64,8 @@ input UpdateSiloDefinitionInput {
 
 input UpdateSiloSpecificationInput {
     id: ID! 
-    connectorID: ID 
+    dockerImage: String 
+    schema: String
     name: String
     logoUrl: String
 }
@@ -74,8 +73,8 @@ input UpdateSiloSpecificationInput {
 input UpdateDatapointInput {
     id: ID! 
     siloDefinitionID: ID 
-    categories: [ID]
-    purposes: [ID]
+    categories: [ID!]
+    purposes: [ID!]
     description: String 
 }
 

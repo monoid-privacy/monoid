@@ -6,11 +6,11 @@ type Connector struct {
 
 type SiloSpecification struct {
 	ID          string
-	ConnectorID string
-	Connector   Connector
 	Name        string
 	LogoURL     *string
 	WorkspaceID string
+	DockerImage *string
+	Schema      *string
 }
 
 type SiloDefinition struct {
