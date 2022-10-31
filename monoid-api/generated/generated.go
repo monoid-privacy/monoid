@@ -90,6 +90,7 @@ type ComplexityRoot struct {
 	}
 
 	SiloDefinition struct {
+		Datapoints        func(childComplexity int) int
 		Description       func(childComplexity int) int
 		ID                func(childComplexity int) int
 		SiloSpecification func(childComplexity int) int
@@ -413,6 +414,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Workspaces(childComplexity), true
 
+	case "SiloDefinition.datapoints":
+		if e.complexity.SiloDefinition.Datapoints == nil {
+			break
+		}
+
+		return e.complexity.SiloDefinition.Datapoints(childComplexity), true
+
 	case "SiloDefinition.description":
 		if e.complexity.SiloDefinition.Description == nil {
 			break
@@ -571,6 +579,7 @@ type SiloDefinition {
     id: ID! 
     description: String 
     siloSpecification: SiloSpecification
+    datapoints: [Datapoint!]
 }
 
 type SiloSpecification {
@@ -1179,6 +1188,8 @@ func (ec *executionContext) fieldContext_Datapoint_siloDefinition(ctx context.Co
 				return ec.fieldContext_SiloDefinition_description(ctx, field)
 			case "siloSpecification":
 				return ec.fieldContext_SiloDefinition_siloSpecification(ctx, field)
+			case "datapoints":
+				return ec.fieldContext_SiloDefinition_datapoints(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SiloDefinition", field.Name)
 		},
@@ -1519,6 +1530,8 @@ func (ec *executionContext) fieldContext_Mutation_updateSiloDefinition(ctx conte
 				return ec.fieldContext_SiloDefinition_description(ctx, field)
 			case "siloSpecification":
 				return ec.fieldContext_SiloDefinition_siloSpecification(ctx, field)
+			case "datapoints":
+				return ec.fieldContext_SiloDefinition_datapoints(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SiloDefinition", field.Name)
 		},
@@ -2050,6 +2063,8 @@ func (ec *executionContext) fieldContext_Query_siloDefinition(ctx context.Contex
 				return ec.fieldContext_SiloDefinition_description(ctx, field)
 			case "siloSpecification":
 				return ec.fieldContext_SiloDefinition_siloSpecification(ctx, field)
+			case "datapoints":
+				return ec.fieldContext_SiloDefinition_datapoints(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SiloDefinition", field.Name)
 		},
@@ -2177,6 +2192,8 @@ func (ec *executionContext) fieldContext_Query_siloDefinitions(ctx context.Conte
 				return ec.fieldContext_SiloDefinition_description(ctx, field)
 			case "siloSpecification":
 				return ec.fieldContext_SiloDefinition_siloSpecification(ctx, field)
+			case "datapoints":
+				return ec.fieldContext_SiloDefinition_datapoints(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SiloDefinition", field.Name)
 		},
@@ -2649,6 +2666,59 @@ func (ec *executionContext) fieldContext_SiloDefinition_siloSpecification(ctx co
 				return ec.fieldContext_SiloSpecification_logoUrl(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SiloSpecification", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SiloDefinition_datapoints(ctx context.Context, field graphql.CollectedField, obj *model.SiloDefinition) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SiloDefinition_datapoints(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Datapoints, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]model.Datapoint)
+	fc.Result = res
+	return ec.marshalODatapoint2ᚕgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDatapointᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SiloDefinition_datapoints(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SiloDefinition",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Datapoint_id(ctx, field)
+			case "siloDefinition":
+				return ec.fieldContext_Datapoint_siloDefinition(ctx, field)
+			case "categories":
+				return ec.fieldContext_Datapoint_categories(ctx, field)
+			case "purposes":
+				return ec.fieldContext_Datapoint_purposes(ctx, field)
+			case "description":
+				return ec.fieldContext_Datapoint_description(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Datapoint", field.Name)
 		},
 	}
 	return fc, nil
@@ -5422,6 +5492,10 @@ func (ec *executionContext) _SiloDefinition(ctx context.Context, sel ast.Selecti
 
 			out.Values[i] = ec._SiloDefinition_siloSpecification(ctx, field, obj)
 
+		case "datapoints":
+
+			out.Values[i] = ec._SiloDefinition_datapoints(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5835,6 +5909,10 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNDatapoint2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDatapoint(ctx context.Context, sel ast.SelectionSet, v model.Datapoint) graphql.Marshaler {
+	return ec._Datapoint(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNDatapoint2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDatapoint(ctx context.Context, sel ast.SelectionSet, v []*model.Datapoint) graphql.Marshaler {
@@ -6335,6 +6413,53 @@ func (ec *executionContext) unmarshalOCreateSiloSpecificationInput2ᚖgithubᚗc
 	}
 	res, err := ec.unmarshalInputCreateSiloSpecificationInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalODatapoint2ᚕgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDatapointᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Datapoint) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNDatapoint2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDatapoint(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalODatapoint2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDatapoint(ctx context.Context, sel ast.SelectionSet, v *model.Datapoint) graphql.Marshaler {

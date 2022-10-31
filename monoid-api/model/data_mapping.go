@@ -19,6 +19,7 @@ type SiloDefinition struct {
 	Description         *string
 	SiloSpecificationID string
 	SiloSpecification   SiloSpecification
+	Datapoints          []Datapoint
 	Subjects            []Subject `gorm:"many2many:silo_definition_subjects;"`
 }
 

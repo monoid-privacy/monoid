@@ -14,6 +14,7 @@ type SiloDefinition {
     id: ID! 
     description: String 
     siloSpecification: SiloSpecification
+    datapoints: [Datapoint!]
 }
 
 type SiloSpecification {
