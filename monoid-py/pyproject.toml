@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "monoid_pydev"
+version = "0.0.1"
+authors = [
+  { name="Monoid, Inc.", email="support@monoid.co" },
+]
+description = "Tools for building Monoid data silos."
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dynamic = ["dependencies"]
+
+[project.urls]
+"Homepage" = "https://www.monoid.co"
+"Bug Tracker" = "https://github.com/monoid/monoid/issues"
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}

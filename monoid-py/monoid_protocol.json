@@ -1,0 +1,135 @@
+{
+  "$id": "monoid_protocol.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MonoidProtocol",
+  "type": "object",
+  "definitions": {
+    "MonoidQuery": {
+      "type": "object",
+      "properties": {
+        "identifiers": {
+          "type": "array",
+          "items": [
+            {
+              "$ref": "#/definitions/MonoidQueryIdentifier"
+            }
+          ]
+        }
+      }
+    },
+    "MonoidQueryIdentifier": {
+      "type": "object",
+      "required": [
+        "schema_name",
+        "identifier",
+        "identifier_query",
+        "json_schema"
+      ],
+      "properties": {
+        "schema_name": {
+          "type": "string"
+        },
+        "schema_group": {
+          "type": "string"
+        },
+        "identifier": {
+          "type": "string"
+        },
+        "identifier_query": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        },
+        "json_schema": {
+          "type": "object"
+        }
+      }
+    },
+    "MonoidRecord": {
+      "type": "object",
+      "required": [
+        "schema_name",
+        "data"
+      ],
+      "properties": {
+        "schema_name": {
+          "type": "string"
+        },
+        "schema_group": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object"
+        }
+      }
+    },
+    "MonoidSchema": {
+      "type": "object",
+      "required": [
+        "name",
+        "json_schema"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "group": {
+          "type": "string"
+        },
+        "json_schema": {
+          "type": "object"
+        }
+      }
+    },
+    "MonoidSiloSpec": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "spec": {
+          "type": "object"
+        }
+      }
+    },
+    "MonoidSchemasMessage": {
+      "type": "object",
+      "required": [
+        "schemas"
+      ],
+      "properties": {
+        "schemas": {
+          "type": "array",
+          "items": [
+            {
+              "$ref": "#/definitions/MonoidSchema"
+            }
+          ]
+        }
+      }
+    },
+    "MonoidMessage": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "SCHEMA",
+            "RECORD"
+          ]
+        },
+        "record": {
+          "$ref": "#/definitions/MonoidRecord"
+        },
+        "schema": {
+          "$ref": "#/definitions/MonoidSchemasMessage"
+        }
+      }
+    }
+  }
+}
