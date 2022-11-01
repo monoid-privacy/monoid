@@ -1,9 +1,5 @@
 package model
 
-type Connector struct {
-	ID string
-}
-
 type SiloSpecification struct {
 	ID          string
 	Name        string
@@ -19,16 +15,15 @@ type SiloDefinition struct {
 	Description         *string
 	SiloSpecificationID string
 	SiloSpecification   SiloSpecification
-	Datapoints          []Datapoint
+	DataSources         []DataSource
 	Subjects            []Subject `gorm:"many2many:silo_definition_subjects;"`
 }
 
-type Datapoint struct {
+type DataSource struct {
 	ID               string
 	SiloDefinitionID string
 	SiloDefinition   SiloDefinition
-	Categories       []Category `gorm:"many2many:datapoint_categories;"`
-	Purposes         []Purpose  `gorm:"many2many:datapoint_purposes;"`
+	Properties       []*Property
 	Description      *string
 }
 

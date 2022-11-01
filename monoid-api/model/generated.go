@@ -2,11 +2,17 @@
 
 package model
 
-type CreateDatapointInput struct {
+type CreateDataSourceInput struct {
 	SiloDefinitionID string    `json:"siloDefinitionID"`
 	CategoryIDs      []*string `json:"categoryIDs"`
 	PurposeIDs       []*string `json:"purposeIDs"`
 	Description      *string   `json:"description"`
+}
+
+type CreatePropertyInput struct {
+	Categories   []string `json:"categories"`
+	DataSourceID string   `json:"dataSourceID"`
+	Purposes     []string `json:"purposes"`
 }
 
 type CreateSiloDefinitionInput struct {
@@ -22,12 +28,25 @@ type CreateSiloSpecificationInput struct {
 	WorkspaceID string  `json:"workspaceID"`
 }
 
-type UpdateDatapointInput struct {
+type Property struct {
+	ID           string      `json:"id"`
+	Categories   []*Category `json:"categories"`
+	DataSourceID string      `json:"dataSourceID"`
+	Purposes     []*Purpose  `json:"purposes"`
+}
+
+type UpdateDataSourceInput struct {
 	ID               string   `json:"id"`
 	SiloDefinitionID *string  `json:"siloDefinitionID"`
 	Categories       []string `json:"categories"`
 	Purposes         []string `json:"purposes"`
 	Description      *string  `json:"description"`
+}
+
+type UpdatePropertyInput struct {
+	Categories   []string `json:"categories"`
+	DataSourceID *string  `json:"dataSourceID"`
+	Purposes     []string `json:"purposes"`
 }
 
 type UpdateSiloDefinitionInput struct {

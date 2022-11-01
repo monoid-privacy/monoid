@@ -2,19 +2,25 @@
 #
 # https://gqlgen.com/getting-started/
 
-type Datapoint { 
+type DataSource { 
     id: ID! 
     siloDefinition: SiloDefinition! 
-    categories: [Category]
-    purposes: [Purpose]
+    properties: [Property!]
     description: String 
+}
+
+type Property { 
+    id: ID! 
+    categories: [Category!]
+    dataSourceID: ID! 
+    purposes: [Purpose!]
 }
 
 type SiloDefinition { 
     id: ID! 
     description: String 
     siloSpecification: SiloSpecification
-    datapoints: [Datapoint!]
+    dataSources: [DataSource!]
 }
 
 type SiloSpecification {
@@ -48,7 +54,7 @@ input CreateSiloSpecificationInput {
     workspaceID: ID!
 }
 
-input CreateDatapointInput {
+input CreateDataSourceInput {
     siloDefinitionID: ID! 
     categoryIDs: [ID]
     purposeIDs: [ID]
@@ -69,7 +75,7 @@ input UpdateSiloSpecificationInput {
     logoUrl: String
 }
 
-input UpdateDatapointInput {
+input UpdateDataSourceInput {
     id: ID! 
     siloDefinitionID: ID 
     categories: [ID!]
@@ -77,26 +83,43 @@ input UpdateDatapointInput {
     description: String 
 }
 
+input CreatePropertyInput {
+    categories: [ID!]
+    dataSourceID: ID! 
+    purposes: [ID!]
+}
+
+input UpdatePropertyInput {
+    categories: [ID!]
+    dataSourceID: ID 
+    purposes: [ID!]
+}
+
 extend type Query {
     siloDefinition(id: ID!): SiloDefinition
-    datapoint(id: ID!): Datapoint
-    siloDefinitions(wsId: ID!): [SiloDefinition]!
-    datapoints(wsId: ID!): [Datapoint]!
+    dataSource(id: ID!): DataSource
+    siloDefinitions(wsId: ID!): [SiloDefinition!]
+    dataSources(wsId: ID!): [DataSource!]
     siloSpecification(id: ID!): SiloSpecification 
-    siloSpecifications(wsId: ID!): [SiloSpecification]!
+    siloSpecifications(wsId: ID!): [SiloSpecification!]
+    property(id: ID!): Property
+    properties(wsId: ID!): [Property!]
 }
 
 extend type Mutation { 
     createSiloDefinition(input: CreateSiloDefinitionInput): ID
-    createDatapoint(input: CreateDatapointInput): ID
+    createDataSource(input: CreateDataSourceInput): ID
     createSiloSpecification(input: CreateSiloSpecificationInput): ID
+    createProperty(input: CreatePropertyInput): ID
 
     updateSiloDefinition(input: UpdateSiloDefinitionInput): SiloDefinition
-    updateDatapoint(input: UpdateDatapointInput): Datapoint 
+    updateDataSource(input: UpdateDataSourceInput): DataSource 
     updateSiloSpecification(input: UpdateSiloSpecificationInput): SiloSpecification
+    updateProperty(input: UpdatePropertyInput): Property
 
     deleteSiloDefinition(id: ID!): ID 
-    deleteDatapoint(id: ID!): ID 
+    deleteDataSource(id: ID!): ID 
     deleteSiloSpecification(id: ID!): ID 
+    deleteProperty(id: ID!): ID
     
 }

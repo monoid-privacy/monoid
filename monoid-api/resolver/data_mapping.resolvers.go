@@ -31,22 +31,20 @@ func (r *mutationResolver) CreateSiloDefinition(ctx context.Context, input *mode
 	return &siloDefinition.ID, nil
 }
 
-// CreateDatapoint is the resolver for the createDatapoint field.
-func (r *mutationResolver) CreateDatapoint(ctx context.Context, input *model.CreateDatapointInput) (*string, error) {
-	datapoint := model.Datapoint{
+// CreateDataSource is the resolver for the createDataSource field.
+func (r *mutationResolver) CreateDataSource(ctx context.Context, input *model.CreateDataSourceInput) (*string, error) {
+	dataSource := model.DataSource{
 		ID:               uuid.NewString(),
 		SiloDefinitionID: input.SiloDefinitionID,
 		Description:      input.Description,
-		Categories:       []model.Category{},
-		Purposes:         []model.Purpose{}, // TODO: Many2many creation for categories and purposes? Pass array of ID's or array of objects?
 	}
 
-	if err := r.Conf.DB.Create(&datapoint).Error; err != nil {
-		log.Err(err).Msg("Error creating datapoint")
-		return nil, gqlerror.Errorf("Error creating datapoint.")
+	if err := r.Conf.DB.Create(&dataSource).Error; err != nil {
+		log.Err(err).Msg("Error creating dataSource")
+		return nil, gqlerror.Errorf("Error creating dataSource.")
 	}
 
-	return &datapoint.ID, nil
+	return &dataSource.ID, nil
 }
 
 // CreateSiloSpecification is the resolver for the createSiloSpecification field.
@@ -65,6 +63,45 @@ func (r *mutationResolver) CreateSiloSpecification(ctx context.Context, input *m
 	}
 
 	return &siloSpecification.ID, nil
+}
+
+// CreateProperty is the resolver for the createProperty field.
+func (r *mutationResolver) CreateProperty(ctx context.Context, input *model.CreatePropertyInput) (*string, error) {
+	property := model.Property{
+		ID:           uuid.NewString(),
+		DataSourceID: input.DataSourceID,
+	}
+
+	if err := r.Conf.DB.Create(&property).Error; err != nil {
+		log.Err(err).Msg("Error creating property")
+		return nil, gqlerror.Errorf("Error creating property.")
+	}
+
+	categories := []model.Category{}
+
+	if err := r.Conf.DB.Where("id IN ?", input.Categories).Find(&categories).Error; err != nil {
+		log.Err(err).Msg("Error finding categories")
+		return nil, gqlerror.Errorf("Error finding categories.")
+	}
+
+	if err := r.Conf.DB.Model(&property).Association("Categories").Append(categories); err != nil {
+		log.Err(err).Msg("Error creating categories")
+		return nil, gqlerror.Errorf("Error creating categories.")
+	}
+
+	purposes := []model.Purpose{}
+
+	if err := r.Conf.DB.Where("id IN ?", input.Purposes).Find(&purposes).Error; err != nil {
+		log.Err(err).Msg("Error finding purposes")
+		return nil, gqlerror.Errorf("Error finding purposes.")
+	}
+
+	if err := r.Conf.DB.Model(&property).Association("Purposes").Append(purposes); err != nil {
+		log.Err(err).Msg("Error creating purposes")
+		return nil, gqlerror.Errorf("Error creating purposes.")
+	}
+
+	return &property.ID, nil
 }
 
 // UpdateSiloDefinition is the resolver for the updateSiloDefinition field.
@@ -92,39 +129,32 @@ func (r *mutationResolver) UpdateSiloDefinition(ctx context.Context, input *mode
 	return &siloDefinition, nil
 }
 
-// UpdateDatapoint is the resolver for the updateDatapoint field.
-func (r *mutationResolver) UpdateDatapoint(ctx context.Context, input *model.UpdateDatapointInput) (*model.Datapoint, error) {
-	datapoint := model.Datapoint{}
+// UpdateDataSource is the resolver for the updateDataSource field.
+func (r *mutationResolver) UpdateDataSource(ctx context.Context, input *model.UpdateDataSourceInput) (*model.DataSource, error) {
+	dataSource := model.DataSource{}
 
-	if err := r.Conf.DB.Where("id = ?", input.ID).First(&datapoint).Error; err != nil {
-		log.Err(err).Msg("Error finding datapoint")
-		return nil, gqlerror.Errorf("Error finding datapoint.")
+	if err := r.Conf.DB.Where("id = ?", input.ID).First(&dataSource).Error; err != nil {
+		log.Err(err).Msg("Error finding dataSource")
+		return nil, gqlerror.Errorf("Error finding dataSource.")
 	}
 
 	if input.Description != nil {
-		datapoint.Description = input.Description
+		dataSource.Description = input.Description
 	}
 
 	if input.SiloDefinitionID != nil {
-		datapoint.SiloDefinitionID = *input.SiloDefinitionID
+		dataSource.SiloDefinitionID = *input.SiloDefinitionID
 	}
 
-	if input.Categories != nil {
-		// TODO: Handle category changes
-		panic(fmt.Errorf("not implemented: category update handling in UpdateDatapoint"))
+	// TODO: Deal with properties
+	panic(fmt.Errorf("not implemented: UpdateDataSource - updating properties"))
+
+	if err := r.Conf.DB.Save(&dataSource).Error; err != nil {
+		log.Err(err).Msg("Error updating dataSource")
+		return nil, gqlerror.Errorf("Error updating dataSource.")
 	}
 
-	if input.Purposes != nil {
-		// TODO: Handle purpose changes
-		panic(fmt.Errorf("not implemented: purpose update handling in UpdateDatapoint"))
-	}
-
-	if err := r.Conf.DB.Save(&datapoint).Error; err != nil {
-		log.Err(err).Msg("Error updating datapoint")
-		return nil, gqlerror.Errorf("Error updating datapoint.")
-	}
-
-	return &datapoint, nil
+	return &dataSource, nil
 }
 
 // UpdateSiloSpecification is the resolver for the updateSiloSpecification field.
@@ -160,6 +190,11 @@ func (r *mutationResolver) UpdateSiloSpecification(ctx context.Context, input *m
 	return &siloSpecification, nil
 }
 
+// UpdateProperty is the resolver for the updateProperty field.
+func (r *mutationResolver) UpdateProperty(ctx context.Context, input *model.UpdatePropertyInput) (*model.Property, error) {
+	panic(fmt.Errorf("not implemented: UpdateProperty - updateProperty"))
+}
+
 // DeleteSiloDefinition is the resolver for the deleteSiloDefinition field.
 func (r *mutationResolver) DeleteSiloDefinition(ctx context.Context, id string) (*string, error) {
 	siloDefinition := &model.SiloDefinition{}
@@ -169,29 +204,27 @@ func (r *mutationResolver) DeleteSiloDefinition(ctx context.Context, id string) 
 		return nil, gqlerror.Errorf("Error finding silo definition.")
 	}
 
-	// TODO: Properly handle cascading delete
-	if err := r.Conf.DB.Select("Datapoint", "Subjects").Delete(siloDefinition).Error; err != nil {
+	if err := r.Conf.DB.Delete(siloDefinition).Error; err != nil {
 		log.Err(err).Msg("Error deleting silo definition")
 		return nil, gqlerror.Errorf("Error deleting silo definition.")
 	}
 
+	// TODO: Properly handle cascading delete
+	panic(fmt.Errorf("not implemented: DeleteSiloDefinition - deleting data sources"))
+
 	return &id, nil
 }
 
-// DeleteDatapoint is the resolver for the deleteDatapoint field.
-func (r *mutationResolver) DeleteDatapoint(ctx context.Context, id string) (*string, error) {
-	datapoint := &model.Datapoint{}
+// DeleteDataSource is the resolver for the deleteDataSource field.
+func (r *mutationResolver) DeleteDataSource(ctx context.Context, id string) (*string, error) {
+	dataSource := &model.DataSource{}
 
-	if err := r.Conf.DB.Where("id = ?", id).First(datapoint).Error; err != nil {
-		log.Err(err).Msg("Error finding datapoint")
-		return nil, gqlerror.Errorf("Error finding datapoint.")
+	if err := r.Conf.DB.Where("id = ?", id).First(dataSource).Error; err != nil {
+		log.Err(err).Msg("Error finding dataSource")
+		return nil, gqlerror.Errorf("Error finding dataSource.")
 	}
 
-	// TODO: Properly handle cascading delete
-	if err := r.Conf.DB.Select("Categories", "Purposes").Delete(datapoint).Error; err != nil {
-		log.Err(err).Msg("Error deleting datapoint")
-		return nil, gqlerror.Errorf("Error deleting datapoint.")
-	}
+	panic(fmt.Errorf("not implemented: DeleteDataSource - deleting properties"))
 
 	return &id, nil
 }
@@ -219,26 +252,46 @@ func (r *mutationResolver) DeleteSiloSpecification(ctx context.Context, id strin
 	return &id, nil
 }
 
+// DeleteProperty is the resolver for the deleteProperty field.
+func (r *mutationResolver) DeleteProperty(ctx context.Context, id string) (*string, error) {
+	property := &model.Property{}
+
+	if err := r.Conf.DB.Where("id = ?", id).First(property).Error; err != nil {
+		log.Err(err).Msg("Error finding property")
+		return nil, gqlerror.Errorf("Error finding property.")
+	}
+
+	if err := r.Conf.DB.Delete(property).Error; err != nil {
+		log.Err(err).Msg("Error deleting property")
+		return nil, gqlerror.Errorf("Error deleting property.")
+	}
+
+	// TODO: Properly handle cascading delete
+	panic(fmt.Errorf("not implemented: DeleteProperty - deleting categories and purposes"))
+
+	return &id, nil
+}
+
 // SiloDefinition is the resolver for the siloDefinition field.
 func (r *queryResolver) SiloDefinition(ctx context.Context, id string) (*model.SiloDefinition, error) {
 	silo := &model.SiloDefinition{}
 	if err := r.Conf.DB.Where("id = ?", id).First(silo).Error; err != nil {
-		log.Err(err).Msg("Error finding datapoint")
-		return nil, gqlerror.Errorf("Error finding datapoint.")
+		log.Err(err).Msg("Error finding dataSource")
+		return nil, gqlerror.Errorf("Error finding dataSource.")
 	}
 
 	return silo, nil
 }
 
-// Datapoint is the resolver for the datapoint field.
-func (r *queryResolver) Datapoint(ctx context.Context, id string) (*model.Datapoint, error) {
-	datapoint := &model.Datapoint{}
-	if err := r.Conf.DB.Where("id = ?", id).First(datapoint).Error; err != nil {
-		log.Err(err).Msg("Error finding datapoint")
-		return nil, gqlerror.Errorf("Error finding datapoint.")
+// DataSource is the resolver for the dataSource field.
+func (r *queryResolver) DataSource(ctx context.Context, id string) (*model.DataSource, error) {
+	dataSource := &model.DataSource{}
+	if err := r.Conf.DB.Where("id = ?", id).First(dataSource).Error; err != nil {
+		log.Err(err).Msg("Error finding dataSource")
+		return nil, gqlerror.Errorf("Error finding dataSource.")
 	}
 
-	return datapoint, nil
+	return dataSource, nil
 }
 
 // SiloDefinitions is the resolver for the siloDefinitions field.
@@ -252,15 +305,15 @@ func (r *queryResolver) SiloDefinitions(ctx context.Context, wsID string) ([]*mo
 	return silos, nil
 }
 
-// Datapoints is the resolver for the datapoints field.
-func (r *queryResolver) Datapoints(ctx context.Context, wsID string) ([]*model.Datapoint, error) {
-	datapoints := []*model.Datapoint{}
-	if err := r.Conf.DB.Where("workspace_id = ?", wsID).Find(&datapoints).Error; err != nil {
-		log.Err(err).Msg("Error finding datapoints")
-		return nil, gqlerror.Errorf("Error finding datapoints.")
+// DataSources is the resolver for the dataSources field.
+func (r *queryResolver) DataSources(ctx context.Context, wsID string) ([]*model.DataSource, error) {
+	dataSources := []*model.DataSource{}
+	if err := r.Conf.DB.Where("workspace_id = ?", wsID).Find(&dataSources).Error; err != nil {
+		log.Err(err).Msg("Error finding dataSources")
+		return nil, gqlerror.Errorf("Error finding dataSources.")
 	}
 
-	return datapoints, nil
+	return dataSources, nil
 }
 
 // SiloSpecification is the resolver for the siloSpecification field.
@@ -284,4 +337,26 @@ func (r *queryResolver) SiloSpecifications(ctx context.Context, wsID string) ([]
 	}
 
 	return siloSpecifications, nil
+}
+
+// Property is the resolver for the property field.
+func (r *queryResolver) Property(ctx context.Context, id string) (*model.Property, error) {
+	property := &model.Property{}
+	if err := r.Conf.DB.Where("id = ?", id).First(property).Error; err != nil {
+		log.Err(err).Msg("Error finding property")
+		return nil, gqlerror.Errorf("Error finding property.")
+	}
+
+	return property, nil
+}
+
+// Properties is the resolver for the properties field.
+func (r *queryResolver) Properties(ctx context.Context, wsID string) ([]*model.Property, error) {
+	properties := []*model.Property{}
+	if err := r.Conf.DB.Where("workspace_id = ?", wsID).Find(&properties).Error; err != nil {
+		log.Err(err).Msg("Error finding properties.")
+		return nil, gqlerror.Errorf("Error finding properties.")
+	}
+
+	return properties, nil
 }

@@ -25,8 +25,7 @@ func main() {
 	conf := cmd.GetBaseConfig(true, []interface{}{
 		model.Workspace{},
 		model.Category{},
-		model.Connector{},
-		model.Datapoint{},
+		model.DataSource{},
 		model.Purpose{},
 		model.SiloDefinition{},
 		model.SiloSpecification{},
