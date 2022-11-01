@@ -9,8 +9,6 @@ import (
 
 	"github.com/brist-ai/monoid/model"
 	"github.com/google/uuid"
-	"github.com/rs/zerolog/log"
-	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
 // CreateSiloDefinition is the resolver for the createSiloDefinition field.
@@ -24,8 +22,7 @@ func (r *mutationResolver) CreateSiloDefinition(ctx context.Context, input *mode
 	}
 
 	if err := r.Conf.DB.Create(&siloDefinition).Error; err != nil {
-		log.Err(err).Msg("Error creating silo definition")
-		return nil, gqlerror.Errorf("Error creating silo definition.")
+		return nil, handleError(err, "Error creating silo definition.")
 	}
 
 	return &siloDefinition.ID, nil
@@ -40,8 +37,7 @@ func (r *mutationResolver) CreateDataSource(ctx context.Context, input *model.Cr
 	}
 
 	if err := r.Conf.DB.Create(&dataSource).Error; err != nil {
-		log.Err(err).Msg("Error creating dataSource")
-		return nil, gqlerror.Errorf("Error creating dataSource.")
+		return nil, handleError(err, "Error creating dataSource.")
 	}
 
 	return &dataSource.ID, nil
@@ -58,8 +54,7 @@ func (r *mutationResolver) CreateSiloSpecification(ctx context.Context, input *m
 	}
 
 	if err := r.Conf.DB.Create(&siloSpecification).Error; err != nil {
-		log.Err(err).Msg("Error creating silo specification")
-		return nil, gqlerror.Errorf("Error creating silo specification.")
+		return nil, handleError(err, "Error creating silo specification.")
 	}
 
 	return &siloSpecification.ID, nil
@@ -73,32 +68,27 @@ func (r *mutationResolver) CreateProperty(ctx context.Context, input *model.Crea
 	}
 
 	if err := r.Conf.DB.Create(&property).Error; err != nil {
-		log.Err(err).Msg("Error creating property")
-		return nil, gqlerror.Errorf("Error creating property.")
+		return nil, handleError(err, "Error creating property.")
 	}
 
 	categories := []model.Category{}
 
 	if err := r.Conf.DB.Where("id IN ?", input.Categories).Find(&categories).Error; err != nil {
-		log.Err(err).Msg("Error finding categories")
-		return nil, gqlerror.Errorf("Error finding categories.")
+		return nil, handleError(err, "Error finding categories.")
 	}
 
 	if err := r.Conf.DB.Model(&property).Association("Categories").Append(categories); err != nil {
-		log.Err(err).Msg("Error creating categories")
-		return nil, gqlerror.Errorf("Error creating categories.")
+		return nil, handleError(err, "Error creating categories.")
 	}
 
 	purposes := []model.Purpose{}
 
 	if err := r.Conf.DB.Where("id IN ?", input.Purposes).Find(&purposes).Error; err != nil {
-		log.Err(err).Msg("Error finding purposes")
-		return nil, gqlerror.Errorf("Error finding purposes.")
+		return nil, handleError(err, "Error finding purposes.")
 	}
 
 	if err := r.Conf.DB.Model(&property).Association("Purposes").Append(purposes); err != nil {
-		log.Err(err).Msg("Error creating purposes")
-		return nil, gqlerror.Errorf("Error creating purposes.")
+		return nil, handleError(err, "Error creating purposes.")
 	}
 
 	return &property.ID, nil
@@ -109,8 +99,7 @@ func (r *mutationResolver) UpdateSiloDefinition(ctx context.Context, input *mode
 	siloDefinition := model.SiloDefinition{}
 
 	if err := r.Conf.DB.Where("id = ?", input.ID).First(&siloDefinition).Error; err != nil {
-		log.Err(err).Msg("Error finding silo definition")
-		return nil, gqlerror.Errorf("Error finding silo definition.")
+		return nil, handleError(err, "Error finding silo definition.")
 	}
 
 	if input.Description != nil {
@@ -122,8 +111,7 @@ func (r *mutationResolver) UpdateSiloDefinition(ctx context.Context, input *mode
 	}
 
 	if err := r.Conf.DB.Save(&siloDefinition).Error; err != nil {
-		log.Err(err).Msg("Error updating silo definition")
-		return nil, gqlerror.Errorf("Error updating silo definition.")
+		return nil, handleError(err, "Error updating silo definition.")
 	}
 
 	return &siloDefinition, nil
@@ -134,8 +122,7 @@ func (r *mutationResolver) UpdateDataSource(ctx context.Context, input *model.Up
 	dataSource := model.DataSource{}
 
 	if err := r.Conf.DB.Where("id = ?", input.ID).First(&dataSource).Error; err != nil {
-		log.Err(err).Msg("Error finding dataSource")
-		return nil, gqlerror.Errorf("Error finding dataSource.")
+		return nil, handleError(err, "Error finding data source.")
 	}
 
 	if input.Description != nil {
@@ -150,8 +137,7 @@ func (r *mutationResolver) UpdateDataSource(ctx context.Context, input *model.Up
 	panic(fmt.Errorf("not implemented: UpdateDataSource - updating properties"))
 
 	if err := r.Conf.DB.Save(&dataSource).Error; err != nil {
-		log.Err(err).Msg("Error updating dataSource")
-		return nil, gqlerror.Errorf("Error updating dataSource.")
+		return nil, handleError(err, "Error updating data source.")
 	}
 
 	return &dataSource, nil
@@ -162,8 +148,7 @@ func (r *mutationResolver) UpdateSiloSpecification(ctx context.Context, input *m
 	siloSpecification := model.SiloSpecification{}
 
 	if err := r.Conf.DB.Where("id = ?", input.ID).First(&siloSpecification).Error; err != nil {
-		log.Err(err).Msg("Error finding silo specification ")
-		return nil, gqlerror.Errorf("Error finding silo specification.")
+		return nil, handleError(err, "Error finding silo specification.")
 	}
 
 	if input.DockerImage != nil {
@@ -183,8 +168,7 @@ func (r *mutationResolver) UpdateSiloSpecification(ctx context.Context, input *m
 	}
 
 	if err := r.Conf.DB.Save(&siloSpecification).Error; err != nil {
-		log.Err(err).Msg("Error updating silo specification")
-		return nil, gqlerror.Errorf("Error updating silo specification.")
+		return nil, handleError(err, "Error updating silo specification.")
 	}
 
 	return &siloSpecification, nil
@@ -200,13 +184,11 @@ func (r *mutationResolver) DeleteSiloDefinition(ctx context.Context, id string) 
 	siloDefinition := &model.SiloDefinition{}
 
 	if err := r.Conf.DB.Where("id = ?", id).First(siloDefinition).Error; err != nil {
-		log.Err(err).Msg("Error finding silo definition")
-		return nil, gqlerror.Errorf("Error finding silo definition.")
+		return nil, handleError(err, "Error finding silo definition.")
 	}
 
 	if err := r.Conf.DB.Delete(siloDefinition).Error; err != nil {
-		log.Err(err).Msg("Error deleting silo definition")
-		return nil, gqlerror.Errorf("Error deleting silo definition.")
+		return nil, handleError(err, "Error deleting silo definition.")
 	}
 
 	// TODO: Properly handle cascading delete
@@ -220,8 +202,7 @@ func (r *mutationResolver) DeleteDataSource(ctx context.Context, id string) (*st
 	dataSource := &model.DataSource{}
 
 	if err := r.Conf.DB.Where("id = ?", id).First(dataSource).Error; err != nil {
-		log.Err(err).Msg("Error finding dataSource")
-		return nil, gqlerror.Errorf("Error finding dataSource.")
+		return nil, handleError(err, "Error finding data source.")
 	}
 
 	panic(fmt.Errorf("not implemented: DeleteDataSource - deleting properties"))
@@ -234,19 +215,16 @@ func (r *mutationResolver) DeleteSiloSpecification(ctx context.Context, id strin
 	siloSpecification := &model.SiloSpecification{}
 
 	if err := r.Conf.DB.Where("id = ?", id).First(siloSpecification).Error; err != nil {
-		log.Err(err).Msg("Error finding silo specification")
-		return nil, gqlerror.Errorf("Error finding silo specification.")
+		return nil, handleError(err, "Error finding silo specification.")
 	}
 
 	if err := r.Conf.DB.Delete(siloSpecification).Error; err != nil {
-		log.Err(err).Msg("Error deleting silo specification")
-		return nil, gqlerror.Errorf("Error deleting silo specification.")
+		return nil, handleError(err, "Error deleting silo specification.")
 	}
 
 	if err := r.Conf.DB.Model(&model.SiloDefinition{}).
 		Where("silo_specification_id = ?", siloSpecification.ID).Update("silo_specification_id", nil).Error; err != nil {
-		log.Err(err).Msg("Error deleting silo specification from silo definitions")
-		return nil, gqlerror.Errorf("Error deleting silo specification from silo definitions.")
+		return nil, handleError(err, "Error deleting silo specifications from silo definition.")
 	}
 
 	return &id, nil
@@ -257,17 +235,32 @@ func (r *mutationResolver) DeleteProperty(ctx context.Context, id string) (*stri
 	property := &model.Property{}
 
 	if err := r.Conf.DB.Where("id = ?", id).First(property).Error; err != nil {
-		log.Err(err).Msg("Error finding property")
-		return nil, gqlerror.Errorf("Error finding property.")
+		return nil, handleError(err, "Error finding property.")
+	}
+
+	categories := []model.Category{}
+
+	if err := r.Conf.DB.Model(property).Association("Categories").Find(&categories); err != nil {
+		return nil, handleError(err, "Error finding categories")
+	}
+
+	if err := r.Conf.DB.Model(property).Association("Categories").Delete(&categories); err != nil {
+		return nil, handleError(err, "Error deleting categories")
+	}
+
+	purposes := []model.Purpose{}
+
+	if err := r.Conf.DB.Model(property).Association("Purposes").Find(&purposes); err != nil {
+		return nil, handleError(err, "Error finding purposes")
+	}
+
+	if err := r.Conf.DB.Model(property).Association("Purposes").Delete(&categories); err != nil {
+		return nil, handleError(err, "Error deleting purposes")
 	}
 
 	if err := r.Conf.DB.Delete(property).Error; err != nil {
-		log.Err(err).Msg("Error deleting property")
-		return nil, gqlerror.Errorf("Error deleting property.")
+		return nil, handleError(err, "Error deleting property.")
 	}
-
-	// TODO: Properly handle cascading delete
-	panic(fmt.Errorf("not implemented: DeleteProperty - deleting categories and purposes"))
 
 	return &id, nil
 }
@@ -276,8 +269,7 @@ func (r *mutationResolver) DeleteProperty(ctx context.Context, id string) (*stri
 func (r *queryResolver) SiloDefinition(ctx context.Context, id string) (*model.SiloDefinition, error) {
 	silo := &model.SiloDefinition{}
 	if err := r.Conf.DB.Where("id = ?", id).First(silo).Error; err != nil {
-		log.Err(err).Msg("Error finding dataSource")
-		return nil, gqlerror.Errorf("Error finding dataSource.")
+		return nil, handleError(err, "Error finding silo definition.")
 	}
 
 	return silo, nil
@@ -287,8 +279,7 @@ func (r *queryResolver) SiloDefinition(ctx context.Context, id string) (*model.S
 func (r *queryResolver) DataSource(ctx context.Context, id string) (*model.DataSource, error) {
 	dataSource := &model.DataSource{}
 	if err := r.Conf.DB.Where("id = ?", id).First(dataSource).Error; err != nil {
-		log.Err(err).Msg("Error finding dataSource")
-		return nil, gqlerror.Errorf("Error finding dataSource.")
+		return nil, handleError(err, "Error finding data source.")
 	}
 
 	return dataSource, nil
@@ -298,8 +289,7 @@ func (r *queryResolver) DataSource(ctx context.Context, id string) (*model.DataS
 func (r *queryResolver) SiloDefinitions(ctx context.Context, wsID string) ([]*model.SiloDefinition, error) {
 	silos := []*model.SiloDefinition{}
 	if err := r.Conf.DB.Where("workspace_id = ?", wsID).Find(&silos).Error; err != nil {
-		log.Err(err).Msg("Error finding silos.")
-		return nil, gqlerror.Errorf("Error finding silos.")
+		return nil, handleError(err, "Error finding silo definitions.")
 	}
 
 	return silos, nil
@@ -309,8 +299,7 @@ func (r *queryResolver) SiloDefinitions(ctx context.Context, wsID string) ([]*mo
 func (r *queryResolver) DataSources(ctx context.Context, wsID string) ([]*model.DataSource, error) {
 	dataSources := []*model.DataSource{}
 	if err := r.Conf.DB.Where("workspace_id = ?", wsID).Find(&dataSources).Error; err != nil {
-		log.Err(err).Msg("Error finding dataSources")
-		return nil, gqlerror.Errorf("Error finding dataSources.")
+		return nil, handleError(err, "Error finding data source.")
 	}
 
 	return dataSources, nil
@@ -321,8 +310,7 @@ func (r *queryResolver) SiloSpecification(ctx context.Context, id string) (*mode
 	siloSpecification := &model.SiloSpecification{}
 
 	if err := r.Conf.DB.Where("id = ?", id).First(siloSpecification).Error; err != nil {
-		log.Err(err).Msg("Error finding silo specification")
-		return nil, gqlerror.Errorf("Error finding silo specification.")
+		return nil, handleError(err, "Error finding silo specification.")
 	}
 
 	return siloSpecification, nil
@@ -332,8 +320,7 @@ func (r *queryResolver) SiloSpecification(ctx context.Context, id string) (*mode
 func (r *queryResolver) SiloSpecifications(ctx context.Context, wsID string) ([]*model.SiloSpecification, error) {
 	siloSpecifications := []*model.SiloSpecification{}
 	if err := r.Conf.DB.Where("workspace_id = ? OR workspace_id IS NULL", wsID).Find(&siloSpecifications).Error; err != nil {
-		log.Err(err).Msg("Error finding silo specifications")
-		return nil, gqlerror.Errorf("Error finding silo specifications.")
+		return nil, handleError(err, "Error finding silo specifications.")
 	}
 
 	return siloSpecifications, nil
@@ -343,8 +330,7 @@ func (r *queryResolver) SiloSpecifications(ctx context.Context, wsID string) ([]
 func (r *queryResolver) Property(ctx context.Context, id string) (*model.Property, error) {
 	property := &model.Property{}
 	if err := r.Conf.DB.Where("id = ?", id).First(property).Error; err != nil {
-		log.Err(err).Msg("Error finding property")
-		return nil, gqlerror.Errorf("Error finding property.")
+		return nil, handleError(err, "Error finding property.")
 	}
 
 	return property, nil
@@ -354,8 +340,7 @@ func (r *queryResolver) Property(ctx context.Context, id string) (*model.Propert
 func (r *queryResolver) Properties(ctx context.Context, wsID string) ([]*model.Property, error) {
 	properties := []*model.Property{}
 	if err := r.Conf.DB.Where("workspace_id = ?", wsID).Find(&properties).Error; err != nil {
-		log.Err(err).Msg("Error finding properties.")
-		return nil, gqlerror.Errorf("Error finding properties.")
+		return nil, handleError(err, "Error finding properties.")
 	}
 
 	return properties, nil

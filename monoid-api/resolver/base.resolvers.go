@@ -10,8 +10,6 @@ import (
 	"github.com/brist-ai/monoid/generated"
 	"github.com/brist-ai/monoid/model"
 	"github.com/google/uuid"
-	"github.com/rs/zerolog/log"
-	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
 // CreateWorkspace is the resolver for the createWorkspace field.
@@ -31,13 +29,11 @@ func (r *mutationResolver) DeleteWorkspace(ctx context.Context, id *string) (*st
 	workspace := &model.Workspace{}
 
 	if err := r.Conf.DB.Where("id = ?", id).First(workspace).Error; err != nil {
-		log.Err(err).Msg("Error finding workspace")
-		return nil, gqlerror.Errorf("Error finding workspace.")
+		return nil, handleError(err, "Error finding workspace.")
 	}
 
 	if err := r.Conf.DB.Delete(workspace).Error; err != nil {
-		log.Err(err).Msg("Error deleting workspace")
-		return nil, gqlerror.Errorf("Error deleting workspace.")
+		return nil, handleError(err, "Error deleting workspace.")
 	}
 
 	// TODO: Cascade deletes
@@ -50,8 +46,7 @@ func (r *mutationResolver) DeleteWorkspace(ctx context.Context, id *string) (*st
 func (r *queryResolver) Workspaces(ctx context.Context) ([]*model.Workspace, error) {
 	workspaces := []*model.Workspace{}
 	if err := r.Conf.DB.Find(&workspaces).Error; err != nil {
-		log.Err(err).Msg("Error finding workspaces")
-		return nil, gqlerror.Errorf("Error finding workspaces.")
+		return nil, handleError(err, "Error finding workspaces.")
 	}
 
 	return workspaces, nil
@@ -61,7 +56,7 @@ func (r *queryResolver) Workspaces(ctx context.Context) ([]*model.Workspace, err
 func (r *queryResolver) Workspace(ctx context.Context, id string) (*model.Workspace, error) {
 	workspace := model.Workspace{}
 	if err := r.Conf.DB.Where("id = ?", id).First(&workspace).Error; err != nil {
-		return nil, err
+		return nil, handleError(err, "Error creating workspace.")
 	}
 
 	return &workspace, nil
