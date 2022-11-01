@@ -7,12 +7,13 @@ type DataSource {
     siloDefinition: SiloDefinition! 
     properties: [Property!]
     description: String 
+    schema: String!
 }
 
 type Property { 
     id: ID! 
     categories: [Category!]
-    dataSourceID: ID! 
+    dataSource: DataSource! 
     purposes: [Purpose!]
 }
 
@@ -21,44 +22,56 @@ type SiloDefinition {
     description: String 
     siloSpecification: SiloSpecification
     dataSources: [DataSource!]
+    subjects: [Subject!]
 }
+
+type Subject {
+    id: ID! 
+    name: String
+}
+
 
 type SiloSpecification {
     id: ID! 
-    dockerImage: String
-    schema: String
     name: String! 
     logoUrl: String
+    dockerImage: String
+    schema: String
+    
 }
 
 type Category { 
     id: ID! 
     name: String! 
+    properties: [Property!]
 }
 
 type Purpose { 
     id: ID! 
     name: String!
+    properties: [Property!]
 }
 
 input CreateSiloDefinitionInput { 
     description: String 
     siloSpecificationID: ID!
     workspaceID: ID! 
+    subjectIDs: [ID!]
 }
 
 input CreateSiloSpecificationInput { 
     name: String! 
+    workspaceID: ID!
     logoURL: String
     dockerImage: String 
-    workspaceID: ID!
+    schema: String 
 }
 
 input CreateDataSourceInput {
     siloDefinitionID: ID! 
-    categoryIDs: [ID]
-    purposeIDs: [ID]
     description: String
+    schema: String!
+    propertyIDs: [ID!]
 }
 
 input UpdateSiloDefinitionInput { 
@@ -78,32 +91,28 @@ input UpdateSiloSpecificationInput {
 input UpdateDataSourceInput {
     id: ID! 
     siloDefinitionID: ID 
-    categories: [ID!]
-    purposes: [ID!]
+    categoryIDs: [ID!]
+    purposeIDs: [ID!]
     description: String 
 }
 
 input CreatePropertyInput {
-    categories: [ID!]
+    categoryIDs: [ID!]
     dataSourceID: ID! 
-    purposes: [ID!]
+    purposeIDs: [ID!]
 }
 
 input UpdatePropertyInput {
-    categories: [ID!]
+    categoryIDs: [ID!]
     dataSourceID: ID 
-    purposes: [ID!]
+    purposeIDs: [ID!]
 }
 
 extend type Query {
     siloDefinition(id: ID!): SiloDefinition
     dataSource(id: ID!): DataSource
-    siloDefinitions(wsId: ID!): [SiloDefinition!]
-    dataSources(wsId: ID!): [DataSource!]
     siloSpecification(id: ID!): SiloSpecification 
-    siloSpecifications(wsId: ID!): [SiloSpecification!]
     property(id: ID!): Property
-    properties(wsId: ID!): [Property!]
 }
 
 extend type Mutation { 

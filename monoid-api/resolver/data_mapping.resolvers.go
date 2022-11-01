@@ -18,11 +18,20 @@ func (r *mutationResolver) CreateSiloDefinition(ctx context.Context, input *mode
 		WorkspaceID:         input.WorkspaceID,
 		Description:         input.Description,
 		SiloSpecificationID: input.SiloSpecificationID,
-		Subjects:            []model.Subject{}, // TODO: Many2many creation for subjects? Pass array of ID's or array of subjects?
 	}
 
 	if err := r.Conf.DB.Create(&siloDefinition).Error; err != nil {
 		return nil, handleError(err, "Error creating silo definition.")
+	}
+
+	subjects := []model.Subject{}
+
+	if err := r.Conf.DB.Where("id IN ?", input.SubjectIDs).Find(&subjects).Error; err != nil {
+		return nil, handleError(err, "Error finding subjects.")
+	}
+
+	if err := r.Conf.DB.Model(&siloDefinition).Association("Subjects").Append(subjects); err != nil {
+		return nil, handleError(err, "Error creating subjects.")
 	}
 
 	return &siloDefinition.ID, nil
@@ -34,10 +43,21 @@ func (r *mutationResolver) CreateDataSource(ctx context.Context, input *model.Cr
 		ID:               uuid.NewString(),
 		SiloDefinitionID: input.SiloDefinitionID,
 		Description:      input.Description,
+		Schema:           input.Schema,
 	}
 
 	if err := r.Conf.DB.Create(&dataSource).Error; err != nil {
 		return nil, handleError(err, "Error creating dataSource.")
+	}
+
+	properties := []model.Property{}
+
+	if err := r.Conf.DB.Where("id IN ?", input.PropertyIDs).Find(&properties).Error; err != nil {
+		return nil, handleError(err, "Error finding properties.")
+	}
+
+	if err := r.Conf.DB.Model(&dataSource).Association("Properties").Append(properties); err != nil {
+		return nil, handleError(err, "Error creating properties")
 	}
 
 	return &dataSource.ID, nil
@@ -51,6 +71,7 @@ func (r *mutationResolver) CreateSiloSpecification(ctx context.Context, input *m
 		LogoURL:     input.LogoURL,
 		WorkspaceID: input.WorkspaceID,
 		DockerImage: input.DockerImage,
+		Schema:      input.Schema,
 	}
 
 	if err := r.Conf.DB.Create(&siloSpecification).Error; err != nil {
@@ -73,7 +94,7 @@ func (r *mutationResolver) CreateProperty(ctx context.Context, input *model.Crea
 
 	categories := []model.Category{}
 
-	if err := r.Conf.DB.Where("id IN ?", input.Categories).Find(&categories).Error; err != nil {
+	if err := r.Conf.DB.Where("id IN ?", input.CategoryIDs).Find(&categories).Error; err != nil {
 		return nil, handleError(err, "Error finding categories.")
 	}
 
@@ -83,7 +104,7 @@ func (r *mutationResolver) CreateProperty(ctx context.Context, input *model.Crea
 
 	purposes := []model.Purpose{}
 
-	if err := r.Conf.DB.Where("id IN ?", input.Purposes).Find(&purposes).Error; err != nil {
+	if err := r.Conf.DB.Where("id IN ?", input.PurposeIDs).Find(&purposes).Error; err != nil {
 		return nil, handleError(err, "Error finding purposes.")
 	}
 
@@ -183,7 +204,7 @@ func (r *mutationResolver) UpdateProperty(ctx context.Context, input *model.Upda
 func (r *mutationResolver) DeleteSiloDefinition(ctx context.Context, id string) (*string, error) {
 	siloDefinition := &model.SiloDefinition{}
 
-	if err := r.Conf.DB.Where("id = ?", id).First(siloDefinition).Error; err != nil {
+	if err := r.Conf.DB.Where("id = ?", id).Preload("Subjects").Preload("DataSources").First(siloDefinition).Error; err != nil {
 		return nil, handleError(err, "Error finding silo definition.")
 	}
 
@@ -285,26 +306,6 @@ func (r *queryResolver) DataSource(ctx context.Context, id string) (*model.DataS
 	return dataSource, nil
 }
 
-// SiloDefinitions is the resolver for the siloDefinitions field.
-func (r *queryResolver) SiloDefinitions(ctx context.Context, wsID string) ([]*model.SiloDefinition, error) {
-	silos := []*model.SiloDefinition{}
-	if err := r.Conf.DB.Where("workspace_id = ?", wsID).Find(&silos).Error; err != nil {
-		return nil, handleError(err, "Error finding silo definitions.")
-	}
-
-	return silos, nil
-}
-
-// DataSources is the resolver for the dataSources field.
-func (r *queryResolver) DataSources(ctx context.Context, wsID string) ([]*model.DataSource, error) {
-	dataSources := []*model.DataSource{}
-	if err := r.Conf.DB.Where("workspace_id = ?", wsID).Find(&dataSources).Error; err != nil {
-		return nil, handleError(err, "Error finding data source.")
-	}
-
-	return dataSources, nil
-}
-
 // SiloSpecification is the resolver for the siloSpecification field.
 func (r *queryResolver) SiloSpecification(ctx context.Context, id string) (*model.SiloSpecification, error) {
 	siloSpecification := &model.SiloSpecification{}
@@ -316,16 +317,6 @@ func (r *queryResolver) SiloSpecification(ctx context.Context, id string) (*mode
 	return siloSpecification, nil
 }
 
-// SiloSpecifications is the resolver for the siloSpecifications field.
-func (r *queryResolver) SiloSpecifications(ctx context.Context, wsID string) ([]*model.SiloSpecification, error) {
-	siloSpecifications := []*model.SiloSpecification{}
-	if err := r.Conf.DB.Where("workspace_id = ? OR workspace_id IS NULL", wsID).Find(&siloSpecifications).Error; err != nil {
-		return nil, handleError(err, "Error finding silo specifications.")
-	}
-
-	return siloSpecifications, nil
-}
-
 // Property is the resolver for the property field.
 func (r *queryResolver) Property(ctx context.Context, id string) (*model.Property, error) {
 	property := &model.Property{}
@@ -334,14 +325,4 @@ func (r *queryResolver) Property(ctx context.Context, id string) (*model.Propert
 	}
 
 	return property, nil
-}
-
-// Properties is the resolver for the properties field.
-func (r *queryResolver) Properties(ctx context.Context, wsID string) ([]*model.Property, error) {
-	properties := []*model.Property{}
-	if err := r.Conf.DB.Where("workspace_id = ?", wsID).Find(&properties).Error; err != nil {
-		return nil, handleError(err, "Error finding properties.")
-	}
-
-	return properties, nil
 }

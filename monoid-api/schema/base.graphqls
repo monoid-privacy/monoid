@@ -4,6 +4,10 @@
 
 type Workspace {
   id: ID!
+  name: String
+  email: String! 
+  siloSpecifications: [SiloSpecification!]
+  siloDefinitions: [SiloDefinition!]
 }
 
 type Query {

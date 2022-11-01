@@ -3,50 +3,45 @@
 package model
 
 type CreateDataSourceInput struct {
-	SiloDefinitionID string    `json:"siloDefinitionID"`
-	CategoryIDs      []*string `json:"categoryIDs"`
-	PurposeIDs       []*string `json:"purposeIDs"`
-	Description      *string   `json:"description"`
+	SiloDefinitionID string   `json:"siloDefinitionID"`
+	Description      *string  `json:"description"`
+	Schema           string   `json:"schema"`
+	PropertyIDs      []string `json:"propertyIDs"`
 }
 
 type CreatePropertyInput struct {
-	Categories   []string `json:"categories"`
+	CategoryIDs  []string `json:"categoryIDs"`
 	DataSourceID string   `json:"dataSourceID"`
-	Purposes     []string `json:"purposes"`
+	PurposeIDs   []string `json:"purposeIDs"`
 }
 
 type CreateSiloDefinitionInput struct {
-	Description         *string `json:"description"`
-	SiloSpecificationID string  `json:"siloSpecificationID"`
-	WorkspaceID         string  `json:"workspaceID"`
+	Description         *string  `json:"description"`
+	SiloSpecificationID string   `json:"siloSpecificationID"`
+	WorkspaceID         string   `json:"workspaceID"`
+	SubjectIDs          []string `json:"subjectIDs"`
 }
 
 type CreateSiloSpecificationInput struct {
 	Name        string  `json:"name"`
+	WorkspaceID string  `json:"workspaceID"`
 	LogoURL     *string `json:"logoURL"`
 	DockerImage *string `json:"dockerImage"`
-	WorkspaceID string  `json:"workspaceID"`
-}
-
-type Property struct {
-	ID           string      `json:"id"`
-	Categories   []*Category `json:"categories"`
-	DataSourceID string      `json:"dataSourceID"`
-	Purposes     []*Purpose  `json:"purposes"`
+	Schema      *string `json:"schema"`
 }
 
 type UpdateDataSourceInput struct {
 	ID               string   `json:"id"`
 	SiloDefinitionID *string  `json:"siloDefinitionID"`
-	Categories       []string `json:"categories"`
-	Purposes         []string `json:"purposes"`
+	CategoryIDs      []string `json:"categoryIDs"`
+	PurposeIDs       []string `json:"purposeIDs"`
 	Description      *string  `json:"description"`
 }
 
 type UpdatePropertyInput struct {
-	Categories   []string `json:"categories"`
+	CategoryIDs  []string `json:"categoryIDs"`
 	DataSourceID *string  `json:"dataSourceID"`
-	Purposes     []string `json:"purposes"`
+	PurposeIDs   []string `json:"purposeIDs"`
 }
 
 type UpdateSiloDefinitionInput struct {
