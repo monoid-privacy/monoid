@@ -377,7 +377,13 @@ func (r *queryResolver) SiloSpecification(ctx context.Context, id string) (*mode
 
 // SiloSpecifications is the resolver for the siloSpecifications field.
 func (r *queryResolver) SiloSpecifications(ctx context.Context) ([]*model.SiloSpecification, error) {
-	panic(fmt.Errorf("not implemented: SiloSpecifications - siloSpecifications"))
+	siloSpecifications := []*model.SiloSpecification{}
+
+	if err := r.Conf.DB.Find(siloSpecifications).Error; err != nil {
+		return nil, handleError(err, "Error finding silo specifications.")
+	}
+
+	return siloSpecifications, nil
 }
 
 // Purposes is the resolver for the purposes field.
