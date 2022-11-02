@@ -13,7 +13,7 @@ import (
 )
 
 // CreateWorkspace is the resolver for the createWorkspace field.
-func (r *mutationResolver) CreateWorkspace(ctx context.Context) (*string, error) {
+func (r *mutationResolver) CreateWorkspace(ctx context.Context) (*model.Workspace, error) {
 	workspace := model.Workspace{
 		ID: uuid.NewString(),
 	}
@@ -21,7 +21,7 @@ func (r *mutationResolver) CreateWorkspace(ctx context.Context) (*string, error)
 		return nil, err
 	}
 
-	return &workspace.ID, nil
+	return &workspace, nil
 }
 
 // DeleteWorkspace is the resolver for the deleteWorkspace field.

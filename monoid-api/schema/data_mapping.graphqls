@@ -25,31 +25,27 @@ type SiloDefinition {
     subjects: [Subject!]
 }
 
-type Subject {
-    id: ID! 
-    name: String
-}
-
-
 type SiloSpecification {
     id: ID! 
     name: String! 
     logoUrl: String
-    dockerImage: String
+    dockerImage: String!
     schema: String
-    
+}
+
+type Subject {
+    id: ID! 
+    name: String!
 }
 
 type Category { 
     id: ID! 
     name: String! 
-    properties: [Property!]
 }
 
 type Purpose { 
     id: ID! 
     name: String!
-    properties: [Property!]
 }
 
 input CreateSiloDefinitionInput { 
@@ -63,7 +59,7 @@ input CreateSiloSpecificationInput {
     name: String! 
     workspaceID: ID!
     logoURL: String
-    dockerImage: String 
+    dockerImage: String! 
     schema: String 
 }
 
@@ -78,6 +74,7 @@ input UpdateSiloDefinitionInput {
     id: ID! 
     description: String 
     siloSpecificationID: ID
+    subjectIDs: [ID!]
 }
 
 input UpdateSiloSpecificationInput {
@@ -90,10 +87,8 @@ input UpdateSiloSpecificationInput {
 
 input UpdateDataSourceInput {
     id: ID! 
-    siloDefinitionID: ID 
-    categoryIDs: [ID!]
-    purposeIDs: [ID!]
     description: String 
+    schema: String
 }
 
 input CreatePropertyInput {
@@ -103,32 +98,74 @@ input CreatePropertyInput {
 }
 
 input UpdatePropertyInput {
+    id: ID!
     categoryIDs: [ID!]
-    dataSourceID: ID 
     purposeIDs: [ID!]
+}
+
+input CreatePurposeInput {
+    name: String! 
+    workspaceID: ID! 
+}
+
+input CreateCategoryInput {
+    name: String! 
+    workspaceID: ID! 
+}
+
+input CreateSubjectInput {
+    name: String! 
+    workspaceID: ID! 
+}
+
+input UpdatePurposeInput {
+    name: String
+}
+
+input UpdateCategoryInput {
+    name: String
+}
+
+input UpdateSubjectInput {
+    name: String
 }
 
 extend type Query {
     siloDefinition(id: ID!): SiloDefinition
     dataSource(id: ID!): DataSource
     siloSpecification(id: ID!): SiloSpecification 
+    siloSpecifications: [SiloSpecification!]
+    purposes: [Purpose!]
+    categories: [Category!]
+    subjects: [Subject!]
+    purpose(id: ID!): Purpose
+    category(id: ID!): Category
+    subject(id: ID!): Subject
     property(id: ID!): Property
 }
 
 extend type Mutation { 
-    createSiloDefinition(input: CreateSiloDefinitionInput): ID
-    createDataSource(input: CreateDataSourceInput): ID
-    createSiloSpecification(input: CreateSiloSpecificationInput): ID
-    createProperty(input: CreatePropertyInput): ID
+    createSiloDefinition(input: CreateSiloDefinitionInput): SiloDefinition
+    createDataSource(input: CreateDataSourceInput): DataSource
+    createSiloSpecification(input: CreateSiloSpecificationInput): SiloSpecification
+    createProperty(input: CreatePropertyInput): Property
+    createPurpose(input: CreatePurposeInput): Purpose 
+    createCategory(input: CreateCategoryInput): Category
+    createSubject(input: CreateSubjectInput): Subject
 
     updateSiloDefinition(input: UpdateSiloDefinitionInput): SiloDefinition
     updateDataSource(input: UpdateDataSourceInput): DataSource 
     updateSiloSpecification(input: UpdateSiloSpecificationInput): SiloSpecification
     updateProperty(input: UpdatePropertyInput): Property
+    updatePurpose(input: UpdatePurposeInput): Purpose 
+    updateCategory(input: UpdateCategoryInput): Category
+    updateSubject(input: UpdateSubjectInput): Subject
 
     deleteSiloDefinition(id: ID!): ID 
     deleteDataSource(id: ID!): ID 
     deleteSiloSpecification(id: ID!): ID 
     deleteProperty(id: ID!): ID
-    
+    deletePurpose(id: ID!): ID
+    deleteCategory(id: ID!): ID
+    deleteSubject(id: ID!): ID
 }

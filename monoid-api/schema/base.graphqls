@@ -8,6 +8,10 @@ type Workspace {
   email: String! 
   siloSpecifications: [SiloSpecification!]
   siloDefinitions: [SiloDefinition!]
+  settings: String!
+  subjects: [Subject!]
+  purposes: [Purpose!]
+  categories: [Category!]
 }
 
 type Query {
@@ -16,6 +20,6 @@ type Query {
 }
 
 extend type Mutation {
-  createWorkspace: ID
+  createWorkspace: Workspace
   deleteWorkspace(id: ID): ID
 }

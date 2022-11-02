@@ -6,7 +6,7 @@ type SiloSpecification struct {
 	LogoURL         *string
 	WorkspaceID     string
 	Workspace       Workspace `gorm:"constraint:OnDelete:CASCADE;"`
-	DockerImage     *string
+	DockerImage     string
 	Schema          *string
 	SiloDefinitions []SiloDefinition
 }
@@ -40,11 +40,10 @@ type Property struct {
 }
 
 type Subject struct {
-	ID              string
-	Name            string
-	WorkspaceID     string
-	Workspace       Workspace `gorm:"constraint:OnDelete:CASCADE;"`
-	SiloDefinitions []SiloDefinition
+	ID          string
+	Name        string
+	WorkspaceID string
+	Workspace   Workspace `gorm:"constraint:OnDelete:CASCADE;"`
 }
 
 type Category struct {
@@ -52,7 +51,6 @@ type Category struct {
 	Name        string
 	WorkspaceID string
 	Workspace   Workspace `gorm:"constraint:OnDelete:CASCADE;"`
-	Properties  []Property
 }
 
 type Purpose struct {
@@ -60,5 +58,4 @@ type Purpose struct {
 	Name        string
 	WorkspaceID string
 	Workspace   Workspace `gorm:"constraint:OnDelete:CASCADE;"`
-	Properties  []Property
 }

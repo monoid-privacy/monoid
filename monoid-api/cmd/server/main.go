@@ -30,6 +30,7 @@ func main() {
 		model.SiloDefinition{},
 		model.SiloSpecification{},
 		model.Subject{},
+		model.Property{},
 	})
 
 	router := mux.NewRouter()

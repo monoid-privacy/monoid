@@ -2,6 +2,11 @@
 
 package model
 
+type CreateCategoryInput struct {
+	Name        string `json:"name"`
+	WorkspaceID string `json:"workspaceID"`
+}
+
 type CreateDataSourceInput struct {
 	SiloDefinitionID string   `json:"siloDefinitionID"`
 	Description      *string  `json:"description"`
@@ -15,6 +20,11 @@ type CreatePropertyInput struct {
 	PurposeIDs   []string `json:"purposeIDs"`
 }
 
+type CreatePurposeInput struct {
+	Name        string `json:"name"`
+	WorkspaceID string `json:"workspaceID"`
+}
+
 type CreateSiloDefinitionInput struct {
 	Description         *string  `json:"description"`
 	SiloSpecificationID string   `json:"siloSpecificationID"`
@@ -26,28 +36,40 @@ type CreateSiloSpecificationInput struct {
 	Name        string  `json:"name"`
 	WorkspaceID string  `json:"workspaceID"`
 	LogoURL     *string `json:"logoURL"`
-	DockerImage *string `json:"dockerImage"`
+	DockerImage string  `json:"dockerImage"`
 	Schema      *string `json:"schema"`
 }
 
+type CreateSubjectInput struct {
+	Name        string `json:"name"`
+	WorkspaceID string `json:"workspaceID"`
+}
+
+type UpdateCategoryInput struct {
+	Name *string `json:"name"`
+}
+
 type UpdateDataSourceInput struct {
-	ID               string   `json:"id"`
-	SiloDefinitionID *string  `json:"siloDefinitionID"`
-	CategoryIDs      []string `json:"categoryIDs"`
-	PurposeIDs       []string `json:"purposeIDs"`
-	Description      *string  `json:"description"`
+	ID          string  `json:"id"`
+	Description *string `json:"description"`
+	Schema      *string `json:"schema"`
 }
 
 type UpdatePropertyInput struct {
-	CategoryIDs  []string `json:"categoryIDs"`
-	DataSourceID *string  `json:"dataSourceID"`
-	PurposeIDs   []string `json:"purposeIDs"`
+	ID          string   `json:"id"`
+	CategoryIDs []string `json:"categoryIDs"`
+	PurposeIDs  []string `json:"purposeIDs"`
+}
+
+type UpdatePurposeInput struct {
+	Name *string `json:"name"`
 }
 
 type UpdateSiloDefinitionInput struct {
-	ID                  string  `json:"id"`
-	Description         *string `json:"description"`
-	SiloSpecificationID *string `json:"siloSpecificationID"`
+	ID                  string   `json:"id"`
+	Description         *string  `json:"description"`
+	SiloSpecificationID *string  `json:"siloSpecificationID"`
+	SubjectIDs          []string `json:"subjectIDs"`
 }
 
 type UpdateSiloSpecificationInput struct {
@@ -56,4 +78,8 @@ type UpdateSiloSpecificationInput struct {
 	Schema      *string `json:"schema"`
 	Name        *string `json:"name"`
 	LogoURL     *string `json:"logoUrl"`
+}
+
+type UpdateSubjectInput struct {
+	Name *string `json:"name"`
 }
