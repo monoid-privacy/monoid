@@ -37,6 +37,7 @@ require (
 	github.com/jackc/pgx/v4 v4.17.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.4 // indirect
+	github.com/kr/pretty v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/moby/term v0.0.0-20220808134915-39b0c02b01ae // indirect
@@ -53,7 +54,6 @@ require (
 	github.com/stretchr/testify v1.8.1 // indirect
 	go.temporal.io/api v1.11.1-0.20220907050538-6de5285cf463 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
-	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect
 	golang.org/x/net v0.0.0-20220906165146-f3363e06e74c // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
@@ -85,4 +85,8 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-require gorm.io/gorm v1.24.1-0.20221019064659-5dd2bb482755
+require (
+	github.com/vektah/gqlparser v1.3.1
+	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
+	gorm.io/gorm v1.24.1-0.20221019064659-5dd2bb482755
+)
