@@ -44,22 +44,12 @@ func (r *mutationResolver) DeleteWorkspace(ctx context.Context, id *string) (*st
 
 // Workspaces is the resolver for the workspaces field.
 func (r *queryResolver) Workspaces(ctx context.Context) ([]*model.Workspace, error) {
-	workspaces := []*model.Workspace{}
-	if err := r.Conf.DB.Find(&workspaces).Error; err != nil {
-		return nil, handleError(err, "Error finding workspaces.")
-	}
-
-	return workspaces, nil
+	return findAllObjects[model.Workspace](r.Conf.DB, "Error finding workspaces.")
 }
 
 // Workspace is the resolver for the workspace field.
 func (r *queryResolver) Workspace(ctx context.Context, id string) (*model.Workspace, error) {
-	workspace := model.Workspace{}
-	if err := r.Conf.DB.Where("id = ?", id).First(&workspace).Error; err != nil {
-		return nil, handleError(err, "Error creating workspace.")
-	}
-
-	return &workspace, nil
+	return findObjectByID[model.Workspace](id, r.Conf.DB, "Error finding workspace.")
 }
 
 // Mutation returns generated.MutationResolver implementation.

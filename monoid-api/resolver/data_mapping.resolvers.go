@@ -314,114 +314,75 @@ func (r *mutationResolver) DeleteSiloSpecification(ctx context.Context, id strin
 
 // DeleteProperty is the resolver for the deleteProperty field.
 func (r *mutationResolver) DeleteProperty(ctx context.Context, id string) (*string, error) {
-	property := &model.Property{}
-
-	if err := r.Conf.DB.Where("id = ?", id).First(property).Error; err != nil {
-		return nil, handleError(err, "Error finding property.")
-	}
-
-	if err := r.Conf.DB.Delete(property).Error; err != nil {
-		return nil, handleError(err, "Error deleting property.")
-	}
-
-	// TODO: Ensure that associations to purpose, category disappear
-
-	return &id, nil
+	return DeleteObjectByID[model.Property](id, r.Conf.DB, "Error deleting property.")
 }
 
 // DeletePurpose is the resolver for the deletePurpose field.
 func (r *mutationResolver) DeletePurpose(ctx context.Context, id string) (*string, error) {
-	panic(fmt.Errorf("not implemented: DeletePurpose - deletePurpose"))
+	return DeleteObjectByID[model.Purpose](id, r.Conf.DB, "Error deleting purpose.")
 }
 
 // DeleteCategory is the resolver for the deleteCategory field.
 func (r *mutationResolver) DeleteCategory(ctx context.Context, id string) (*string, error) {
-	panic(fmt.Errorf("not implemented: DeleteCategory - deleteCategory"))
+	return DeleteObjectByID[model.Category](id, r.Conf.DB, "Error deleting category.")
 }
 
 // DeleteSubject is the resolver for the deleteSubject field.
 func (r *mutationResolver) DeleteSubject(ctx context.Context, id string) (*string, error) {
-	panic(fmt.Errorf("not implemented: DeleteSubject - deleteSubject"))
+	return DeleteObjectByID[model.Subject](id, r.Conf.DB, "Error deleting subject.")
 }
 
 // SiloDefinition is the resolver for the siloDefinition field.
 func (r *queryResolver) SiloDefinition(ctx context.Context, id string) (*model.SiloDefinition, error) {
-	silo := &model.SiloDefinition{}
-	if err := r.Conf.DB.Where("id = ?", id).First(silo).Error; err != nil {
-		return nil, handleError(err, "Error finding silo definition.")
-	}
-
-	return silo, nil
+	return findObjectByID[model.SiloDefinition](id, r.Conf.DB, "Error finding silo definition.")
 }
 
 // DataSource is the resolver for the dataSource field.
 func (r *queryResolver) DataSource(ctx context.Context, id string) (*model.DataSource, error) {
-	dataSource := &model.DataSource{}
-	if err := r.Conf.DB.Where("id = ?", id).First(dataSource).Error; err != nil {
-		return nil, handleError(err, "Error finding data source.")
-	}
-
-	return dataSource, nil
+	return findObjectByID[model.DataSource](id, r.Conf.DB, "Error finding data source.")
 }
 
 // SiloSpecification is the resolver for the siloSpecification field.
 func (r *queryResolver) SiloSpecification(ctx context.Context, id string) (*model.SiloSpecification, error) {
-	siloSpecification := &model.SiloSpecification{}
-
-	if err := r.Conf.DB.Where("id = ?", id).First(siloSpecification).Error; err != nil {
-		return nil, handleError(err, "Error finding silo specification.")
-	}
-
-	return siloSpecification, nil
+	return findObjectByID[model.SiloSpecification](id, r.Conf.DB, "Error finding silo specification.")
 }
 
 // SiloSpecifications is the resolver for the siloSpecifications field.
 func (r *queryResolver) SiloSpecifications(ctx context.Context) ([]*model.SiloSpecification, error) {
-	siloSpecifications := []*model.SiloSpecification{}
-
-	if err := r.Conf.DB.Find(siloSpecifications).Error; err != nil {
-		return nil, handleError(err, "Error finding silo specifications.")
-	}
-
-	return siloSpecifications, nil
+	return findAllObjects[model.SiloSpecification](r.Conf.DB, "Error finding silo specifications.")
 }
 
 // Purposes is the resolver for the purposes field.
 func (r *queryResolver) Purposes(ctx context.Context) ([]*model.Purpose, error) {
-	panic(fmt.Errorf("not implemented: Purposes - purposes"))
+	return findAllObjects[model.Purpose](r.Conf.DB, "Error finding purposes.")
 }
 
 // Categories is the resolver for the categories field.
 func (r *queryResolver) Categories(ctx context.Context) ([]*model.Category, error) {
-	panic(fmt.Errorf("not implemented: Categories - categories"))
+	return findAllObjects[model.Category](r.Conf.DB, "Error finding categories.")
 }
 
 // Subjects is the resolver for the subjects field.
 func (r *queryResolver) Subjects(ctx context.Context) ([]*model.Subject, error) {
-	panic(fmt.Errorf("not implemented: Subjects - subjects"))
+	return findAllObjects[model.Subject](r.Conf.DB, "Error finding silo subjects.")
 }
 
 // Purpose is the resolver for the purpose field.
 func (r *queryResolver) Purpose(ctx context.Context, id string) (*model.Purpose, error) {
-	panic(fmt.Errorf("not implemented: Purpose - purpose"))
+	return findObjectByID[model.Purpose](id, r.Conf.DB, "Error finding purpose.")
 }
 
 // Category is the resolver for the category field.
 func (r *queryResolver) Category(ctx context.Context, id string) (*model.Category, error) {
-	panic(fmt.Errorf("not implemented: Category - category"))
+	return findObjectByID[model.Category](id, r.Conf.DB, "Error finding category.")
 }
 
 // Subject is the resolver for the subject field.
 func (r *queryResolver) Subject(ctx context.Context, id string) (*model.Subject, error) {
-	panic(fmt.Errorf("not implemented: Subject - subject"))
+	return findObjectByID[model.Subject](id, r.Conf.DB, "Error finding subject.")
 }
 
 // Property is the resolver for the property field.
 func (r *queryResolver) Property(ctx context.Context, id string) (*model.Property, error) {
-	property := &model.Property{}
-	if err := r.Conf.DB.Where("id = ?", id).First(property).Error; err != nil {
-		return nil, handleError(err, "Error finding property.")
-	}
-
-	return property, nil
+	return findObjectByID[model.Property](id, r.Conf.DB, "Error finding property.")
 }
