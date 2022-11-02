@@ -6,10 +6,12 @@ interface CardProps extends React.HTMLProps<HTMLDivElement> {
 }
 
 export default function Card(props: CardProps) {
-  const { className, innerClassName, children } = props;
+  const {
+    className, innerClassName, children, ...rest
+  } = props;
 
   return (
-    <div {...props} className={classNames('bg-white shadow sm:rounded-lg', className)}>
+    <div className={classNames('bg-white shadow sm:rounded-lg', className)} {...rest}>
       <div className={classNames('px-4 py-5 sm:p-6', innerClassName)}>
         {children}
       </div>
@@ -24,10 +26,10 @@ Card.defaultProps = {
 interface CardDividerProps extends React.HTMLProps<HTMLDivElement> { }
 
 export function CardDivider(props: CardDividerProps) {
-  const { className } = props;
+  const { className, ...rest } = props;
 
   return (
-    <div {...props} className={classNames('relative py-5', className)}>
+    <div className={classNames('relative py-5', className)} {...rest}>
       <div className="absolute inset-0 flex items-center" aria-hidden="true">
         <div className="w-full border-t border-gray-300" />
       </div>

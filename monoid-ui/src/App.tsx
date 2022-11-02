@@ -3,6 +3,7 @@ import './App.css';
 
 import { ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client';
 import MonoidRouter from './pages/router';
+import ToastDisplayer from './components/ToastDisplayer';
 
 const client = new ApolloClient({
   uri: `${process.env.REACT_APP_API_URL}/query`,
@@ -12,7 +13,9 @@ const client = new ApolloClient({
 function App() {
   return (
     <ApolloProvider client={client}>
-      <MonoidRouter />
+      <ToastDisplayer>
+        <MonoidRouter />
+      </ToastDisplayer>
     </ApolloProvider>
   );
 }

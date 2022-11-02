@@ -1,6 +1,6 @@
 import React from 'react';
 import { gql, useQuery } from '@apollo/client';
-import LoadingPage from '../../components/LoadingPage';
+import LoadingPage from '../../common/LoadingPage';
 import OnboardingForm from './OnboardingForm';
 
 const GET_WORKSPACES = gql`
