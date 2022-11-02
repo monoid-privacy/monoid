@@ -33,10 +33,10 @@ type DataSource struct {
 
 type Property struct {
 	ID           string      `json:"id"`
-	Categories   []*Category `json:"categories"`
+	Categories   []*Category `gorm:"many2many:property_categories;"`
 	DataSourceID string      `json:"dataSourceID"`
 	DataSource   DataSource  `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	Purposes     []*Purpose  `json:"purposes"`
+	Purposes     []*Purpose  `gorm:"many2many:property_purposes;"`
 }
 
 type Subject struct {
