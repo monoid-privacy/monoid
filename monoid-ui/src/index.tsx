@@ -4,7 +4,7 @@ import './index.css';
 import OSSApp from './App';
 import reportWebVitals from './reportWebVitals';
 
-const cloud = true; // process.env.REACT_APP_CLOUD;
+const cloud = false; // process.env.REACT_APP_CLOUD;
 let App = OSSApp;
 
 if (cloud) {

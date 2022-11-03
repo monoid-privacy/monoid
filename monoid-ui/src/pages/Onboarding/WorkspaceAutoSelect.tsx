@@ -1,5 +1,6 @@
 import React from 'react';
 import { gql, useQuery } from '@apollo/client';
+import { Navigate } from 'react-router-dom';
 import LoadingPage from '../../common/LoadingPage';
 import OnboardingForm from './OnboardingForm';
 
@@ -11,7 +12,7 @@ const GET_WORKSPACES = gql`
   }
 `;
 
-export default function WorkspaceSelect() {
+export default function WorkspaceAutoSelect() {
   const { data, loading, error } = useQuery(GET_WORKSPACES);
 
   if (loading) {
@@ -28,5 +29,5 @@ export default function WorkspaceSelect() {
     return <div>{error.message}</div>;
   }
 
-  return <div />;
+  return <Navigate to={`/workspaces/${data.workspaces[0].id}`} />;
 }

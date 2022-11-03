@@ -13,10 +13,43 @@ import (
 )
 
 // CreateWorkspace is the resolver for the createWorkspace field.
-func (r *mutationResolver) CreateWorkspace(ctx context.Context) (*model.Workspace, error) {
+func (r *mutationResolver) CreateWorkspace(ctx context.Context, input model.CreateWorkspaceInput) (*model.Workspace, error) {
 	workspace := model.Workspace{
-		ID: uuid.NewString(),
+		ID:   uuid.NewString(),
+		Name: input.Name,
 	}
+
+	workspaceSettings := model.WorkspaceSettings{
+		SendNews:      true,
+		AnonymizeData: false,
+	}
+
+	for _, s := range input.Settings {
+		if s.Key == "email" {
+			workspaceSettings.Email = s.Value
+		}
+
+		if s.Key == "anonymizeData" {
+			if s.Value == "t" {
+				workspaceSettings.AnonymizeData = true
+			} else {
+				workspaceSettings.AnonymizeData = false
+			}
+		}
+
+		if s.Key == "sendNews" {
+			if s.Value == "t" {
+				workspaceSettings.SendNews = true
+			} else {
+				workspaceSettings.SendNews = false
+			}
+		}
+	}
+
+	if valid := model.ValidateEmail(workspaceSettings.Email); !valid {
+		return nil, handleError(fmt.Errorf("invalid email %s", workspaceSettings.Email), "Invalid email.")
+	}
+
 	if err := r.Conf.DB.Create(&workspace).Error; err != nil {
 		return nil, err
 	}
@@ -35,9 +68,6 @@ func (r *mutationResolver) DeleteWorkspace(ctx context.Context, id *string) (*st
 	if err := r.Conf.DB.Delete(workspace).Error; err != nil {
 		return nil, handleError(err, "Error deleting workspace.")
 	}
-
-	// TODO: Cascade deletes
-	panic(fmt.Errorf("not implemented: delete cascades in DeleteWorkspace"))
 
 	return id, nil
 }

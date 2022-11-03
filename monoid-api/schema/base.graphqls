@@ -5,7 +5,6 @@
 type Workspace {
   id: ID!
   name: String
-  email: String! 
   siloSpecifications: [SiloSpecification!]
   siloDefinitions: [SiloDefinition!]
   settings: String!
@@ -19,7 +18,17 @@ type Query {
   workspace(id: ID!): Workspace
 }
 
+input KVPair {
+  key: String!
+  value: String!
+}
+
+input CreateWorkspaceInput {
+  name: String!
+  settings: [KVPair]
+}
+
 extend type Mutation {
-  createWorkspace: Workspace
+  createWorkspace(input: CreateWorkspaceInput!): Workspace
   deleteWorkspace(id: ID): ID
 }

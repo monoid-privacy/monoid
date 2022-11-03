@@ -11,13 +11,14 @@ interface ComboboxProps<T> extends Omit<Omit<Omit<React.HTMLProps<HTMLDivElement
   onChange: (v: T) => void,
   filter: (query: string) => T[],
   id: (v: T) => string,
-  displayValue: (v: T) => string,
+  displayText: (v: T) => string,
+  displayNode?: (v: T) => React.ReactNode,
 }
 
 export default function Combobox<T>(props: ComboboxProps<T>) {
   const [query, setQuery] = useState<string>('');
   const {
-    value, label, onChange, filter, id, displayValue, className,
+    value, label, onChange, filter, id, displayText, displayNode, className,
     disabled,
   } = props;
   const opts = filter(query);
@@ -64,7 +65,7 @@ export default function Combobox<T>(props: ComboboxProps<T>) {
             )
           }
           onChange={(event) => setQuery(event.target.value)}
-          displayValue={(v) => (v ? displayValue(v) : '')}
+          displayValue={(v) => (v ? displayText(v) : '')}
           autoComplete="off"
           autoCorrect="off"
           autoCapitalize="off"
@@ -93,7 +94,7 @@ export default function Combobox<T>(props: ComboboxProps<T>) {
                   {({ active, selected }) => (
                     <>
                       <span className={classNames('block truncate', selected ? 'font-semibold' : '')}>
-                        {displayValue(v)}
+                        {displayNode ? displayNode(v) : displayText(v)}
                       </span>
 
                       {selected && (
@@ -121,4 +122,5 @@ export default function Combobox<T>(props: ComboboxProps<T>) {
 
 Combobox.defaultProps = {
   label: null,
+  displayNode: null,
 };

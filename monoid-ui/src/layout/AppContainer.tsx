@@ -1,9 +1,9 @@
 import React from 'react';
 
 import {
-  BeakerIcon, DocumentIcon,
+  BeakerIcon, CloudIcon, DocumentIcon,
 } from '@heroicons/react/24/outline';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { faSlack, faGithub } from '@fortawesome/free-brands-svg-icons';
 import Navbar from '../components/nav/Navbar';
 import Sidebar from '../components/nav/Sidebar';
@@ -15,7 +15,10 @@ export default function AppContainer(props: {
 }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { id } = useParams();
+
   const { children } = props;
+  console.log(children);
   const sidebarSections: {
     name: string,
     links: NavLink[]
@@ -29,6 +32,14 @@ export default function AppContainer(props: {
           navigate('/dashboard');
         },
         current: location.pathname.startsWith('/dashboard'),
+      },
+      {
+        title: 'Data Silos',
+        icon: CloudIcon,
+        onClick: () => {
+          navigate(`/workspaces/${id}/silos`);
+        },
+        current: location.pathname.startsWith(`/workspaces/${id}/silos`),
       },
     ],
   }, {

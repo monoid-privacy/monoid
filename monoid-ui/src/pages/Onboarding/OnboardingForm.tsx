@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
+import { gql, useMutation } from '@apollo/client';
+import { useNavigate } from 'react-router-dom';
+import { XCircleIcon } from '@heroicons/react/24/outline';
 import Button from '../../components/Button';
 import { H2 } from '../../components/Headers';
 import Input, { InputLabel } from '../../components/Input';
@@ -7,6 +10,16 @@ import Text from '../../components/Text';
 import logo from '../../logo.svg';
 import Card from '../../components/Card';
 import PageCenter from '../../components/PageCenter';
+import Spinner from '../../components/Spinner';
+import ToastContext from '../../contexts/ToastContext';
+
+const CREATE_WORKSPACE = gql`
+  mutation CreateWorkspace($input: CreateWorkspaceInput!) {
+    createWorkspace(input: $input) {
+      id
+    }
+  }
+`;
 
 export default function OnboardingForm() {
   const [formData, setFormData] = useState({
@@ -15,10 +28,16 @@ export default function OnboardingForm() {
     analytics: false,
   });
 
+  const [createWorkspace, createWorkspaceRes] = useMutation(CREATE_WORKSPACE);
+  const navigate = useNavigate();
+  const toastCtx = useContext(ToastContext);
+
   return (
     <PageCenter>
       <Card>
-        <form className="flex flex-col">
+        <form
+          className="flex flex-col"
+        >
           <img src={logo} alt="Monoid Logo" className="h-20" />
           <H2 className="self-center my-3">
             Welcome to Monoid
@@ -30,6 +49,13 @@ export default function OnboardingForm() {
             <div className="mt-2 sm:flex sm:items-center">
               <Input
                 placeholder="you@example.com"
+                onChange={(e) => {
+                  setFormData({
+                    ...formData,
+                    email: e.target.value,
+                  });
+                }}
+                value={formData.email}
               />
             </div>
           </div>
@@ -73,8 +99,35 @@ export default function OnboardingForm() {
               </Text>
             </div>
           </div>
-          <Button className="mt-3">
-            Continue
+          <Button
+            className="mt-3"
+            onClick={() => {
+              createWorkspace({
+                variables: {
+                  input: {
+                    name: formData.email,
+                    settings: [
+                      { key: 'email', value: formData.email },
+                      { key: 'anonymizeData', value: formData.analytics ? 't' : 'f' },
+                      { key: 'sendNews', value: formData.news ? 't' : 'f' },
+                    ],
+                  },
+                },
+              }).then(({ data }) => {
+                navigate(`/workspaces/${data.createWorkspace.id}`);
+              }).catch((err) => {
+                toastCtx.showToast(
+                  {
+                    title: 'Error Creating Workspace',
+                    message: err.message,
+                    variant: 'danger',
+                    icon: XCircleIcon,
+                  },
+                );
+              });
+            }}
+          >
+            {createWorkspaceRes.loading ? <Spinner /> : 'Continue'}
           </Button>
         </form>
       </Card>

@@ -64,7 +64,7 @@ type ComplexityRoot struct {
 		CreateSiloDefinition    func(childComplexity int, input *model.CreateSiloDefinitionInput) int
 		CreateSiloSpecification func(childComplexity int, input *model.CreateSiloSpecificationInput) int
 		CreateSubject           func(childComplexity int, input *model.CreateSubjectInput) int
-		CreateWorkspace         func(childComplexity int) int
+		CreateWorkspace         func(childComplexity int, input model.CreateWorkspaceInput) int
 		DeleteCategory          func(childComplexity int, id string) int
 		DeleteDataSource        func(childComplexity int, id string) int
 		DeleteProperty          func(childComplexity int, id string) int
@@ -133,7 +133,6 @@ type ComplexityRoot struct {
 
 	Workspace struct {
 		Categories         func(childComplexity int) int
-		Email              func(childComplexity int) int
 		ID                 func(childComplexity int) int
 		Name               func(childComplexity int) int
 		Purposes           func(childComplexity int) int
@@ -145,7 +144,7 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	CreateWorkspace(ctx context.Context) (*model.Workspace, error)
+	CreateWorkspace(ctx context.Context, input model.CreateWorkspaceInput) (*model.Workspace, error)
 	DeleteWorkspace(ctx context.Context, id *string) (*string, error)
 	CreateSiloDefinition(ctx context.Context, input *model.CreateSiloDefinitionInput) (*model.SiloDefinition, error)
 	CreateDataSource(ctx context.Context, input *model.CreateDataSourceInput) (*model.DataSource, error)
@@ -338,7 +337,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Mutation.CreateWorkspace(childComplexity), true
+		args, err := ec.field_Mutation_createWorkspace_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateWorkspace(childComplexity, args["input"].(model.CreateWorkspaceInput)), true
 
 	case "Mutation.deleteCategory":
 		if e.complexity.Mutation.DeleteCategory == nil {
@@ -784,13 +788,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Workspace.Categories(childComplexity), true
 
-	case "Workspace.email":
-		if e.complexity.Workspace.Email == nil {
-			break
-		}
-
-		return e.complexity.Workspace.Email(childComplexity), true
-
 	case "Workspace.id":
 		if e.complexity.Workspace.ID == nil {
 			break
@@ -855,6 +852,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateSiloDefinitionInput,
 		ec.unmarshalInputCreateSiloSpecificationInput,
 		ec.unmarshalInputCreateSubjectInput,
+		ec.unmarshalInputCreateWorkspaceInput,
+		ec.unmarshalInputKVPair,
 		ec.unmarshalInputUpdateCategoryInput,
 		ec.unmarshalInputUpdateDataSourceInput,
 		ec.unmarshalInputUpdatePropertyInput,
@@ -929,7 +928,6 @@ var sources = []*ast.Source{
 type Workspace {
   id: ID!
   name: String
-  email: String! 
   siloSpecifications: [SiloSpecification!]
   siloDefinitions: [SiloDefinition!]
   settings: String!
@@ -943,8 +941,18 @@ type Query {
   workspace(id: ID!): Workspace
 }
 
+input KVPair {
+  key: String!
+  value: String!
+}
+
+input CreateWorkspaceInput {
+  name: String!
+  settings: [KVPair]
+}
+
 extend type Mutation {
-  createWorkspace: Workspace
+  createWorkspace(input: CreateWorkspaceInput!): Workspace
   deleteWorkspace(id: ID): ID
 }`, BuiltIn: false},
 	{Name: "../schema/data_mapping.graphqls", Input: `# GraphQL schema example
@@ -1222,6 +1230,21 @@ func (ec *executionContext) field_Mutation_createSubject_args(ctx context.Contex
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalOCreateSubjectInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCreateSubjectInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createWorkspace_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.CreateWorkspaceInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNCreateWorkspaceInput2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCreateWorkspaceInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1966,7 +1989,7 @@ func (ec *executionContext) _Mutation_createWorkspace(ctx context.Context, field
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateWorkspace(rctx)
+		return ec.resolvers.Mutation().CreateWorkspace(rctx, fc.Args["input"].(model.CreateWorkspaceInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1992,8 +2015,6 @@ func (ec *executionContext) fieldContext_Mutation_createWorkspace(ctx context.Co
 				return ec.fieldContext_Workspace_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Workspace_name(ctx, field)
-			case "email":
-				return ec.fieldContext_Workspace_email(ctx, field)
 			case "siloSpecifications":
 				return ec.fieldContext_Workspace_siloSpecifications(ctx, field)
 			case "siloDefinitions":
@@ -2009,6 +2030,17 @@ func (ec *executionContext) fieldContext_Mutation_createWorkspace(ctx context.Co
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Workspace", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createWorkspace_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -3607,8 +3639,6 @@ func (ec *executionContext) fieldContext_Query_workspaces(ctx context.Context, f
 				return ec.fieldContext_Workspace_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Workspace_name(ctx, field)
-			case "email":
-				return ec.fieldContext_Workspace_email(ctx, field)
 			case "siloSpecifications":
 				return ec.fieldContext_Workspace_siloSpecifications(ctx, field)
 			case "siloDefinitions":
@@ -3668,8 +3698,6 @@ func (ec *executionContext) fieldContext_Query_workspace(ctx context.Context, fi
 				return ec.fieldContext_Workspace_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Workspace_name(ctx, field)
-			case "email":
-				return ec.fieldContext_Workspace_email(ctx, field)
 			case "siloSpecifications":
 				return ec.fieldContext_Workspace_siloSpecifications(ctx, field)
 			case "siloDefinitions":
@@ -5064,50 +5092,6 @@ func (ec *executionContext) _Workspace_name(ctx context.Context, field graphql.C
 }
 
 func (ec *executionContext) fieldContext_Workspace_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Workspace",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Workspace_email(ctx context.Context, field graphql.CollectedField, obj *model.Workspace) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Workspace_email(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Email, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Workspace_email(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Workspace",
 		Field:      field,
@@ -7500,6 +7484,78 @@ func (ec *executionContext) unmarshalInputCreateSubjectInput(ctx context.Context
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputCreateWorkspaceInput(ctx context.Context, obj interface{}) (model.CreateWorkspaceInput, error) {
+	var it model.CreateWorkspaceInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "settings"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "settings":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("settings"))
+			it.Settings, err = ec.unmarshalOKVPair2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐKVPair(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputKVPair(ctx context.Context, obj interface{}) (model.KVPair, error) {
+	var it model.KVPair
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"key", "value"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "key":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("key"))
+			it.Key, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "value":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
+			it.Value, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUpdateCategoryInput(ctx context.Context, obj interface{}) (model.UpdateCategoryInput, error) {
 	var it model.UpdateCategoryInput
 	asMap := map[string]interface{}{}
@@ -8575,13 +8631,6 @@ func (ec *executionContext) _Workspace(ctx context.Context, sel ast.SelectionSet
 
 			out.Values[i] = ec._Workspace_name(ctx, field, obj)
 
-		case "email":
-
-			out.Values[i] = ec._Workspace_email(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "siloSpecifications":
 
 			out.Values[i] = ec._Workspace_siloSpecifications(ctx, field, obj)
@@ -8965,6 +9014,11 @@ func (ec *executionContext) marshalNCategory2ᚖgithubᚗcomᚋbristᚑaiᚋmono
 		return graphql.Null
 	}
 	return ec._Category(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNCreateWorkspaceInput2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCreateWorkspaceInput(ctx context.Context, v interface{}) (model.CreateWorkspaceInput, error) {
+	res, err := ec.unmarshalInputCreateWorkspaceInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNDataSource2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSource(ctx context.Context, sel ast.SelectionSet, v model.DataSource) graphql.Marshaler {
@@ -9599,6 +9653,34 @@ func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.Se
 	}
 	res := graphql.MarshalID(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOKVPair2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐKVPair(ctx context.Context, v interface{}) ([]*model.KVPair, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.KVPair, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalOKVPair2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐKVPair(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOKVPair2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐKVPair(ctx context.Context, v interface{}) (*model.KVPair, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputKVPair(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOProperty2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPropertyᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Property) graphql.Marshaler {

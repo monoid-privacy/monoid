@@ -6,9 +6,10 @@ export default function Sidebar(props: {
   sections: {
     name?: React.ReactNode,
     links: NavLink[]
-  }[]
+  }[],
+  footer?: React.ReactNode
 }) {
-  const { sections } = props;
+  const { sections, footer } = props;
 
   return (
     <>
@@ -57,9 +58,16 @@ export default function Sidebar(props: {
               </nav>
             ))}
           </div>
+          <div className="flex flex-shrink-0 border-t border-gray-200 p-4">
+            {footer}
+          </div>
         </div>
       </div>
     </>
 
   );
 }
+
+Sidebar.defaultProps = {
+  footer: undefined,
+};

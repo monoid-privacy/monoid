@@ -45,6 +45,16 @@ type CreateSubjectInput struct {
 	WorkspaceID string `json:"workspaceID"`
 }
 
+type CreateWorkspaceInput struct {
+	Name     string    `json:"name"`
+	Settings []*KVPair `json:"settings"`
+}
+
+type KVPair struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
 type UpdateCategoryInput struct {
 	Name *string `json:"name"`
 }

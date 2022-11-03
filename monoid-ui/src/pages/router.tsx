@@ -3,19 +3,21 @@ import {
   BrowserRouter,
   Routes,
   Route,
+  Outlet,
 } from 'react-router-dom';
 import AppContainer from '../layout/AppContainer';
-import WorkspaceSelect from './Onboarding/WorkspaceSelect';
+import WorkspaceSelect from './Onboarding/WorkspaceAutoSelect';
+import SiloRoutes from './Silos/SiloRoutes';
 
 export default function MonoidRouter() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<WorkspaceSelect />} />
-        <Route element={<AppContainer />}>
-          <Route path="/workspaces">
-            <Route index element={<div />} />
-            <Route path=":id" element={<div />} />
+        <Route path="workspaces">
+          <Route index element={<WorkspaceSelect />} />
+          <Route path=":id" element={<AppContainer><Outlet /></AppContainer>}>
+            <Route path="silos/*" element={<SiloRoutes />} />
           </Route>
         </Route>
       </Routes>
