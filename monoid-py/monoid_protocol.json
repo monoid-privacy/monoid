@@ -148,13 +148,13 @@
         "record": {
           "$ref": "#/definitions/MonoidRecord"
         },
-        "schema": {
+        "schema_msg": {
           "$ref": "#/definitions/MonoidSchemasMessage"
         },
         "spec": {
           "$ref": "#/definitions/MonoidSiloSpec"
         },
-        "validate": {
+        "validate_msg": {
           "$ref": "#/definitions/MonoidValidateMessage"
         }
       },

@@ -4,11 +4,14 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"path/filepath"
 
+	"github.com/brist-ai/monoid/tartools"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/volume"
+	"go.temporal.io/sdk/activity"
 )
 
 // createVolume creates a docker volume and returns the name of the volume
@@ -38,7 +41,19 @@ func (dp *DockerMonoidProtocol) copyFile(
 	f io.Reader,
 	dest string,
 ) error {
-	return dp.client.CopyToContainer(ctx, *dp.containerID, dest, f, types.CopyToContainerOptions{})
+	path, filename := filepath.Split(dest)
+	wrapped, err := tartools.WrapInTar(f, filename)
+
+	if err != nil {
+		return err
+	}
+
+	defer wrapped.Close()
+
+	logger := activity.GetLogger(ctx)
+	logger.Info("CTR ID", map[string]string{"ctr": *dp.containerID, "dest": path})
+
+	return dp.client.CopyToContainer(ctx, *dp.containerID, path, wrapped, types.CopyToContainerOptions{})
 }
 
 func (dp *DockerMonoidProtocol) teardownVolumes(
@@ -103,7 +118,8 @@ func (dp *DockerMonoidProtocol) createContainer(
 		return "", err
 	}
 
-	dp.containerID = &ctr.ID
+	containerID := ctr.ID
+	dp.containerID = &containerID
 
 	return ctr.ID, nil
 }

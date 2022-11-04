@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"database/sql"
-	"encoding/hex"
+	"encoding/base64"
 	"fmt"
 	"math/rand"
 	"os"
@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/brist-ai/monoid/config"
+	"github.com/brist-ai/monoid/model"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog/log"
 	"gorm.io/driver/postgres"
@@ -75,7 +76,7 @@ func encryptionKey(keyFile string) ([]byte, error) {
 	}
 
 	strDat := strings.Trim(string(dat), " \n")
-	key, err := hex.DecodeString(strDat)
+	key, err := base64.StdEncoding.DecodeString(strDat)
 	if err != nil {
 		return nil, err
 	}
@@ -103,15 +104,15 @@ func GetBaseConfig(runMigrations bool, models []interface{}) config.BaseConfig {
 		MigrateDb(db, models)
 	}
 
-	// Set the token secret
-	// tokenSecretFile := os.Getenv("TOKEN_ENCRYPTION_KEY")
-	// key, err := encryptionKey(tokenSecretFile)
+	// Set the encryption secret
+	tokenSecretFile := os.Getenv("DB_ENCRYPTION_KEY")
+	key, err := encryptionKey(tokenSecretFile)
 
-	// if err != nil {
-	// 	panic(err)
-	// }
+	if err != nil {
+		panic(err)
+	}
 
-	// model.SetEncryptionKey(key)
+	model.SetEncryptionKey(key)
 
 	conf := config.BaseConfig{
 		DB:          db,

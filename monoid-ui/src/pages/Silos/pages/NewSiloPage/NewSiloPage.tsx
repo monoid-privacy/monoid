@@ -1,6 +1,7 @@
 import { gql, useMutation } from '@apollo/client';
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
+import AlertRegion from '../../../../components/AlertRegion';
 import Button from '../../../../components/Button';
 import Card from '../../../../components/Card';
 import Input, { InputLabel } from '../../../../components/Input';
@@ -83,6 +84,17 @@ export default function NewSiloPage() {
                 }}
               />
             )}
+
+          {
+            createSiloRes.error
+            && (
+              <div>
+                <AlertRegion alertTitle="Error Connecting Silo">
+                  {createSiloRes.error.message}
+                </AlertRegion>
+              </div>
+            )
+          }
 
           <div>
             <Button

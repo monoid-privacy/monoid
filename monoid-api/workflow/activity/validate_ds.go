@@ -16,7 +16,7 @@ func (a *Activity) ValidateDataSiloDef(ctx context.Context, dataSourceDef model.
 	logger.Info("Validating silo def")
 
 	spec := dataSourceDef.SiloSpecification
-	mp, err := docker.NewDockerMP(spec.DockerImage, spec.DockerImage)
+	mp, err := docker.NewDockerMP(spec.DockerImage, spec.DockerTag)
 	if err != nil {
 		logger.Error("Error creating docker client: %v", err)
 		return nil, err

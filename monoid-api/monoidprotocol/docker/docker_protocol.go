@@ -9,6 +9,7 @@ import (
 	"github.com/brist-ai/monoid/monoidprotocol"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
+	"go.temporal.io/sdk/activity"
 )
 
 type DockerMonoidProtocol struct {
@@ -42,7 +43,11 @@ func NewDockerMP(dockerImage string, dockerTag string) (monoidprotocol.MonoidPro
 }
 
 func (dp *DockerMonoidProtocol) InitConn(ctx context.Context) error {
+	logger := activity.GetLogger(ctx)
+
+	logger.Info("Inspecting", map[string]interface{}{"img": dp.imageName})
 	_, _, err := dp.client.ImageInspectWithRaw(ctx, dp.imageName)
+	logger.Info("Inspected", map[string]interface{}{"error": err})
 
 	if err != nil {
 		_, err := dp.client.ImagePull(ctx, dp.imageName, types.ImagePullOptions{})
@@ -91,10 +96,7 @@ func (dp *DockerMonoidProtocol) Spec(ctx context.Context) (*monoidprotocol.Monoi
 }
 
 func (dp *DockerMonoidProtocol) Validate(ctx context.Context, config map[string]interface{}) (*monoidprotocol.MonoidValidateMessage, error) {
-	// logger := activity.GetLogger(ctx)
-
-	// logger.Info("creating vol")
-
+	logger := activity.GetLogger(ctx)
 	vid, err := dp.createVolume(ctx)
 
 	if err != nil {
@@ -104,6 +106,7 @@ func (dp *DockerMonoidProtocol) Validate(ctx context.Context, config map[string]
 	confFileName := "/" + vid + "/conf.json"
 
 	cid, err := dp.createContainer(ctx, []string{"validate", "-c", confFileName}, []string{vid})
+	logger.Info("Created container", map[string]interface{}{"cid": cid})
 
 	if err != nil {
 		return nil, err
@@ -114,7 +117,10 @@ func (dp *DockerMonoidProtocol) Validate(ctx context.Context, config map[string]
 		return nil, err
 	}
 
-	dp.copyFile(ctx, bytes.NewBuffer(bts), confFileName)
+	err = dp.copyFile(ctx, bytes.NewBuffer(bts), confFileName)
+	if err != nil {
+		return nil, err
+	}
 
 	// logger.Info("Starting Container")
 
@@ -124,7 +130,7 @@ func (dp *DockerMonoidProtocol) Validate(ctx context.Context, config map[string]
 		return nil, err
 	}
 
-	// logger.Info("Started Container")
+	logger.Info("Started Container")
 
 	done, _ := ContainerWait(context.Background(), dp.client, cid)
 
@@ -144,7 +150,7 @@ func (dp *DockerMonoidProtocol) Validate(ctx context.Context, config map[string]
 		return nil, fmt.Errorf("incorrect message type: %v", msg.Type)
 	}
 
-	return msg.Validate, nil
+	return msg.ValidateMsg, nil
 }
 
 func (dp *DockerMonoidProtocol) Teardown(ctx context.Context) error {

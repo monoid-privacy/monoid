@@ -11,7 +11,7 @@ import (
 	"github.com/brist-ai/monoid/monoidprotocol"
 	"github.com/brist-ai/monoid/workflow"
 	"github.com/google/uuid"
-	"github.com/rs/zerolog/log"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.temporal.io/sdk/client"
 )
 
@@ -48,31 +48,39 @@ func (r *mutationResolver) CreateSiloDefinition(ctx context.Context, input *mode
 
 	we, err := r.Conf.TemporalClient.ExecuteWorkflow(ctx, options, sf.ValidateDSWorkflow, siloDefinition)
 	if err != nil {
-		log.Err(err).Msg("unable to complete Workflow")
+		return nil, handleError(err, "An error occurred while validating connection information.")
 	}
 
 	// Get the results
 	var res monoidprotocol.MonoidValidateMessage
 	err = we.Get(ctx, &res)
 	if err != nil {
-		log.Err(err).Msg("unable to get Workflow result")
+		return nil, handleError(err, "An error occurred while validating connection information.")
 	}
 
-	fmt.Println(res)
+	if res.Status == monoidprotocol.MonoidValidateMessageStatusFAILURE {
+		msg := "An error occurred while validating connection information."
 
-	// if err := r.Conf.DB.Create(&siloDefinition).Error; err != nil {
-	// 	return nil, handleError(err, "Error creating silo definition.")
-	// }
+		if res.Message != nil {
+			msg = *res.Message
+		}
 
-	// subjects := []model.Subject{}
+		return nil, gqlerror.Errorf(msg)
+	}
 
-	// if err := r.Conf.DB.Where("id IN ?", input.SubjectIDs).Find(&subjects).Error; err != nil {
-	// 	return nil, handleError(err, "Error finding subjects.")
-	// }
+	if err := r.Conf.DB.Create(&siloDefinition).Error; err != nil {
+		return nil, handleError(err, "Error creating silo definition.")
+	}
 
-	// if err := r.Conf.DB.Model(&siloDefinition).Association("Subjects").Append(subjects); err != nil {
-	// 	return nil, handleError(err, "Error creating subjects.")
-	// }
+	subjects := []model.Subject{}
+
+	if err := r.Conf.DB.Where("id IN ?", input.SubjectIDs).Find(&subjects).Error; err != nil {
+		return nil, handleError(err, "Error finding subjects.")
+	}
+
+	if err := r.Conf.DB.Model(&siloDefinition).Association("Subjects").Append(subjects); err != nil {
+		return nil, handleError(err, "Error creating subjects.")
+	}
 
 	return &siloDefinition, nil
 }

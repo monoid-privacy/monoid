@@ -68,10 +68,10 @@ class MonoidRunner():
                 yield MonoidMessage(type=Type.RECORD, record=s).json()
 
         elif self.parse_result.command == "schema":
-            yield MonoidMessage(type=Type.SCHEMA, schema=self.silo.schemas(config)).json()
+            yield MonoidMessage(type=Type.SCHEMA, schema_msg=self.silo.schemas(config)).json()
 
         elif self.parse_result.command == "validate":
-            yield MonoidMessage(type=Type.VALIDATE, validate=self.silo.validate(config)).json()
+            yield MonoidMessage(type=Type.VALIDATE, validate_msg=self.silo.validate(config)).json()
 
 
 def run_query(silo: AbstractSilo, args: List[str]):

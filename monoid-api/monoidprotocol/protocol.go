@@ -10,8 +10,8 @@ type MonoidMessage struct {
 	// Record corresponds to the JSON schema field "record".
 	Record *MonoidRecord `json:"record,omitempty"`
 
-	// Schema corresponds to the JSON schema field "schema".
-	Schema *MonoidSchemasMessage `json:"schema,omitempty"`
+	// SchemaMsg corresponds to the JSON schema field "schema_msg".
+	SchemaMsg *MonoidSchemasMessage `json:"schema_msg,omitempty"`
 
 	// Spec corresponds to the JSON schema field "spec".
 	Spec *MonoidSiloSpec `json:"spec,omitempty"`
@@ -19,8 +19,8 @@ type MonoidMessage struct {
 	// Type corresponds to the JSON schema field "type".
 	Type MonoidMessageType `json:"type"`
 
-	// Validate corresponds to the JSON schema field "validate".
-	Validate *MonoidValidateMessage `json:"validate,omitempty"`
+	// ValidateMsg corresponds to the JSON schema field "validate_msg".
+	ValidateMsg *MonoidValidateMessage `json:"validate_msg,omitempty"`
 }
 
 type MonoidMessageType string
