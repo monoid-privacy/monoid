@@ -3,10 +3,8 @@ import json
 from re import S
 from typing import Any, Iterable, Mapping, List
 
-from requests import delete
-
 from monoid_pydev.silos.data_store import DataStore
-from monoid_pydev.models import MonoidQuery, MonoidRecord, MonoidSchema, MonoidSiloSpec, MonoidSchemasMessage
+from monoid_pydev.models import MonoidQuery, MonoidRecord, MonoidSchema, MonoidSiloSpec, MonoidSchemasMessage, MonoidValidateMessage
 import monoid_pydev.utils as utils
 
 
@@ -90,6 +88,15 @@ class AbstractSilo(ABC):
             )]
 
             yield from data_store.sample_records(schema)
+
+    @abstractmethod
+    def validate(
+        self,
+        conf: Mapping[str, Any],
+    ) -> MonoidValidateMessage:
+        """
+        Validates that the configuration is set up correctly.
+        """
 
     def parse_config(
         self,

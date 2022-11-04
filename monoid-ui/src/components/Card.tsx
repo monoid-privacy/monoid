@@ -2,7 +2,7 @@ import React from 'react';
 import { classNames } from '../utils/utils';
 
 interface CardProps extends React.HTMLProps<HTMLDivElement> {
-  innerClassName?: string
+  innerClassName?: string,
 }
 
 export default function Card(props: CardProps) {

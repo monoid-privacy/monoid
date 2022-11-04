@@ -3,17 +3,21 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "MonoidProtocol",
   "type": "object",
+  "properties": {
+    "MonoidMessage": {
+      "type": "object",
+      "$ref": "#/definitions/MonoidMessage"
+    }
+  },
   "definitions": {
     "MonoidQuery": {
       "type": "object",
       "properties": {
         "identifiers": {
           "type": "array",
-          "items": [
-            {
-              "$ref": "#/definitions/MonoidQueryIdentifier"
-            }
-          ]
+          "items": {
+            "$ref": "#/definitions/MonoidQueryIdentifier"
+          }
         }
       }
     },
@@ -105,13 +109,29 @@
       "properties": {
         "schemas": {
           "type": "array",
-          "items": [
-            {
-              "$ref": "#/definitions/MonoidSchema"
-            }
-          ]
+          "items": {
+            "$ref": "#/definitions/MonoidSchema"
+          }
         }
       }
+    },
+    "MonoidValidateMessage": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "SUCCESS",
+            "FAILURE"
+          ]
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status"
+      ]
     },
     "MonoidMessage": {
       "type": "object",
@@ -120,7 +140,9 @@
           "type": "string",
           "enum": [
             "SCHEMA",
-            "RECORD"
+            "RECORD",
+            "SPEC",
+            "VALIDATE"
           ]
         },
         "record": {
@@ -128,8 +150,17 @@
         },
         "schema": {
           "$ref": "#/definitions/MonoidSchemasMessage"
+        },
+        "spec": {
+          "$ref": "#/definitions/MonoidSiloSpec"
+        },
+        "validate": {
+          "$ref": "#/definitions/MonoidValidateMessage"
         }
-      }
+      },
+      "required": [
+        "type"
+      ]
     }
   }
 }

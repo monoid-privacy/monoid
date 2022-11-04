@@ -3,41 +3,51 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
     "properties": {
-      "username": {
+      "hostname": {
         "type": "string",
-        "title": "Username",
-        "description": "The username for the databse."
+        "title": "Hostname",
+        "order": 0,
+        "description": "The hostname of the database"
+      },
+      "port": {
+        "type": "number",
+        "title": "Port",
+        "order": 1,
+        "description": "The port of the database"
       },
       "database": {
         "type": "string",
         "title": "Default Database",
         "description": "The default database to connect to. Monoid can scan for all databases on your instance, but this is the one the system will connect to initially.",
-        "default": "postgres"
+        "default": "postgres",
+        "order": 2
       },
-      "scan_all": {
-        "type": "boolean",
-        "title": "Scan All DBs",
-        "description": "If true, Monoid will scan all databases.",
-        "default": true
-      },
-      "hostname": {
+      "username": {
         "type": "string",
-        "description": "The hostname of the database"
-      },
-      "port": {
-        "type": "number",
-        "description": "The port of the database"
+        "title": "Username",
+        "description": "The username for the databse.",
+        "order": 3
       },
       "password": {
         "type": "string",
         "secret": true,
         "title": "Password",
-        "description": "The password for the database"
+        "description": "The password for the database",
+        "order": 4
+      },
+      "scan_all": {
+        "type": "boolean",
+        "title": "Scan All DBs",
+        "description": "If true, Monoid will scan all databases.",
+        "default": true,
+        "order": 5
       },
       "ssl": {
+        "title": "Connect using SSL",
         "type": "boolean",
         "default": false,
-        "description": "Connect using SSL."
+        "description": "Connect using SSL.",
+        "order": 6
       },
       "schemas": {
         "title": "Schemas",
@@ -50,7 +60,8 @@
         "uniqueItems": true,
         "default": [
           "public"
-        ]
+        ],
+        "order": 7
       },
       "exclude_dbs": {
         "title": "Exclude DBs",
@@ -61,7 +72,8 @@
         },
         "minItems": 0,
         "uniqueItems": true,
-        "default": []
+        "default": [],
+        "order": 8
       }
     },
     "required": [

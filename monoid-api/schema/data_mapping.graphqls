@@ -2,98 +2,101 @@
 #
 # https://gqlgen.com/getting-started/
 
-type DataSource { 
-    id: ID! 
-    siloDefinition: SiloDefinition! 
+type DataSource {
+    id: ID!
+    siloDefinition: SiloDefinition!
     properties: [Property!]
-    description: String 
+    description: String
     schema: String!
 }
 
-type Property { 
-    id: ID! 
+type Property {
+    id: ID!
     categories: [Category!]
-    dataSource: DataSource! 
+    dataSource: DataSource!
     purposes: [Purpose!]
 }
 
-type SiloDefinition { 
-    id: ID! 
-    description: String 
+type SiloDefinition {
+    id: ID!
+    name: String!
+    description: String
     siloSpecification: SiloSpecification
     dataSources: [DataSource!]
     subjects: [Subject!]
 }
 
 type SiloSpecification {
-    id: ID! 
-    name: String! 
+    id: ID!
+    name: String!
     logoUrl: String
     dockerImage: String!
     schema: String
 }
 
 type Subject {
-    id: ID! 
+    id: ID!
     name: String!
 }
 
-type Category { 
-    id: ID! 
-    name: String! 
-}
-
-type Purpose { 
-    id: ID! 
+type Category {
+    id: ID!
     name: String!
 }
 
-input CreateSiloDefinitionInput { 
-    description: String 
+type Purpose {
+    id: ID!
+    name: String!
+}
+
+input CreateSiloDefinitionInput {
+    description: String
     siloSpecificationID: ID!
-    workspaceID: ID! 
+    workspaceID: ID!
     subjectIDs: [ID!]
+    siloData: String
+    name: String!
 }
 
-input CreateSiloSpecificationInput { 
-    name: String! 
+input CreateSiloSpecificationInput {
+    name: String!
     workspaceID: ID!
     logoURL: String
-    dockerImage: String! 
-    schema: String 
+    dockerImage: String!
+    schema: String
 }
 
 input CreateDataSourceInput {
-    siloDefinitionID: ID! 
+    siloDefinitionID: ID!
     description: String
     schema: String!
     propertyIDs: [ID!]
 }
 
-input UpdateSiloDefinitionInput { 
-    id: ID! 
-    description: String 
+input UpdateSiloDefinitionInput {
+    id: ID!
+    description: String
     siloSpecificationID: ID
     subjectIDs: [ID!]
 }
 
 input UpdateSiloSpecificationInput {
-    id: ID! 
-    dockerImage: String 
+    id: ID!
+    dockerImage: String
     schema: String
     name: String
     logoUrl: String
 }
 
 input UpdateDataSourceInput {
-    id: ID! 
-    description: String 
+    id: ID!
+    description: String
     schema: String
 }
 
 input CreatePropertyInput {
     categoryIDs: [ID!]
-    dataSourceID: ID! 
+    dataSourceID: ID!
     purposeIDs: [ID!]
 }
 
@@ -104,18 +107,18 @@ input UpdatePropertyInput {
 }
 
 input CreatePurposeInput {
-    name: String! 
-    workspaceID: ID! 
+    name: String!
+    workspaceID: ID!
 }
 
 input CreateCategoryInput {
-    name: String! 
-    workspaceID: ID! 
+    name: String!
+    workspaceID: ID!
 }
 
 input CreateSubjectInput {
-    name: String! 
-    workspaceID: ID! 
+    name: String!
+    workspaceID: ID!
 }
 
 input UpdatePurposeInput {
@@ -133,7 +136,7 @@ input UpdateSubjectInput {
 extend type Query {
     siloDefinition(id: ID!): SiloDefinition
     dataSource(id: ID!): DataSource
-    siloSpecification(id: ID!): SiloSpecification 
+    siloSpecification(id: ID!): SiloSpecification
     siloSpecifications: [SiloSpecification!]
     purposes: [Purpose!]
     categories: [Category!]
@@ -144,26 +147,26 @@ extend type Query {
     property(id: ID!): Property
 }
 
-extend type Mutation { 
+extend type Mutation {
     createSiloDefinition(input: CreateSiloDefinitionInput): SiloDefinition
     createDataSource(input: CreateDataSourceInput): DataSource
     createSiloSpecification(input: CreateSiloSpecificationInput): SiloSpecification
     createProperty(input: CreatePropertyInput): Property
-    createPurpose(input: CreatePurposeInput): Purpose 
+    createPurpose(input: CreatePurposeInput): Purpose
     createCategory(input: CreateCategoryInput): Category
     createSubject(input: CreateSubjectInput): Subject
 
     updateSiloDefinition(input: UpdateSiloDefinitionInput): SiloDefinition
-    updateDataSource(input: UpdateDataSourceInput): DataSource 
+    updateDataSource(input: UpdateDataSourceInput): DataSource
     updateSiloSpecification(input: UpdateSiloSpecificationInput): SiloSpecification
     updateProperty(input: UpdatePropertyInput): Property
-    updatePurpose(input: UpdatePurposeInput): Purpose 
+    updatePurpose(input: UpdatePurposeInput): Purpose
     updateCategory(input: UpdateCategoryInput): Category
     updateSubject(input: UpdateSubjectInput): Subject
 
-    deleteSiloDefinition(id: ID!): ID 
-    deleteDataSource(id: ID!): ID 
-    deleteSiloSpecification(id: ID!): ID 
+    deleteSiloDefinition(id: ID!): ID
+    deleteDataSource(id: ID!): ID
+    deleteSiloSpecification(id: ID!): ID
     deleteProperty(id: ID!): ID
     deletePurpose(id: ID!): ID
     deleteCategory(id: ID!): ID

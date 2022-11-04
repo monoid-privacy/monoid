@@ -3,14 +3,16 @@ package config
 import (
 	"net/http"
 
+	"go.temporal.io/sdk/client"
 	"gorm.io/gorm"
 )
 
 type BaseConfig struct {
-	DB          *gorm.DB
-	TokenSecret string
-	ApiURL      string
-	WebURL      string
+	DB             *gorm.DB
+	TokenSecret    string
+	ApiURL         string
+	WebURL         string
+	TemporalClient client.Client
 }
 
 func (c BaseConfig) PreFlightHandler(next http.Handler) http.Handler {

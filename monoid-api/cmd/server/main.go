@@ -12,6 +12,7 @@ import (
 	"github.com/brist-ai/monoid/model"
 	"github.com/brist-ai/monoid/resolver"
 	"github.com/gorilla/mux"
+	"go.temporal.io/sdk/client"
 )
 
 const defaultPort = "8080"
@@ -32,6 +33,14 @@ func main() {
 		model.Subject{},
 		model.Property{},
 	})
+
+	c, err := client.Dial(client.Options{})
+	if err != nil {
+		log.Fatalln("unable to create Temporal client", err)
+	}
+	defer c.Close()
+
+	conf.TemporalClient = c
 
 	router := mux.NewRouter()
 

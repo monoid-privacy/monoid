@@ -43,7 +43,12 @@ func main() {
 		Conf: &conf,
 	}
 
+	mwf := workflow.Workflow{
+		Conf: &conf,
+	}
+
 	w.RegisterActivity(a.ValidateDataSiloDef)
+	w.RegisterWorkflow(mwf.ValidateDSWorkflow)
 
 	// Start listening to the Task Queue
 	err = w.Run(worker.InterruptCh())

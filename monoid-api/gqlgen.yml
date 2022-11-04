@@ -61,3 +61,7 @@ models:
       - github.com/99designs/gqlgen/graphql.Int
       - github.com/99designs/gqlgen/graphql.Int64
       - github.com/99designs/gqlgen/graphql.Int32
+  Workspace:
+    fields:
+      settings:
+        resolver: true # force a resolver to be generated

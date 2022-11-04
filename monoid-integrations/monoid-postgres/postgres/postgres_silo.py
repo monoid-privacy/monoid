@@ -1,6 +1,7 @@
 from typing import Any, Mapping, List
 from monoid_pydev.silos import AbstractSilo
 from monoid_pydev.silos.data_store import DataStore
+from monoid_pydev.models import MonoidValidateMessage, Status
 import psycopg
 
 from postgres.postgres_table import PostgresTableDataStore
@@ -48,3 +49,17 @@ class PostgresSilo(AbstractSilo):
     def data_stores(self, conf: Mapping[str, Any]) -> List[DataStore]:
         conn = self._get_connection(conf)
         return self._get_database_table_stores(conf["database"], conn)
+
+    def validate(self, conf: Mapping[str, Any]) -> MonoidValidateMessage:
+        try:
+            conn = self._get_connection(conf)
+        except psycopg.OperationalError as e:
+            return MonoidValidateMessage(
+                status=Status.FAILURE,
+                message=e.pgconn.error_message.decode('utf-8')
+            )
+
+        conn.close()
+        return MonoidValidateMessage(
+            status=Status.SUCCESS
+        )

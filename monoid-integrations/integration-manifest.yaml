@@ -1,0 +1,6 @@
+- name: Postgres
+  id: d454d06e-4a7d-47d2-b8af-b3c877eceed5
+  documentationUrl: https://docs.monoid.co
+  dockerImage: monoid/monoid-postgres
+  dockerTag: 0.0.1
+  logo: postgres.svg

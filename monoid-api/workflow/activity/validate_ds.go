@@ -2,17 +2,44 @@ package activity
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/brist-ai/monoid/model"
-	"github.com/docker/docker/client"
+	"github.com/brist-ai/monoid/monoidprotocol"
+	"github.com/brist-ai/monoid/monoidprotocol/docker"
+	"go.temporal.io/sdk/activity"
 )
 
-func (a *Activity) ValidateDataSiloDef(ctx context.Context, dataSourceDef model.SiloDefinition) error {
-	_, err := client.NewClientWithOpts(client.FromEnv)
+func (a *Activity) ValidateDataSiloDef(ctx context.Context, dataSourceDef model.SiloDefinition) (*monoidprotocol.MonoidValidateMessage, error) {
+	logger := activity.GetLogger(ctx)
 
+	logger.Info("Validating silo def")
+
+	spec := dataSourceDef.SiloSpecification
+	mp, err := docker.NewDockerMP(spec.DockerImage, spec.DockerImage)
 	if err != nil {
-		return err
+		logger.Error("Error creating docker client: %v", err)
+		return nil, err
 	}
 
-	return nil
+	defer mp.Teardown(ctx)
+
+	if err := mp.InitConn(ctx); err != nil {
+		logger.Error("Error creating docker connection: %v", err)
+		return nil, err
+	}
+
+	conf := map[string]interface{}{}
+	json.Unmarshal([]byte(dataSourceDef.Config), &conf)
+
+	logger.Info("validating")
+
+	validate, err := mp.Validate(ctx, conf)
+
+	if err != nil {
+		logger.Error("Error running validate: %v", err)
+		return nil, err
+	}
+
+	return validate, nil
 }

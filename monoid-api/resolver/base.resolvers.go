@@ -82,11 +82,20 @@ func (r *queryResolver) Workspace(ctx context.Context, id string) (*model.Worksp
 	return findObjectByID[model.Workspace](id, r.Conf.DB, "Error finding workspace.")
 }
 
+// Settings is the resolver for the settings field.
+func (r *workspaceResolver) Settings(ctx context.Context, obj *model.Workspace) (string, error) {
+	panic(fmt.Errorf("not implemented: Settings - settings"))
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
+// Workspace returns generated.WorkspaceResolver implementation.
+func (r *Resolver) Workspace() generated.WorkspaceResolver { return &workspaceResolver{r} }
+
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+type workspaceResolver struct{ *Resolver }

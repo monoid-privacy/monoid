@@ -30,6 +30,8 @@ type CreateSiloDefinitionInput struct {
 	SiloSpecificationID string   `json:"siloSpecificationID"`
 	WorkspaceID         string   `json:"workspaceID"`
 	SubjectIDs          []string `json:"subjectIDs"`
+	SiloData            *string  `json:"siloData"`
+	Name                string   `json:"name"`
 }
 
 type CreateSiloSpecificationInput struct {

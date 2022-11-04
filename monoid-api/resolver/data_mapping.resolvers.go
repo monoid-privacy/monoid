@@ -8,31 +8,71 @@ import (
 	"fmt"
 
 	"github.com/brist-ai/monoid/model"
+	"github.com/brist-ai/monoid/monoidprotocol"
+	"github.com/brist-ai/monoid/workflow"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
+	"go.temporal.io/sdk/client"
 )
 
 // CreateSiloDefinition is the resolver for the createSiloDefinition field.
 func (r *mutationResolver) CreateSiloDefinition(ctx context.Context, input *model.CreateSiloDefinitionInput) (*model.SiloDefinition, error) {
 	siloDefinition := model.SiloDefinition{
 		ID:                  uuid.NewString(),
+		Name:                input.Name,
 		WorkspaceID:         input.WorkspaceID,
 		Description:         input.Description,
 		SiloSpecificationID: input.SiloSpecificationID,
 	}
 
-	if err := r.Conf.DB.Create(&siloDefinition).Error; err != nil {
-		return nil, handleError(err, "Error creating silo definition.")
+	if input.SiloData != nil {
+		siloDefinition.Config = model.SecretString(*input.SiloData)
 	}
 
-	subjects := []model.Subject{}
-
-	if err := r.Conf.DB.Where("id IN ?", input.SubjectIDs).Find(&subjects).Error; err != nil {
-		return nil, handleError(err, "Error finding subjects.")
+	siloSpec := model.SiloSpecification{}
+	if err := r.Conf.DB.Where("id = ?", siloDefinition.SiloSpecificationID).First(&siloSpec).Error; err != nil {
+		return nil, handleError(err, "Silo specification doesn't exist.")
 	}
 
-	if err := r.Conf.DB.Model(&siloDefinition).Association("Subjects").Append(subjects); err != nil {
-		return nil, handleError(err, "Error creating subjects.")
+	siloDefinition.SiloSpecification = siloSpec
+
+	options := client.StartWorkflowOptions{
+		ID:        fmt.Sprintf("ws-%s-silo-%s-%s", input.WorkspaceID, siloSpec.DockerImage, siloDefinition.ID),
+		TaskQueue: workflow.DockerRunnerQueue,
 	}
+
+	// Start the Workflow
+	sf := workflow.Workflow{
+		Conf: r.Conf,
+	}
+
+	we, err := r.Conf.TemporalClient.ExecuteWorkflow(ctx, options, sf.ValidateDSWorkflow, siloDefinition)
+	if err != nil {
+		log.Err(err).Msg("unable to complete Workflow")
+	}
+
+	// Get the results
+	var res monoidprotocol.MonoidValidateMessage
+	err = we.Get(ctx, &res)
+	if err != nil {
+		log.Err(err).Msg("unable to get Workflow result")
+	}
+
+	fmt.Println(res)
+
+	// if err := r.Conf.DB.Create(&siloDefinition).Error; err != nil {
+	// 	return nil, handleError(err, "Error creating silo definition.")
+	// }
+
+	// subjects := []model.Subject{}
+
+	// if err := r.Conf.DB.Where("id IN ?", input.SubjectIDs).Find(&subjects).Error; err != nil {
+	// 	return nil, handleError(err, "Error finding subjects.")
+	// }
+
+	// if err := r.Conf.DB.Model(&siloDefinition).Association("Subjects").Append(subjects); err != nil {
+	// 	return nil, handleError(err, "Error creating subjects.")
+	// }
 
 	return &siloDefinition, nil
 }
@@ -69,7 +109,7 @@ func (r *mutationResolver) CreateSiloSpecification(ctx context.Context, input *m
 		ID:          uuid.NewString(),
 		Name:        input.Name,
 		LogoURL:     input.LogoURL,
-		WorkspaceID: input.WorkspaceID,
+		WorkspaceID: &input.WorkspaceID,
 		DockerImage: input.DockerImage,
 		Schema:      input.Schema,
 	}
