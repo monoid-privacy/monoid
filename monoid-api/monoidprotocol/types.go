@@ -33,4 +33,5 @@ type MonoidProtocol interface {
 	) (*MonoidSchemasMessage, error)
 
 	Teardown(ctx context.Context) error
+	Schema(ctx context.Context, config map[string]interface{}) (*MonoidSchemasMessage, error)
 }

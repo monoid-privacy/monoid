@@ -57,6 +57,10 @@ func (dp *DockerMonoidProtocol) InitConn(ctx context.Context) error {
 	return nil
 }
 
+func (dp *DockerMonoidProtocol) Schema(ctx context.Context, config map[string]interface{}) {
+	panic(fmt.Errorf("not implemented: DockerMonoidProtocol - Schema"))
+}
+
 func (dp *DockerMonoidProtocol) Spec(ctx context.Context) (*monoidprotocol.MonoidSiloSpec, error) {
 	msg, err := dp.runCmdStaticLog(
 		ctx,

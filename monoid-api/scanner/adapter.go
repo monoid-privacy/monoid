@@ -1,12 +1,14 @@
 package scanner
 
+import "github.com/brist-ai/monoid/monoidprotocol"
+
 type table struct {
 	Schema string
 	Name   string
 }
 
 type Adapter interface {
-	Init(url string) error
+	Init(spec *monoidprotocol.MonoidProtocol) error
 	FetchTables() ([]table, error)
 	FetchTableData(object table, limit int) (*tableData, error)
 	Scan(scanOpts ScanOpts) ([]ruleMatch, error)
