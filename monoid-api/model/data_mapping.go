@@ -1,5 +1,7 @@
 package model
 
+// SiloSpecification is the information about all silos that have
+// integrations with monoid
 type SiloSpecification struct {
 	ID              string
 	Name            string
@@ -12,6 +14,7 @@ type SiloSpecification struct {
 	SiloDefinitions []SiloDefinition
 }
 
+// SiloDefinition is an instantiation of a silo
 type SiloDefinition struct {
 	ID                  string
 	Name                string

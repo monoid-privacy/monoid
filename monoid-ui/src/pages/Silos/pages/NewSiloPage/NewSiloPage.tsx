@@ -100,8 +100,6 @@ export default function NewSiloPage() {
             <Button
               className="justify-center"
               onClick={() => {
-                console.log(silo.siloData);
-
                 createSilo({
                   variables: {
                     input: {

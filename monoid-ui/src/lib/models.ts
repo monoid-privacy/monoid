@@ -4,3 +4,9 @@ export interface SiloSpec {
   name: string
   schema: string
 }
+
+export interface SiloDefinition {
+  id: string,
+  name: string,
+  siloSpecification: SiloSpec
+}

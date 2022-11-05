@@ -38,6 +38,7 @@ type Config struct {
 type ResolverRoot interface {
 	Mutation() MutationResolver
 	Query() QueryResolver
+	SiloDefinition() SiloDefinitionResolver
 	Workspace() WorkspaceResolver
 }
 
@@ -186,7 +187,11 @@ type QueryResolver interface {
 	Subject(ctx context.Context, id string) (*model.Subject, error)
 	Property(ctx context.Context, id string) (*model.Property, error)
 }
+type SiloDefinitionResolver interface {
+	SiloSpecification(ctx context.Context, obj *model.SiloDefinition) (*model.SiloSpecification, error)
+}
 type WorkspaceResolver interface {
+	SiloDefinitions(ctx context.Context, obj *model.Workspace) ([]*model.SiloDefinition, error)
 	Settings(ctx context.Context, obj *model.Workspace) (string, error)
 }
 
@@ -4646,7 +4651,7 @@ func (ec *executionContext) _SiloDefinition_siloSpecification(ctx context.Contex
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.SiloSpecification, nil
+		return ec.resolvers.SiloDefinition().SiloSpecification(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4655,17 +4660,17 @@ func (ec *executionContext) _SiloDefinition_siloSpecification(ctx context.Contex
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(model.SiloSpecification)
+	res := resTmp.(*model.SiloSpecification)
 	fc.Result = res
-	return ec.marshalOSiloSpecification2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloSpecification(ctx, field.Selections, res)
+	return ec.marshalOSiloSpecification2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloSpecification(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SiloDefinition_siloSpecification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SiloDefinition",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -5239,7 +5244,7 @@ func (ec *executionContext) _Workspace_siloDefinitions(ctx context.Context, fiel
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.SiloDefinitions, nil
+		return ec.resolvers.Workspace().SiloDefinitions(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5248,17 +5253,17 @@ func (ec *executionContext) _Workspace_siloDefinitions(ctx context.Context, fiel
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]model.SiloDefinition)
+	res := resTmp.([]*model.SiloDefinition)
 	fc.Result = res
-	return ec.marshalOSiloDefinition2ᚕgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloDefinitionᚄ(ctx, field.Selections, res)
+	return ec.marshalOSiloDefinition2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloDefinitionᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Workspace_siloDefinitions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Workspace",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -8582,23 +8587,36 @@ func (ec *executionContext) _SiloDefinition(ctx context.Context, sel ast.Selecti
 			out.Values[i] = ec._SiloDefinition_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "name":
 
 			out.Values[i] = ec._SiloDefinition_name(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "description":
 
 			out.Values[i] = ec._SiloDefinition_description(ctx, field, obj)
 
 		case "siloSpecification":
+			field := field
 
-			out.Values[i] = ec._SiloDefinition_siloSpecification(ctx, field, obj)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._SiloDefinition_siloSpecification(ctx, field, obj)
+				return res
+			}
 
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "dataSources":
 
 			out.Values[i] = ec._SiloDefinition_dataSources(ctx, field, obj)
@@ -8729,9 +8747,22 @@ func (ec *executionContext) _Workspace(ctx context.Context, sel ast.SelectionSet
 			out.Values[i] = ec._Workspace_siloSpecifications(ctx, field, obj)
 
 		case "siloDefinitions":
+			field := field
 
-			out.Values[i] = ec._Workspace_siloDefinitions(ctx, field, obj)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Workspace_siloDefinitions(ctx, field, obj)
+				return res
+			}
 
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "settings":
 			field := field
 
@@ -9172,6 +9203,16 @@ func (ec *executionContext) marshalNPurpose2ᚖgithubᚗcomᚋbristᚑaiᚋmonoi
 
 func (ec *executionContext) marshalNSiloDefinition2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloDefinition(ctx context.Context, sel ast.SelectionSet, v model.SiloDefinition) graphql.Marshaler {
 	return ec._SiloDefinition(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSiloDefinition2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloDefinition(ctx context.Context, sel ast.SelectionSet, v *model.SiloDefinition) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SiloDefinition(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNSiloSpecification2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloSpecification(ctx context.Context, sel ast.SelectionSet, v model.SiloSpecification) graphql.Marshaler {
@@ -9944,7 +9985,7 @@ func (ec *executionContext) marshalOPurpose2ᚖgithubᚗcomᚋbristᚑaiᚋmonoi
 	return ec._Purpose(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOSiloDefinition2ᚕgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloDefinitionᚄ(ctx context.Context, sel ast.SelectionSet, v []model.SiloDefinition) graphql.Marshaler {
+func (ec *executionContext) marshalOSiloDefinition2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloDefinitionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SiloDefinition) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -9971,7 +10012,7 @@ func (ec *executionContext) marshalOSiloDefinition2ᚕgithubᚗcomᚋbristᚑai�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSiloDefinition2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloDefinition(ctx, sel, v[i])
+			ret[i] = ec.marshalNSiloDefinition2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloDefinition(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -9996,10 +10037,6 @@ func (ec *executionContext) marshalOSiloDefinition2ᚖgithubᚗcomᚋbristᚑai�
 		return graphql.Null
 	}
 	return ec._SiloDefinition(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalOSiloSpecification2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloSpecification(ctx context.Context, sel ast.SelectionSet, v model.SiloSpecification) graphql.Marshaler {
-	return ec._SiloSpecification(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalOSiloSpecification2ᚕgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloSpecificationᚄ(ctx context.Context, sel ast.SelectionSet, v []model.SiloSpecification) graphql.Marshaler {

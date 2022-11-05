@@ -65,3 +65,9 @@ models:
     fields:
       settings:
         resolver: true # force a resolver to be generated
+      siloDefinitions:
+        resolver: true
+  SiloDefinition:
+    fields:
+      siloSpecification:
+        resolver: true
