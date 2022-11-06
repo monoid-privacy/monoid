@@ -48,7 +48,10 @@ func main() {
 	}
 
 	w.RegisterActivity(a.ValidateDataSiloDef)
+	w.RegisterActivity(a.DetectDataSources)
+
 	w.RegisterWorkflow(mwf.ValidateDSWorkflow)
+	w.RegisterWorkflow(mwf.DetectDSWorkflow)
 
 	// Start listening to the Task Queue
 	err = w.Run(worker.InterruptCh())

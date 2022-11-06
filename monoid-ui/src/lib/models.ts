@@ -6,7 +6,8 @@ export interface SiloSpec {
 }
 
 export interface SiloDefinition {
-  id: string,
-  name: string,
-  siloSpecification: SiloSpec
+  id?: string,
+  name?: string,
+  siloSpecification?: SiloSpec,
+  siloConfig?: object
 }

@@ -10,12 +10,12 @@ import (
 	"go.temporal.io/sdk/activity"
 )
 
-func (a *Activity) ValidateDataSiloDef(ctx context.Context, dataSourceDef model.SiloDefinition) (*monoidprotocol.MonoidValidateMessage, error) {
+func (a *Activity) ValidateDataSiloDef(ctx context.Context, dataSiloDef model.SiloDefinition) (*monoidprotocol.MonoidValidateMessage, error) {
 	logger := activity.GetLogger(ctx)
 
 	logger.Info("Validating silo def")
 
-	spec := dataSourceDef.SiloSpecification
+	spec := dataSiloDef.SiloSpecification
 	mp, err := docker.NewDockerMP(spec.DockerImage, spec.DockerTag)
 	if err != nil {
 		logger.Error("Error creating docker client: %v", err)
@@ -30,7 +30,7 @@ func (a *Activity) ValidateDataSiloDef(ctx context.Context, dataSourceDef model.
 	}
 
 	conf := map[string]interface{}{}
-	json.Unmarshal([]byte(dataSourceDef.Config), &conf)
+	json.Unmarshal([]byte(dataSiloDef.Config), &conf)
 
 	logger.Info("validating")
 

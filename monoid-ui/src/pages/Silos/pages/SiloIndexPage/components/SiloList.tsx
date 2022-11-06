@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { gql, useQuery } from '@apollo/client';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import AlertRegion from '../../../../../components/AlertRegion';
 import Spinner from '../../../../../components/Spinner';
 import Table from '../../../../../components/Table';
@@ -33,6 +33,7 @@ export default function SiloList() {
       id,
     },
   });
+  const navigate = useNavigate();
 
   if (error) {
     return (
@@ -61,7 +62,10 @@ export default function SiloList() {
         },
       ]}
       tableRows={data?.workspace.siloDefinitions.map((sd) => ({
-        key: sd.id,
+        key: sd.id!,
+        onClick: () => {
+          navigate(sd.id!);
+        },
         columns: [
           {
             key: 'name',
@@ -71,16 +75,16 @@ export default function SiloList() {
             key: 'silo_type',
             content: (
               <div className="flex">
-                {sd.siloSpecification.logoUrl
+                {sd.siloSpecification!.logoUrl
                   && (
                     <img
-                      src={sd.siloSpecification.logoUrl}
+                      src={sd.siloSpecification!.logoUrl}
                       alt={
-                        `${sd.siloSpecification.name} Logo`
+                        `${sd.siloSpecification!.name} Logo`
                       }
                     />
                   )}
-                <div>{sd.siloSpecification.name}</div>
+                <div>{sd.siloSpecification!.name}</div>
               </div>
             ),
           },

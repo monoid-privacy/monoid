@@ -6,7 +6,6 @@ type Workspace {
   id: ID!
   name: String
   siloSpecifications: [SiloSpecification!]
-  siloDefinitions: [SiloDefinition!]
   settings: String!
   subjects: [Subject!]
   purposes: [Purpose!]

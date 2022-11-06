@@ -82,16 +82,6 @@ func (r *queryResolver) Workspace(ctx context.Context, id string) (*model.Worksp
 	return findObjectByID[model.Workspace](id, r.Conf.DB, "Error finding workspace.")
 }
 
-// SiloDefinitions is the resolver for the siloDefinitions field.
-func (r *workspaceResolver) SiloDefinitions(ctx context.Context, obj *model.Workspace) ([]*model.SiloDefinition, error) {
-	defs := []*model.SiloDefinition{}
-	if err := r.Conf.DB.Model(obj).Association("SiloDefinitions").Find(&defs); err != nil {
-		return nil, handleError(err, "Error getting definitions.")
-	}
-
-	return defs, nil
-}
-
 // Settings is the resolver for the settings field.
 func (r *workspaceResolver) Settings(ctx context.Context, obj *model.Workspace) (string, error) {
 	panic(fmt.Errorf("not implemented: Settings - settings"))

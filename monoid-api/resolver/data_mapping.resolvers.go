@@ -7,84 +7,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/brist-ai/monoid/generated"
 	"github.com/brist-ai/monoid/model"
-	"github.com/brist-ai/monoid/monoidprotocol"
 	"github.com/brist-ai/monoid/workflow"
 	"github.com/google/uuid"
-	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.temporal.io/sdk/client"
 )
-
-// CreateSiloDefinition is the resolver for the createSiloDefinition field.
-func (r *mutationResolver) CreateSiloDefinition(ctx context.Context, input *model.CreateSiloDefinitionInput) (*model.SiloDefinition, error) {
-	siloDefinition := model.SiloDefinition{
-		ID:                  uuid.NewString(),
-		Name:                input.Name,
-		WorkspaceID:         input.WorkspaceID,
-		Description:         input.Description,
-		SiloSpecificationID: input.SiloSpecificationID,
-	}
-
-	if input.SiloData != nil {
-		siloDefinition.Config = model.SecretString(*input.SiloData)
-	}
-
-	siloSpec := model.SiloSpecification{}
-	if err := r.Conf.DB.Where("id = ?", siloDefinition.SiloSpecificationID).First(&siloSpec).Error; err != nil {
-		return nil, handleError(err, "Silo specification doesn't exist.")
-	}
-
-	siloDefinition.SiloSpecification = siloSpec
-
-	options := client.StartWorkflowOptions{
-		ID:        fmt.Sprintf("ws-%s-silo-%s-%s", input.WorkspaceID, siloSpec.DockerImage, siloDefinition.ID),
-		TaskQueue: workflow.DockerRunnerQueue,
-	}
-
-	// Start the Workflow
-	sf := workflow.Workflow{
-		Conf: r.Conf,
-	}
-
-	we, err := r.Conf.TemporalClient.ExecuteWorkflow(ctx, options, sf.ValidateDSWorkflow, siloDefinition)
-	if err != nil {
-		return nil, handleError(err, "An error occurred while validating connection information.")
-	}
-
-	// Get the results
-	var res monoidprotocol.MonoidValidateMessage
-	err = we.Get(ctx, &res)
-	if err != nil {
-		return nil, handleError(err, "An error occurred while validating connection information.")
-	}
-
-	if res.Status == monoidprotocol.MonoidValidateMessageStatusFAILURE {
-		msg := "An error occurred while validating connection information."
-
-		if res.Message != nil {
-			msg = *res.Message
-		}
-
-		return nil, gqlerror.Errorf(msg)
-	}
-
-	if err := r.Conf.DB.Create(&siloDefinition).Error; err != nil {
-		return nil, handleError(err, "Error creating silo definition.")
-	}
-
-	subjects := []model.Subject{}
-
-	if err := r.Conf.DB.Where("id IN ?", input.SubjectIDs).Find(&subjects).Error; err != nil {
-		return nil, handleError(err, "Error finding subjects.")
-	}
-
-	if err := r.Conf.DB.Model(&siloDefinition).Association("Subjects").Append(subjects); err != nil {
-		return nil, handleError(err, "Error creating subjects.")
-	}
-
-	return &siloDefinition, nil
-}
 
 // CreateDataSource is the resolver for the createDataSource field.
 func (r *mutationResolver) CreateDataSource(ctx context.Context, input *model.CreateDataSourceInput) (*model.DataSource, error) {
@@ -177,37 +104,6 @@ func (r *mutationResolver) CreateCategory(ctx context.Context, input *model.Crea
 // CreateSubject is the resolver for the createSubject field.
 func (r *mutationResolver) CreateSubject(ctx context.Context, input *model.CreateSubjectInput) (*model.Subject, error) {
 	panic(fmt.Errorf("not implemented: CreateSubject - createSubject"))
-}
-
-// UpdateSiloDefinition is the resolver for the updateSiloDefinition field.
-func (r *mutationResolver) UpdateSiloDefinition(ctx context.Context, input *model.UpdateSiloDefinitionInput) (*model.SiloDefinition, error) {
-	siloDefinition := model.SiloDefinition{}
-
-	if err := r.Conf.DB.Where("id = ?", input.ID).First(&siloDefinition).Error; err != nil {
-		return nil, handleError(err, "Error finding silo definition.")
-	}
-
-	siloDefinition.Description = input.Description
-
-	if input.SiloSpecificationID != nil {
-		siloDefinition.SiloSpecificationID = *input.SiloSpecificationID
-	}
-
-	subjects := []model.Subject{}
-
-	if err := r.Conf.DB.Where("id IN ?", input.SubjectIDs).Find(subjects).Error; err != nil {
-		return nil, handleError(err, "Error updating silo definition.")
-	}
-
-	if err := r.Conf.DB.Model(&siloDefinition).Association("Subjects").Replace(subjects); err != nil {
-		return nil, handleError(err, "Error updating silo definition.")
-	}
-
-	if err := r.Conf.DB.Save(&siloDefinition).Error; err != nil {
-		return nil, handleError(err, "Error updating silo definition.")
-	}
-
-	return &siloDefinition, nil
 }
 
 // UpdateDataSource is the resolver for the updateDataSource field.
@@ -310,23 +206,6 @@ func (r *mutationResolver) UpdateSubject(ctx context.Context, input *model.Updat
 	panic(fmt.Errorf("not implemented: UpdateSubject - updateSubject"))
 }
 
-// DeleteSiloDefinition is the resolver for the deleteSiloDefinition field.
-func (r *mutationResolver) DeleteSiloDefinition(ctx context.Context, id string) (*string, error) {
-	siloDefinition := &model.SiloDefinition{}
-
-	if err := r.Conf.DB.Where("id = ?", id).Preload("Subjects").Preload("DataSources").First(siloDefinition).Error; err != nil {
-		return nil, handleError(err, "Error finding silo definition.")
-	}
-
-	if err := r.Conf.DB.Delete(siloDefinition).Error; err != nil {
-		return nil, handleError(err, "Error deleting silo definition.")
-	}
-
-	// TODO: Check that deletes properly cascade to subjects (m2m) and datasources (12m)
-
-	return &id, nil
-}
-
 // DeleteDataSource is the resolver for the deleteDataSource field.
 func (r *mutationResolver) DeleteDataSource(ctx context.Context, id string) (*string, error) {
 	dataSource := &model.DataSource{}
@@ -381,9 +260,31 @@ func (r *mutationResolver) DeleteSubject(ctx context.Context, id string) (*strin
 	return DeleteObjectByID[model.Subject](id, r.Conf.DB, "Error deleting subject.")
 }
 
-// SiloDefinition is the resolver for the siloDefinition field.
-func (r *queryResolver) SiloDefinition(ctx context.Context, id string) (*model.SiloDefinition, error) {
-	return findObjectByID[model.SiloDefinition](id, r.Conf.DB, "Error finding silo definition.")
+// DetectSiloSources is the resolver for the detectSiloSources field.
+func (r *mutationResolver) DetectSiloSources(ctx context.Context, workspaceID string, id string) (*string, error) {
+	silo := model.SiloDefinition{}
+	if err := r.Conf.DB.Where("id = ?", id).Where(
+		"workspace_id = ?", workspaceID,
+	).Preload("SiloSpecification").First(&silo).Error; err != nil {
+		return nil, handleError(err, "Error finding silo.")
+	}
+
+	options := client.StartWorkflowOptions{
+		ID:        fmt.Sprintf("detect/%s/%s", silo.ID, uuid.NewString()),
+		TaskQueue: workflow.DockerRunnerQueue,
+	}
+
+	// Start the Workflow
+	sf := workflow.Workflow{
+		Conf: r.Conf,
+	}
+
+	_, err := r.Conf.TemporalClient.ExecuteWorkflow(context.Background(), options, sf.DetectDSWorkflow, silo)
+	if err != nil {
+		return nil, err
+	}
+
+	return &silo.ID, nil
 }
 
 // DataSource is the resolver for the dataSource field.
@@ -436,22 +337,17 @@ func (r *queryResolver) Property(ctx context.Context, id string) (*model.Propert
 	return findObjectByID[model.Property](id, r.Conf.DB, "Error finding property.")
 }
 
-// SiloSpecification is the resolver for the siloSpecification field.
-func (r *siloDefinitionResolver) SiloSpecification(ctx context.Context, obj *model.SiloDefinition) (*model.SiloSpecification, error) {
-	spec := model.SiloSpecification{}
-	if err := r.Conf.DB.Where(
-		"id = ?",
-		obj.SiloSpecificationID,
-	).First(&spec).Error; err != nil {
-		return nil, handleError(err, "Error finding specifications")
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *queryResolver) SiloDefinition(ctx context.Context, id string) (*model.SiloDefinition, error) {
+	silo := &model.SiloDefinition{}
+	if err := r.Conf.DB.Where("id = ?", id).First(silo).Error; err != nil {
+		return nil, handleError(err, "Error finding silo definition.")
 	}
 
-	return &spec, nil
+	return silo, nil
 }
-
-// SiloDefinition returns generated.SiloDefinitionResolver implementation.
-func (r *Resolver) SiloDefinition() generated.SiloDefinitionResolver {
-	return &siloDefinitionResolver{r}
-}
-
-type siloDefinitionResolver struct{ *Resolver }

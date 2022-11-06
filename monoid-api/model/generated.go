@@ -78,10 +78,12 @@ type UpdatePurposeInput struct {
 }
 
 type UpdateSiloDefinitionInput struct {
-	ID                  string   `json:"id"`
-	Description         *string  `json:"description"`
-	SiloSpecificationID *string  `json:"siloSpecificationID"`
-	SubjectIDs          []string `json:"subjectIDs"`
+	ID          string   `json:"id"`
+	WorkspaceID string   `json:"workspaceId"`
+	Name        *string  `json:"name"`
+	Description *string  `json:"description"`
+	SubjectIDs  []string `json:"subjectIDs"`
+	SiloData    *string  `json:"siloData"`
 }
 
 type UpdateSiloSpecificationInput struct {

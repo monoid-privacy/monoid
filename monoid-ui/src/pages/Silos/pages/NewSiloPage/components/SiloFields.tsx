@@ -196,9 +196,12 @@ function JSONSchemaField(
 export default function SiloFields(props: {
   siloID: string,
   siloData: any,
-  setSiloData: (v: any) => void
+  setSiloData: (v: any) => void,
+  prefilled?: boolean
 }) {
-  const { siloID, siloData, setSiloData } = props;
+  const {
+    siloID, siloData, setSiloData, prefilled,
+  } = props;
   const { data, loading, error } = useQuery<{ siloSpecification: SiloSpec }>(GET_SILO_DATA, {
     variables: {
       id: siloID,
@@ -211,7 +214,10 @@ export default function SiloFields(props: {
     }
 
     const schema = JSON.parse(data.siloSpecification.schema) as MonoidJSONSchema;
-    setSiloData(buildDefaultObject(schema));
+    if (!prefilled) {
+      setSiloData(buildDefaultObject(schema));
+    }
+
     return schema;
   }, [data?.siloSpecification]);
 
@@ -229,3 +235,7 @@ export default function SiloFields(props: {
     <JSONSchemaControl def={jsonSchema} value={siloData} onChange={(v) => setSiloData(v)} root />
   );
 }
+
+SiloFields.defaultProps = {
+  prefilled: false,
+};

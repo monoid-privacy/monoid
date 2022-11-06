@@ -12,6 +12,7 @@ interface TableRow {
     content: React.ReactNode
     key: string
   }[]
+  onClick?: () => void
 }
 
 interface TableProps extends React.HTMLProps<HTMLDivElement> {
@@ -83,7 +84,13 @@ export default function Table(props: TableProps) {
         <tbody className="divide-y divide-gray-200 bg-white">
           {
             tableRows.map((r) => (
-              <tr key={r.key}>
+              <tr
+                key={r.key}
+                onClick={r.onClick}
+                className={
+                  r.onClick ? 'cursor-pointer hover:bg-gray-100' : ''
+                }
+              >
                 {
                   r.columns.map((c) => (
                     <TD key={c.key}>

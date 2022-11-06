@@ -4,6 +4,9 @@
 
 type DataSource {
     id: ID!
+    name: String!
+    group: String
+
     siloDefinition: SiloDefinition!
     properties: [Property!]
     description: String
@@ -15,15 +18,6 @@ type Property {
     categories: [Category!]
     dataSource: DataSource!
     purposes: [Purpose!]
-}
-
-type SiloDefinition {
-    id: ID!
-    name: String!
-    description: String
-    siloSpecification: SiloSpecification
-    dataSources: [DataSource!]
-    subjects: [Subject!]
 }
 
 type SiloSpecification {
@@ -49,15 +43,6 @@ type Purpose {
     name: String!
 }
 
-input CreateSiloDefinitionInput {
-    description: String
-    siloSpecificationID: ID!
-    workspaceID: ID!
-    subjectIDs: [ID!]
-    siloData: String
-    name: String!
-}
-
 input CreateSiloSpecificationInput {
     name: String!
     workspaceID: ID!
@@ -71,13 +56,6 @@ input CreateDataSourceInput {
     description: String
     schema: String!
     propertyIDs: [ID!]
-}
-
-input UpdateSiloDefinitionInput {
-    id: ID!
-    description: String
-    siloSpecificationID: ID
-    subjectIDs: [ID!]
 }
 
 input UpdateSiloSpecificationInput {
@@ -134,7 +112,6 @@ input UpdateSubjectInput {
 }
 
 extend type Query {
-    siloDefinition(id: ID!): SiloDefinition
     dataSource(id: ID!): DataSource
     siloSpecification(id: ID!): SiloSpecification
     siloSpecifications: [SiloSpecification!]
@@ -148,7 +125,6 @@ extend type Query {
 }
 
 extend type Mutation {
-    createSiloDefinition(input: CreateSiloDefinitionInput): SiloDefinition
     createDataSource(input: CreateDataSourceInput): DataSource
     createSiloSpecification(input: CreateSiloSpecificationInput): SiloSpecification
     createProperty(input: CreatePropertyInput): Property
@@ -156,7 +132,6 @@ extend type Mutation {
     createCategory(input: CreateCategoryInput): Category
     createSubject(input: CreateSubjectInput): Subject
 
-    updateSiloDefinition(input: UpdateSiloDefinitionInput): SiloDefinition
     updateDataSource(input: UpdateDataSourceInput): DataSource
     updateSiloSpecification(input: UpdateSiloSpecificationInput): SiloSpecification
     updateProperty(input: UpdatePropertyInput): Property
@@ -164,11 +139,12 @@ extend type Mutation {
     updateCategory(input: UpdateCategoryInput): Category
     updateSubject(input: UpdateSubjectInput): Subject
 
-    deleteSiloDefinition(id: ID!): ID
     deleteDataSource(id: ID!): ID
     deleteSiloSpecification(id: ID!): ID
     deleteProperty(id: ID!): ID
     deletePurpose(id: ID!): ID
     deleteCategory(id: ID!): ID
     deleteSubject(id: ID!): ID
+
+    detectSiloSources(workspaceId: ID!, id: ID!): ID
 }

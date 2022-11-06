@@ -29,7 +29,10 @@ type SiloDefinition struct {
 }
 
 type DataSource struct {
-	ID               string
+	ID    string
+	Group *string
+	Name  string
+
 	SiloDefinitionID string
 	SiloDefinition   SiloDefinition `gorm:"constraint:OnDelete:CASCADE;"`
 	Properties       []*Property

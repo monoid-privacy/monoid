@@ -1,0 +1,42 @@
+scalar Map
+
+input UpdateSiloDefinitionInput {
+    id: ID!
+    workspaceId: ID!
+
+    name: String
+    description: String
+
+    subjectIDs: [ID!]
+    siloData: String
+}
+
+type SiloDefinition {
+    id: ID!
+    name: String!
+    description: String
+    siloSpecification: SiloSpecification
+    dataSources: [DataSource!]
+    subjects: [Subject!]
+    siloConfig: Map
+}
+
+input CreateSiloDefinitionInput {
+    description: String
+    siloSpecificationID: ID!
+    workspaceID: ID!
+    subjectIDs: [ID!]
+    siloData: String
+    name: String!
+}
+
+extend type Mutation {
+    createSiloDefinition(input: CreateSiloDefinitionInput): SiloDefinition
+    updateSiloDefinition(input: UpdateSiloDefinitionInput): SiloDefinition
+    deleteSiloDefinition(id: ID!): ID
+}
+
+extend type Workspace {
+    siloDefinitions: [SiloDefinition!]
+    siloDefinition(id: ID!): SiloDefinition
+}

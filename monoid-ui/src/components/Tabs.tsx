@@ -7,6 +7,7 @@ interface TabsProps extends React.HTMLProps<HTMLDivElement> {
     tabKey: string,
     tabBody: React.ReactNode
   }[],
+  bodyClassName?: string,
   variant?: 'pill' | 'line',
   current: string,
   setCurrent: (c: string) => void
@@ -14,7 +15,7 @@ interface TabsProps extends React.HTMLProps<HTMLDivElement> {
 
 export default function Tabs(props: TabsProps) {
   const {
-    tabs, className, variant, current, setCurrent,
+    tabs, className, bodyClassName, variant, current, setCurrent,
   } = props;
 
   useEffect(() => {
@@ -73,11 +74,16 @@ export default function Tabs(props: TabsProps) {
             )
         ))}
       </nav>
-      {curr && curr.tabBody}
+      {curr && (
+        <div className={classNames('', bodyClassName)}>
+          {curr.tabBody}
+        </div>
+      )}
     </div>
   );
 }
 
 Tabs.defaultProps = {
   variant: 'pill',
+  bodyClassName: '',
 };
