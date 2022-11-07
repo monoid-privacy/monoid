@@ -131,6 +131,7 @@ func (dp *DockerMonoidProtocol) Sample(
 			"-s": schemas,
 		},
 	)
+	fmt.Println(dp.containerID)
 
 	if err != nil {
 		return nil, err

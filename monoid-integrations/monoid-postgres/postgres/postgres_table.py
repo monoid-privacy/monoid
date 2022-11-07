@@ -4,6 +4,7 @@ from monoid_pydev.silos.data_store import DataStore
 import psycopg
 from monoid_pydev.models import MonoidRecord, MonoidQueryIdentifier, MonoidSchema
 from typing import Any, Dict, Iterable, Optional
+from pypika import Table, Query, Field
 
 
 def type_to_jsonschema(pg_type: str) -> Optional[str]:
@@ -90,17 +91,13 @@ class PostgresTableDataStore(DataStore):
         query_cols = [f for f in query_identifier.json_schema["properties"]]
 
         with self.conn.cursor() as cur:
-            q = str(query_identifier.identifier_query)
-            if isinstance(query_identifier.identifier_query, str):
-                q = f"'{q}'"
+            tbl = Table(self.table, schema=self.schema)
+            q = Query.from_(tbl).select(
+                *query_cols).where(
+                    Field(query_identifier.identifier) ==
+                query_identifier.identifier_query)
 
-            cur.execute(
-                f"""
-                SELECT {",".join(query_cols)}
-                    FROM {self.schema}.{self.table}
-                    WHERE {query_identifier.identifier} = {q}
-                """
-            )
+            cur.execute(str(q))
 
             for r in cur:
                 yield MonoidRecord(
@@ -115,13 +112,9 @@ class PostgresTableDataStore(DataStore):
         query_cols = [f for f in schema.json_schema["properties"]]
 
         with self.conn.cursor() as cur:
-            cur.execute(
-                f"""
-                SELECT {",".join(query_cols)}
-                    FROM {self.schema}.{self.table}
-                    LIMIT 5;
-                """
-            )
+            tbl = Table(self.table, schema=self.schema)
+            q = Query.from_(tbl).select(*query_cols).limit(5)
+            cur.execute(str(q))
 
             for r in cur:
                 # TODO: Do more sophisticated transformation
@@ -136,16 +129,10 @@ class PostgresTableDataStore(DataStore):
     def delete_records(self, query_identifier: MonoidQueryIdentifier) -> Iterable[MonoidRecord]:
         res = [q for q in self.query_records(query_identifier)]
         with self.conn.cursor() as cur:
-            q = str(query_identifier.identifier_query)
-            if isinstance(query_identifier.identifier_query, str):
-                q = f"'{q}'"
-
-            cur.execute(
-                f"""
-                DELETE
-                    FROM {self.schema}.{self.table}
-                    WHERE {query_identifier.identifier} = {q}
-                """
-            )
+            tbl = Table(self.table, schema=self.schema)
+            q = Query.from_(tbl).delete().where(
+                Field(query_identifier.identifier) ==
+                query_identifier.identifier_query)
+            cur.execute(str(q))
 
         return res
