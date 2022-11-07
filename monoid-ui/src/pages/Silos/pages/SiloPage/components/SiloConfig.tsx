@@ -5,6 +5,7 @@ import AlertRegion from '../../../../../components/AlertRegion';
 import Spinner from '../../../../../components/Spinner';
 import { SiloDefinition } from '../../../../../lib/models';
 import SiloForm from '../../NewSiloPage/components/SiloForm';
+import Card, { CardDivider, CardHeader } from '../../../../../components/Card';
 
 const GET_SILO_CONFIG = gql`
   query GetSiloConfig($id: ID!, $workspaceId: ID!) {
@@ -58,22 +59,28 @@ export default function SiloConfig() {
   }
 
   return (
-    <SiloForm
-      defaultSilo={data?.workspace.siloDefinition}
-      onSubmit={(val) => {
-        updateSilo({
-          variables: {
-            input: {
-              id: siloId,
-              workspaceId: id,
-              name: val.name,
-              siloData: JSON.stringify(val.siloData),
+    <Card>
+      <CardHeader>
+        Silo Settings
+      </CardHeader>
+      <CardDivider />
+      <SiloForm
+        defaultSilo={data?.workspace.siloDefinition}
+        onSubmit={(val) => {
+          updateSilo({
+            variables: {
+              input: {
+                id: siloId,
+                workspaceId: id,
+                name: val.name,
+                siloData: JSON.stringify(val.siloData),
+              },
             },
-          },
-        });
-      }}
-      loading={updateSiloRes.loading}
-      error={updateSiloRes.error}
-    />
+          });
+        }}
+        loading={updateSiloRes.loading}
+        error={updateSiloRes.error}
+      />
+    </Card>
   );
 }

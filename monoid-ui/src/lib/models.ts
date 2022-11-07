@@ -13,6 +13,7 @@ export interface SiloDefinition {
 }
 
 export interface Property {
+  id?: string
   name?: string
 }
 

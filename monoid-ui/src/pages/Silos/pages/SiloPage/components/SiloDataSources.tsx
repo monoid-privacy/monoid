@@ -5,7 +5,9 @@ import Button from '../../../../../components/Button';
 import Spinner from '../../../../../components/Spinner';
 import AlertRegion from '../../../../../components/AlertRegion';
 import Table from '../../../../../components/Table';
-import { DataSource } from '../../../../../lib/models';
+import { DataSource, Property } from '../../../../../lib/models';
+import PageHeader from '../../../../../components/PageHeader';
+import Combobox from '../../../../../components/Combobox';
 
 const RUN_SOURCE_SCAN = gql`
   mutation RunSourceScan($id: ID!, $workspaceId: ID!) {
@@ -22,6 +24,7 @@ const SILO_DATA_SOURCES = gql`
           name
           properties {
             id
+            name
           }
         }
       }
@@ -51,20 +54,26 @@ export default function SiloDataSources() {
     );
   }
 
-  console.log(data);
   return (
-    <>
-      <Button onClick={() => {
-        runScan({
-          variables: {
-            id: siloId,
-            workspaceId: id,
-          },
-        });
-      }}
-      >
-        {runScanRes.loading ? <Spinner /> : 'Run Scan'}
-      </Button>
+    <div>
+      <PageHeader
+        title="Sources"
+        level="second"
+        actionItem={(
+          <Button onClick={() => {
+            runScan({
+              variables: {
+                id: siloId,
+                workspaceId: id,
+              },
+            });
+          }}
+          >
+            {runScanRes.loading ? <Spinner /> : 'Re-Scan'}
+          </Button>
+        )}
+      />
+
       <Table
         tableCols={[
           {
@@ -88,10 +97,55 @@ export default function SiloDataSources() {
               content: `${ds.properties!.length}`,
             },
           ],
-        }
-        ))}
+          nestedComponent: (
+            <tr>
+              <td colSpan={3} className="p-0">
+                <div>
+                  <Table
+                    tableCols={[{
+                      header: 'Property Name',
+                      key: 'name',
+                    }, {
+                      header: 'Category',
+                      key: 'cat',
+                    }]}
+                    tableRows={
+                      ds.properties?.map(
+                        (p: Property) => ({
+                          key: p.id!,
+                          columns: [
+                            {
+                              key: 'name',
+                              content: p.name,
+                            },
+                            {
+                              key: 'cat',
+                              content: (
+                                <Combobox
+                                  value={undefined}
+                                  onChange={() => { }}
+                                  filter={() => ([])}
+                                  id={(v) => `${v}`}
+                                  displayText={(v) => `${v}`}
+                                />
+                              ),
+                            },
+                          ],
+                        }),
+                      )
+                    }
+                    type="plain"
+                    insetClass="pl-12"
+                    className="border-y-2 border-gray-300"
+                  />
+                </div>
+              </td>
+            </tr>
+          ),
+        }))}
         className="mt-3"
+        nested
       />
-    </>
+    </div>
   );
 }

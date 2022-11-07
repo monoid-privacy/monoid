@@ -10,8 +10,8 @@ export default function SiloRoutes() {
       <Route index element={<SiloIndex />} />
       <Route path="new" element={<NewSiloPage />} />
       <Route path=":siloId">
-        <Route index element={<Navigate to="config" />} />
-        <Route path="config" element={<SiloPage tab="config" />} />
+        <Route index element={<Navigate to="data_sources" />} />
+        <Route path="settings" element={<SiloPage tab="settings" />} />
         <Route path="data_sources" element={<SiloPage tab="data_sources" />} />
       </Route>
     </Routes>

@@ -25,7 +25,7 @@ const GET_SILO_TITLE_DATA = gql`
 
 export default function SiloPage(
   props: {
-    tab: 'config' | 'data_sources'
+    tab: 'settings' | 'data_sources'
   },
 ) {
   const { tab } = props;
@@ -67,21 +67,21 @@ export default function SiloPage(
       <Tabs
         tabs={[
           {
-            tabName: 'Config',
-            tabKey: 'config',
-            tabBody: <SiloConfig />,
-          },
-          {
             tabName: 'Data Sources',
             tabKey: 'data_sources',
             tabBody: <SiloDataSources />,
+          },
+          {
+            tabName: 'Silo Settings',
+            tabKey: 'settings',
+            tabBody: <SiloConfig />,
           },
         ]}
         current={tab}
         setCurrent={(c) => {
           navigate(`../${c}`);
         }}
-        bodyClassName="mt-2"
+        bodyClassName="mt-7"
         variant="line"
       />
     </>

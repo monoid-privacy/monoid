@@ -1,6 +1,7 @@
 import { gql, useMutation } from '@apollo/client';
 import React from 'react';
 import { useParams } from 'react-router-dom';
+import Card from '../../../../components/Card';
 import PageHeader from '../../../../components/PageHeader';
 import SiloForm from './components/SiloForm';
 
@@ -20,22 +21,24 @@ export default function NewSiloPage() {
   return (
     <>
       <PageHeader title="New Silo" />
-      <SiloForm
-        onSubmit={(silo) => {
-          createSilo({
-            variables: {
-              input: {
-                name: silo.name,
-                siloSpecificationID: silo.siloSpec?.id,
-                workspaceID: id,
-                siloData: JSON.stringify(silo.siloData),
+      <Card className="mt-5">
+        <SiloForm
+          onSubmit={(silo) => {
+            createSilo({
+              variables: {
+                input: {
+                  name: silo.name,
+                  siloSpecificationID: silo.siloSpec?.id,
+                  workspaceID: id,
+                  siloData: JSON.stringify(silo.siloData),
+                },
               },
-            },
-          });
-        }}
-        loading={createSiloRes.loading}
-        error={createSiloRes.error}
-      />
+            });
+          }}
+          loading={createSiloRes.loading}
+          error={createSiloRes.error}
+        />
+      </Card>
     </>
   );
 }
