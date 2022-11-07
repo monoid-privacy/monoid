@@ -1,6 +1,8 @@
 package monoidprotocol
 
-import "context"
+import (
+	"context"
+)
 
 type MonoidProtocol interface {
 	InitConn(ctx context.Context) error
@@ -33,5 +35,4 @@ type MonoidProtocol interface {
 	) (*MonoidSchemasMessage, error)
 
 	Teardown(ctx context.Context) error
-	Schema(ctx context.Context, config map[string]interface{}) (*MonoidSchemasMessage, error)
 }

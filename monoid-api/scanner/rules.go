@@ -6,6 +6,24 @@ import (
 	mapset "github.com/deckarep/golang-set"
 )
 
+type MatchConfig struct {
+	RegexRules     []regexRule
+	NameRules      []nameRule
+	MultiNameRules []multiNameRule
+	TokenRules     []tokenRule
+	MinCount       int
+}
+
+func NewMatchConfig() MatchConfig {
+	return MatchConfig{
+		RegexRules:     regexRules,
+		NameRules:      nameRules,
+		MultiNameRules: multiNameRules,
+		TokenRules:     tokenRules,
+		MinCount:       1,
+	}
+}
+
 type nameRule struct {
 	Name        string
 	DisplayName string
