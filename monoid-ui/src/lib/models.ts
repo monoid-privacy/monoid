@@ -11,3 +11,13 @@ export interface SiloDefinition {
   siloSpecification?: SiloSpec,
   siloConfig?: object
 }
+
+export interface Property {
+  name?: string
+}
+
+export interface DataSource {
+  id?: string
+  name?: string
+  properties?: Property[]
+}

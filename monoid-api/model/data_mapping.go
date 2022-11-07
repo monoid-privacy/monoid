@@ -42,6 +42,7 @@ type DataSource struct {
 
 type Property struct {
 	ID           string      `json:"id"`
+	Name         string      `json:"name"`
 	Categories   []*Category `gorm:"many2many:property_categories;"`
 	DataSourceID string      `json:"dataSourceID"`
 	DataSource   DataSource  `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`

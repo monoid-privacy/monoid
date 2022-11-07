@@ -15,6 +15,7 @@ type DataSource {
 
 type Property {
     id: ID!
+    name: String!
     categories: [Category!]
     dataSource: DataSource!
     purposes: [Purpose!]

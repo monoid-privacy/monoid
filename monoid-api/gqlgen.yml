@@ -71,3 +71,9 @@ models:
     fields:
       siloSpecification:
         resolver: true
+      dataSources:
+        resolver: true
+  DataSource:
+    fields:
+      properties:
+        resolver: true

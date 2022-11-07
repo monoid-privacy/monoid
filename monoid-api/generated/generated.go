@@ -36,6 +36,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	DataSource() DataSourceResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
 	SiloDefinition() SiloDefinitionResolver
@@ -92,6 +93,7 @@ type ComplexityRoot struct {
 		Categories func(childComplexity int) int
 		DataSource func(childComplexity int) int
 		ID         func(childComplexity int) int
+		Name       func(childComplexity int) int
 		Purposes   func(childComplexity int) int
 	}
 
@@ -151,6 +153,9 @@ type ComplexityRoot struct {
 	}
 }
 
+type DataSourceResolver interface {
+	Properties(ctx context.Context, obj *model.DataSource) ([]*model.Property, error)
+}
 type MutationResolver interface {
 	CreateWorkspace(ctx context.Context, input model.CreateWorkspaceInput) (*model.Workspace, error)
 	DeleteWorkspace(ctx context.Context, id *string) (*string, error)
@@ -193,6 +198,7 @@ type QueryResolver interface {
 }
 type SiloDefinitionResolver interface {
 	SiloSpecification(ctx context.Context, obj *model.SiloDefinition) (*model.SiloSpecification, error)
+	DataSources(ctx context.Context, obj *model.SiloDefinition) ([]*model.DataSource, error)
 
 	SiloConfig(ctx context.Context, obj *model.SiloDefinition) (map[string]interface{}, error)
 }
@@ -589,6 +595,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Property.ID(childComplexity), true
+
+	case "Property.name":
+		if e.complexity.Property.Name == nil {
+			break
+		}
+
+		return e.complexity.Property.Name(childComplexity), true
 
 	case "Property.purposes":
 		if e.complexity.Property.Purposes == nil {
@@ -1030,6 +1043,7 @@ type DataSource {
 
 type Property {
     id: ID!
+    name: String!
     categories: [Category!]
     dataSource: DataSource!
     purposes: [Purpose!]
@@ -2045,7 +2059,7 @@ func (ec *executionContext) _DataSource_properties(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Properties, nil
+		return ec.resolvers.DataSource().Properties(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2063,12 +2077,14 @@ func (ec *executionContext) fieldContext_DataSource_properties(ctx context.Conte
 	fc = &graphql.FieldContext{
 		Object:     "DataSource",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Property_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Property_name(ctx, field)
 			case "categories":
 				return ec.fieldContext_Property_categories(ctx, field)
 			case "dataSource":
@@ -2461,6 +2477,8 @@ func (ec *executionContext) fieldContext_Mutation_createProperty(ctx context.Con
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Property_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Property_name(ctx, field)
 			case "categories":
 				return ec.fieldContext_Property_categories(ctx, field)
 			case "dataSource":
@@ -2829,6 +2847,8 @@ func (ec *executionContext) fieldContext_Mutation_updateProperty(ctx context.Con
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Property_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Property_name(ctx, field)
 			case "categories":
 				return ec.fieldContext_Property_categories(ctx, field)
 			case "dataSource":
@@ -3618,6 +3638,50 @@ func (ec *executionContext) fieldContext_Property_id(ctx context.Context, field 
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Property_name(ctx context.Context, field graphql.CollectedField, obj *model.Property) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Property_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Property_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Property",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4536,6 +4600,8 @@ func (ec *executionContext) fieldContext_Query_property(ctx context.Context, fie
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Property_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Property_name(ctx, field)
 			case "categories":
 				return ec.fieldContext_Property_categories(ctx, field)
 			case "dataSource":
@@ -4885,7 +4951,7 @@ func (ec *executionContext) _SiloDefinition_dataSources(ctx context.Context, fie
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.DataSources, nil
+		return ec.resolvers.SiloDefinition().DataSources(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4894,17 +4960,17 @@ func (ec *executionContext) _SiloDefinition_dataSources(ctx context.Context, fie
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]model.DataSource)
+	res := resTmp.([]*model.DataSource)
 	fc.Result = res
-	return ec.marshalODataSource2ᚕgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSourceᚄ(ctx, field.Selections, res)
+	return ec.marshalODataSource2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSourceᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SiloDefinition_dataSources(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SiloDefinition",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -8301,14 +8367,14 @@ func (ec *executionContext) _DataSource(ctx context.Context, sel ast.SelectionSe
 			out.Values[i] = ec._DataSource_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "name":
 
 			out.Values[i] = ec._DataSource_name(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "group":
 
@@ -8319,12 +8385,25 @@ func (ec *executionContext) _DataSource(ctx context.Context, sel ast.SelectionSe
 			out.Values[i] = ec._DataSource_siloDefinition(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "properties":
+			field := field
 
-			out.Values[i] = ec._DataSource_properties(ctx, field, obj)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._DataSource_properties(ctx, field, obj)
+				return res
+			}
 
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "description":
 
 			out.Values[i] = ec._DataSource_description(ctx, field, obj)
@@ -8334,7 +8413,7 @@ func (ec *executionContext) _DataSource(ctx context.Context, sel ast.SelectionSe
 			out.Values[i] = ec._DataSource_schema(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -8534,6 +8613,13 @@ func (ec *executionContext) _Property(ctx context.Context, sel ast.SelectionSet,
 		case "id":
 
 			out.Values[i] = ec._Property_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "name":
+
+			out.Values[i] = ec._Property_name(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -8927,9 +9013,22 @@ func (ec *executionContext) _SiloDefinition(ctx context.Context, sel ast.Selecti
 
 			})
 		case "dataSources":
+			field := field
 
-			out.Values[i] = ec._SiloDefinition_dataSources(ctx, field, obj)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._SiloDefinition_dataSources(ctx, field, obj)
+				return res
+			}
 
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "subjects":
 
 			out.Values[i] = ec._SiloDefinition_subjects(ctx, field, obj)
@@ -9505,6 +9604,16 @@ func (ec *executionContext) marshalNDataSource2githubᚗcomᚋbristᚑaiᚋmonoi
 	return ec._DataSource(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalNDataSource2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSource(ctx context.Context, sel ast.SelectionSet, v *model.DataSource) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DataSource(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalID(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -10037,7 +10146,7 @@ func (ec *executionContext) unmarshalOCreateSubjectInput2ᚖgithubᚗcomᚋbrist
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalODataSource2ᚕgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSourceᚄ(ctx context.Context, sel ast.SelectionSet, v []model.DataSource) graphql.Marshaler {
+func (ec *executionContext) marshalODataSource2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSourceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DataSource) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -10064,7 +10173,7 @@ func (ec *executionContext) marshalODataSource2ᚕgithubᚗcomᚋbristᚑaiᚋmo
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNDataSource2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSource(ctx, sel, v[i])
+			ret[i] = ec.marshalNDataSource2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSource(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)

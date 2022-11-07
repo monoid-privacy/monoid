@@ -7,11 +7,23 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/brist-ai/monoid/generated"
 	"github.com/brist-ai/monoid/model"
 	"github.com/brist-ai/monoid/workflow"
 	"github.com/google/uuid"
 	"go.temporal.io/sdk/client"
 )
+
+// Properties is the resolver for the properties field.
+func (r *dataSourceResolver) Properties(ctx context.Context, obj *model.DataSource) ([]*model.Property, error) {
+	properties := []*model.Property{}
+
+	if err := r.Conf.DB.Where("data_source_id = ?", obj.ID).Find(&properties).Error; err != nil {
+		return nil, handleError(err, "Error finding properties.")
+	}
+
+	return properties, nil
+}
 
 // CreateDataSource is the resolver for the createDataSource field.
 func (r *mutationResolver) CreateDataSource(ctx context.Context, input *model.CreateDataSourceInput) (*model.DataSource, error) {
@@ -337,17 +349,7 @@ func (r *queryResolver) Property(ctx context.Context, id string) (*model.Propert
 	return findObjectByID[model.Property](id, r.Conf.DB, "Error finding property.")
 }
 
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//    it when you're done.
-//  - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *queryResolver) SiloDefinition(ctx context.Context, id string) (*model.SiloDefinition, error) {
-	silo := &model.SiloDefinition{}
-	if err := r.Conf.DB.Where("id = ?", id).First(silo).Error; err != nil {
-		return nil, handleError(err, "Error finding silo definition.")
-	}
+// DataSource returns generated.DataSourceResolver implementation.
+func (r *Resolver) DataSource() generated.DataSourceResolver { return &dataSourceResolver{r} }
 
-	return silo, nil
-}
+type dataSourceResolver struct{ *Resolver }

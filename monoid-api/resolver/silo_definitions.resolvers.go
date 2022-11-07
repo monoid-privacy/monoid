@@ -157,6 +157,18 @@ func (r *siloDefinitionResolver) SiloSpecification(ctx context.Context, obj *mod
 	return &spec, nil
 }
 
+// DataSources is the resolver for the dataSources field.
+func (r *siloDefinitionResolver) DataSources(ctx context.Context, obj *model.SiloDefinition) ([]*model.DataSource, error) {
+	sources := []*model.DataSource{}
+	if err := r.Conf.DB.Where(
+		"silo_definition_id = ?", obj.ID,
+	).Find(&sources).Error; err != nil {
+		return nil, handleError(err, "Error finding data sources")
+	}
+
+	return sources, nil
+}
+
 // SiloConfig is the resolver for the siloConfig field.
 func (r *siloDefinitionResolver) SiloConfig(ctx context.Context, obj *model.SiloDefinition) (map[string]interface{}, error) {
 	res := map[string]interface{}{}

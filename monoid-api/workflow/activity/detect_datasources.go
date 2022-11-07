@@ -4,10 +4,13 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/brist-ai/monoid/jsonschema"
 	"github.com/brist-ai/monoid/model"
 	"github.com/brist-ai/monoid/monoidprotocol/docker"
 	"github.com/google/uuid"
+	"github.com/mitchellh/mapstructure"
 	"go.temporal.io/sdk/activity"
+	"gorm.io/gorm"
 )
 
 type dataSourceMatcher struct {
@@ -65,9 +68,10 @@ func (a *Activity) DetectDataSources(ctx context.Context, dataSiloDef model.Silo
 		}] = &s
 	}
 
-	dataSources := make([]model.DataSource, 0, len(schemas.Schemas))
+	updateDataSources := make([]model.DataSource, 0, len(schemas.Schemas))
+	createDataSources := make([]model.DataSource, 0, len(schemas.Schemas))
 
-	logger.Info("Schemas", schemas.Schemas)
+	logger.Info("Schemas", schemas.Schemas, sourceMap, len(sourceMap), len(sources), dataSiloDef.ID)
 
 	for _, schema := range schemas.Schemas {
 		group := ""
@@ -75,36 +79,68 @@ func (a *Activity) DetectDataSources(ctx context.Context, dataSiloDef model.Silo
 			group = *schema.Group
 		}
 
-		currSource, ok := sourceMap[dataSourceMatcher{
+		currSource, shouldUpdate := sourceMap[dataSourceMatcher{
 			Name:  schema.Name,
 			Group: group,
 		}]
 
-		if !ok {
+		if !shouldUpdate {
 			currSource = &model.DataSource{
-				ID:    uuid.NewString(),
-				Group: schema.Group,
-				Name:  schema.Name,
+				ID:               uuid.NewString(),
+				Group:            schema.Group,
+				Name:             schema.Name,
+				SiloDefinitionID: dataSiloDef.ID,
 			}
 		}
 
-		schema, err := json.Marshal(schema.JsonSchema)
+		parsedSchema := jsonschema.Schema{}
+		err := mapstructure.Decode(schema.JsonSchema, &parsedSchema)
 		if err != nil {
-			logger.Error("Error parsing schema: %v", err)
+			logger.Error("Error decoding schema: %v", err)
 			continue
 		}
 
-		currSource.Schema = string(schema)
+		props := []*model.Property{}
 
-		dataSources = append(dataSources, *currSource)
+		for name := range parsedSchema.Properties {
+			props = append(props, &model.Property{
+				ID:   uuid.NewString(),
+				Name: name,
+			})
+		}
+
+		currSource.Properties = props
+
+		schemaStr, err := json.Marshal(schema.JsonSchema)
+		if err != nil {
+			logger.Error("Error marshalling schema: %v", err)
+			continue
+		}
+
+		currSource.Schema = string(schemaStr)
+
+		if shouldUpdate {
+			updateDataSources = append(updateDataSources, *currSource)
+		} else {
+			createDataSources = append(createDataSources, *currSource)
+		}
 	}
 
-	// TODO: If data sources are deleted here, they can't just be cleared,
-	// has to be some way of notifying ppl of that happening (tombstoning the source)
-	// before it goes away.
-	if err := a.Conf.DB.Model(&dataSiloDef).Association("DataSources").Replace(&dataSources); err != nil {
-		return err
-	}
+	a.Conf.DB.Transaction(func(tx *gorm.DB) error {
+		if len(createDataSources) != 0 {
+			if err := tx.Create(&createDataSources).Error; err != nil {
+				return err
+			}
+		}
+
+		for _, u := range updateDataSources {
+			if err := tx.Updates(&u).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 
 	return nil
 }
