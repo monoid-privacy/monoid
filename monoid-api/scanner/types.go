@@ -1,11 +1,7 @@
 package scanner
 
 type ScanOpts struct {
-	UrlStr      string
-	ShowData    bool
-	ShowAll     bool
 	Limit       int
-	Debug       bool
 	MatchConfig *MatchConfig
 }
 
@@ -30,12 +26,6 @@ type ruleMatch struct {
 	MatchedData []string
 	MatchType   string
 	LineCount   int
-}
-
-type matchInfo struct {
-	ruleMatch
-	RowStr string
-	Values []string
 }
 
 type MatchFinder struct {

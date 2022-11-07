@@ -7,7 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func handleError(err error, msg string) error {
+func HandleError(err error, msg string) error {
 	log.Err(err).Msg(msg)
 	return fmt.Errorf(msg)
 
