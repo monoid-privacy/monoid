@@ -1,0 +1,21 @@
+scalar Time
+
+enum JobStatus {
+    QUEUED
+    RUNNING
+    COMPLETED
+    FAILED
+}
+
+type Job {
+    id: ID!
+    jobType: String!
+    resourceId: ID!
+    status: JobStatus!
+    createdAt: Time!
+    updatedAt: Time!
+}
+
+extend type Query {
+    jobs(resourceId: ID!, jobType: String!, status: [JobStatus]): [Job]
+}

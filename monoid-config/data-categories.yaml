@@ -1,0 +1,24 @@
+- name: Last Name
+  id: surname
+- name: Phone Number
+  id: phone
+- name: Date of Birth
+  id: date_of_birth
+- name: Postal Code
+  id: postal_code
+- name: Oauth Token
+  id: oauth_token
+- name: Location
+  id: location
+- name: Email
+  id: email
+- name: IP Address
+  id: ip
+- name: Credit Card
+  id: credit_card
+- name: SSN
+  id: ssn
+- name: Street Address
+  id: street
+- name: MAC Address
+  id: mac

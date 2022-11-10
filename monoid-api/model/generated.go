@@ -2,6 +2,12 @@
 
 package model
 
+import (
+	"fmt"
+	"io"
+	"strconv"
+)
+
 type CreateCategoryInput struct {
 	Name        string `json:"name"`
 	WorkspaceID string `json:"workspaceID"`
@@ -96,4 +102,49 @@ type UpdateSiloSpecificationInput struct {
 
 type UpdateSubjectInput struct {
 	Name *string `json:"name"`
+}
+
+type JobStatus string
+
+const (
+	JobStatusQueued    JobStatus = "QUEUED"
+	JobStatusRunning   JobStatus = "RUNNING"
+	JobStatusCompleted JobStatus = "COMPLETED"
+	JobStatusFailed    JobStatus = "FAILED"
+)
+
+var AllJobStatus = []JobStatus{
+	JobStatusQueued,
+	JobStatusRunning,
+	JobStatusCompleted,
+	JobStatusFailed,
+}
+
+func (e JobStatus) IsValid() bool {
+	switch e {
+	case JobStatusQueued, JobStatusRunning, JobStatusCompleted, JobStatusFailed:
+		return true
+	}
+	return false
+}
+
+func (e JobStatus) String() string {
+	return string(e)
+}
+
+func (e *JobStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = JobStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid JobStatus", str)
+	}
+	return nil
+}
+
+func (e JobStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }

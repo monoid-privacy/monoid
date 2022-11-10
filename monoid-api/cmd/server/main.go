@@ -9,7 +9,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/brist-ai/monoid/cmd"
 	"github.com/brist-ai/monoid/generated"
-	"github.com/brist-ai/monoid/model"
+	"github.com/brist-ai/monoid/loader"
 	"github.com/brist-ai/monoid/resolver"
 	"github.com/gorilla/mux"
 	"go.temporal.io/sdk/client"
@@ -23,16 +23,7 @@ func main() {
 		port = defaultPort
 	}
 
-	conf := cmd.GetBaseConfig(true, []interface{}{
-		model.Workspace{},
-		model.Category{},
-		model.DataSource{},
-		model.Purpose{},
-		model.SiloDefinition{},
-		model.SiloSpecification{},
-		model.Subject{},
-		model.Property{},
-	})
+	conf := cmd.GetBaseConfig(true, cmd.Models)
 
 	c, err := client.Dial(client.Options{})
 	if err != nil {
@@ -45,7 +36,7 @@ func main() {
 	router := mux.NewRouter()
 
 	router.Use(func(h http.Handler) http.Handler {
-		return conf.PreFlightHandler(h)
+		return conf.PreFlightHandler(loader.Middleware(&conf, h))
 	})
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(

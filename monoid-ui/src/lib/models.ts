@@ -15,10 +15,22 @@ export interface SiloDefinition {
 export interface Property {
   id?: string
   name?: string
+  categories?: Category[]
 }
 
 export interface DataSource {
   id?: string
   name?: string
   properties?: Property[]
+}
+
+export interface Category {
+  id?: string
+  name?: string
+}
+
+export interface Job {
+  id?: string,
+  jobType?: string,
+  status?: 'RUNNING' | 'QUEUED' | 'FAILED' | 'SUCCESS'
 }

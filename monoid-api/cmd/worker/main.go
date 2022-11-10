@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/brist-ai/monoid/cmd"
-	"github.com/brist-ai/monoid/model"
 	"github.com/brist-ai/monoid/workflow"
 	"github.com/brist-ai/monoid/workflow/activity"
 	"go.temporal.io/sdk/client"
@@ -20,15 +19,7 @@ func main() {
 		port = defaultPort
 	}
 
-	conf := cmd.GetBaseConfig(false, []interface{}{
-		model.Workspace{},
-		model.Category{},
-		model.DataSource{},
-		model.Purpose{},
-		model.SiloDefinition{},
-		model.SiloSpecification{},
-		model.Subject{},
-	})
+	conf := cmd.GetBaseConfig(false, cmd.Models)
 
 	// Create the client object just once per process
 	c, err := client.Dial(client.Options{})
@@ -49,6 +40,8 @@ func main() {
 
 	w.RegisterActivity(a.ValidateDataSiloDef)
 	w.RegisterActivity(a.DetectDataSources)
+	w.RegisterActivity(a.FindOrCreateJob)
+	w.RegisterActivity(a.UpdateJobStatus)
 
 	w.RegisterWorkflow(mwf.ValidateDSWorkflow)
 	w.RegisterWorkflow(mwf.DetectDSWorkflow)

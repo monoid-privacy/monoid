@@ -4,7 +4,7 @@ import CreatableSelect from 'react-select/creatable';
 import { components } from 'react-select';
 import { classNames } from '../utils/utils';
 
-function StyledSelectInput(props: any) {
+export function StyledSelectInput(props: any) {
   const { className, type, ...rest } = props;
 
   return (

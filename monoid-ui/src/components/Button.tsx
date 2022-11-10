@@ -12,7 +12,7 @@ interface ButtonProps extends Omit<React.HTMLProps<HTMLButtonElement>, 'size'> {
 export default function Button(props: ButtonProps) {
   let classes = '';
   const {
-    size, variant, className, children, type, to,
+    size, variant, className, children, type, to, disabled, ...rest
   } = props;
 
   switch (size) {
@@ -40,8 +40,14 @@ export default function Button(props: ButtonProps) {
     case 'danger':
       classes = classNames(classes, 'text-white bg-red-600 hover:bg-red-700 focus:ring-red-500 border-transparent');
       break;
-    default:
-      classes = classNames(classes, 'text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500 border-transparent');
+    default: {
+      let colorClasses = 'text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500 border-transparent';
+
+      if (disabled) {
+        colorClasses = 'text-gray-200 bg-indigo-400 border-transparent';
+      }
+      classes = classNames(classes, colorClasses);
+    }
   }
 
   classes = classNames(classes, className, 'text-center');
@@ -65,9 +71,10 @@ export default function Button(props: ButtonProps) {
 
   return (
     <button
-      {...props}
       type="button"
       className={classes}
+      disabled={disabled}
+      {...rest}
     >
       {children}
     </button>

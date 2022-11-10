@@ -147,5 +147,5 @@ extend type Mutation {
     deleteCategory(id: ID!): ID
     deleteSubject(id: ID!): ID
 
-    detectSiloSources(workspaceId: ID!, id: ID!): ID
+    detectSiloSources(workspaceId: ID!, id: ID!): Job!
 }

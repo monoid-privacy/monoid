@@ -33,6 +33,18 @@ type DBInfo struct {
 	Name     string
 }
 
+var Models = []interface{}{
+	model.Workspace{},
+	model.Category{},
+	model.DataSource{},
+	model.Purpose{},
+	model.SiloDefinition{},
+	model.SiloSpecification{},
+	model.Subject{},
+	model.Property{},
+	model.Job{},
+}
+
 func InitDb(dbInfo DBInfo) *gorm.DB {
 	var db *gorm.DB
 	var err error

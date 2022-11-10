@@ -46,3 +46,7 @@ export function faComponent(icon: IconDefinition) {
 
   return comp;
 }
+
+export function dedup<T>(arr: T[], subset: (t: T) => any) {
+  return Array.from(new Map(arr.map((m) => [subset(m), m])).values());
+}

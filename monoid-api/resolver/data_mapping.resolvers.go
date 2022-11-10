@@ -8,7 +8,10 @@ import (
 	"fmt"
 
 	"github.com/brist-ai/monoid/generated"
+
+	"github.com/brist-ai/monoid/loader"
 	"github.com/brist-ai/monoid/model"
+
 	"github.com/brist-ai/monoid/workflow"
 	"github.com/google/uuid"
 	"go.temporal.io/sdk/client"
@@ -18,7 +21,7 @@ import (
 func (r *dataSourceResolver) Properties(ctx context.Context, obj *model.DataSource) ([]*model.Property, error) {
 	properties := []*model.Property{}
 
-	if err := r.Conf.DB.Where("data_source_id = ?", obj.ID).Find(&properties).Error; err != nil {
+	if err := r.Conf.DB.Where("data_source_id = ?", obj.ID).Order("created_at desc, name asc").Find(&properties).Error; err != nil {
 		return nil, handleError(err, "Error finding properties.")
 	}
 
@@ -175,28 +178,32 @@ func (r *mutationResolver) UpdateProperty(ctx context.Context, input *model.Upda
 	}
 
 	// Updating purposes
-	purposes := []model.Purpose{}
+	if input.PurposeIDs != nil {
+		purposes := []model.Purpose{}
 
-	if err := r.Conf.DB.Where("id IN ?", input.PurposeIDs).Find(purposes).Error; err != nil {
-		return nil, handleError(err, "Error updating property.")
-	}
+		if err := r.Conf.DB.Where("id IN ?", input.PurposeIDs).Find(&purposes).Error; err != nil {
+			return nil, handleError(err, "Error updating property.")
+		}
 
-	if err := r.Conf.DB.Model(&property).Association("Purposes").Replace(purposes); err != nil {
-		return nil, handleError(err, "Error updating property.")
+		if err := r.Conf.DB.Model(&property).Association("Purposes").Replace(&purposes); err != nil {
+			return nil, handleError(err, "Error updating property.")
+		}
 	}
 
 	// Updating categories
-	categories := []model.Category{}
+	if input.CategoryIDs != nil {
+		categories := []model.Category{}
 
-	if err := r.Conf.DB.Where("id IN ?", input.CategoryIDs).Find(categories).Error; err != nil {
-		return nil, handleError(err, "Error updating property.")
+		if err := r.Conf.DB.Where("id IN ?", input.CategoryIDs).Find(&categories).Error; err != nil {
+			return nil, handleError(err, "Error updating property.")
+		}
+
+		if err := r.Conf.DB.Model(&property).Association("Categories").Replace(&categories); err != nil {
+			return nil, handleError(err, "Error updating property.")
+		}
 	}
 
-	if err := r.Conf.DB.Model(&property).Association("Categories").Replace(categories); err != nil {
-		return nil, handleError(err, "Error updating property.")
-	}
-
-	if err := r.Conf.DB.Save(&property).Error; err != nil {
+	if err := r.Conf.DB.Omit("Categories", "Purposes").Save(&property).Error; err != nil {
 		return nil, handleError(err, "Error updating property.")
 	}
 
@@ -273,7 +280,7 @@ func (r *mutationResolver) DeleteSubject(ctx context.Context, id string) (*strin
 }
 
 // DetectSiloSources is the resolver for the detectSiloSources field.
-func (r *mutationResolver) DetectSiloSources(ctx context.Context, workspaceID string, id string) (*string, error) {
+func (r *mutationResolver) DetectSiloSources(ctx context.Context, workspaceID string, id string) (*model.Job, error) {
 	silo := model.SiloDefinition{}
 	if err := r.Conf.DB.Where("id = ?", id).Where(
 		"workspace_id = ?", workspaceID,
@@ -281,8 +288,20 @@ func (r *mutationResolver) DetectSiloSources(ctx context.Context, workspaceID st
 		return nil, handleError(err, "Error finding silo.")
 	}
 
+	job := model.Job{
+		ID:          uuid.NewString(),
+		WorkspaceID: workspaceID,
+		JobType:     model.JobTypeDiscoverSources,
+		Status:      model.JobStatusQueued,
+		ResourceID:  id,
+	}
+
+	if err := r.Conf.DB.Create(&job).Error; err != nil {
+		return nil, handleError(err, "Error creating dectect job.")
+	}
+
 	options := client.StartWorkflowOptions{
-		ID:        fmt.Sprintf("detect/%s/%s", silo.ID, uuid.NewString()),
+		ID:        fmt.Sprintf("detect/%s/%s", silo.ID, job.ID),
 		TaskQueue: workflow.DockerRunnerQueue,
 	}
 
@@ -291,12 +310,24 @@ func (r *mutationResolver) DetectSiloSources(ctx context.Context, workspaceID st
 		Conf: r.Conf,
 	}
 
-	_, err := r.Conf.TemporalClient.ExecuteWorkflow(context.Background(), options, sf.DetectDSWorkflow, silo)
+	_, err := r.Conf.TemporalClient.ExecuteWorkflow(
+		context.Background(),
+		options,
+		sf.DetectDSWorkflow,
+		job.ID,
+		silo,
+	)
+
 	if err != nil {
 		return nil, err
 	}
 
-	return &silo.ID, nil
+	return &job, nil
+}
+
+// Categories is the resolver for the categories field.
+func (r *propertyResolver) Categories(ctx context.Context, obj *model.Property) ([]*model.Category, error) {
+	return loader.GetCategories(ctx, obj.ID)
 }
 
 // DataSource is the resolver for the dataSource field.
@@ -352,4 +383,8 @@ func (r *queryResolver) Property(ctx context.Context, id string) (*model.Propert
 // DataSource returns generated.DataSourceResolver implementation.
 func (r *Resolver) DataSource() generated.DataSourceResolver { return &dataSourceResolver{r} }
 
+// Property returns generated.PropertyResolver implementation.
+func (r *Resolver) Property() generated.PropertyResolver { return &propertyResolver{r} }
+
 type dataSourceResolver struct{ *Resolver }
+type propertyResolver struct{ *Resolver }

@@ -1,5 +1,7 @@
 package model
 
+import "time"
+
 // SiloSpecification is the information about all silos that have
 // integrations with monoid
 type SiloSpecification struct {
@@ -26,6 +28,9 @@ type SiloDefinition struct {
 	DataSources         []DataSource
 	Subjects            []Subject `gorm:"many2many:silo_definition_subjects;"`
 	Config              SecretString
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type DataSource struct {
@@ -38,6 +43,9 @@ type DataSource struct {
 	Properties       []*Property
 	Description      *string
 	Schema           string
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type Property struct {
@@ -47,6 +55,9 @@ type Property struct {
 	DataSourceID string      `json:"dataSourceID"`
 	DataSource   DataSource  `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Purposes     []*Purpose  `gorm:"many2many:property_purposes;"`
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type Subject struct {
@@ -59,7 +70,7 @@ type Subject struct {
 type Category struct {
 	ID          string
 	Name        string
-	WorkspaceID string
+	WorkspaceID *string
 	Workspace   Workspace `gorm:"constraint:OnDelete:CASCADE;"`
 }
 

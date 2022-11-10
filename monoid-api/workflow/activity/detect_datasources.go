@@ -18,6 +18,28 @@ type dataSourceMatcher struct {
 	Name  string
 }
 
+func getProperties(prevProperties []*model.Property, newProperties map[string]*jsonschema.Schema) []*model.Property {
+	propMap := map[string]*model.Property{}
+	for _, p := range prevProperties {
+		propMap[p.Name] = p
+	}
+
+	resProps := make([]*model.Property, 0, len(newProperties))
+	for p := range newProperties {
+		if prop, ok := propMap[p]; ok {
+			resProps = append(resProps, prop)
+			continue
+		}
+
+		resProps = append(resProps, &model.Property{
+			ID:   uuid.NewString(),
+			Name: p,
+		})
+	}
+
+	return resProps
+}
+
 func (a *Activity) DetectDataSources(ctx context.Context, dataSiloDef model.SiloDefinition) error {
 	logger := activity.GetLogger(ctx)
 
@@ -50,7 +72,9 @@ func (a *Activity) DetectDataSources(ctx context.Context, dataSiloDef model.Silo
 	}
 
 	sources := []model.DataSource{}
-	if err := a.Conf.DB.Where("silo_definition_id = ?", dataSiloDef.ID).Find(&sources).Error; err != nil {
+	if err := a.Conf.DB.Preload("Properties").Where(
+		"silo_definition_id = ?", dataSiloDef.ID,
+	).Find(&sources).Error; err != nil {
 		logger.Error("Error getting silo def %v", err)
 		return err
 	}
@@ -62,10 +86,11 @@ func (a *Activity) DetectDataSources(ctx context.Context, dataSiloDef model.Silo
 			group = *s.Group
 		}
 
+		scp := s
 		sourceMap[dataSourceMatcher{
 			Group: group,
 			Name:  s.Name,
-		}] = &s
+		}] = &scp
 	}
 
 	updateDataSources := make([]model.DataSource, 0, len(schemas.Schemas))
@@ -100,15 +125,7 @@ func (a *Activity) DetectDataSources(ctx context.Context, dataSiloDef model.Silo
 			continue
 		}
 
-		props := []*model.Property{}
-
-		for name := range parsedSchema.Properties {
-			props = append(props, &model.Property{
-				ID:   uuid.NewString(),
-				Name: name,
-			})
-		}
-
+		props := getProperties(currSource.Properties, parsedSchema.Properties)
 		currSource.Properties = props
 
 		schemaStr, err := json.Marshal(schema.JsonSchema)
@@ -126,6 +143,8 @@ func (a *Activity) DetectDataSources(ctx context.Context, dataSiloDef model.Silo
 		}
 	}
 
+	logger.Info("Data sources", updateDataSources, createDataSources)
+
 	a.Conf.DB.Transaction(func(tx *gorm.DB) error {
 		if len(createDataSources) != 0 {
 			if err := tx.Create(&createDataSources).Error; err != nil {
@@ -134,7 +153,11 @@ func (a *Activity) DetectDataSources(ctx context.Context, dataSiloDef model.Silo
 		}
 
 		for _, u := range updateDataSources {
-			if err := tx.Updates(&u).Error; err != nil {
+			if err := tx.Omit("Properties").Updates(&u).Error; err != nil {
+				return err
+			}
+
+			if err := tx.Model(&u).Association("Properties").Replace(&u.Properties); err != nil {
 				return err
 			}
 		}
