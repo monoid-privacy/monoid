@@ -1,4 +1,4 @@
-package scanner
+package basic_scanner
 
 import (
 	"regexp"
@@ -31,16 +31,21 @@ type tokenRule struct {
 	Tokens      mapset.Set
 }
 
+// Credit to github.com/ankane/pdscan for many of the rules and setup
+
 // columns are lowercased and _ are removed
 // this allows use a single list for under_score and camelCase
 // no rules for email or IP, since they can be detected automatically
 // keep last name and phone until better international support
+
+// TODO: add category
 var nameRules = []nameRule{
-	{Name: "surname", DisplayName: "last na mes", ColumnNames: []string{"lastname", "lname", "surname"}},
+	{Name: "surname", DisplayName: "last names", ColumnNames: []string{"lastname", "lname", "surname"}},
 	{Name: "phone", DisplayName: "phone numbers", ColumnNames: []string{"phone", "phonenumber"}},
 	{Name: "date_of_birth", DisplayName: "dates of birth", ColumnNames: []string{"dateofbirth", "birthday", "dob"}},
 	{Name: "postal_code", DisplayName: "postal codes", ColumnNames: []string{"zip", "zipcode", "postalcode"}},
 	{Name: "oauth_token", DisplayName: "OAuth tokens", ColumnNames: []string{"accesstoken", "refreshtoken"}},
+	{Name: "user_id", DisplayName: "user id", ColumnNames: []string{"userid"}},
 }
 
 var multiNameRules = []multiNameRule{

@@ -1,37 +1,25 @@
 package scanner
 
-type ScanOpts struct {
-	Limit       int
-	MatchConfig *MatchConfig
-}
+import "github.com/brist-ai/monoid/monoidprotocol"
 
-type MatchConfig struct {
-	RegexRules     []regexRule
-	NameRules      []nameRule
-	MultiNameRules []multiNameRule
-	TokenRules     []tokenRule
-	MinCount       int
-}
-
-type MatchLine struct {
-	LineIndex int
-	Line      string
-}
-
-type ruleMatch struct {
+type RuleMatch struct {
 	RuleName    string
 	DisplayName string
 	Confidence  string
 	Identifier  string
 	MatchedData []string
 	MatchType   string
+	SchemaName  string
+	SchemaGroup *string
 	LineCount   int
 }
 
-type MatchFinder struct {
-	// dims [# rules][# matches]
-	MatchedValues [][]MatchLine
-	TokenValues   [][]MatchLine
-	Count         int
-	matchConfig   *MatchConfig
+type SchemaRecordGroup struct {
+	Schema  monoidprotocol.MonoidSchema
+	Records []monoidprotocol.MonoidRecord
+}
+
+type ValuePath struct {
+	Path []string
+	Type string
 }
