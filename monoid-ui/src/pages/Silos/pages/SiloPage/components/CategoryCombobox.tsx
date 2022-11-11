@@ -68,7 +68,6 @@ export default function CategoryCombobox(props: {
         name: categoryMap[v] || '',
       }))}
       onChange={(v) => {
-        console.log('Change', v);
         updateCat({
           variables: {
             input: {

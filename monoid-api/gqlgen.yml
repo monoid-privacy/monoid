@@ -73,6 +73,8 @@ models:
         resolver: true
       dataSources:
         resolver: true
+      scanConfig:
+        resolver: true
   DataSource:
     fields:
       properties:

@@ -6,8 +6,10 @@ import PageHeader from '../../../../components/PageHeader';
 import Spinner from '../../../../components/Spinner';
 import Tabs from '../../../../components/Tabs';
 import { SiloDefinition } from '../../../../lib/models';
+import SiloAlerts from './components/SiloAlerts';
 import SiloConfig from './components/SiloConfig';
 import SiloDataSources from './components/SiloDataSources';
+import SiloScans from './components/SiloScans';
 
 const GET_SILO_TITLE_DATA = gql`
   query GetSiloTitle($id: ID!, $workspaceId: ID!) {
@@ -25,7 +27,7 @@ const GET_SILO_TITLE_DATA = gql`
 
 export default function SiloPage(
   props: {
-    tab: 'settings' | 'data_sources'
+    tab: 'settings' | 'data_sources' | 'alerts' | 'scanning'
   },
 ) {
   const { tab } = props;
@@ -70,11 +72,18 @@ export default function SiloPage(
             tabName: 'Data Sources',
             tabKey: 'data_sources',
             tabBody: <SiloDataSources />,
-          },
-          {
+          }, {
             tabName: 'Silo Settings',
             tabKey: 'settings',
             tabBody: <SiloConfig />,
+          }, {
+            tabName: 'Scanning',
+            tabKey: 'scanning',
+            tabBody: <SiloScans />,
+          }, {
+            tabName: 'Alerts',
+            tabKey: 'alerts',
+            tabBody: <SiloAlerts />,
           },
         ]}
         current={tab}

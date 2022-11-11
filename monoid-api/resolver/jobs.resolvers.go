@@ -13,7 +13,7 @@ import (
 func (r *queryResolver) Jobs(ctx context.Context, resourceID string, jobType string, status []*model.JobStatus) ([]*model.Job, error) {
 	jobs := []*model.Job{}
 
-	q := r.Conf.DB.Where("resource_id = ?", resourceID).Where("job_type = ?", jobType)
+	q := r.Conf.DB.Order("created_at desc").Where("resource_id = ?", resourceID).Where("job_type = ?", jobType)
 	if len(status) != 0 {
 		q = q.Where("status IN ?", status)
 	}

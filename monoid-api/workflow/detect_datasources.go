@@ -9,10 +9,15 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
+type DetectDSArgs struct {
+	SiloDefID   string
+	WorkspaceID string
+	JobID       string
+}
+
 func (w *Workflow) DetectDSWorkflow(
 	ctx workflow.Context,
-	jobID string,
-	dataSiloDef model.SiloDefinition,
+	args DetectDSArgs,
 ) error {
 	options := workflow.ActivityOptions{
 		StartToCloseTimeout: time.Minute * 2,
@@ -24,17 +29,20 @@ func (w *Workflow) DetectDSWorkflow(
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	ac := activity.Activity{}
+
+	// Get or create (if this is scheduled) the job
+	job := model.Job{}
 	err := workflow.ExecuteActivity(ctx, ac.FindOrCreateJob, activity.JobInput{
-		ID:          jobID,
-		WorkspaceID: dataSiloDef.WorkspaceID,
+		ID:          args.JobID,
+		WorkspaceID: args.WorkspaceID,
 		JobType:     model.JobTypeDiscoverSources,
-		ResourceID:  dataSiloDef.ID,
+		ResourceID:  args.SiloDefID,
 		Status:      model.JobStatusRunning,
 	}).Get(ctx, nil)
 
 	if err != nil {
 		err := workflow.ExecuteActivity(ctx, ac.UpdateJobStatus, activity.JobStatusInput{
-			ID:     jobID,
+			ID:     args.JobID,
 			Status: model.JobStatusFailed,
 		}).Get(ctx, nil)
 
@@ -45,11 +53,14 @@ func (w *Workflow) DetectDSWorkflow(
 		return err
 	}
 
-	err = workflow.ExecuteActivity(ctx, ac.DetectDataSources, dataSiloDef).Get(ctx, nil)
+	// Run the detection activity
+	err = workflow.ExecuteActivity(ctx, ac.DetectDataSources, activity.DetectDSArgs{
+		SiloID: args.SiloDefID,
+	}).Get(ctx, nil)
 
 	if err != nil {
 		err := workflow.ExecuteActivity(ctx, ac.UpdateJobStatus, activity.JobStatusInput{
-			ID:     jobID,
+			ID:     args.JobID,
 			Status: model.JobStatusFailed,
 		}).Get(ctx, nil)
 
@@ -61,7 +72,7 @@ func (w *Workflow) DetectDSWorkflow(
 	}
 
 	err = workflow.ExecuteActivity(ctx, ac.UpdateJobStatus, activity.JobStatusInput{
-		ID:     jobID,
+		ID:     job.ID,
 		Status: model.JobStatusCompleted,
 	}).Get(ctx, nil)
 

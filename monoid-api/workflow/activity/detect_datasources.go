@@ -18,35 +18,75 @@ type dataSourceMatcher struct {
 	Name  string
 }
 
+// getProperties matches newProperties with prevProperties, and returns a merged
+// list with all existing properties and new ones.
 func getProperties(prevProperties []*model.Property, newProperties map[string]*jsonschema.Schema) []*model.Property {
 	propMap := map[string]*model.Property{}
 	for _, p := range prevProperties {
 		propMap[p.Name] = p
 	}
 
-	resProps := make([]*model.Property, 0, len(newProperties))
+	resPropMap := map[string]*model.Property{}
+
+	// Detect properties in the new list of properties,
+	// add them to the result map and mark then as tentatively created.
 	for p := range newProperties {
 		if prop, ok := propMap[p]; ok {
-			resProps = append(resProps, prop)
+			resPropMap[prop.Name] = prop
 			continue
 		}
 
-		resProps = append(resProps, &model.Property{
-			ID:   uuid.NewString(),
-			Name: p,
-		})
+		c := model.TentativeStatusCreated
+		resPropMap[p] = &model.Property{
+			ID:        uuid.NewString(),
+			Tentative: &c,
+			Name:      p,
+		}
+	}
+
+	// Detect properties that have been removed in the new schema and mark them as tentatively
+	// deleted.
+	for p := range propMap {
+		if _, ok := resPropMap[p]; ok {
+			continue
+		}
+
+		prop := *propMap[p]
+		d := model.TentativeStatusDeleted
+		prop.Tentative = &d
+
+		resPropMap[p] = &prop
+	}
+
+	resProps := make([]*model.Property, 0, len(resPropMap))
+
+	for _, p := range resPropMap {
+		resProps = append(resProps, p)
 	}
 
 	return resProps
 }
 
-func (a *Activity) DetectDataSources(ctx context.Context, dataSiloDef model.SiloDefinition) error {
+// DetectDSArgs are the arguments passed into a the activity.
+type DetectDSArgs struct {
+	SiloID string
+}
+
+// DetectDataSources scans for the data sources for a data silo.
+func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) error {
 	logger := activity.GetLogger(ctx)
+
+	dataSilo := model.SiloDefinition{}
+	if err := a.Conf.DB.Preload("SiloSpecification").Where("id = ?", args.SiloID).First(&dataSilo).Error; err != nil {
+		return err
+	}
 
 	logger.Info("Getting schemas")
 
-	spec := dataSiloDef.SiloSpecification
-	mp, err := docker.NewDockerMP(spec.DockerImage, spec.DockerTag)
+	mp, err := docker.NewDockerMP(
+		dataSilo.SiloSpecification.DockerImage,
+		dataSilo.SiloSpecification.DockerTag,
+	)
 	if err != nil {
 		logger.Error("Error creating docker client: %v", err)
 		return err
@@ -60,7 +100,7 @@ func (a *Activity) DetectDataSources(ctx context.Context, dataSiloDef model.Silo
 	}
 
 	conf := map[string]interface{}{}
-	json.Unmarshal([]byte(dataSiloDef.Config), &conf)
+	json.Unmarshal([]byte(dataSilo.Config), &conf)
 
 	logger.Info("pulling schema")
 
@@ -71,14 +111,17 @@ func (a *Activity) DetectDataSources(ctx context.Context, dataSiloDef model.Silo
 		return err
 	}
 
+	// Get all the data sources (with properties) that currently exist
+	// for this silo.
 	sources := []model.DataSource{}
 	if err := a.Conf.DB.Preload("Properties").Where(
-		"silo_definition_id = ?", dataSiloDef.ID,
+		"silo_definition_id = ?", dataSilo.ID,
 	).Find(&sources).Error; err != nil {
 		logger.Error("Error getting silo def %v", err)
 		return err
 	}
 
+	// Detect the new data sources.
 	sourceMap := map[dataSourceMatcher]*model.DataSource{}
 	for _, s := range sources {
 		group := ""
@@ -96,7 +139,7 @@ func (a *Activity) DetectDataSources(ctx context.Context, dataSiloDef model.Silo
 	updateDataSources := make([]model.DataSource, 0, len(schemas.Schemas))
 	createDataSources := make([]model.DataSource, 0, len(schemas.Schemas))
 
-	logger.Info("Schemas", schemas.Schemas, sourceMap, len(sourceMap), len(sources), dataSiloDef.ID)
+	logger.Info("Schemas", schemas.Schemas, sourceMap, len(sourceMap), len(sources))
 
 	for _, schema := range schemas.Schemas {
 		group := ""
@@ -114,7 +157,7 @@ func (a *Activity) DetectDataSources(ctx context.Context, dataSiloDef model.Silo
 				ID:               uuid.NewString(),
 				Group:            schema.Group,
 				Name:             schema.Name,
-				SiloDefinitionID: dataSiloDef.ID,
+				SiloDefinitionID: dataSilo.ID,
 			}
 		}
 

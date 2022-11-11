@@ -8,13 +8,13 @@ import (
 	"fmt"
 
 	"github.com/brist-ai/monoid/generated"
-
 	"github.com/brist-ai/monoid/loader"
 	"github.com/brist-ai/monoid/model"
-
 	"github.com/brist-ai/monoid/workflow"
 	"github.com/google/uuid"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.temporal.io/sdk/client"
+	"gorm.io/gorm"
 )
 
 // Properties is the resolver for the properties field.
@@ -52,6 +52,11 @@ func (r *mutationResolver) CreateDataSource(ctx context.Context, input *model.Cr
 	}
 
 	return &dataSource, nil
+}
+
+// ReviewDataSource is the resolver for the reviewDataSource field.
+func (r *mutationResolver) ReviewDataSource(ctx context.Context, input model.ReviewDataSourcesInput) ([]*model.Property, error) {
+	panic(fmt.Errorf("not implemented: ReviewDataSource - reviewDataSource"))
 }
 
 // CreateSiloSpecification is the resolver for the createSiloSpecification field.
@@ -210,6 +215,77 @@ func (r *mutationResolver) UpdateProperty(ctx context.Context, input *model.Upda
 	return &property, nil
 }
 
+// ReviewProperties is the resolver for the reviewProperties field.
+func (r *mutationResolver) ReviewProperties(ctx context.Context, input model.ReviewPropertiesInput) ([]*model.Property, error) {
+	properties := []*model.Property{}
+	if err := r.Conf.DB.Where("id IN ?", input.PropertyIDs).Find(&properties).Error; err != nil {
+		return nil, handleError(err, "Could not find properties.")
+	}
+
+	if len(properties) != len(input.PropertyIDs) {
+		return nil, gqlerror.Errorf("Could not find properties.")
+	}
+
+	// An array of property ids to delete
+	delProps := make([]string, 0, len(properties))
+
+	// An array of property ids to remove the tentative flag from.
+	updateProps := make([]string, 0, len(properties))
+	resProps := make([]*model.Property, 0, len(properties))
+
+	for _, p := range properties {
+		if p.Tentative == nil {
+			continue
+		}
+
+		switch *p.Tentative {
+		// If the user approves a creation, the tentative status is set to
+		// nil, otherwise, the property is deleted.
+		case model.TentativeStatusCreated:
+			if input.ReviewResult == model.ReviewResultApprove {
+				p.Tentative = nil
+				updateProps = append(updateProps, p.ID)
+				resProps = append(resProps, p)
+			} else {
+				delProps = append(delProps, p.ID)
+			}
+		// If the user approves a deletion, the property is deleted, otherwise,
+		// the tentative status is set to nil, since it is being left as-is.
+		case model.TentativeStatusDeleted:
+			if input.ReviewResult == model.ReviewResultApprove {
+				delProps = append(delProps, p.ID)
+			} else {
+				p.Tentative = nil
+				updateProps = append(updateProps, p.ID)
+				resProps = append(resProps, p)
+			}
+		}
+	}
+
+	if err := r.Conf.DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&model.Property{}).Where("id IN ?", updateProps).Updates(map[string]interface{}{
+			"tentative": nil,
+		}).Error; err != nil {
+			return err
+		}
+
+		// Delete the property_category associations
+		if err := tx.Table("property_categories").Where("property_id IN ?", delProps).Delete(nil).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Where("id IN ?", delProps).Delete(&model.Property{}).Error; err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
+		return nil, handleError(err, "Error updating properties.")
+	}
+
+	return resProps, nil
+}
+
 // UpdatePurpose is the resolver for the updatePurpose field.
 func (r *mutationResolver) UpdatePurpose(ctx context.Context, input *model.UpdatePurposeInput) (*model.Purpose, error) {
 	panic(fmt.Errorf("not implemented: UpdatePurpose - updatePurpose"))
@@ -301,7 +377,7 @@ func (r *mutationResolver) DetectSiloSources(ctx context.Context, workspaceID st
 	}
 
 	options := client.StartWorkflowOptions{
-		ID:        fmt.Sprintf("detect/%s/%s", silo.ID, job.ID),
+		ID:        fmt.Sprintf("%s", job.ID),
 		TaskQueue: workflow.DockerRunnerQueue,
 	}
 

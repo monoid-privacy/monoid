@@ -38,6 +38,7 @@ var Models = []interface{}{
 	model.Category{},
 	model.DataSource{},
 	model.Purpose{},
+	model.SiloScanConfig{},
 	model.SiloDefinition{},
 	model.SiloSpecification{},
 	model.Subject{},

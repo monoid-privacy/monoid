@@ -28,9 +28,16 @@ type SiloDefinition struct {
 	DataSources         []DataSource
 	Subjects            []Subject `gorm:"many2many:silo_definition_subjects;"`
 	Config              SecretString
+	ScanConfig          *SiloScanConfig
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
+}
+
+type SiloScanConfig struct {
+	SiloDefinitionID string
+	Cron             *string
+	WorkflowID       *string
 }
 
 type DataSource struct {
@@ -43,18 +50,20 @@ type DataSource struct {
 	Properties       []*Property
 	Description      *string
 	Schema           string
+	Tentative        *TentativeStatus `json:"tentative"`
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
 
 type Property struct {
-	ID           string      `json:"id"`
-	Name         string      `json:"name"`
-	Categories   []*Category `gorm:"many2many:property_categories;"`
-	DataSourceID string      `json:"dataSourceID"`
-	DataSource   DataSource  `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	Purposes     []*Purpose  `gorm:"many2many:property_purposes;"`
+	ID           string           `json:"id"`
+	Name         string           `json:"name"`
+	Categories   []*Category      `gorm:"many2many:property_categories;"`
+	DataSourceID string           `json:"dataSourceID"`
+	DataSource   DataSource       `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Purposes     []*Purpose       `gorm:"many2many:property_purposes;"`
+	Tentative    *TentativeStatus `json:"tentative"`
 
 	CreatedAt time.Time
 	UpdatedAt time.Time

@@ -41,3 +41,7 @@ func DeleteObjectByID[Object any](id string, db *gorm.DB, errMsg string) (*strin
 
 	return &id, nil
 }
+
+func str(s string) *string {
+	return &s
+}

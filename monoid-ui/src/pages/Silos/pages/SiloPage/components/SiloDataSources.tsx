@@ -1,19 +1,26 @@
 import React, { useContext, useEffect } from 'react';
 import {
+  ApolloError,
   gql, useApolloClient, useMutation, useQuery,
 } from '@apollo/client';
 import { useParams } from 'react-router-dom';
-import { CheckCircleIcon } from '@heroicons/react/24/outline';
+import {
+  CheckCircleIcon, MinusCircleIcon, PlusCircleIcon, XCircleIcon,
+} from '@heroicons/react/24/outline';
+import {
+  CheckIcon, XMarkIcon,
+} from '@heroicons/react/24/solid';
+
 import Button from '../../../../../components/Button';
 import Spinner from '../../../../../components/Spinner';
 import AlertRegion from '../../../../../components/AlertRegion';
 import Table from '../../../../../components/Table';
 import { DataSource, Job, Property } from '../../../../../lib/models';
-import PageHeader from '../../../../../components/PageHeader';
 import CategoryCombobox from './CategoryCombobox';
 import Badge from '../../../../../components/Badge';
 import { dedup } from '../../../../../utils/utils';
 import ToastContext from '../../../../../contexts/ToastContext';
+import Card, { CardHeader } from '../../../../../components/Card';
 
 const RUN_SOURCE_SCAN = gql`
   mutation RunSourceScan($id: ID!, $workspaceId: ID!) {
@@ -49,9 +56,19 @@ const SILO_DATA_SOURCES = gql`
               id
               name
             }
+            tentative
           }
         }
       }
+    }
+  }
+`;
+
+const REVIEW_PROPERTIES = gql`
+  mutation ReviewProperties($input: ReviewPropertiesInput!) {
+    reviewProperties(input: $input) {
+      id
+      tentative
     }
   }
 `;
@@ -121,6 +138,80 @@ ScanRegion.defaultProps = {
   onScanStatusChange: () => { },
 };
 
+function TentativePropertyBadge(props: { property: Property }) {
+  const { property } = props;
+  const [reviewProperty, reviewPropertyRes] = useMutation(REVIEW_PROPERTIES);
+  const toastCtx = useContext(ToastContext);
+
+  return (
+    <Badge
+      key={property.id}
+      className="mt-1"
+      color={property.tentative === 'CREATED' ? 'green' : 'red'}
+      actions={reviewPropertyRes.loading ? [] : [
+        {
+          onClick: () => {
+            reviewProperty({
+              variables: {
+                input: {
+                  propertyIDs: [property.id!],
+                  reviewResult: 'APPROVE',
+                },
+              },
+            }).catch((err: ApolloError) => {
+              toastCtx.showToast({
+                variant: 'danger',
+                title: 'Error',
+                message: err.message,
+                icon: XCircleIcon,
+              });
+            });
+          },
+          content: (
+            <CheckIcon className="w-3" />
+          ),
+        },
+        {
+          onClick: () => {
+            reviewProperty({
+              variables: {
+                input: {
+                  propertyIDs: [property.id!],
+                  reviewResult: 'DENY',
+                },
+              },
+            }).catch((err: ApolloError) => {
+              toastCtx.showToast({
+                variant: 'danger',
+                title: 'Error',
+                message: err.message,
+                icon: XCircleIcon,
+              });
+            });
+          },
+          content: (
+            <XMarkIcon className="w-3" />
+          ),
+        },
+      ]}
+    >
+      {
+        reviewPropertyRes.loading
+          ? <Spinner />
+          : (
+            <div>
+              {
+                property.tentative === 'CREATED'
+                  ? 'Scan: Discovered'
+                  : 'Scan: Deleted'
+              }
+            </div>
+          )
+      }
+    </Badge>
+  );
+}
+
 export default function SiloDataSources() {
   const [runScan, runScanRes] = useMutation<{ detectSiloSources: Job }>(RUN_SOURCE_SCAN);
   const { siloId, id } = useParams<{ siloId: string, id: string }>();
@@ -148,11 +239,10 @@ export default function SiloDataSources() {
   }
 
   return (
-    <div>
-      <PageHeader
-        title="Sources"
-        level="second"
-        actionItem={(
+    <Card innerClassName="px-0 py-0 sm:p-0" className="overflow-hidden">
+      <CardHeader className="flex items-center px-4 py-4 sm:px-6">
+        Sources
+        <div className="ml-auto">
           <ScanRegion
             siloId={siloId!}
             onScanStatusChange={(s) => {
@@ -189,10 +279,10 @@ export default function SiloDataSources() {
               {runScanRes.loading ? <Spinner color="white" size="sm" /> : 'Re-Scan'}
             </Button>
           </ScanRegion>
-        )}
-      />
-
+        </div>
+      </CardHeader>
       <Table
+        type="plain"
         tableCols={[
           {
             header: 'Name',
@@ -216,10 +306,35 @@ export default function SiloDataSources() {
                 <div className="space-x-2">
                   {
                     dedup(
-                      ds.properties?.flatMap((p) => p.categories || []) || [],
+                      ds.properties?.flatMap((p) => p.categories?.map(((c) => {
+                        if (!p.tentative) {
+                          return {
+                            ...c,
+                            tentative: c.tentative,
+                          };
+                        }
+
+                        if (p.tentative === 'DELETED') {
+                          return {
+                            ...c,
+                            tentative: 'DELETED',
+                          };
+                        }
+                        return {
+                          ...c,
+                          tentative: c.tentative ? c.tentative : p.tentative,
+                        };
+                      })) || []) || [],
                       (c) => c.id!,
                     ).map((c) => (
-                      <Badge key={c.id}>
+                      <Badge key={c.id} color={c.tentative ? 'yellow' : 'blue'}>
+                        <div className="mr-1">
+                          {c.tentative && (
+                            c.tentative === 'CREATED'
+                              ? <PlusCircleIcon className="w-4 h-4" />
+                              : <MinusCircleIcon className="w-4 h-4" />
+                          )}
+                        </div>
                         {c.name}
                       </Badge>
                     ))
@@ -248,7 +363,19 @@ export default function SiloDataSources() {
                           columns: [
                             {
                               key: 'name',
-                              content: p.name,
+                              content: (
+                                <div className="flex flex-col items-start">
+                                  {p.name}
+                                  {p.tentative
+                                    && (
+                                      <TentativePropertyBadge
+                                        key={p.id}
+                                        property={p}
+                                      />
+                                    )}
+
+                                </div>
+                              ),
                             },
                             {
                               key: 'cat',
@@ -272,9 +399,9 @@ export default function SiloDataSources() {
             </tr>
           ),
         }))}
-        className="mt-3"
+        innerClassName="border-t border-gray-300"
         nested
       />
-    </div>
+    </Card>
   );
 }

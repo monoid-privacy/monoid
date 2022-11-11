@@ -6,12 +6,20 @@ package resolver
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"regexp"
+	"strings"
 
 	"github.com/brist-ai/monoid/generated"
 	"github.com/brist-ai/monoid/model"
+	"github.com/brist-ai/monoid/workflow"
 	"github.com/google/uuid"
+	cron "github.com/robfig/cron/v3"
 	"github.com/vektah/gqlparser/v2/gqlerror"
+	"go.temporal.io/sdk/client"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // CreateSiloDefinition is the resolver for the createSiloDefinition field.
@@ -144,6 +152,99 @@ func (r *mutationResolver) DeleteSiloDefinition(ctx context.Context, id string) 
 	return &id, nil
 }
 
+// UpdateSiloScanConfig is the resolver for the updateSiloScanConfig field.
+func (r *mutationResolver) UpdateSiloScanConfig(ctx context.Context, input model.SiloScanConfigInput) (*model.SiloDefinition, error) {
+	silo := model.SiloDefinition{}
+	if err := r.Conf.DB.Preload("ScanConfig").Preload(
+		"SiloSpecification",
+	).Where("id = ?", input.SiloID).First(&silo).Error; err != nil {
+		return nil, handleError(err, "Silo not found.")
+	}
+
+	if silo.ScanConfig != nil && silo.ScanConfig.WorkflowID != nil && *silo.ScanConfig.WorkflowID != "" {
+		if err := r.Conf.TemporalClient.CancelWorkflow(ctx, *silo.ScanConfig.WorkflowID, ""); err != nil {
+			return nil, handleError(err, "Unable to remove existing scan configuration.")
+		}
+	}
+
+	if input.Cron == "" {
+		if err := r.Conf.DB.Model(&silo).Association("ScanConfig").Clear(); err != nil {
+			return nil, handleError(err, "Unable to save new scan configuration.")
+		}
+
+		return &silo, nil
+	}
+
+	// Validate that the cron config is valid, and will run at most once per hour.
+	validator := cron.NewParser(
+		cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow,
+	)
+
+	_, err := validator.Parse(input.Cron)
+	if err != nil {
+		return nil, handleError(err, "Invalid cron string.")
+	}
+
+	// If the minutes have anything but in integer, it might run
+	// more than once per hour
+	spl := strings.Fields(input.Cron)
+	re := regexp.MustCompile("^(?:(?:[0-9][0-9]?))$")
+	if !re.MatchString(spl[0]) {
+		return nil, handleError(fmt.Errorf("invalid cron"), "Workflows can execute at most once per hour.")
+	}
+
+	workflowOptions := client.StartWorkflowOptions{
+		CronSchedule: input.Cron,
+		TaskQueue:    workflow.DockerRunnerQueue,
+	}
+
+	// Start the Workflow
+	sf := workflow.Workflow{
+		Conf: r.Conf,
+	}
+
+	workflow, err := r.Conf.TemporalClient.ExecuteWorkflow(
+		context.Background(),
+		workflowOptions,
+		sf.DetectDSWorkflow,
+		workflow.DetectDSArgs{
+			SiloDefID:   silo.ID,
+			WorkspaceID: silo.WorkspaceID,
+		},
+	)
+
+	if err != nil {
+		return nil, handleError(err, "Error scheduling workflow.")
+	}
+
+	// Save the config to the db.
+	workflowID := workflow.GetID()
+
+	if err := r.Conf.DB.Transaction(func(tx *gorm.DB) error {
+		if err := r.Conf.DB.Model(&model.SiloScanConfig{}).Where(
+			"silo_definition_id = ?",
+			silo.ID,
+		).Delete(nil).Error; err != nil {
+			return err
+		}
+
+		if err := r.Conf.DB.Clauses(
+			clause.OnConflict{DoNothing: true},
+		).Create(&model.SiloScanConfig{
+			SiloDefinitionID: silo.ID,
+			Cron:             &input.Cron,
+			WorkflowID:       &workflowID,
+		}).Error; err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
+		return nil, handleError(err, "Unable to save new scan configuration.")
+	}
+	return &silo, nil
+}
+
 // SiloSpecification is the resolver for the siloSpecification field.
 func (r *siloDefinitionResolver) SiloSpecification(ctx context.Context, obj *model.SiloDefinition) (*model.SiloSpecification, error) {
 	spec := model.SiloSpecification{}
@@ -177,6 +278,24 @@ func (r *siloDefinitionResolver) SiloConfig(ctx context.Context, obj *model.Silo
 	}
 
 	return res, nil
+}
+
+// ScanConfig is the resolver for the scanConfig field.
+func (r *siloDefinitionResolver) ScanConfig(ctx context.Context, obj *model.SiloDefinition) (*model.SiloScanConfig, error) {
+	scanConfig := model.SiloScanConfig{}
+	if err := r.Conf.DB.Where("silo_definition_id = ?", obj.ID).First(&scanConfig).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return &model.SiloScanConfig{
+				SiloDefinitionID: obj.ID,
+				Cron:             str(""),
+				WorkflowID:       str(""),
+			}, nil
+		}
+
+		return nil, handleError(err, "Error running query.")
+	}
+
+	return &scanConfig, nil
 }
 
 // SiloDefinitions is the resolver for the siloDefinitions field.

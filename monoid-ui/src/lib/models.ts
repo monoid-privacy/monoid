@@ -12,9 +12,12 @@ export interface SiloDefinition {
   siloConfig?: object
 }
 
+type TentativeValue = 'CREATED' | 'DELETED' | null;
+
 export interface Property {
   id?: string
   name?: string
+  tentative?: TentativeValue
   categories?: Category[]
 }
 
@@ -27,10 +30,12 @@ export interface DataSource {
 export interface Category {
   id?: string
   name?: string
+  tentative?: TentativeValue
 }
 
 export interface Job {
   id?: string,
   jobType?: string,
-  status?: 'RUNNING' | 'QUEUED' | 'FAILED' | 'SUCCESS'
+  status?: 'RUNNING' | 'QUEUED' | 'FAILED' | 'COMPLETED'
+  createdAt?: string
 }

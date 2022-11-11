@@ -3,12 +3,13 @@ import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { twMerge } from 'tailwind-merge';
 
 dayjs.extend(relativeTime);
 
 // eslint-disable-next-line import/prefer-default-export
 export function classNames(...classes: (string | undefined)[]) {
-  return classes.filter(Boolean).join(' ');
+  return twMerge(...classes);
 }
 
 export function timeDiffFormat(time?: string): string {

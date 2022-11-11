@@ -11,11 +11,18 @@ type DataSource {
     properties: [Property!]
     description: String
     schema: String!
+    tentative: TentativeStatus
+}
+
+enum TentativeStatus {
+    DELETED
+    CREATED
 }
 
 type Property {
     id: ID!
     name: String!
+    tentative: TentativeStatus
     categories: [Category!]
     dataSource: DataSource!
     purposes: [Purpose!]
@@ -112,6 +119,21 @@ input UpdateSubjectInput {
     name: String
 }
 
+enum ReviewResult {
+    APPROVE
+    DENY
+}
+
+input ReviewPropertiesInput {
+    propertyIDs: [ID!]
+    reviewResult: ReviewResult!
+}
+
+input ReviewDataSourcesInput {
+    dataSourceIDs: [ID!]
+    reviewResult: ReviewResult!
+}
+
 extend type Query {
     dataSource(id: ID!): DataSource
     siloSpecification(id: ID!): SiloSpecification
@@ -127,6 +149,8 @@ extend type Query {
 
 extend type Mutation {
     createDataSource(input: CreateDataSourceInput): DataSource
+    reviewDataSource(input: ReviewDataSourcesInput!): [Property]
+
     createSiloSpecification(input: CreateSiloSpecificationInput): SiloSpecification
     createProperty(input: CreatePropertyInput): Property
     createPurpose(input: CreatePurposeInput): Purpose
@@ -135,7 +159,10 @@ extend type Mutation {
 
     updateDataSource(input: UpdateDataSourceInput): DataSource
     updateSiloSpecification(input: UpdateSiloSpecificationInput): SiloSpecification
+
     updateProperty(input: UpdatePropertyInput): Property
+    reviewProperties(input: ReviewPropertiesInput!): [Property]
+
     updatePurpose(input: UpdatePurposeInput): Purpose
     updateCategory(input: UpdateCategoryInput): Category
     updateSubject(input: UpdateSubjectInput): Subject

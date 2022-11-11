@@ -28,6 +28,7 @@
     "react-scripts": "5.0.1",
     "react-select": "^5.6.0",
     "react-tag-input": "^6.8.1",
+    "tailwind-merge": "^1.8.0",
     "typescript": "*",
     "util": "^0.12.5",
     "uuid": "^9.0.0",

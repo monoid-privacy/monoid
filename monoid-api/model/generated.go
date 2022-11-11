@@ -63,6 +63,24 @@ type KVPair struct {
 	Value string `json:"value"`
 }
 
+type ReviewDataSourcesInput struct {
+	DataSourceIDs []string     `json:"dataSourceIDs"`
+	ReviewResult  ReviewResult `json:"reviewResult"`
+}
+
+type ReviewPropertiesInput struct {
+	PropertyIDs  []string     `json:"propertyIDs"`
+	ReviewResult ReviewResult `json:"reviewResult"`
+}
+
+type SiloScanConfigInput struct {
+	SiloID string `json:"siloId"`
+	// A cron string that can be used to schedule
+	// the scan, or empty string if automatic scanning
+	// is disabled.
+	Cron string `json:"cron"`
+}
+
 type UpdateCategoryInput struct {
 	Name *string `json:"name"`
 }
@@ -146,5 +164,87 @@ func (e *JobStatus) UnmarshalGQL(v interface{}) error {
 }
 
 func (e JobStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type ReviewResult string
+
+const (
+	ReviewResultApprove ReviewResult = "APPROVE"
+	ReviewResultDeny    ReviewResult = "DENY"
+)
+
+var AllReviewResult = []ReviewResult{
+	ReviewResultApprove,
+	ReviewResultDeny,
+}
+
+func (e ReviewResult) IsValid() bool {
+	switch e {
+	case ReviewResultApprove, ReviewResultDeny:
+		return true
+	}
+	return false
+}
+
+func (e ReviewResult) String() string {
+	return string(e)
+}
+
+func (e *ReviewResult) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ReviewResult(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ReviewResult", str)
+	}
+	return nil
+}
+
+func (e ReviewResult) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type TentativeStatus string
+
+const (
+	TentativeStatusDeleted TentativeStatus = "DELETED"
+	TentativeStatusCreated TentativeStatus = "CREATED"
+)
+
+var AllTentativeStatus = []TentativeStatus{
+	TentativeStatusDeleted,
+	TentativeStatusCreated,
+}
+
+func (e TentativeStatus) IsValid() bool {
+	switch e {
+	case TentativeStatusDeleted, TentativeStatusCreated:
+		return true
+	}
+	return false
+}
+
+func (e TentativeStatus) String() string {
+	return string(e)
+}
+
+func (e *TentativeStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = TentativeStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid TentativeStatus", str)
+	}
+	return nil
+}
+
+func (e TentativeStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }

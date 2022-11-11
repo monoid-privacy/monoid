@@ -40,9 +40,9 @@ export function CardDivider(props: CardDividerProps) {
 interface CardHeaderProps extends React.HTMLProps<HTMLDivElement> { }
 
 export function CardHeader(props: CardHeaderProps) {
-  const { children } = props;
+  const { children, className, ...rest } = props;
 
   return (
-    <h3 className="text-lg leading-6 font-medium text-gray-900">{children}</h3>
+    <h3 className={classNames('text-lg leading-6 font-medium text-gray-900', className)} {...rest}>{children}</h3>
   );
 }
