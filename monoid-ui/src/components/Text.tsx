@@ -3,7 +3,7 @@ import { classNames } from '../utils/utils';
 
 interface TextProps extends Omit<React.HTMLProps<HTMLParagraphElement>, 'size'> {
   size?: 'xs' | 'sm' | 'md' | 'lg',
-  em?: 'light' | 'normal'
+  em?: 'light' | 'normal' | 'bold'
 }
 
 export default function Text(props: TextProps) {
@@ -35,6 +35,9 @@ export default function Text(props: TextProps) {
       break;
     case 'normal':
       emCls = '';
+      break;
+    case 'bold':
+      emCls = 'font-semibold';
       break;
     default:
       break;

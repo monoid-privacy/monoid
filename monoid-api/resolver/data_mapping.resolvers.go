@@ -12,7 +12,6 @@ import (
 	"github.com/brist-ai/monoid/model"
 	"github.com/brist-ai/monoid/workflow"
 	"github.com/google/uuid"
-	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.temporal.io/sdk/client"
 	"gorm.io/gorm"
 )
@@ -34,7 +33,6 @@ func (r *mutationResolver) CreateDataSource(ctx context.Context, input *model.Cr
 		ID:               uuid.NewString(),
 		SiloDefinitionID: input.SiloDefinitionID,
 		Description:      input.Description,
-		Schema:           input.Schema,
 	}
 
 	if err := r.Conf.DB.Create(&dataSource).Error; err != nil {
@@ -136,10 +134,6 @@ func (r *mutationResolver) UpdateDataSource(ctx context.Context, input *model.Up
 
 	dataSource.Description = input.Description
 
-	if input.Schema != nil {
-		dataSource.Schema = *input.Schema
-	}
-
 	if err := r.Conf.DB.Save(&dataSource).Error; err != nil {
 		return nil, handleError(err, "Error updating data source.")
 	}
@@ -213,77 +207,6 @@ func (r *mutationResolver) UpdateProperty(ctx context.Context, input *model.Upda
 	}
 
 	return &property, nil
-}
-
-// ReviewProperties is the resolver for the reviewProperties field.
-func (r *mutationResolver) ReviewProperties(ctx context.Context, input model.ReviewPropertiesInput) ([]*model.Property, error) {
-	properties := []*model.Property{}
-	if err := r.Conf.DB.Where("id IN ?", input.PropertyIDs).Find(&properties).Error; err != nil {
-		return nil, handleError(err, "Could not find properties.")
-	}
-
-	if len(properties) != len(input.PropertyIDs) {
-		return nil, gqlerror.Errorf("Could not find properties.")
-	}
-
-	// An array of property ids to delete
-	delProps := make([]string, 0, len(properties))
-
-	// An array of property ids to remove the tentative flag from.
-	updateProps := make([]string, 0, len(properties))
-	resProps := make([]*model.Property, 0, len(properties))
-
-	for _, p := range properties {
-		if p.Tentative == nil {
-			continue
-		}
-
-		switch *p.Tentative {
-		// If the user approves a creation, the tentative status is set to
-		// nil, otherwise, the property is deleted.
-		case model.TentativeStatusCreated:
-			if input.ReviewResult == model.ReviewResultApprove {
-				p.Tentative = nil
-				updateProps = append(updateProps, p.ID)
-				resProps = append(resProps, p)
-			} else {
-				delProps = append(delProps, p.ID)
-			}
-		// If the user approves a deletion, the property is deleted, otherwise,
-		// the tentative status is set to nil, since it is being left as-is.
-		case model.TentativeStatusDeleted:
-			if input.ReviewResult == model.ReviewResultApprove {
-				delProps = append(delProps, p.ID)
-			} else {
-				p.Tentative = nil
-				updateProps = append(updateProps, p.ID)
-				resProps = append(resProps, p)
-			}
-		}
-	}
-
-	if err := r.Conf.DB.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&model.Property{}).Where("id IN ?", updateProps).Updates(map[string]interface{}{
-			"tentative": nil,
-		}).Error; err != nil {
-			return err
-		}
-
-		// Delete the property_category associations
-		if err := tx.Table("property_categories").Where("property_id IN ?", delProps).Delete(nil).Error; err != nil {
-			return err
-		}
-
-		if err := tx.Where("id IN ?", delProps).Delete(&model.Property{}).Error; err != nil {
-			return err
-		}
-
-		return nil
-	}); err != nil {
-		return nil, handleError(err, "Error updating properties.")
-	}
-
-	return resProps, nil
 }
 
 // UpdatePurpose is the resolver for the updatePurpose field.
@@ -372,30 +295,39 @@ func (r *mutationResolver) DetectSiloSources(ctx context.Context, workspaceID st
 		ResourceID:  id,
 	}
 
-	if err := r.Conf.DB.Create(&job).Error; err != nil {
-		return nil, handleError(err, "Error creating dectect job.")
-	}
+	if err := r.Conf.DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(&job).Error; err != nil {
+			return err
+		}
 
-	options := client.StartWorkflowOptions{
-		ID:        fmt.Sprintf("%s", job.ID),
-		TaskQueue: workflow.DockerRunnerQueue,
-	}
+		options := client.StartWorkflowOptions{
+			ID:        job.ID,
+			TaskQueue: workflow.DockerRunnerQueue,
+		}
 
-	// Start the Workflow
-	sf := workflow.Workflow{
-		Conf: r.Conf,
-	}
+		// Start the Workflow
+		sf := workflow.Workflow{
+			Conf: r.Conf,
+		}
 
-	_, err := r.Conf.TemporalClient.ExecuteWorkflow(
-		context.Background(),
-		options,
-		sf.DetectDSWorkflow,
-		job.ID,
-		silo,
-	)
+		_, err := r.Conf.TemporalClient.ExecuteWorkflow(
+			context.Background(),
+			options,
+			sf.DetectDSWorkflow,
+			workflow.DetectDSArgs{
+				SiloDefID:   silo.ID,
+				WorkspaceID: silo.WorkspaceID,
+				JobID:       job.ID,
+			},
+		)
 
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
+		return nil, handleError(err, "Error running job.")
 	}
 
 	return &job, nil

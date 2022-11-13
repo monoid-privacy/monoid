@@ -38,7 +38,7 @@ func (w *Workflow) DetectDSWorkflow(
 		JobType:     model.JobTypeDiscoverSources,
 		ResourceID:  args.SiloDefID,
 		Status:      model.JobStatusRunning,
-	}).Get(ctx, nil)
+	}).Get(ctx, &job)
 
 	if err != nil {
 		err := workflow.ExecuteActivity(ctx, ac.UpdateJobStatus, activity.JobStatusInput{

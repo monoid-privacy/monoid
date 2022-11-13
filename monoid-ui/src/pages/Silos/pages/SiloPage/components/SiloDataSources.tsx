@@ -56,7 +56,6 @@ const SILO_DATA_SOURCES = gql`
               id
               name
             }
-            tentative
           }
         }
       }
@@ -273,6 +272,13 @@ export default function SiloDataSources() {
                     resourceId: siloId,
                   },
                 });
+              }).catch((err: ApolloError) => {
+                toastCtx.showToast({
+                  variant: 'danger',
+                  title: 'Error',
+                  message: err.message,
+                  icon: XCircleIcon,
+                });
               });
             }}
             >
@@ -298,7 +304,29 @@ export default function SiloDataSources() {
           columns: [
             {
               key: 'name',
-              content: ds.name,
+              content: (
+                <div className="flex flex-col items-start">
+                  <div>{ds.name}</div>
+                  <div className="space-x-2">
+                    {
+                      ds.tentative
+                      && (
+                        <Badge color={ds.tentative === 'CREATED' ? 'green' : 'red'} className="mt-2">
+                          {ds.tentative === 'CREATED' ? 'Discovered' : 'Deleted'}
+                        </Badge>
+                      )
+                    }
+                    {
+                      (ds.properties?.filter((p) => p.tentative).length || 0) !== 0
+                      && (
+                        <Badge color="yellow" className="mt-2">
+                          Property Changes Discovered
+                        </Badge>
+                      )
+                    }
+                  </div>
+                </div>
+              ),
             },
             {
               key: 'properties',
@@ -306,6 +334,8 @@ export default function SiloDataSources() {
                 <div className="space-x-2">
                   {
                     dedup(
+                      // Get all the categories that are listed under the properties for
+                      // the data source.
                       ds.properties?.flatMap((p) => p.categories?.map(((c) => {
                         if (!p.tentative) {
                           return {

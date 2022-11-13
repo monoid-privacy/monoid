@@ -44,6 +44,7 @@ var Models = []interface{}{
 	model.Subject{},
 	model.Property{},
 	model.Job{},
+	model.DataDiscovery{},
 }
 
 func InitDb(dbInfo DBInfo) *gorm.DB {

@@ -37,6 +37,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	DataDiscovery() DataDiscoveryResolver
 	DataSource() DataSourceResolver
 	Mutation() MutationResolver
 	Property() PropertyResolver
@@ -54,15 +55,21 @@ type ComplexityRoot struct {
 		Name func(childComplexity int) int
 	}
 
+	DataDiscovery struct {
+		CreatedAt func(childComplexity int) int
+		Data      func(childComplexity int) int
+		ID        func(childComplexity int) int
+		Status    func(childComplexity int) int
+		Type      func(childComplexity int) int
+	}
+
 	DataSource struct {
 		Description    func(childComplexity int) int
 		Group          func(childComplexity int) int
 		ID             func(childComplexity int) int
 		Name           func(childComplexity int) int
 		Properties     func(childComplexity int) int
-		Schema         func(childComplexity int) int
 		SiloDefinition func(childComplexity int) int
-		Tentative      func(childComplexity int) int
 	}
 
 	Job struct {
@@ -92,8 +99,8 @@ type ComplexityRoot struct {
 		DeleteSubject           func(childComplexity int, id string) int
 		DeleteWorkspace         func(childComplexity int, id *string) int
 		DetectSiloSources       func(childComplexity int, workspaceID string, id string) int
+		HandleDiscovery         func(childComplexity int, input *model.HandleDiscoveryInput) int
 		ReviewDataSource        func(childComplexity int, input model.ReviewDataSourcesInput) int
-		ReviewProperties        func(childComplexity int, input model.ReviewPropertiesInput) int
 		UpdateCategory          func(childComplexity int, input *model.UpdateCategoryInput) int
 		UpdateDataSource        func(childComplexity int, input *model.UpdateDataSourceInput) int
 		UpdateProperty          func(childComplexity int, input *model.UpdatePropertyInput) int
@@ -104,13 +111,33 @@ type ComplexityRoot struct {
 		UpdateSubject           func(childComplexity int, input *model.UpdateSubjectInput) int
 	}
 
+	NewCategoryDiscovery struct {
+		CategoryID func(childComplexity int) int
+		PropertyID func(childComplexity int) int
+	}
+
+	NewDataSourceDiscovery struct {
+		Group      func(childComplexity int) int
+		Name       func(childComplexity int) int
+		Properties func(childComplexity int) int
+	}
+
+	NewPropertyDiscovery struct {
+		Categories   func(childComplexity int) int
+		DataSourceId func(childComplexity int) int
+		Name         func(childComplexity int) int
+	}
+
+	ObjectMissingDiscovery struct {
+		ID func(childComplexity int) int
+	}
+
 	Property struct {
 		Categories func(childComplexity int) int
 		DataSource func(childComplexity int) int
 		ID         func(childComplexity int) int
 		Name       func(childComplexity int) int
 		Purposes   func(childComplexity int) int
-		Tentative  func(childComplexity int) int
 	}
 
 	Purpose struct {
@@ -137,6 +164,7 @@ type ComplexityRoot struct {
 	SiloDefinition struct {
 		DataSources       func(childComplexity int) int
 		Description       func(childComplexity int) int
+		Discoveries       func(childComplexity int) int
 		ID                func(childComplexity int) int
 		Name              func(childComplexity int) int
 		ScanConfig        func(childComplexity int) int
@@ -175,6 +203,9 @@ type ComplexityRoot struct {
 	}
 }
 
+type DataDiscoveryResolver interface {
+	Data(ctx context.Context, obj *model.DataDiscovery) (model.DataDiscoveryData, error)
+}
 type DataSourceResolver interface {
 	Properties(ctx context.Context, obj *model.DataSource) ([]*model.Property, error)
 }
@@ -191,7 +222,6 @@ type MutationResolver interface {
 	UpdateDataSource(ctx context.Context, input *model.UpdateDataSourceInput) (*model.DataSource, error)
 	UpdateSiloSpecification(ctx context.Context, input *model.UpdateSiloSpecificationInput) (*model.SiloSpecification, error)
 	UpdateProperty(ctx context.Context, input *model.UpdatePropertyInput) (*model.Property, error)
-	ReviewProperties(ctx context.Context, input model.ReviewPropertiesInput) ([]*model.Property, error)
 	UpdatePurpose(ctx context.Context, input *model.UpdatePurposeInput) (*model.Purpose, error)
 	UpdateCategory(ctx context.Context, input *model.UpdateCategoryInput) (*model.Category, error)
 	UpdateSubject(ctx context.Context, input *model.UpdateSubjectInput) (*model.Subject, error)
@@ -202,6 +232,7 @@ type MutationResolver interface {
 	DeleteCategory(ctx context.Context, id string) (*string, error)
 	DeleteSubject(ctx context.Context, id string) (*string, error)
 	DetectSiloSources(ctx context.Context, workspaceID string, id string) (*model.Job, error)
+	HandleDiscovery(ctx context.Context, input *model.HandleDiscoveryInput) (*model.DataDiscovery, error)
 	CreateSiloDefinition(ctx context.Context, input *model.CreateSiloDefinitionInput) (*model.SiloDefinition, error)
 	UpdateSiloDefinition(ctx context.Context, input *model.UpdateSiloDefinitionInput) (*model.SiloDefinition, error)
 	DeleteSiloDefinition(ctx context.Context, id string) (*string, error)
@@ -231,6 +262,7 @@ type SiloDefinitionResolver interface {
 
 	SiloConfig(ctx context.Context, obj *model.SiloDefinition) (map[string]interface{}, error)
 	ScanConfig(ctx context.Context, obj *model.SiloDefinition) (*model.SiloScanConfig, error)
+	Discoveries(ctx context.Context, obj *model.SiloDefinition) ([]*model.DataDiscovery, error)
 }
 type WorkspaceResolver interface {
 	Settings(ctx context.Context, obj *model.Workspace) (string, error)
@@ -268,6 +300,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Category.Name(childComplexity), true
 
+	case "DataDiscovery.createdAt":
+		if e.complexity.DataDiscovery.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.DataDiscovery.CreatedAt(childComplexity), true
+
+	case "DataDiscovery.data":
+		if e.complexity.DataDiscovery.Data == nil {
+			break
+		}
+
+		return e.complexity.DataDiscovery.Data(childComplexity), true
+
+	case "DataDiscovery.id":
+		if e.complexity.DataDiscovery.ID == nil {
+			break
+		}
+
+		return e.complexity.DataDiscovery.ID(childComplexity), true
+
+	case "DataDiscovery.status":
+		if e.complexity.DataDiscovery.Status == nil {
+			break
+		}
+
+		return e.complexity.DataDiscovery.Status(childComplexity), true
+
+	case "DataDiscovery.type":
+		if e.complexity.DataDiscovery.Type == nil {
+			break
+		}
+
+		return e.complexity.DataDiscovery.Type(childComplexity), true
+
 	case "DataSource.description":
 		if e.complexity.DataSource.Description == nil {
 			break
@@ -303,26 +370,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.DataSource.Properties(childComplexity), true
 
-	case "DataSource.schema":
-		if e.complexity.DataSource.Schema == nil {
-			break
-		}
-
-		return e.complexity.DataSource.Schema(childComplexity), true
-
 	case "DataSource.siloDefinition":
 		if e.complexity.DataSource.SiloDefinition == nil {
 			break
 		}
 
 		return e.complexity.DataSource.SiloDefinition(childComplexity), true
-
-	case "DataSource.tentative":
-		if e.complexity.DataSource.Tentative == nil {
-			break
-		}
-
-		return e.complexity.DataSource.Tentative(childComplexity), true
 
 	case "Job.createdAt":
 		if e.complexity.Job.CreatedAt == nil {
@@ -570,6 +623,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.DetectSiloSources(childComplexity, args["workspaceId"].(string), args["id"].(string)), true
 
+	case "Mutation.handleDiscovery":
+		if e.complexity.Mutation.HandleDiscovery == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_handleDiscovery_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.HandleDiscovery(childComplexity, args["input"].(*model.HandleDiscoveryInput)), true
+
 	case "Mutation.reviewDataSource":
 		if e.complexity.Mutation.ReviewDataSource == nil {
 			break
@@ -581,18 +646,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ReviewDataSource(childComplexity, args["input"].(model.ReviewDataSourcesInput)), true
-
-	case "Mutation.reviewProperties":
-		if e.complexity.Mutation.ReviewProperties == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_reviewProperties_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.ReviewProperties(childComplexity, args["input"].(model.ReviewPropertiesInput)), true
 
 	case "Mutation.updateCategory":
 		if e.complexity.Mutation.UpdateCategory == nil {
@@ -690,6 +743,69 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateSubject(childComplexity, args["input"].(*model.UpdateSubjectInput)), true
 
+	case "NewCategoryDiscovery.categoryId":
+		if e.complexity.NewCategoryDiscovery.CategoryID == nil {
+			break
+		}
+
+		return e.complexity.NewCategoryDiscovery.CategoryID(childComplexity), true
+
+	case "NewCategoryDiscovery.propertyId":
+		if e.complexity.NewCategoryDiscovery.PropertyID == nil {
+			break
+		}
+
+		return e.complexity.NewCategoryDiscovery.PropertyID(childComplexity), true
+
+	case "NewDataSourceDiscovery.group":
+		if e.complexity.NewDataSourceDiscovery.Group == nil {
+			break
+		}
+
+		return e.complexity.NewDataSourceDiscovery.Group(childComplexity), true
+
+	case "NewDataSourceDiscovery.name":
+		if e.complexity.NewDataSourceDiscovery.Name == nil {
+			break
+		}
+
+		return e.complexity.NewDataSourceDiscovery.Name(childComplexity), true
+
+	case "NewDataSourceDiscovery.properties":
+		if e.complexity.NewDataSourceDiscovery.Properties == nil {
+			break
+		}
+
+		return e.complexity.NewDataSourceDiscovery.Properties(childComplexity), true
+
+	case "NewPropertyDiscovery.categories":
+		if e.complexity.NewPropertyDiscovery.Categories == nil {
+			break
+		}
+
+		return e.complexity.NewPropertyDiscovery.Categories(childComplexity), true
+
+	case "NewPropertyDiscovery.dataSourceId":
+		if e.complexity.NewPropertyDiscovery.DataSourceId == nil {
+			break
+		}
+
+		return e.complexity.NewPropertyDiscovery.DataSourceId(childComplexity), true
+
+	case "NewPropertyDiscovery.name":
+		if e.complexity.NewPropertyDiscovery.Name == nil {
+			break
+		}
+
+		return e.complexity.NewPropertyDiscovery.Name(childComplexity), true
+
+	case "ObjectMissingDiscovery.id":
+		if e.complexity.ObjectMissingDiscovery.ID == nil {
+			break
+		}
+
+		return e.complexity.ObjectMissingDiscovery.ID(childComplexity), true
+
 	case "Property.categories":
 		if e.complexity.Property.Categories == nil {
 			break
@@ -724,13 +840,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Property.Purposes(childComplexity), true
-
-	case "Property.tentative":
-		if e.complexity.Property.Tentative == nil {
-			break
-		}
-
-		return e.complexity.Property.Tentative(childComplexity), true
 
 	case "Purpose.id":
 		if e.complexity.Purpose.ID == nil {
@@ -890,6 +999,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.SiloDefinition.Description(childComplexity), true
+
+	case "SiloDefinition.discoveries":
+		if e.complexity.SiloDefinition.Discoveries == nil {
+			break
+		}
+
+		return e.complexity.SiloDefinition.Discoveries(childComplexity), true
 
 	case "SiloDefinition.id":
 		if e.complexity.SiloDefinition.ID == nil {
@@ -1073,9 +1189,9 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateSiloSpecificationInput,
 		ec.unmarshalInputCreateSubjectInput,
 		ec.unmarshalInputCreateWorkspaceInput,
+		ec.unmarshalInputHandleDiscoveryInput,
 		ec.unmarshalInputKVPair,
 		ec.unmarshalInputReviewDataSourcesInput,
-		ec.unmarshalInputReviewPropertiesInput,
 		ec.unmarshalInputSiloScanConfigInput,
 		ec.unmarshalInputUpdateCategoryInput,
 		ec.unmarshalInputUpdateDataSourceInput,
@@ -1189,19 +1305,11 @@ type DataSource {
     siloDefinition: SiloDefinition!
     properties: [Property!]
     description: String
-    schema: String!
-    tentative: TentativeStatus
-}
-
-enum TentativeStatus {
-    DELETED
-    CREATED
 }
 
 type Property {
     id: ID!
     name: String!
-    tentative: TentativeStatus
     categories: [Category!]
     dataSource: DataSource!
     purposes: [Purpose!]
@@ -1241,7 +1349,6 @@ input CreateSiloSpecificationInput {
 input CreateDataSourceInput {
     siloDefinitionID: ID!
     description: String
-    schema: String!
     propertyIDs: [ID!]
 }
 
@@ -1256,7 +1363,6 @@ input UpdateSiloSpecificationInput {
 input UpdateDataSourceInput {
     id: ID!
     description: String
-    schema: String
 }
 
 input CreatePropertyInput {
@@ -1303,10 +1409,10 @@ enum ReviewResult {
     DENY
 }
 
-input ReviewPropertiesInput {
-    propertyIDs: [ID!]
-    reviewResult: ReviewResult!
-}
+# input ReviewPropertiesInput {
+#     propertyIDs: [ID!]
+#     reviewResult: ReviewResult!
+# }
 
 input ReviewDataSourcesInput {
     dataSourceIDs: [ID!]
@@ -1340,7 +1446,7 @@ extend type Mutation {
     updateSiloSpecification(input: UpdateSiloSpecificationInput): SiloSpecification
 
     updateProperty(input: UpdatePropertyInput): Property
-    reviewProperties(input: ReviewPropertiesInput!): [Property]
+    # reviewProperties(input: ReviewPropertiesInput!): [Property]
 
     updatePurpose(input: UpdatePurposeInput): Purpose
     updateCategory(input: UpdateCategoryInput): Category
@@ -1354,6 +1460,69 @@ extend type Mutation {
     deleteSubject(id: ID!): ID
 
     detectSiloSources(workspaceId: ID!, id: ID!): Job!
+}`, BuiltIn: false},
+	{Name: "../schema/discovery.graphqls", Input: `enum DiscoveryType {
+    DATA_SOURCE_MISSING
+    DATA_SOURCE_FOUND
+    PROPERTY_FOUND
+    PROPERTY_MISSING
+    CATEGORY_FOUND
+}
+
+enum DiscoveryStatus {
+    OPEN
+    ACCEPTED
+    REJECTED
+}
+
+type NewDataSourceDiscovery {
+    name: String!
+    group: String
+    properties: [NewPropertyDiscovery]
+}
+
+type NewPropertyDiscovery {
+    name: String!
+    categories: [NewCategoryDiscovery]
+    dataSourceId: String
+}
+
+type NewCategoryDiscovery {
+    propertyId: String
+    categoryId: String!
+}
+
+type ObjectMissingDiscovery {
+    id: String!
+}
+
+union DataDiscoveryData = NewDataSourceDiscovery | NewPropertyDiscovery | NewCategoryDiscovery | ObjectMissingDiscovery
+
+type DataDiscovery {
+    id: ID!
+    type: DiscoveryType!
+    status: DiscoveryStatus!
+    data: DataDiscoveryData!
+
+    createdAt: Time!
+}
+
+extend type SiloDefinition {
+    discoveries: [DataDiscovery]
+}
+
+enum DiscoveryAction {
+    ACCEPT
+    REJECT
+}
+
+input HandleDiscoveryInput {
+    discoveryId: ID!
+    action: DiscoveryAction!
+}
+
+extend type Mutation {
+    handleDiscovery(input: HandleDiscoveryInput): DataDiscovery
 }`, BuiltIn: false},
 	{Name: "../schema/jobs.graphqls", Input: `scalar Time
 
@@ -1707,13 +1876,13 @@ func (ec *executionContext) field_Mutation_detectSiloSources_args(ctx context.Co
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_reviewDataSource_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_handleDiscovery_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.ReviewDataSourcesInput
+	var arg0 *model.HandleDiscoveryInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNReviewDataSourcesInput2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐReviewDataSourcesInput(ctx, tmp)
+		arg0, err = ec.unmarshalOHandleDiscoveryInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐHandleDiscoveryInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1722,13 +1891,13 @@ func (ec *executionContext) field_Mutation_reviewDataSource_args(ctx context.Con
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_reviewProperties_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_reviewDataSource_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.ReviewPropertiesInput
+	var arg0 model.ReviewDataSourcesInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNReviewPropertiesInput2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐReviewPropertiesInput(ctx, tmp)
+		arg0, err = ec.unmarshalNReviewDataSourcesInput2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐReviewDataSourcesInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2151,6 +2320,226 @@ func (ec *executionContext) fieldContext_Category_name(ctx context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _DataDiscovery_id(ctx context.Context, field graphql.CollectedField, obj *model.DataDiscovery) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DataDiscovery_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DataDiscovery_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DataDiscovery",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DataDiscovery_type(ctx context.Context, field graphql.CollectedField, obj *model.DataDiscovery) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DataDiscovery_type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DiscoveryType)
+	fc.Result = res
+	return ec.marshalNDiscoveryType2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DataDiscovery_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DataDiscovery",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DiscoveryType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DataDiscovery_status(ctx context.Context, field graphql.CollectedField, obj *model.DataDiscovery) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DataDiscovery_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DiscoveryStatus)
+	fc.Result = res
+	return ec.marshalNDiscoveryStatus2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryStatus(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DataDiscovery_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DataDiscovery",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DiscoveryStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DataDiscovery_data(ctx context.Context, field graphql.CollectedField, obj *model.DataDiscovery) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DataDiscovery_data(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.DataDiscovery().Data(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataDiscoveryData)
+	fc.Result = res
+	return ec.marshalNDataDiscoveryData2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataDiscoveryData(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DataDiscovery_data(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DataDiscovery",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataDiscoveryData does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DataDiscovery_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.DataDiscovery) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DataDiscovery_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DataDiscovery_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DataDiscovery",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _DataSource_id(ctx context.Context, field graphql.CollectedField, obj *model.DataSource) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DataSource_id(ctx, field)
 	if err != nil {
@@ -2335,6 +2724,8 @@ func (ec *executionContext) fieldContext_DataSource_siloDefinition(ctx context.C
 				return ec.fieldContext_SiloDefinition_siloConfig(ctx, field)
 			case "scanConfig":
 				return ec.fieldContext_SiloDefinition_scanConfig(ctx, field)
+			case "discoveries":
+				return ec.fieldContext_SiloDefinition_discoveries(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SiloDefinition", field.Name)
 		},
@@ -2382,8 +2773,6 @@ func (ec *executionContext) fieldContext_DataSource_properties(ctx context.Conte
 				return ec.fieldContext_Property_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Property_name(ctx, field)
-			case "tentative":
-				return ec.fieldContext_Property_tentative(ctx, field)
 			case "categories":
 				return ec.fieldContext_Property_categories(ctx, field)
 			case "dataSource":
@@ -2433,91 +2822,6 @@ func (ec *executionContext) fieldContext_DataSource_description(ctx context.Cont
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _DataSource_schema(ctx context.Context, field graphql.CollectedField, obj *model.DataSource) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_DataSource_schema(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Schema, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_DataSource_schema(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "DataSource",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _DataSource_tentative(ctx context.Context, field graphql.CollectedField, obj *model.DataSource) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_DataSource_tentative(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Tentative, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.TentativeStatus)
-	fc.Result = res
-	return ec.marshalOTentativeStatus2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐTentativeStatus(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_DataSource_tentative(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "DataSource",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type TentativeStatus does not have child fields")
 		},
 	}
 	return fc, nil
@@ -2959,10 +3263,6 @@ func (ec *executionContext) fieldContext_Mutation_createDataSource(ctx context.C
 				return ec.fieldContext_DataSource_properties(ctx, field)
 			case "description":
 				return ec.fieldContext_DataSource_description(ctx, field)
-			case "schema":
-				return ec.fieldContext_DataSource_schema(ctx, field)
-			case "tentative":
-				return ec.fieldContext_DataSource_tentative(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DataSource", field.Name)
 		},
@@ -3021,8 +3321,6 @@ func (ec *executionContext) fieldContext_Mutation_reviewDataSource(ctx context.C
 				return ec.fieldContext_Property_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Property_name(ctx, field)
-			case "tentative":
-				return ec.fieldContext_Property_tentative(ctx, field)
 			case "categories":
 				return ec.fieldContext_Property_categories(ctx, field)
 			case "dataSource":
@@ -3151,8 +3449,6 @@ func (ec *executionContext) fieldContext_Mutation_createProperty(ctx context.Con
 				return ec.fieldContext_Property_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Property_name(ctx, field)
-			case "tentative":
-				return ec.fieldContext_Property_tentative(ctx, field)
 			case "categories":
 				return ec.fieldContext_Property_categories(ctx, field)
 			case "dataSource":
@@ -3399,10 +3695,6 @@ func (ec *executionContext) fieldContext_Mutation_updateDataSource(ctx context.C
 				return ec.fieldContext_DataSource_properties(ctx, field)
 			case "description":
 				return ec.fieldContext_DataSource_description(ctx, field)
-			case "schema":
-				return ec.fieldContext_DataSource_schema(ctx, field)
-			case "tentative":
-				return ec.fieldContext_DataSource_tentative(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DataSource", field.Name)
 		},
@@ -3525,8 +3817,6 @@ func (ec *executionContext) fieldContext_Mutation_updateProperty(ctx context.Con
 				return ec.fieldContext_Property_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Property_name(ctx, field)
-			case "tentative":
-				return ec.fieldContext_Property_tentative(ctx, field)
 			case "categories":
 				return ec.fieldContext_Property_categories(ctx, field)
 			case "dataSource":
@@ -3545,72 +3835,6 @@ func (ec *executionContext) fieldContext_Mutation_updateProperty(ctx context.Con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_updateProperty_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_reviewProperties(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_reviewProperties(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ReviewProperties(rctx, fc.Args["input"].(model.ReviewPropertiesInput))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.([]*model.Property)
-	fc.Result = res
-	return ec.marshalOProperty2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐProperty(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_reviewProperties(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Property_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Property_name(ctx, field)
-			case "tentative":
-				return ec.fieldContext_Property_tentative(ctx, field)
-			case "categories":
-				return ec.fieldContext_Property_categories(ctx, field)
-			case "dataSource":
-				return ec.fieldContext_Property_dataSource(ctx, field)
-			case "purposes":
-				return ec.fieldContext_Property_purposes(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Property", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_reviewProperties_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -4172,6 +4396,70 @@ func (ec *executionContext) fieldContext_Mutation_detectSiloSources(ctx context.
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_handleDiscovery(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_handleDiscovery(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().HandleDiscovery(rctx, fc.Args["input"].(*model.HandleDiscoveryInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.DataDiscovery)
+	fc.Result = res
+	return ec.marshalODataDiscovery2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataDiscovery(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_handleDiscovery(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_DataDiscovery_id(ctx, field)
+			case "type":
+				return ec.fieldContext_DataDiscovery_type(ctx, field)
+			case "status":
+				return ec.fieldContext_DataDiscovery_status(ctx, field)
+			case "data":
+				return ec.fieldContext_DataDiscovery_data(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_DataDiscovery_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DataDiscovery", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_handleDiscovery_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_createSiloDefinition(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_createSiloDefinition(ctx, field)
 	if err != nil {
@@ -4224,6 +4512,8 @@ func (ec *executionContext) fieldContext_Mutation_createSiloDefinition(ctx conte
 				return ec.fieldContext_SiloDefinition_siloConfig(ctx, field)
 			case "scanConfig":
 				return ec.fieldContext_SiloDefinition_scanConfig(ctx, field)
+			case "discoveries":
+				return ec.fieldContext_SiloDefinition_discoveries(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SiloDefinition", field.Name)
 		},
@@ -4294,6 +4584,8 @@ func (ec *executionContext) fieldContext_Mutation_updateSiloDefinition(ctx conte
 				return ec.fieldContext_SiloDefinition_siloConfig(ctx, field)
 			case "scanConfig":
 				return ec.fieldContext_SiloDefinition_scanConfig(ctx, field)
+			case "discoveries":
+				return ec.fieldContext_SiloDefinition_discoveries(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SiloDefinition", field.Name)
 		},
@@ -4416,6 +4708,8 @@ func (ec *executionContext) fieldContext_Mutation_updateSiloScanConfig(ctx conte
 				return ec.fieldContext_SiloDefinition_siloConfig(ctx, field)
 			case "scanConfig":
 				return ec.fieldContext_SiloDefinition_scanConfig(ctx, field)
+			case "discoveries":
+				return ec.fieldContext_SiloDefinition_discoveries(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SiloDefinition", field.Name)
 		},
@@ -4430,6 +4724,401 @@ func (ec *executionContext) fieldContext_Mutation_updateSiloScanConfig(ctx conte
 	if fc.Args, err = ec.field_Mutation_updateSiloScanConfig_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NewCategoryDiscovery_propertyId(ctx context.Context, field graphql.CollectedField, obj *model.NewCategoryDiscovery) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NewCategoryDiscovery_propertyId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PropertyID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NewCategoryDiscovery_propertyId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NewCategoryDiscovery",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NewCategoryDiscovery_categoryId(ctx context.Context, field graphql.CollectedField, obj *model.NewCategoryDiscovery) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NewCategoryDiscovery_categoryId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CategoryID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NewCategoryDiscovery_categoryId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NewCategoryDiscovery",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NewDataSourceDiscovery_name(ctx context.Context, field graphql.CollectedField, obj *model.NewDataSourceDiscovery) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NewDataSourceDiscovery_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NewDataSourceDiscovery_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NewDataSourceDiscovery",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NewDataSourceDiscovery_group(ctx context.Context, field graphql.CollectedField, obj *model.NewDataSourceDiscovery) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NewDataSourceDiscovery_group(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Group, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NewDataSourceDiscovery_group(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NewDataSourceDiscovery",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NewDataSourceDiscovery_properties(ctx context.Context, field graphql.CollectedField, obj *model.NewDataSourceDiscovery) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NewDataSourceDiscovery_properties(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Properties, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]model.NewPropertyDiscovery)
+	fc.Result = res
+	return ec.marshalONewPropertyDiscovery2ᚕgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐNewPropertyDiscovery(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NewDataSourceDiscovery_properties(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NewDataSourceDiscovery",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "name":
+				return ec.fieldContext_NewPropertyDiscovery_name(ctx, field)
+			case "categories":
+				return ec.fieldContext_NewPropertyDiscovery_categories(ctx, field)
+			case "dataSourceId":
+				return ec.fieldContext_NewPropertyDiscovery_dataSourceId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type NewPropertyDiscovery", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NewPropertyDiscovery_name(ctx context.Context, field graphql.CollectedField, obj *model.NewPropertyDiscovery) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NewPropertyDiscovery_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NewPropertyDiscovery_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NewPropertyDiscovery",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NewPropertyDiscovery_categories(ctx context.Context, field graphql.CollectedField, obj *model.NewPropertyDiscovery) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NewPropertyDiscovery_categories(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Categories, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]model.NewCategoryDiscovery)
+	fc.Result = res
+	return ec.marshalONewCategoryDiscovery2ᚕgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐNewCategoryDiscovery(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NewPropertyDiscovery_categories(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NewPropertyDiscovery",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "propertyId":
+				return ec.fieldContext_NewCategoryDiscovery_propertyId(ctx, field)
+			case "categoryId":
+				return ec.fieldContext_NewCategoryDiscovery_categoryId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type NewCategoryDiscovery", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NewPropertyDiscovery_dataSourceId(ctx context.Context, field graphql.CollectedField, obj *model.NewPropertyDiscovery) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NewPropertyDiscovery_dataSourceId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DataSourceId, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NewPropertyDiscovery_dataSourceId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NewPropertyDiscovery",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ObjectMissingDiscovery_id(ctx context.Context, field graphql.CollectedField, obj *model.ObjectMissingDiscovery) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ObjectMissingDiscovery_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ObjectMissingDiscovery_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ObjectMissingDiscovery",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
 	}
 	return fc, nil
 }
@@ -4517,47 +5206,6 @@ func (ec *executionContext) fieldContext_Property_name(ctx context.Context, fiel
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Property_tentative(ctx context.Context, field graphql.CollectedField, obj *model.Property) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Property_tentative(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Tentative, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.TentativeStatus)
-	fc.Result = res
-	return ec.marshalOTentativeStatus2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐTentativeStatus(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Property_tentative(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Property",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type TentativeStatus does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4661,10 +5309,6 @@ func (ec *executionContext) fieldContext_Property_dataSource(ctx context.Context
 				return ec.fieldContext_DataSource_properties(ctx, field)
 			case "description":
 				return ec.fieldContext_DataSource_description(ctx, field)
-			case "schema":
-				return ec.fieldContext_DataSource_schema(ctx, field)
-			case "tentative":
-				return ec.fieldContext_DataSource_tentative(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DataSource", field.Name)
 		},
@@ -4988,10 +5632,6 @@ func (ec *executionContext) fieldContext_Query_dataSource(ctx context.Context, f
 				return ec.fieldContext_DataSource_properties(ctx, field)
 			case "description":
 				return ec.fieldContext_DataSource_description(ctx, field)
-			case "schema":
-				return ec.fieldContext_DataSource_schema(ctx, field)
-			case "tentative":
-				return ec.fieldContext_DataSource_tentative(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DataSource", field.Name)
 		},
@@ -5482,8 +6122,6 @@ func (ec *executionContext) fieldContext_Query_property(ctx context.Context, fie
 				return ec.fieldContext_Property_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Property_name(ctx, field)
-			case "tentative":
-				return ec.fieldContext_Property_tentative(ctx, field)
 			case "categories":
 				return ec.fieldContext_Property_categories(ctx, field)
 			case "dataSource":
@@ -5933,10 +6571,6 @@ func (ec *executionContext) fieldContext_SiloDefinition_dataSources(ctx context.
 				return ec.fieldContext_DataSource_properties(ctx, field)
 			case "description":
 				return ec.fieldContext_DataSource_description(ctx, field)
-			case "schema":
-				return ec.fieldContext_DataSource_schema(ctx, field)
-			case "tentative":
-				return ec.fieldContext_DataSource_tentative(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DataSource", field.Name)
 		},
@@ -6072,6 +6706,59 @@ func (ec *executionContext) fieldContext_SiloDefinition_scanConfig(ctx context.C
 				return ec.fieldContext_SiloScanConfig_cron(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SiloScanConfig", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SiloDefinition_discoveries(ctx context.Context, field graphql.CollectedField, obj *model.SiloDefinition) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SiloDefinition_discoveries(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.SiloDefinition().Discoveries(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.DataDiscovery)
+	fc.Result = res
+	return ec.marshalODataDiscovery2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataDiscovery(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SiloDefinition_discoveries(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SiloDefinition",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_DataDiscovery_id(ctx, field)
+			case "type":
+				return ec.fieldContext_DataDiscovery_type(ctx, field)
+			case "status":
+				return ec.fieldContext_DataDiscovery_status(ctx, field)
+			case "data":
+				return ec.fieldContext_DataDiscovery_data(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_DataDiscovery_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DataDiscovery", field.Name)
 		},
 	}
 	return fc, nil
@@ -6798,6 +7485,8 @@ func (ec *executionContext) fieldContext_Workspace_siloDefinitions(ctx context.C
 				return ec.fieldContext_SiloDefinition_siloConfig(ctx, field)
 			case "scanConfig":
 				return ec.fieldContext_SiloDefinition_scanConfig(ctx, field)
+			case "discoveries":
+				return ec.fieldContext_SiloDefinition_discoveries(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SiloDefinition", field.Name)
 		},
@@ -6857,6 +7546,8 @@ func (ec *executionContext) fieldContext_Workspace_siloDefinition(ctx context.Co
 				return ec.fieldContext_SiloDefinition_siloConfig(ctx, field)
 			case "scanConfig":
 				return ec.fieldContext_SiloDefinition_scanConfig(ctx, field)
+			case "discoveries":
+				return ec.fieldContext_SiloDefinition_discoveries(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SiloDefinition", field.Name)
 		},
@@ -8691,7 +9382,7 @@ func (ec *executionContext) unmarshalInputCreateDataSourceInput(ctx context.Cont
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"siloDefinitionID", "description", "schema", "propertyIDs"}
+	fieldsInOrder := [...]string{"siloDefinitionID", "description", "propertyIDs"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -8711,14 +9402,6 @@ func (ec *executionContext) unmarshalInputCreateDataSourceInput(ctx context.Cont
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
 			it.Description, err = ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "schema":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("schema"))
-			it.Schema, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -9016,6 +9699,42 @@ func (ec *executionContext) unmarshalInputCreateWorkspaceInput(ctx context.Conte
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputHandleDiscoveryInput(ctx context.Context, obj interface{}) (model.HandleDiscoveryInput, error) {
+	var it model.HandleDiscoveryInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"discoveryId", "action"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "discoveryId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discoveryId"))
+			it.DiscoveryID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "action":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("action"))
+			it.Action, err = ec.unmarshalNDiscoveryAction2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryAction(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputKVPair(ctx context.Context, obj interface{}) (model.KVPair, error) {
 	var it model.KVPair
 	asMap := map[string]interface{}{}
@@ -9071,42 +9790,6 @@ func (ec *executionContext) unmarshalInputReviewDataSourcesInput(ctx context.Con
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dataSourceIDs"))
 			it.DataSourceIDs, err = ec.unmarshalOID2ᚕstringᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "reviewResult":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewResult"))
-			it.ReviewResult, err = ec.unmarshalNReviewResult2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐReviewResult(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputReviewPropertiesInput(ctx context.Context, obj interface{}) (model.ReviewPropertiesInput, error) {
-	var it model.ReviewPropertiesInput
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"propertyIDs", "reviewResult"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "propertyIDs":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("propertyIDs"))
-			it.PropertyIDs, err = ec.unmarshalOID2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -9195,7 +9878,7 @@ func (ec *executionContext) unmarshalInputUpdateDataSourceInput(ctx context.Cont
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "description", "schema"}
+	fieldsInOrder := [...]string{"id", "description"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -9215,14 +9898,6 @@ func (ec *executionContext) unmarshalInputUpdateDataSourceInput(ctx context.Cont
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
 			it.Description, err = ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "schema":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("schema"))
-			it.Schema, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -9464,6 +10139,43 @@ func (ec *executionContext) unmarshalInputUpdateSubjectInput(ctx context.Context
 
 // region    ************************** interface.gotpl ***************************
 
+func (ec *executionContext) _DataDiscoveryData(ctx context.Context, sel ast.SelectionSet, obj model.DataDiscoveryData) graphql.Marshaler {
+	switch obj := (obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.NewDataSourceDiscovery:
+		return ec._NewDataSourceDiscovery(ctx, sel, &obj)
+	case *model.NewDataSourceDiscovery:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._NewDataSourceDiscovery(ctx, sel, obj)
+	case model.NewPropertyDiscovery:
+		return ec._NewPropertyDiscovery(ctx, sel, &obj)
+	case *model.NewPropertyDiscovery:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._NewPropertyDiscovery(ctx, sel, obj)
+	case model.NewCategoryDiscovery:
+		return ec._NewCategoryDiscovery(ctx, sel, &obj)
+	case *model.NewCategoryDiscovery:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._NewCategoryDiscovery(ctx, sel, obj)
+	case model.ObjectMissingDiscovery:
+		return ec._ObjectMissingDiscovery(ctx, sel, &obj)
+	case *model.ObjectMissingDiscovery:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._ObjectMissingDiscovery(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
@@ -9491,6 +10203,75 @@ func (ec *executionContext) _Category(ctx context.Context, sel ast.SelectionSet,
 
 			if out.Values[i] == graphql.Null {
 				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var dataDiscoveryImplementors = []string{"DataDiscovery"}
+
+func (ec *executionContext) _DataDiscovery(ctx context.Context, sel ast.SelectionSet, obj *model.DataDiscovery) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, dataDiscoveryImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DataDiscovery")
+		case "id":
+
+			out.Values[i] = ec._DataDiscovery_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "type":
+
+			out.Values[i] = ec._DataDiscovery_type(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "status":
+
+			out.Values[i] = ec._DataDiscovery_status(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "data":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._DataDiscovery_data(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "createdAt":
+
+			out.Values[i] = ec._DataDiscovery_createdAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -9558,17 +10339,6 @@ func (ec *executionContext) _DataSource(ctx context.Context, sel ast.SelectionSe
 		case "description":
 
 			out.Values[i] = ec._DataSource_description(ctx, field, obj)
-
-		case "schema":
-
-			out.Values[i] = ec._DataSource_schema(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "tentative":
-
-			out.Values[i] = ec._DataSource_tentative(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -9735,12 +10505,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_updateProperty(ctx, field)
 			})
 
-		case "reviewProperties":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_reviewProperties(ctx, field)
-			})
-
 		case "updatePurpose":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -9804,6 +10568,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "handleDiscovery":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_handleDiscovery(ctx, field)
+			})
+
 		case "createSiloDefinition":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -9839,6 +10609,138 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 	return out
 }
 
+var newCategoryDiscoveryImplementors = []string{"NewCategoryDiscovery", "DataDiscoveryData"}
+
+func (ec *executionContext) _NewCategoryDiscovery(ctx context.Context, sel ast.SelectionSet, obj *model.NewCategoryDiscovery) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, newCategoryDiscoveryImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("NewCategoryDiscovery")
+		case "propertyId":
+
+			out.Values[i] = ec._NewCategoryDiscovery_propertyId(ctx, field, obj)
+
+		case "categoryId":
+
+			out.Values[i] = ec._NewCategoryDiscovery_categoryId(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var newDataSourceDiscoveryImplementors = []string{"NewDataSourceDiscovery", "DataDiscoveryData"}
+
+func (ec *executionContext) _NewDataSourceDiscovery(ctx context.Context, sel ast.SelectionSet, obj *model.NewDataSourceDiscovery) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, newDataSourceDiscoveryImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("NewDataSourceDiscovery")
+		case "name":
+
+			out.Values[i] = ec._NewDataSourceDiscovery_name(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "group":
+
+			out.Values[i] = ec._NewDataSourceDiscovery_group(ctx, field, obj)
+
+		case "properties":
+
+			out.Values[i] = ec._NewDataSourceDiscovery_properties(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var newPropertyDiscoveryImplementors = []string{"NewPropertyDiscovery", "DataDiscoveryData"}
+
+func (ec *executionContext) _NewPropertyDiscovery(ctx context.Context, sel ast.SelectionSet, obj *model.NewPropertyDiscovery) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, newPropertyDiscoveryImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("NewPropertyDiscovery")
+		case "name":
+
+			out.Values[i] = ec._NewPropertyDiscovery_name(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "categories":
+
+			out.Values[i] = ec._NewPropertyDiscovery_categories(ctx, field, obj)
+
+		case "dataSourceId":
+
+			out.Values[i] = ec._NewPropertyDiscovery_dataSourceId(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var objectMissingDiscoveryImplementors = []string{"ObjectMissingDiscovery", "DataDiscoveryData"}
+
+func (ec *executionContext) _ObjectMissingDiscovery(ctx context.Context, sel ast.SelectionSet, obj *model.ObjectMissingDiscovery) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, objectMissingDiscoveryImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ObjectMissingDiscovery")
+		case "id":
+
+			out.Values[i] = ec._ObjectMissingDiscovery_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var propertyImplementors = []string{"Property"}
 
 func (ec *executionContext) _Property(ctx context.Context, sel ast.SelectionSet, obj *model.Property) graphql.Marshaler {
@@ -9863,10 +10765,6 @@ func (ec *executionContext) _Property(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "tentative":
-
-			out.Values[i] = ec._Property_tentative(ctx, field, obj)
-
 		case "categories":
 			field := field
 
@@ -10336,6 +11234,23 @@ func (ec *executionContext) _SiloDefinition(ctx context.Context, sel ast.Selecti
 					}
 				}()
 				res = ec._SiloDefinition_scanConfig(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "discoveries":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._SiloDefinition_discoveries(ctx, field, obj)
 				return res
 			}
 
@@ -10921,6 +11836,16 @@ func (ec *executionContext) unmarshalNCreateWorkspaceInput2githubᚗcomᚋbrist�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNDataDiscoveryData2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataDiscoveryData(ctx context.Context, sel ast.SelectionSet, v model.DataDiscoveryData) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DataDiscoveryData(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNDataSource2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSource(ctx context.Context, sel ast.SelectionSet, v model.DataSource) graphql.Marshaler {
 	return ec._DataSource(ctx, sel, &v)
 }
@@ -10933,6 +11858,36 @@ func (ec *executionContext) marshalNDataSource2ᚖgithubᚗcomᚋbristᚑaiᚋmo
 		return graphql.Null
 	}
 	return ec._DataSource(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNDiscoveryAction2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryAction(ctx context.Context, v interface{}) (model.DiscoveryAction, error) {
+	var res model.DiscoveryAction
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNDiscoveryAction2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryAction(ctx context.Context, sel ast.SelectionSet, v model.DiscoveryAction) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNDiscoveryStatus2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryStatus(ctx context.Context, v interface{}) (model.DiscoveryStatus, error) {
+	var res model.DiscoveryStatus
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNDiscoveryStatus2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryStatus(ctx context.Context, sel ast.SelectionSet, v model.DiscoveryStatus) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNDiscoveryType2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryType(ctx context.Context, v interface{}) (model.DiscoveryType, error) {
+	var res model.DiscoveryType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNDiscoveryType2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryType(ctx context.Context, sel ast.SelectionSet, v model.DiscoveryType) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
@@ -11000,11 +11955,6 @@ func (ec *executionContext) marshalNPurpose2ᚖgithubᚗcomᚋbristᚑaiᚋmonoi
 
 func (ec *executionContext) unmarshalNReviewDataSourcesInput2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐReviewDataSourcesInput(ctx context.Context, v interface{}) (model.ReviewDataSourcesInput, error) {
 	res, err := ec.unmarshalInputReviewDataSourcesInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNReviewPropertiesInput2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐReviewPropertiesInput(ctx context.Context, v interface{}) (model.ReviewPropertiesInput, error) {
-	res, err := ec.unmarshalInputReviewPropertiesInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -11552,6 +12502,54 @@ func (ec *executionContext) unmarshalOCreateSubjectInput2ᚖgithubᚗcomᚋbrist
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalODataDiscovery2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataDiscovery(ctx context.Context, sel ast.SelectionSet, v []*model.DataDiscovery) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalODataDiscovery2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataDiscovery(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalODataDiscovery2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataDiscovery(ctx context.Context, sel ast.SelectionSet, v *model.DataDiscovery) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._DataDiscovery(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalODataSource2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSourceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DataSource) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -11604,6 +12602,14 @@ func (ec *executionContext) marshalODataSource2ᚖgithubᚗcomᚋbristᚑaiᚋmo
 		return graphql.Null
 	}
 	return ec._DataSource(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOHandleDiscoveryInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐHandleDiscoveryInput(ctx context.Context, v interface{}) (*model.HandleDiscoveryInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputHandleDiscoveryInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOID2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
@@ -11827,6 +12833,96 @@ func (ec *executionContext) marshalOMap2map(ctx context.Context, sel ast.Selecti
 	}
 	res := graphql.MarshalMap(v)
 	return res
+}
+
+func (ec *executionContext) marshalONewCategoryDiscovery2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐNewCategoryDiscovery(ctx context.Context, sel ast.SelectionSet, v model.NewCategoryDiscovery) graphql.Marshaler {
+	return ec._NewCategoryDiscovery(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalONewCategoryDiscovery2ᚕgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐNewCategoryDiscovery(ctx context.Context, sel ast.SelectionSet, v []model.NewCategoryDiscovery) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalONewCategoryDiscovery2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐNewCategoryDiscovery(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalONewPropertyDiscovery2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐNewPropertyDiscovery(ctx context.Context, sel ast.SelectionSet, v model.NewPropertyDiscovery) graphql.Marshaler {
+	return ec._NewPropertyDiscovery(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalONewPropertyDiscovery2ᚕgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐNewPropertyDiscovery(ctx context.Context, sel ast.SelectionSet, v []model.NewPropertyDiscovery) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalONewPropertyDiscovery2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐNewPropertyDiscovery(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
 }
 
 func (ec *executionContext) marshalOProperty2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐProperty(ctx context.Context, sel ast.SelectionSet, v []*model.Property) graphql.Marshaler {
@@ -12312,22 +13408,6 @@ func (ec *executionContext) marshalOSubject2ᚖgithubᚗcomᚋbristᚑaiᚋmonoi
 		return graphql.Null
 	}
 	return ec._Subject(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOTentativeStatus2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐTentativeStatus(ctx context.Context, v interface{}) (*model.TentativeStatus, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var res = new(model.TentativeStatus)
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOTentativeStatus2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐTentativeStatus(ctx context.Context, sel ast.SelectionSet, v *model.TentativeStatus) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return v
 }
 
 func (ec *executionContext) unmarshalOUpdateCategoryInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUpdateCategoryInput(ctx context.Context, v interface{}) (*model.UpdateCategoryInput, error) {

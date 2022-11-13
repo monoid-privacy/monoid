@@ -1,0 +1,63 @@
+enum DiscoveryType {
+    DATA_SOURCE_MISSING
+    DATA_SOURCE_FOUND
+    PROPERTY_FOUND
+    PROPERTY_MISSING
+    CATEGORY_FOUND
+}
+
+enum DiscoveryStatus {
+    OPEN
+    ACCEPTED
+    REJECTED
+}
+
+type NewDataSourceDiscovery {
+    name: String!
+    group: String
+    properties: [NewPropertyDiscovery]
+}
+
+type NewPropertyDiscovery {
+    name: String!
+    categories: [NewCategoryDiscovery]
+    dataSourceId: String
+}
+
+type NewCategoryDiscovery {
+    propertyId: String
+    categoryId: String!
+}
+
+type ObjectMissingDiscovery {
+    id: String!
+}
+
+union DataDiscoveryData = NewDataSourceDiscovery | NewPropertyDiscovery | NewCategoryDiscovery | ObjectMissingDiscovery
+
+type DataDiscovery {
+    id: ID!
+    type: DiscoveryType!
+    status: DiscoveryStatus!
+    data: DataDiscoveryData!
+
+    createdAt: Time!
+}
+
+extend type SiloDefinition {
+    discoveries: [DataDiscovery]
+}
+
+enum DiscoveryAction {
+    ACCEPT
+    REJECT
+}
+
+input HandleDiscoveryInput {
+    discoveryId: ID!
+    action: DiscoveryAction!
+}
+
+extend type Mutation {
+    handleDiscovery(input: HandleDiscoveryInput): DataDiscovery
+}

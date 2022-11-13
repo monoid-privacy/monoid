@@ -16,7 +16,6 @@ type CreateCategoryInput struct {
 type CreateDataSourceInput struct {
 	SiloDefinitionID string   `json:"siloDefinitionID"`
 	Description      *string  `json:"description"`
-	Schema           string   `json:"schema"`
 	PropertyIDs      []string `json:"propertyIDs"`
 }
 
@@ -58,6 +57,11 @@ type CreateWorkspaceInput struct {
 	Settings []*KVPair `json:"settings"`
 }
 
+type HandleDiscoveryInput struct {
+	DiscoveryID string          `json:"discoveryId"`
+	Action      DiscoveryAction `json:"action"`
+}
+
 type KVPair struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
@@ -66,11 +70,6 @@ type KVPair struct {
 type ReviewDataSourcesInput struct {
 	DataSourceIDs []string     `json:"dataSourceIDs"`
 	ReviewResult  ReviewResult `json:"reviewResult"`
-}
-
-type ReviewPropertiesInput struct {
-	PropertyIDs  []string     `json:"propertyIDs"`
-	ReviewResult ReviewResult `json:"reviewResult"`
 }
 
 type SiloScanConfigInput struct {
@@ -88,7 +87,6 @@ type UpdateCategoryInput struct {
 type UpdateDataSourceInput struct {
 	ID          string  `json:"id"`
 	Description *string `json:"description"`
-	Schema      *string `json:"schema"`
 }
 
 type UpdatePropertyInput struct {
@@ -120,6 +118,137 @@ type UpdateSiloSpecificationInput struct {
 
 type UpdateSubjectInput struct {
 	Name *string `json:"name"`
+}
+
+type DiscoveryAction string
+
+const (
+	DiscoveryActionAccept DiscoveryAction = "ACCEPT"
+	DiscoveryActionReject DiscoveryAction = "REJECT"
+)
+
+var AllDiscoveryAction = []DiscoveryAction{
+	DiscoveryActionAccept,
+	DiscoveryActionReject,
+}
+
+func (e DiscoveryAction) IsValid() bool {
+	switch e {
+	case DiscoveryActionAccept, DiscoveryActionReject:
+		return true
+	}
+	return false
+}
+
+func (e DiscoveryAction) String() string {
+	return string(e)
+}
+
+func (e *DiscoveryAction) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = DiscoveryAction(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid DiscoveryAction", str)
+	}
+	return nil
+}
+
+func (e DiscoveryAction) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type DiscoveryStatus string
+
+const (
+	DiscoveryStatusOpen     DiscoveryStatus = "OPEN"
+	DiscoveryStatusAccepted DiscoveryStatus = "ACCEPTED"
+	DiscoveryStatusRejected DiscoveryStatus = "REJECTED"
+)
+
+var AllDiscoveryStatus = []DiscoveryStatus{
+	DiscoveryStatusOpen,
+	DiscoveryStatusAccepted,
+	DiscoveryStatusRejected,
+}
+
+func (e DiscoveryStatus) IsValid() bool {
+	switch e {
+	case DiscoveryStatusOpen, DiscoveryStatusAccepted, DiscoveryStatusRejected:
+		return true
+	}
+	return false
+}
+
+func (e DiscoveryStatus) String() string {
+	return string(e)
+}
+
+func (e *DiscoveryStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = DiscoveryStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid DiscoveryStatus", str)
+	}
+	return nil
+}
+
+func (e DiscoveryStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type DiscoveryType string
+
+const (
+	DiscoveryTypeDataSourceMissing DiscoveryType = "DATA_SOURCE_MISSING"
+	DiscoveryTypeDataSourceFound   DiscoveryType = "DATA_SOURCE_FOUND"
+	DiscoveryTypePropertyFound     DiscoveryType = "PROPERTY_FOUND"
+	DiscoveryTypePropertyMissing   DiscoveryType = "PROPERTY_MISSING"
+	DiscoveryTypeCategoryFound     DiscoveryType = "CATEGORY_FOUND"
+)
+
+var AllDiscoveryType = []DiscoveryType{
+	DiscoveryTypeDataSourceMissing,
+	DiscoveryTypeDataSourceFound,
+	DiscoveryTypePropertyFound,
+	DiscoveryTypePropertyMissing,
+	DiscoveryTypeCategoryFound,
+}
+
+func (e DiscoveryType) IsValid() bool {
+	switch e {
+	case DiscoveryTypeDataSourceMissing, DiscoveryTypeDataSourceFound, DiscoveryTypePropertyFound, DiscoveryTypePropertyMissing, DiscoveryTypeCategoryFound:
+		return true
+	}
+	return false
+}
+
+func (e DiscoveryType) String() string {
+	return string(e)
+}
+
+func (e *DiscoveryType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = DiscoveryType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid DiscoveryType", str)
+	}
+	return nil
+}
+
+func (e DiscoveryType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
 type JobStatus string
@@ -205,46 +334,5 @@ func (e *ReviewResult) UnmarshalGQL(v interface{}) error {
 }
 
 func (e ReviewResult) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type TentativeStatus string
-
-const (
-	TentativeStatusDeleted TentativeStatus = "DELETED"
-	TentativeStatusCreated TentativeStatus = "CREATED"
-)
-
-var AllTentativeStatus = []TentativeStatus{
-	TentativeStatusDeleted,
-	TentativeStatusCreated,
-}
-
-func (e TentativeStatus) IsValid() bool {
-	switch e {
-	case TentativeStatusDeleted, TentativeStatusCreated:
-		return true
-	}
-	return false
-}
-
-func (e TentativeStatus) String() string {
-	return string(e)
-}
-
-func (e *TentativeStatus) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = TentativeStatus(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid TentativeStatus", str)
-	}
-	return nil
-}
-
-func (e TentativeStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }

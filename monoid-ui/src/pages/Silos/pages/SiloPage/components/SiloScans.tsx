@@ -6,6 +6,8 @@ import { useParams } from 'react-router-dom';
 import { CheckCircleIcon, QuestionMarkCircleIcon, XCircleIcon } from '@heroicons/react/24/solid';
 import dayjs from 'dayjs';
 import updateLocale from 'dayjs/plugin/updateLocale';
+import duration from 'dayjs/plugin/duration';
+import relativeTime from 'dayjs/plugin/relativeTime';
 
 import AlertRegion from '../../../../../components/AlertRegion';
 import Card, { CardDivider, CardHeader } from '../../../../../components/Card';
@@ -17,6 +19,8 @@ import Text from '../../../../../components/Text';
 import ToastContext from '../../../../../contexts/ToastContext';
 
 dayjs.extend(updateLocale);
+dayjs.extend(duration);
+dayjs.extend(relativeTime);
 
 const GET_SCANS = gql`
   query RunningDiscoverJobs($resourceId: ID!) {
@@ -69,7 +73,7 @@ const scanOptions = [
   },
   ...scanIntervals.map((v) => (
     {
-      label: `Every ${v} hours`,
+      label: `Every ${dayjs.duration(v, 'hours').humanize().replace(/(^a|an)\w*/, '')}`,
       value: `0 */${v} * * *`,
     }
   )),
@@ -97,7 +101,7 @@ function JobRow(props: {
       break;
     case 'COMPLETED':
       jobStatusText = 'Scan Succeeded';
-      jobIcon = <CheckCircleIcon className="h-7 w-7 text-green-600" />;
+      jobIcon = <CheckCircleIcon className="h-7 w-7 text-green-400" />;
       break;
     default:
       break;
@@ -199,40 +203,36 @@ function ScanSettingsCard() {
               <InputLabel htmlFor="scan-select" className="mb-2">
                 Scan Frequency
               </InputLabel>
-              {
-                !updateScanRes.loading
-                && (
-                  <Select
-                    id="scan-select"
-                    onChange={(e) => {
-                      updateScanSchedule({
-                        variables: {
-                          input: {
-                            siloId,
-                            cron: e.target.value,
-                          },
-                        },
-                      }).catch((err: ApolloError) => {
-                        toastCtx.showToast({
-                          title: 'Error',
-                          message: err.message,
-                          variant: 'danger',
-                          icon: XCircleIcon,
-                        });
-                      });
-                    }}
-                    value={
-                      data.workspace.siloDefinition.scanConfig.cron || ''
-                    }
-                  >
-                    {scanOptions.map((v) => (
-                      <option key={v.value} value={v.value}>
-                        {v.label}
-                      </option>
-                    ))}
-                  </Select>
-                )
-              }
+              <Select
+                id="scan-select"
+                onChange={(e) => {
+                  updateScanSchedule({
+                    variables: {
+                      input: {
+                        siloId,
+                        cron: e.target.value,
+                      },
+                    },
+                  }).catch((err: ApolloError) => {
+                    toastCtx.showToast({
+                      title: 'Error',
+                      message: err.message,
+                      variant: 'danger',
+                      icon: XCircleIcon,
+                    });
+                  });
+                }}
+                value={
+                  data.workspace.siloDefinition.scanConfig.cron || ''
+                }
+              >
+                {!updateScanRes.loading
+                  && scanOptions.map((v) => (
+                    <option key={v.value} value={v.value}>
+                      {v.label}
+                    </option>
+                  ))}
+              </Select>
             </>
           )}
       </div>
