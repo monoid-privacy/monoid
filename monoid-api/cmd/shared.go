@@ -44,6 +44,7 @@ var Models = []interface{}{
 	model.SiloSpecification{},
 	model.Subject{},
 	model.Property{},
+	model.UserPrimaryKey{},
 	model.Job{},
 	model.DataDiscovery{},
 	model.OSSRegistration{},

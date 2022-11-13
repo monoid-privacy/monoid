@@ -191,6 +191,11 @@ func (r *workspaceResolver) Settings(ctx context.Context, obj *model.Workspace) 
 	return res, nil
 }
 
+// UserPrimaryKeys is the resolver for the userPrimaryKeys field.
+func (r *workspaceResolver) UserPrimaryKeys(ctx context.Context, obj *model.Workspace) ([]*model.UserPrimaryKey, error) {
+	panic(fmt.Errorf("not implemented: UserPrimaryKeys - userPrimaryKeys"))
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 

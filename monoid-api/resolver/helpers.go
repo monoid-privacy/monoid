@@ -1,9 +1,18 @@
 package resolver
 
 import (
+	"fmt"
+
+	"github.com/brist-ai/monoid/model"
+	"github.com/brist-ai/monoid/monoidprotocol"
 	"github.com/rs/zerolog/log"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"gorm.io/gorm"
+)
+
+const (
+	Delete = "delete"
+	Query  = "query"
 )
 
 func handleError(err error, msg string) *gqlerror.Error {
@@ -44,4 +53,27 @@ func DeleteObjectByID[Object any](id string, db *gorm.DB, errMsg string) (*strin
 
 func str(s string) *string {
 	return &s
+}
+
+func MonoidRecordsToMonoidRecordResponses(monoidRecords []monoidprotocol.MonoidRecord) []model.MonoidRecordResponse {
+	var recordResponses []model.MonoidRecordResponse
+
+	for _, record := range monoidRecords {
+		response := MonoidRecordToMonoidRecordResponse(record)
+		recordResponses = append(recordResponses, response)
+	}
+
+	return recordResponses
+}
+
+func MonoidRecordToMonoidRecordResponse(monoidRecord monoidprotocol.MonoidRecord) model.MonoidRecordResponse {
+	dataString := fmt.Sprint(monoidRecord.Data)
+
+	recordResponse := model.MonoidRecordResponse{
+		Data:        dataString,
+		SchemaGroup: monoidRecord.SchemaGroup,
+		SchemaName:  monoidRecord.SchemaName,
+	}
+
+	return recordResponse
 }

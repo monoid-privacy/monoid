@@ -18,6 +18,7 @@ type Property {
     categories: [Category!]
     dataSource: DataSource!
     purposes: [Purpose!]
+    userPrimaryKey: UserPrimaryKey
 }
 
 type SiloSpecification {

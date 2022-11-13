@@ -1,0 +1,48 @@
+type UserPrimaryKey {
+    id: ID! 
+    name: String! 
+    properties: [Property!]
+}
+
+type MonoidRecordResponse {
+    data: String! 
+    SchemaGroup: String
+    SchemaName: String! 
+}
+
+input CreateUserPrimaryKeyInput {
+    name: String! 
+}
+
+input UpdateUserPrimaryKeyInput {
+    id: ID! 
+    name: String! 
+}
+
+input DeleteUserDataInput {
+    primaryKeys: [UserPrimaryKeyInput!]
+    workspaceId: ID!
+}
+
+input QueryUserDataInput {
+    primaryKeys: [UserPrimaryKeyInput!]
+    workspaceId: ID!
+}
+
+input UserPrimaryKeyInput {
+    UserPrimaryKeyId: ID! 
+    Value: String! 
+}
+
+extend type Query {
+    userPrimaryKey(id: ID!): UserPrimaryKey
+}
+
+extend type Mutation {
+    createUserPrimaryKey(input: CreateUserPrimaryKeyInput!): UserPrimaryKey
+    updateUserPrimaryKey(input: UpdateUserPrimaryKeyInput!): UserPrimaryKey
+    deleteUserPrimaryKey(id: ID!): ID
+
+    deleteUserData(input: DeleteUserDataInput!): [MonoidRecordResponse!]
+    queryUserData(input: QueryUserDataInput!): [MonoidRecordResponse!]
+}

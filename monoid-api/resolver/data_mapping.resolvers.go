@@ -413,3 +413,23 @@ func (r *Resolver) Property() generated.PropertyResolver { return &propertyResol
 
 type dataSourceResolver struct{ *Resolver }
 type propertyResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *propertyResolver) UserPrimaryKey(ctx context.Context, obj *model.Property) (*model.UserPrimaryKey, error) {
+	if obj.UserPrimaryKeyID == nil {
+		return nil, nil
+	}
+
+	userPrimaryKey := model.UserPrimaryKey{}
+
+	if err := r.Conf.DB.Where("user_primary_key_id = ?", *obj.UserPrimaryKeyID).First(&userPrimaryKey).Error; err != nil {
+		return nil, handleError(err, "Error finding user primary key.")
+	}
+
+	return &userPrimaryKey, nil
+}

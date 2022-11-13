@@ -52,6 +52,10 @@ type CreateSubjectInput struct {
 	WorkspaceID string `json:"workspaceID"`
 }
 
+type CreateUserPrimaryKeyInput struct {
+	Name string `json:"name"`
+}
+
 type CreateWorkspaceInput struct {
 	Name     string    `json:"name"`
 	Settings []*KVPair `json:"settings"`
@@ -60,6 +64,11 @@ type CreateWorkspaceInput struct {
 type DataDiscoveriesListResult struct {
 	Discoveries    []*DataDiscovery `json:"discoveries"`
 	NumDiscoveries int              `json:"numDiscoveries"`
+}
+
+type DeleteUserDataInput struct {
+	PrimaryKeys []*UserPrimaryKeyInput `json:"primaryKeys"`
+	WorkspaceID string                 `json:"workspaceId"`
 }
 
 type HandleAllDiscoveriesInput struct {
@@ -80,6 +89,17 @@ type JobsResult struct {
 type KVPair struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
+}
+
+type MonoidRecordResponse struct {
+	Data        string  `json:"data"`
+	SchemaGroup *string `json:"SchemaGroup"`
+	SchemaName  string  `json:"SchemaName"`
+}
+
+type QueryUserDataInput struct {
+	PrimaryKeys []*UserPrimaryKeyInput `json:"primaryKeys"`
+	WorkspaceID string                 `json:"workspaceId"`
 }
 
 type SiloScanConfigInput struct {
@@ -130,9 +150,25 @@ type UpdateSubjectInput struct {
 	Name *string `json:"name"`
 }
 
+type UpdateUserPrimaryKeyInput struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
 type UpdateWorkspaceSettingsInput struct {
 	WorkspaceID string    `json:"workspaceID"`
 	Settings    []*KVPair `json:"settings"`
+}
+
+type UserPrimaryKey struct {
+	ID         string      `json:"id"`
+	Name       string      `json:"name"`
+	Properties []*Property `json:"properties"`
+}
+
+type UserPrimaryKeyInput struct {
+	UserPrimaryKeyID string `json:"UserPrimaryKeyId"`
+	Value            string `json:"Value"`
 }
 
 type DiscoveryAction string
