@@ -10,6 +10,7 @@ import (
 	"github.com/brist-ai/monoid/config"
 	"github.com/brist-ai/monoid/model"
 	"github.com/brist-ai/monoid/specimport"
+	"github.com/joho/godotenv"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
 )
@@ -98,6 +99,8 @@ func main() {
 		fmt.Println("Usage ./loader [config directory]")
 		return
 	}
+
+	godotenv.Load()
 
 	conf := cmd.GetBaseConfig(true, cmd.Models)
 

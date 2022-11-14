@@ -1,0 +1,144 @@
+version: "3.7"
+services:
+  db:
+    image: postgres:14.6-alpine3.16
+    container_name: monoid-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+      - POSTGRES_USER=${DATABASE_USER}
+    volumes:
+      - db:/var/lib/postgresql/data
+      - ./monoid-config/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - monoid-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  web:
+    container_name: monoid-web
+    build:
+      dockerfile: Dockerfile
+      context: ./monoid-ui
+    ports:
+      - 3000:3000
+    networks:
+      - monoid-network
+  temporal:
+    container_name: monoid-temporal
+    depends_on:
+      - db
+    environment:
+      - DB=postgresql
+      - DB_PORT=5432
+      - POSTGRES_USER=${DATABASE_USER}
+      - POSTGRES_PWD=${DATABASE_PASSWORD}
+      - POSTGRES_SEEDS=monoid-db
+      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
+    image: temporalio/auto-setup:1.18.4
+    networks:
+      - monoid-network
+    volumes:
+      - ./monoid-config/temporal:/etc/temporal/config/dynamicconfig
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "tctl",
+          "--address",
+          "monoid-temporal:7233",
+          "workflow",
+          "list"
+        ]
+      interval: 1s
+      timeout: 5s
+      retries: 30
+  api:
+    container_name: monoid-api
+    build:
+      dockerfile: cmd/server/Dockerfile
+      context: ./monoid-api
+    environment:
+      - WEB_URL=${WEB_URL}
+      - DB_USER=${DATABASE_USER}
+      - DB_PASS=${DATABASE_PASSWORD}
+      - DB_TCP_HOST=monoid-db
+      - DB_PORT=5432
+      - DB_NAME=${DATABASE_NAME}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - TEMPORAL=monoid-temporal:7233
+    depends_on:
+      db:
+        condition: service_healthy
+      loader:
+        condition: service_completed_successfully
+      temporal:
+        condition: service_healthy
+    networks:
+      - monoid-network
+  loader:
+    container_name: monoid-loader
+    build:
+      dockerfile: cmd/tools/loader/Dockerfile
+      context: ./monoid-api
+    command: /monoid-config
+    environment:
+      - DB_USER=${DATABASE_USER}
+      - DB_PASS=${DATABASE_PASSWORD}
+      - DB_TCP_HOST=monoid-db
+      - DB_PORT=5432
+      - DB_NAME=${DATABASE_NAME}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+    volumes:
+      - ./monoid-config:/monoid-config
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - monoid-network
+  worker:
+    container_name: monoid-worker
+    build:
+      dockerfile: cmd/worker/Dockerfile
+      context: ./monoid-api
+    environment:
+      - WEB_URL=${WEB_URL}
+      - DB_USER=${DATABASE_USER}
+      - DB_PASS=${DATABASE_PASSWORD}
+      - DB_TCP_HOST=monoid-db
+      - DB_PORT=5432
+      - DB_NAME=${DATABASE_NAME}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - TEMPORAL=monoid-temporal:7233
+    depends_on:
+      db:
+        condition: service_healthy
+      loader:
+        condition: service_completed_successfully
+      temporal:
+        condition: service_healthy
+    networks:
+      - monoid-network
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+  proxy:
+    depends_on:
+      - web
+      - api
+    container_name: monoid-proxy
+    build:
+      dockerfile: Dockerfile
+      context: ./monoid-proxy
+    networks:
+      - monoid-network
+    ports:
+      - 8080:80
+networks:
+  monoid-network:
+    driver: bridge
+    name: monoid-network
+volumes:
+  db:
+    name: db

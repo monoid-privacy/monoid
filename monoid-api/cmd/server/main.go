@@ -25,7 +25,10 @@ func main() {
 
 	conf := cmd.GetBaseConfig(true, cmd.Models)
 
-	c, err := client.Dial(client.Options{})
+	c, err := client.Dial(client.Options{
+		HostPort: os.Getenv("TEMPORAL"),
+	})
+
 	if err != nil {
 		log.Fatalln("unable to create Temporal client", err)
 	}

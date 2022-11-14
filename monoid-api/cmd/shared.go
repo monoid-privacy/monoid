@@ -119,8 +119,7 @@ func GetBaseConfig(runMigrations bool, models []interface{}) config.BaseConfig {
 	}
 
 	// Set the encryption secret
-	tokenSecretFile := os.Getenv("DB_ENCRYPTION_KEY")
-	key, err := encryptionKey(tokenSecretFile)
+	key, err := base64.StdEncoding.DecodeString(os.Getenv("ENCRYPTION_KEY"))
 
 	if err != nil {
 		panic(err)
