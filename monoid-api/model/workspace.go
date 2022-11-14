@@ -16,6 +16,7 @@ type Workspace struct {
 	Subjects           []Subject
 	Purposes           []Purpose
 	Categories         []Category
+	Requests           []Request
 	Settings           datatypes.JSON
 }
 

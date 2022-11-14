@@ -1,9 +1,3 @@
-type UserPrimaryKey {
-    id: ID! 
-    name: String! 
-    properties: [Property!]
-}
-
 type MonoidRecordResponse {
     data: String! 
     SchemaGroup: String
@@ -19,14 +13,10 @@ input UpdateUserPrimaryKeyInput {
     name: String! 
 }
 
-input DeleteUserDataInput {
+input UserDataRequestInput {
     primaryKeys: [UserPrimaryKeyInput!]
     workspaceId: ID!
-}
-
-input QueryUserDataInput {
-    primaryKeys: [UserPrimaryKeyInput!]
-    workspaceId: ID!
+    type: String!
 }
 
 input UserPrimaryKeyInput {
@@ -34,8 +24,34 @@ input UserPrimaryKeyInput {
     Value: String! 
 }
 
+type UserPrimaryKey {
+    id: ID! 
+    name: String! 
+    properties: [Property!]
+}
+
+type PrimaryKeyValue {
+    id: ID! 
+    userPrimaryKey: UserPrimaryKey! 
+    value: String! 
+}
+
+type Request {
+    id: ID! 
+    primaryKeyValues: [PrimaryKeyValue!]
+    requestStatuses: [RequestStatus!]
+}
+
+type RequestStatus {
+    id: ID! 
+    request: Request! 
+    dataSource: DataSource! 
+    status: String! 
+}
+
 extend type Query {
     userPrimaryKey(id: ID!): UserPrimaryKey
+    request(id: ID!): Request 
 }
 
 extend type Mutation {
@@ -43,6 +59,6 @@ extend type Mutation {
     updateUserPrimaryKey(input: UpdateUserPrimaryKeyInput!): UserPrimaryKey
     deleteUserPrimaryKey(id: ID!): ID
 
-    deleteUserData(input: DeleteUserDataInput!): [MonoidRecordResponse!]
-    queryUserData(input: QueryUserDataInput!): [MonoidRecordResponse!]
+
+    createUserDataRequest(input: UserDataRequestInput): Request
 }

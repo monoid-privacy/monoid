@@ -66,11 +66,6 @@ type DataDiscoveriesListResult struct {
 	NumDiscoveries int              `json:"numDiscoveries"`
 }
 
-type DeleteUserDataInput struct {
-	PrimaryKeys []*UserPrimaryKeyInput `json:"primaryKeys"`
-	WorkspaceID string                 `json:"workspaceId"`
-}
-
 type HandleAllDiscoveriesInput struct {
 	SiloID string          `json:"siloId"`
 	Action DiscoveryAction `json:"action"`
@@ -95,11 +90,6 @@ type MonoidRecordResponse struct {
 	Data        string  `json:"data"`
 	SchemaGroup *string `json:"SchemaGroup"`
 	SchemaName  string  `json:"SchemaName"`
-}
-
-type QueryUserDataInput struct {
-	PrimaryKeys []*UserPrimaryKeyInput `json:"primaryKeys"`
-	WorkspaceID string                 `json:"workspaceId"`
 }
 
 type SiloScanConfigInput struct {
@@ -158,6 +148,12 @@ type UpdateUserPrimaryKeyInput struct {
 type UpdateWorkspaceSettingsInput struct {
 	WorkspaceID string    `json:"workspaceID"`
 	Settings    []*KVPair `json:"settings"`
+}
+
+type UserDataRequestInput struct {
+	PrimaryKeys []*UserPrimaryKeyInput `json:"primaryKeys"`
+	WorkspaceID string                 `json:"workspaceId"`
+	Type        string                 `json:"type"`
 }
 
 type UserPrimaryKey struct {

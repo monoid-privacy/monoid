@@ -5,11 +5,10 @@ package resolver
 
 import (
 	"context"
+	"errors"
 
 	"github.com/brist-ai/monoid/model"
-	"github.com/brist-ai/monoid/requests"
 	"github.com/google/uuid"
-	"gorm.io/gorm/clause"
 )
 
 // CreateUserPrimaryKey is the resolver for the createUserPrimaryKey field.
@@ -48,79 +47,77 @@ func (r *mutationResolver) DeleteUserPrimaryKey(ctx context.Context, id string) 
 	return DeleteObjectByID[model.UserPrimaryKey](id, r.Conf.DB, "Error deleting user primary key.")
 }
 
-// DeleteUserData is the resolver for the deleteUserData field.
-func (r *mutationResolver) DeleteUserData(ctx context.Context, input model.DeleteUserDataInput) ([]*model.MonoidRecordResponse, error) {
-	primaryKeyMap := make(requests.PrimaryKeyMap)
+// CreateUserDataRequest is the resolver for the createUserDataRequest field.
+func (r *mutationResolver) CreateUserDataRequest(ctx context.Context, input *model.UserDataRequestInput) (*model.Request, error) {
+	if input.Type != model.Delete && input.Type != model.Query {
+		return nil, handleError(errors.New("request type is not 'delete' or 'query'"), "Error creating user data request.")
+	}
+	request := model.Request{
+		ID:          uuid.NewString(),
+		WorkspaceID: input.WorkspaceID,
+		Type:        input.Type,
+	}
+
+	if err := r.Conf.DB.Create(&request).Error; err != nil {
+		return nil, handleError(err, "Error creating user data request.")
+	}
+
 	for _, primaryKey := range input.PrimaryKeys {
-		if primaryKey != nil {
-			keyID := primaryKey.UserPrimaryKeyID
-			primaryKeyMap[keyID] = primaryKey.Value
+		primaryKeyValue := model.PrimaryKeyValue{
+			ID:               uuid.NewString(),
+			UserPrimaryKeyID: primaryKey.UserPrimaryKeyID,
+			Value:            primaryKey.Value,
+			RequestID:        request.ID,
+		}
+
+		if err := r.Conf.DB.Create(&primaryKeyValue).Error; err != nil {
+			return nil, handleError(err, "Error creating user data request.")
 		}
 	}
 
-	var siloDefinitions []model.SiloDefinition
-
-	if err := r.Conf.DB.Preload(clause.Associations).Preload("DataSources.Properties").Where("workspace_id = ?", input.WorkspaceID).Find(&siloDefinitions).Error; err != nil {
-		return nil, handleError(err, "Error deleting user data.")
+	type ID struct {
+		ID string
 	}
 
-	monoidRequestHandler := requests.NewMonoidRequestHandler()
-	deletionRequest := requests.DeletionRequest{
-		PrimaryKeyMap:   primaryKeyMap,
-		SiloDefinitions: siloDefinitions,
+	siloDefinitionIDs := []ID{}
+	dataSourceIDs := []ID{}
+
+	// TODO: Do this properly with a join
+	if err := r.Conf.DB.Model(model.DataSource{}).Where("workspace_id = ?", input.WorkspaceID).Find(&siloDefinitionIDs).Error; err != nil {
+		return nil, handleError(err, "Error creating user data request.")
 	}
 
-	records, err := monoidRequestHandler.HandleDeletion(deletionRequest)
-
-	if err != nil {
-		return nil, handleError(err, "Error deleting user data.")
+	siloDefinitionIDStrings := []string{}
+	for _, id := range siloDefinitionIDs {
+		siloDefinitionIDStrings = append(siloDefinitionIDStrings, id.ID)
 	}
 
-	recordResponses := MonoidRecordsToMonoidRecordResponses(*records)
-	var recordResponsePointers []*model.MonoidRecordResponse
-	for _, response := range recordResponses {
-		recordResponsePointers = append(recordResponsePointers, &response)
+	if err := r.Conf.DB.Model(model.DataSource{}).Where("silo_definition_id IN", siloDefinitionIDStrings).Find(&dataSourceIDs).Error; err != nil {
+		return nil, handleError(err, "Error creating user data request.")
 	}
-	return recordResponsePointers, nil
-}
 
-// QueryUserData is the resolver for the queryUserData field.
-func (r *mutationResolver) QueryUserData(ctx context.Context, input model.QueryUserDataInput) ([]*model.MonoidRecordResponse, error) {
-	primaryKeyMap := make(requests.PrimaryKeyMap)
-	for _, primaryKey := range input.PrimaryKeys {
-		if primaryKey != nil {
-			keyID := primaryKey.UserPrimaryKeyID
-			primaryKeyMap[keyID] = primaryKey.Value
+	for _, id := range dataSourceIDs {
+		requestStatus := model.RequestStatus{
+			ID:           uuid.NewString(),
+			RequestID:    request.ID,
+			DataSourceID: id.ID,
+			Status:       model.Created,
+		}
+
+		if err := r.Conf.DB.Create(&requestStatus).Error; err != nil {
+			return nil, handleError(err, "Error creating user data request.")
 		}
 	}
 
-	var siloDefinitions []model.SiloDefinition
-
-	if err := r.Conf.DB.Preload(clause.Associations).Preload("DataSources.Properties").Where("workspace_id = ?", input.WorkspaceID).Find(&siloDefinitions).Error; err != nil {
-		return nil, handleError(err, "Error deleting user data.")
-	}
-
-	monoidRequestHandler := requests.NewMonoidRequestHandler()
-	queryRequest := requests.QueryRequest{
-		PrimaryKeyMap:   primaryKeyMap,
-		SiloDefinitions: siloDefinitions,
-	}
-
-	records, err := monoidRequestHandler.HandleQuery(queryRequest)
-
-	if err != nil {
-		return nil, handleError(err, "Error querying user data.")
-	}
-
-	recordResponses := MonoidRecordsToMonoidRecordResponses(*records)
-	var recordResponsePointers []*model.MonoidRecordResponse
-	for _, response := range recordResponses {
-		recordResponsePointers = append(recordResponsePointers, &response)
-	}
-	return recordResponsePointers, nil
+	return &request, nil
 }
 
 // UserPrimaryKey is the resolver for the userPrimaryKey field.
 func (r *queryResolver) UserPrimaryKey(ctx context.Context, id string) (*model.UserPrimaryKey, error) {
 	return findObjectByID[model.UserPrimaryKey](id, r.Conf.DB, "Error finding user primary key.")
+}
+
+// Request is the resolver for the request field.
+func (r *queryResolver) Request(ctx context.Context, id string) (*model.Request, error) {
+	return findObjectByID[model.Request](id, r.Conf.DB, "Error finding request.")
 }

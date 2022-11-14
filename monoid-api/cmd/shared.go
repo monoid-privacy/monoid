@@ -46,6 +46,9 @@ var Models = []interface{}{
 	model.Property{},
 	model.UserPrimaryKey{},
 	model.Job{},
+	model.Request{},
+	model.RequestStatus{},
+	model.PrimaryKeyValue{},
 	model.DataDiscovery{},
 	model.OSSRegistration{},
 }
