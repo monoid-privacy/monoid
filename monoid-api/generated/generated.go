@@ -44,9 +44,12 @@ type ResolverRoot interface {
 	Mutation() MutationResolver
 	NewCategoryDiscovery() NewCategoryDiscoveryResolver
 	NewPropertyDiscovery() NewPropertyDiscoveryResolver
+	PrimaryKeyValue() PrimaryKeyValueResolver
 	Property() PropertyResolver
 	PropertyMissingDiscovery() PropertyMissingDiscoveryResolver
 	Query() QueryResolver
+	Request() RequestResolver
+	RequestStatus() RequestStatusResolver
 	SiloDefinition() SiloDefinitionResolver
 	Workspace() WorkspaceResolver
 }
@@ -76,12 +79,13 @@ type ComplexityRoot struct {
 	}
 
 	DataSource struct {
-		Description    func(childComplexity int) int
-		Group          func(childComplexity int) int
-		ID             func(childComplexity int) int
-		Name           func(childComplexity int) int
-		Properties     func(childComplexity int) int
-		SiloDefinition func(childComplexity int) int
+		Description     func(childComplexity int) int
+		Group           func(childComplexity int) int
+		ID              func(childComplexity int) int
+		Name            func(childComplexity int) int
+		Properties      func(childComplexity int) int
+		RequestStatuses func(childComplexity int) int
+		SiloDefinition  func(childComplexity int) int
 	}
 
 	DataSourceMissingDiscovery struct {
@@ -131,6 +135,7 @@ type ComplexityRoot struct {
 		DeleteUserPrimaryKey     func(childComplexity int, id string) int
 		DeleteWorkspace          func(childComplexity int, id *string) int
 		DetectSiloSources        func(childComplexity int, workspaceID string, id string) int
+		ExecuteUserDataRequest   func(childComplexity int, requestID string) int
 		HandleAllOpenDiscoveries func(childComplexity int, input *model.HandleAllDiscoveriesInput) int
 		HandleDiscovery          func(childComplexity int, input *model.HandleDiscoveryInput) int
 		UpdateCategory           func(childComplexity int, input *model.UpdateCategoryInput) int
@@ -167,6 +172,7 @@ type ComplexityRoot struct {
 
 	PrimaryKeyValue struct {
 		ID             func(childComplexity int) int
+		Request        func(childComplexity int) int
 		UserPrimaryKey func(childComplexity int) int
 		Value          func(childComplexity int) int
 	}
@@ -279,6 +285,8 @@ type DataDiscoveryResolver interface {
 }
 type DataSourceResolver interface {
 	Properties(ctx context.Context, obj *model.DataSource) ([]*model.Property, error)
+
+	RequestStatuses(ctx context.Context, obj *model.DataSource) ([]*model.RequestStatus, error)
 }
 type DataSourceMissingDiscoveryResolver interface {
 	DataSource(ctx context.Context, obj *model.DataSourceMissingDiscovery) (*model.DataSource, error)
@@ -315,6 +323,7 @@ type MutationResolver interface {
 	UpdateUserPrimaryKey(ctx context.Context, input model.UpdateUserPrimaryKeyInput) (*model.UserPrimaryKey, error)
 	DeleteUserPrimaryKey(ctx context.Context, id string) (*string, error)
 	CreateUserDataRequest(ctx context.Context, input *model.UserDataRequestInput) (*model.Request, error)
+	ExecuteUserDataRequest(ctx context.Context, requestID string) ([]*model.MonoidRecordResponse, error)
 	CreateSiloDefinition(ctx context.Context, input *model.CreateSiloDefinitionInput) (*model.SiloDefinition, error)
 	UpdateSiloDefinition(ctx context.Context, input *model.UpdateSiloDefinitionInput) (*model.SiloDefinition, error)
 	DeleteSiloDefinition(ctx context.Context, id string) (*string, error)
@@ -327,9 +336,15 @@ type NewCategoryDiscoveryResolver interface {
 type NewPropertyDiscoveryResolver interface {
 	DataSource(ctx context.Context, obj *model.NewPropertyDiscovery) (*model.DataSource, error)
 }
+type PrimaryKeyValueResolver interface {
+	UserPrimaryKey(ctx context.Context, obj *model.PrimaryKeyValue) (*model.UserPrimaryKey, error)
+	Request(ctx context.Context, obj *model.PrimaryKeyValue) (*model.Request, error)
+}
 type PropertyResolver interface {
 	Categories(ctx context.Context, obj *model.Property) ([]*model.Category, error)
 	DataSource(ctx context.Context, obj *model.Property) (*model.DataSource, error)
+
+	UserPrimaryKey(ctx context.Context, obj *model.Property) (*model.UserPrimaryKey, error)
 }
 type PropertyMissingDiscoveryResolver interface {
 	Property(ctx context.Context, obj *model.PropertyMissingDiscovery) (*model.Property, error)
@@ -350,6 +365,14 @@ type QueryResolver interface {
 	Jobs(ctx context.Context, resourceID string, jobType string, query *string, status []*model.JobStatus, limit int, offset int) (*model.JobsResult, error)
 	UserPrimaryKey(ctx context.Context, id string) (*model.UserPrimaryKey, error)
 	Request(ctx context.Context, id string) (*model.Request, error)
+}
+type RequestResolver interface {
+	PrimaryKeyValues(ctx context.Context, obj *model.Request) ([]*model.PrimaryKeyValue, error)
+	RequestStatuses(ctx context.Context, obj *model.Request) ([]*model.RequestStatus, error)
+}
+type RequestStatusResolver interface {
+	Request(ctx context.Context, obj *model.RequestStatus) (*model.Request, error)
+	DataSource(ctx context.Context, obj *model.RequestStatus) (*model.DataSource, error)
 }
 type SiloDefinitionResolver interface {
 	SiloSpecification(ctx context.Context, obj *model.SiloDefinition) (*model.SiloSpecification, error)
@@ -495,6 +518,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DataSource.Properties(childComplexity), true
+
+	case "DataSource.requestStatuses":
+		if e.complexity.DataSource.RequestStatuses == nil {
+			break
+		}
+
+		return e.complexity.DataSource.RequestStatuses(childComplexity), true
 
 	case "DataSource.siloDefinition":
 		if e.complexity.DataSource.SiloDefinition == nil {
@@ -841,6 +871,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.DetectSiloSources(childComplexity, args["workspaceId"].(string), args["id"].(string)), true
 
+	case "Mutation.executeUserDataRequest":
+		if e.complexity.Mutation.ExecuteUserDataRequest == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_executeUserDataRequest_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ExecuteUserDataRequest(childComplexity, args["requestId"].(string)), true
+
 	case "Mutation.handleAllOpenDiscoveries":
 		if e.complexity.Mutation.HandleAllOpenDiscoveries == nil {
 			break
@@ -1068,6 +1110,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PrimaryKeyValue.ID(childComplexity), true
+
+	case "PrimaryKeyValue.request":
+		if e.complexity.PrimaryKeyValue.Request == nil {
+			break
+		}
+
+		return e.complexity.PrimaryKeyValue.Request(childComplexity), true
 
 	case "PrimaryKeyValue.userPrimaryKey":
 		if e.complexity.PrimaryKeyValue.UserPrimaryKey == nil {
@@ -1745,6 +1794,7 @@ type DataSource {
     siloDefinition: SiloDefinition!
     properties: [Property!]
     description: String
+    requestStatuses: [RequestStatus!]
 }
 
 type Property {
@@ -2072,6 +2122,7 @@ type UserPrimaryKey {
 type PrimaryKeyValue {
     id: ID! 
     userPrimaryKey: UserPrimaryKey! 
+    request: Request! 
     value: String! 
 }
 
@@ -2100,6 +2151,7 @@ extend type Mutation {
 
 
     createUserDataRequest(input: UserDataRequestInput): Request
+    executeUserDataRequest(requestId: ID!): [MonoidRecordResponse!]
 }`, BuiltIn: false},
 	{Name: "../schema/silo_definitions.graphqls", Input: `scalar Map
 
@@ -2473,6 +2525,21 @@ func (ec *executionContext) field_Mutation_detectSiloSources_args(ctx context.Co
 		}
 	}
 	args["id"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_executeUserDataRequest_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["requestId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requestId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["requestId"] = arg0
 	return args, nil
 }
 
@@ -3860,6 +3927,57 @@ func (ec *executionContext) fieldContext_DataSource_description(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _DataSource_requestStatuses(ctx context.Context, field graphql.CollectedField, obj *model.DataSource) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DataSource_requestStatuses(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.DataSource().RequestStatuses(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.RequestStatus)
+	fc.Result = res
+	return ec.marshalORequestStatus2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatusᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DataSource_requestStatuses(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DataSource",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_RequestStatus_id(ctx, field)
+			case "request":
+				return ec.fieldContext_RequestStatus_request(ctx, field)
+			case "dataSource":
+				return ec.fieldContext_RequestStatus_dataSource(ctx, field)
+			case "status":
+				return ec.fieldContext_RequestStatus_status(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RequestStatus", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _DataSourceMissingDiscovery_id(ctx context.Context, field graphql.CollectedField, obj *model.DataSourceMissingDiscovery) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DataSourceMissingDiscovery_id(ctx, field)
 	if err != nil {
@@ -3952,6 +4070,8 @@ func (ec *executionContext) fieldContext_DataSourceMissingDiscovery_dataSource(c
 				return ec.fieldContext_DataSource_properties(ctx, field)
 			case "description":
 				return ec.fieldContext_DataSource_description(ctx, field)
+			case "requestStatuses":
+				return ec.fieldContext_DataSource_requestStatuses(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DataSource", field.Name)
 		},
@@ -4773,6 +4893,8 @@ func (ec *executionContext) fieldContext_Mutation_createDataSource(ctx context.C
 				return ec.fieldContext_DataSource_properties(ctx, field)
 			case "description":
 				return ec.fieldContext_DataSource_description(ctx, field)
+			case "requestStatuses":
+				return ec.fieldContext_DataSource_requestStatuses(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DataSource", field.Name)
 		},
@@ -5143,6 +5265,8 @@ func (ec *executionContext) fieldContext_Mutation_updateDataSource(ctx context.C
 				return ec.fieldContext_DataSource_properties(ctx, field)
 			case "description":
 				return ec.fieldContext_DataSource_description(ctx, field)
+			case "requestStatuses":
+				return ec.fieldContext_DataSource_requestStatuses(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DataSource", field.Name)
 		},
@@ -6216,6 +6340,66 @@ func (ec *executionContext) fieldContext_Mutation_createUserDataRequest(ctx cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_executeUserDataRequest(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_executeUserDataRequest(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ExecuteUserDataRequest(rctx, fc.Args["requestId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.MonoidRecordResponse)
+	fc.Result = res
+	return ec.marshalOMonoidRecordResponse2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐMonoidRecordResponseᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_executeUserDataRequest(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "data":
+				return ec.fieldContext_MonoidRecordResponse_data(ctx, field)
+			case "SchemaGroup":
+				return ec.fieldContext_MonoidRecordResponse_SchemaGroup(ctx, field)
+			case "SchemaName":
+				return ec.fieldContext_MonoidRecordResponse_SchemaName(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MonoidRecordResponse", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_executeUserDataRequest_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_createSiloDefinition(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_createSiloDefinition(ctx, field)
 	if err != nil {
@@ -6994,6 +7178,8 @@ func (ec *executionContext) fieldContext_NewPropertyDiscovery_dataSource(ctx con
 				return ec.fieldContext_DataSource_properties(ctx, field)
 			case "description":
 				return ec.fieldContext_DataSource_description(ctx, field)
+			case "requestStatuses":
+				return ec.fieldContext_DataSource_requestStatuses(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DataSource", field.Name)
 		},
@@ -7059,7 +7245,7 @@ func (ec *executionContext) _PrimaryKeyValue_userPrimaryKey(ctx context.Context,
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.UserPrimaryKey, nil
+		return ec.resolvers.PrimaryKeyValue().UserPrimaryKey(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7071,17 +7257,17 @@ func (ec *executionContext) _PrimaryKeyValue_userPrimaryKey(ctx context.Context,
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.UserPrimaryKey)
+	res := resTmp.(*model.UserPrimaryKey)
 	fc.Result = res
-	return ec.marshalNUserPrimaryKey2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUserPrimaryKey(ctx, field.Selections, res)
+	return ec.marshalNUserPrimaryKey2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUserPrimaryKey(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PrimaryKeyValue_userPrimaryKey(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PrimaryKeyValue",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -7092,6 +7278,58 @@ func (ec *executionContext) fieldContext_PrimaryKeyValue_userPrimaryKey(ctx cont
 				return ec.fieldContext_UserPrimaryKey_properties(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserPrimaryKey", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PrimaryKeyValue_request(ctx context.Context, field graphql.CollectedField, obj *model.PrimaryKeyValue) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrimaryKeyValue_request(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.PrimaryKeyValue().Request(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Request)
+	fc.Result = res
+	return ec.marshalNRequest2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequest(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PrimaryKeyValue_request(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PrimaryKeyValue",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Request_id(ctx, field)
+			case "primaryKeyValues":
+				return ec.fieldContext_Request_primaryKeyValues(ctx, field)
+			case "requestStatuses":
+				return ec.fieldContext_Request_requestStatuses(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Request", field.Name)
 		},
 	}
 	return fc, nil
@@ -7327,6 +7565,8 @@ func (ec *executionContext) fieldContext_Property_dataSource(ctx context.Context
 				return ec.fieldContext_DataSource_properties(ctx, field)
 			case "description":
 				return ec.fieldContext_DataSource_description(ctx, field)
+			case "requestStatuses":
+				return ec.fieldContext_DataSource_requestStatuses(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DataSource", field.Name)
 		},
@@ -7395,7 +7635,7 @@ func (ec *executionContext) _Property_userPrimaryKey(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.UserPrimaryKey, nil
+		return ec.resolvers.Property().UserPrimaryKey(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7413,8 +7653,8 @@ func (ec *executionContext) fieldContext_Property_userPrimaryKey(ctx context.Con
 	fc = &graphql.FieldContext{
 		Object:     "Property",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -7810,6 +8050,8 @@ func (ec *executionContext) fieldContext_Query_dataSource(ctx context.Context, f
 				return ec.fieldContext_DataSource_properties(ctx, field)
 			case "description":
 				return ec.fieldContext_DataSource_description(ctx, field)
+			case "requestStatuses":
+				return ec.fieldContext_DataSource_requestStatuses(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DataSource", field.Name)
 		},
@@ -8694,7 +8936,7 @@ func (ec *executionContext) _Request_primaryKeyValues(ctx context.Context, field
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.PrimaryKeyValues, nil
+		return ec.resolvers.Request().PrimaryKeyValues(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8703,23 +8945,25 @@ func (ec *executionContext) _Request_primaryKeyValues(ctx context.Context, field
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]model.PrimaryKeyValue)
+	res := resTmp.([]*model.PrimaryKeyValue)
 	fc.Result = res
-	return ec.marshalOPrimaryKeyValue2ᚕgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPrimaryKeyValueᚄ(ctx, field.Selections, res)
+	return ec.marshalOPrimaryKeyValue2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPrimaryKeyValueᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Request_primaryKeyValues(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Request",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_PrimaryKeyValue_id(ctx, field)
 			case "userPrimaryKey":
 				return ec.fieldContext_PrimaryKeyValue_userPrimaryKey(ctx, field)
+			case "request":
+				return ec.fieldContext_PrimaryKeyValue_request(ctx, field)
 			case "value":
 				return ec.fieldContext_PrimaryKeyValue_value(ctx, field)
 			}
@@ -8743,7 +8987,7 @@ func (ec *executionContext) _Request_requestStatuses(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.RequestStatuses, nil
+		return ec.resolvers.Request().RequestStatuses(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8752,17 +8996,17 @@ func (ec *executionContext) _Request_requestStatuses(ctx context.Context, field 
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]model.RequestStatus)
+	res := resTmp.([]*model.RequestStatus)
 	fc.Result = res
-	return ec.marshalORequestStatus2ᚕgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatusᚄ(ctx, field.Selections, res)
+	return ec.marshalORequestStatus2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatusᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Request_requestStatuses(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Request",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -8838,7 +9082,7 @@ func (ec *executionContext) _RequestStatus_request(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Request, nil
+		return ec.resolvers.RequestStatus().Request(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8850,17 +9094,17 @@ func (ec *executionContext) _RequestStatus_request(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.Request)
+	res := resTmp.(*model.Request)
 	fc.Result = res
-	return ec.marshalNRequest2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequest(ctx, field.Selections, res)
+	return ec.marshalNRequest2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequest(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_RequestStatus_request(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "RequestStatus",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -8890,7 +9134,7 @@ func (ec *executionContext) _RequestStatus_dataSource(ctx context.Context, field
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.DataSource, nil
+		return ec.resolvers.RequestStatus().DataSource(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8902,17 +9146,17 @@ func (ec *executionContext) _RequestStatus_dataSource(ctx context.Context, field
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.DataSource)
+	res := resTmp.(*model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_RequestStatus_dataSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "RequestStatus",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -8927,6 +9171,8 @@ func (ec *executionContext) fieldContext_RequestStatus_dataSource(ctx context.Co
 				return ec.fieldContext_DataSource_properties(ctx, field)
 			case "description":
 				return ec.fieldContext_DataSource_description(ctx, field)
+			case "requestStatuses":
+				return ec.fieldContext_DataSource_requestStatuses(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DataSource", field.Name)
 		},
@@ -9208,6 +9454,8 @@ func (ec *executionContext) fieldContext_SiloDefinition_dataSources(ctx context.
 				return ec.fieldContext_DataSource_properties(ctx, field)
 			case "description":
 				return ec.fieldContext_DataSource_description(ctx, field)
+			case "requestStatuses":
+				return ec.fieldContext_DataSource_requestStatuses(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DataSource", field.Name)
 		},
@@ -13545,6 +13793,23 @@ func (ec *executionContext) _DataSource(ctx context.Context, sel ast.SelectionSe
 
 			out.Values[i] = ec._DataSource_description(ctx, field, obj)
 
+		case "requestStatuses":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._DataSource_requestStatuses(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13945,6 +14210,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_createUserDataRequest(ctx, field)
 			})
 
+		case "executeUserDataRequest":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_executeUserDataRequest(ctx, field)
+			})
+
 		case "createSiloDefinition":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -14153,21 +14424,54 @@ func (ec *executionContext) _PrimaryKeyValue(ctx context.Context, sel ast.Select
 			out.Values[i] = ec._PrimaryKeyValue_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "userPrimaryKey":
+			field := field
 
-			out.Values[i] = ec._PrimaryKeyValue_userPrimaryKey(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PrimaryKeyValue_userPrimaryKey(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "request":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PrimaryKeyValue_request(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "value":
 
 			out.Values[i] = ec._PrimaryKeyValue_value(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -14246,9 +14550,22 @@ func (ec *executionContext) _Property(ctx context.Context, sel ast.SelectionSet,
 			out.Values[i] = ec._Property_purposes(ctx, field, obj)
 
 		case "userPrimaryKey":
+			field := field
 
-			out.Values[i] = ec._Property_userPrimaryKey(ctx, field, obj)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Property_userPrimaryKey(ctx, field, obj)
+				return res
+			}
 
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -14700,16 +15017,42 @@ func (ec *executionContext) _Request(ctx context.Context, sel ast.SelectionSet, 
 			out.Values[i] = ec._Request_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "primaryKeyValues":
+			field := field
 
-			out.Values[i] = ec._Request_primaryKeyValues(ctx, field, obj)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Request_primaryKeyValues(ctx, field, obj)
+				return res
+			}
 
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "requestStatuses":
+			field := field
 
-			out.Values[i] = ec._Request_requestStatuses(ctx, field, obj)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Request_requestStatuses(ctx, field, obj)
+				return res
+			}
 
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -14736,28 +15079,54 @@ func (ec *executionContext) _RequestStatus(ctx context.Context, sel ast.Selectio
 			out.Values[i] = ec._RequestStatus_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "request":
+			field := field
 
-			out.Values[i] = ec._RequestStatus_request(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._RequestStatus_request(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "dataSource":
+			field := field
 
-			out.Values[i] = ec._RequestStatus_dataSource(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._RequestStatus_dataSource(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "status":
 
 			out.Values[i] = ec._RequestStatus_status(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -15726,8 +16095,24 @@ func (ec *executionContext) marshalNMap2map(ctx context.Context, sel ast.Selecti
 	return res
 }
 
-func (ec *executionContext) marshalNPrimaryKeyValue2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPrimaryKeyValue(ctx context.Context, sel ast.SelectionSet, v model.PrimaryKeyValue) graphql.Marshaler {
-	return ec._PrimaryKeyValue(ctx, sel, &v)
+func (ec *executionContext) marshalNMonoidRecordResponse2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐMonoidRecordResponse(ctx context.Context, sel ast.SelectionSet, v *model.MonoidRecordResponse) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._MonoidRecordResponse(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNPrimaryKeyValue2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPrimaryKeyValue(ctx context.Context, sel ast.SelectionSet, v *model.PrimaryKeyValue) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._PrimaryKeyValue(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNProperty2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐProperty(ctx context.Context, sel ast.SelectionSet, v *model.Property) graphql.Marshaler {
@@ -15758,8 +16143,24 @@ func (ec *executionContext) marshalNRequest2githubᚗcomᚋbristᚑaiᚋmonoid�
 	return ec._Request(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNRequestStatus2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatus(ctx context.Context, sel ast.SelectionSet, v model.RequestStatus) graphql.Marshaler {
-	return ec._RequestStatus(ctx, sel, &v)
+func (ec *executionContext) marshalNRequest2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequest(ctx context.Context, sel ast.SelectionSet, v *model.Request) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Request(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNRequestStatus2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatus(ctx context.Context, sel ast.SelectionSet, v *model.RequestStatus) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._RequestStatus(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNSiloDefinition2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloDefinition(ctx context.Context, sel ast.SelectionSet, v model.SiloDefinition) graphql.Marshaler {
@@ -16758,6 +17159,53 @@ func (ec *executionContext) marshalOMap2map(ctx context.Context, sel ast.Selecti
 	return res
 }
 
+func (ec *executionContext) marshalOMonoidRecordResponse2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐMonoidRecordResponseᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.MonoidRecordResponse) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNMonoidRecordResponse2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐMonoidRecordResponse(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) marshalONewCategoryDiscovery2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐNewCategoryDiscovery(ctx context.Context, sel ast.SelectionSet, v model.NewCategoryDiscovery) graphql.Marshaler {
 	return ec._NewCategoryDiscovery(ctx, sel, &v)
 }
@@ -16848,7 +17296,7 @@ func (ec *executionContext) marshalONewPropertyDiscovery2ᚕgithubᚗcomᚋbrist
 	return ret
 }
 
-func (ec *executionContext) marshalOPrimaryKeyValue2ᚕgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPrimaryKeyValueᚄ(ctx context.Context, sel ast.SelectionSet, v []model.PrimaryKeyValue) graphql.Marshaler {
+func (ec *executionContext) marshalOPrimaryKeyValue2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPrimaryKeyValueᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.PrimaryKeyValue) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -16875,7 +17323,7 @@ func (ec *executionContext) marshalOPrimaryKeyValue2ᚕgithubᚗcomᚋbristᚑai
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNPrimaryKeyValue2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPrimaryKeyValue(ctx, sel, v[i])
+			ret[i] = ec.marshalNPrimaryKeyValue2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPrimaryKeyValue(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -17057,7 +17505,7 @@ func (ec *executionContext) marshalORequest2ᚖgithubᚗcomᚋbristᚑaiᚋmonoi
 	return ec._Request(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalORequestStatus2ᚕgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []model.RequestStatus) graphql.Marshaler {
+func (ec *executionContext) marshalORequestStatus2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.RequestStatus) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -17084,7 +17532,7 @@ func (ec *executionContext) marshalORequestStatus2ᚕgithubᚗcomᚋbristᚑai�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNRequestStatus2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatus(ctx, sel, v[i])
+			ret[i] = ec.marshalNRequestStatus2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatus(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)

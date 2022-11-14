@@ -10,6 +10,7 @@ type DataSource {
     siloDefinition: SiloDefinition!
     properties: [Property!]
     description: String
+    requestStatuses: [RequestStatus!]
 }
 
 type Property {

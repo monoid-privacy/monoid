@@ -33,6 +33,7 @@ type UserPrimaryKey {
 type PrimaryKeyValue {
     id: ID! 
     userPrimaryKey: UserPrimaryKey! 
+    request: Request! 
     value: String! 
 }
 
@@ -61,4 +62,5 @@ extend type Mutation {
 
 
     createUserDataRequest(input: UserDataRequestInput): Request
+    executeUserDataRequest(requestId: ID!): [MonoidRecordResponse!]
 }

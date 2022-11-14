@@ -67,6 +67,8 @@ models:
         resolver: true # force a resolver to be generated
       siloDefinitions:
         resolver: true
+      requests: 
+        resolver: true 
   SiloDefinition:
     fields:
       siloSpecification:
@@ -79,11 +81,33 @@ models:
     fields:
       properties:
         resolver: true
+      requestStatuses: 
+        resolver: true 
   Property:
     fields:
       categories:
         resolver: true
       dataSource:
+        resolver: true
+      userPrimaryKey: 
+        resolver: true
+  RequestStatus: 
+    fields: 
+      request: 
+        resolver: true 
+      dataSource: 
+        resolver: true 
+  Request: 
+    fields: 
+      primaryKeyValues: 
+        resolver: true 
+      requestStatuses: 
+        resolver: true 
+  PrimaryKeyValue: 
+    fields: 
+      userPrimaryKey: 
+        resolver: true 
+      request: 
         resolver: true
   DataDiscovery:
     fields:

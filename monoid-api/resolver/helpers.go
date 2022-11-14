@@ -21,6 +21,26 @@ func handleError(err error, msg string) *gqlerror.Error {
 
 }
 
+func sliceToPointerSlice[T any](slice []T) []*T {
+	pointerSlice := make([]*T, len(slice))
+	for _, elem := range slice {
+		pointerSlice = append(pointerSlice, &elem)
+	}
+	return pointerSlice
+}
+
+func findChildObjects[childObjectType any](db *gorm.DB, parentObjectID string, queryId string) ([]*childObjectType, error) {
+	childObjects := []childObjectType{}
+	queryString := fmt.Sprintf("%s = ?", queryId)
+	if err := db.Where(queryString, parentObjectID).Find(&childObjects).Error; err != nil {
+		return nil, err
+	}
+
+	pointerSlice := sliceToPointerSlice(childObjects)
+
+	return pointerSlice, nil
+}
+
 func findAllObjects[Object any](db *gorm.DB, errMsg string) ([]*Object, error) {
 	objects := []*Object{}
 

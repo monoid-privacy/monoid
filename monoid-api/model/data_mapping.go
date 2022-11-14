@@ -50,6 +50,7 @@ type DataSource struct {
 	SiloDefinition   SiloDefinition `gorm:"constraint:OnDelete:CASCADE;"`
 	Properties       []*Property
 	Description      *string
+	RequestStatuses  []RequestStatus
 
 	CreatedAt time.Time
 	UpdatedAt time.Time

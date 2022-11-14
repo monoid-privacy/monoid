@@ -6,7 +6,9 @@ package resolver
 import (
 	"context"
 	"errors"
+	"fmt"
 
+	"github.com/brist-ai/monoid/generated"
 	"github.com/brist-ai/monoid/model"
 	"github.com/google/uuid"
 )
@@ -112,6 +114,21 @@ func (r *mutationResolver) CreateUserDataRequest(ctx context.Context, input *mod
 	return &request, nil
 }
 
+// ExecuteUserDataRequest is the resolver for the executeUserDataRequest field.
+func (r *mutationResolver) ExecuteUserDataRequest(ctx context.Context, requestID string) ([]*model.MonoidRecordResponse, error) {
+	panic(fmt.Errorf("not implemented: ExecuteUserDataRequest - executeUserDataRequest"))
+}
+
+// UserPrimaryKey is the resolver for the userPrimaryKey field.
+func (r *primaryKeyValueResolver) UserPrimaryKey(ctx context.Context, obj *model.PrimaryKeyValue) (*model.UserPrimaryKey, error) {
+	return findObjectByID[model.UserPrimaryKey](obj.UserPrimaryKeyID, r.Conf.DB, "Error finding user primary key.")
+}
+
+// Request is the resolver for the request field.
+func (r *primaryKeyValueResolver) Request(ctx context.Context, obj *model.PrimaryKeyValue) (*model.Request, error) {
+	panic(fmt.Errorf("not implemented: Request - request"))
+}
+
 // UserPrimaryKey is the resolver for the userPrimaryKey field.
 func (r *queryResolver) UserPrimaryKey(ctx context.Context, id string) (*model.UserPrimaryKey, error) {
 	return findObjectByID[model.UserPrimaryKey](id, r.Conf.DB, "Error finding user primary key.")
@@ -121,3 +138,38 @@ func (r *queryResolver) UserPrimaryKey(ctx context.Context, id string) (*model.U
 func (r *queryResolver) Request(ctx context.Context, id string) (*model.Request, error) {
 	return findObjectByID[model.Request](id, r.Conf.DB, "Error finding request.")
 }
+
+// PrimaryKeyValues is the resolver for the primaryKeyValues field.
+func (r *requestResolver) PrimaryKeyValues(ctx context.Context, obj *model.Request) ([]*model.PrimaryKeyValue, error) {
+	return findChildObjects[model.PrimaryKeyValue](r.Conf.DB, obj.ID, "request_id")
+}
+
+// RequestStatuses is the resolver for the requestStatuses field.
+func (r *requestResolver) RequestStatuses(ctx context.Context, obj *model.Request) ([]*model.RequestStatus, error) {
+	return findChildObjects[model.RequestStatus](r.Conf.DB, obj.ID, "request_id")
+}
+
+// Request is the resolver for the request field.
+func (r *requestStatusResolver) Request(ctx context.Context, obj *model.RequestStatus) (*model.Request, error) {
+	return findObjectByID[model.Request](obj.RequestID, r.Conf.DB, "Error finding request.")
+}
+
+// DataSource is the resolver for the dataSource field.
+func (r *requestStatusResolver) DataSource(ctx context.Context, obj *model.RequestStatus) (*model.DataSource, error) {
+	return findObjectByID[model.DataSource](obj.DataSourceID, r.Conf.DB, "Error finding data source.")
+}
+
+// PrimaryKeyValue returns generated.PrimaryKeyValueResolver implementation.
+func (r *Resolver) PrimaryKeyValue() generated.PrimaryKeyValueResolver {
+	return &primaryKeyValueResolver{r}
+}
+
+// Request returns generated.RequestResolver implementation.
+func (r *Resolver) Request() generated.RequestResolver { return &requestResolver{r} }
+
+// RequestStatus returns generated.RequestStatusResolver implementation.
+func (r *Resolver) RequestStatus() generated.RequestStatusResolver { return &requestStatusResolver{r} }
+
+type primaryKeyValueResolver struct{ *Resolver }
+type requestResolver struct{ *Resolver }
+type requestStatusResolver struct{ *Resolver }
