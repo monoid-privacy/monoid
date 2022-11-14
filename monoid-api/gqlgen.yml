@@ -83,6 +83,8 @@ models:
     fields:
       categories:
         resolver: true
+      dataSource:
+        resolver: true
   DataDiscovery:
     fields:
       data:

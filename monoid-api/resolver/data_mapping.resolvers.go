@@ -12,6 +12,7 @@ import (
 	"github.com/brist-ai/monoid/model"
 	"github.com/brist-ai/monoid/workflow"
 	"github.com/google/uuid"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.temporal.io/sdk/client"
 	"gorm.io/gorm"
 )
@@ -336,6 +337,20 @@ func (r *mutationResolver) DetectSiloSources(ctx context.Context, workspaceID st
 // Categories is the resolver for the categories field.
 func (r *propertyResolver) Categories(ctx context.Context, obj *model.Property) ([]*model.Category, error) {
 	return loader.GetCategories(ctx, obj.ID)
+}
+
+// DataSource is the resolver for the dataSource field.
+func (r *propertyResolver) DataSource(ctx context.Context, obj *model.Property) (*model.DataSource, error) {
+	ds := model.DataSource{}
+	if err := r.Conf.DB.Model(obj).Association("DataSource").Find(&ds); err != nil {
+		return nil, err
+	}
+
+	if ds.ID == "" {
+		return nil, gqlerror.Errorf("Could not find data source.")
+	}
+
+	return &ds, nil
 }
 
 // DataSource is the resolver for the dataSource field.

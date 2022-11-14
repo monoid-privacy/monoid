@@ -1,8 +1,10 @@
 import React from 'react';
 import { classNames } from '../utils/utils';
 
+export type BadgeColor = 'blue' | 'green' | 'yellow' | 'red';
+
 interface BadgeProps extends React.HTMLProps<HTMLSpanElement> {
-  color?: 'blue' | 'green' | 'yellow' | 'red'
+  color?: BadgeColor
   actions?: {
     onClick: () => void
     content: React.ReactNode,

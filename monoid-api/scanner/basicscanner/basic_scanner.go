@@ -1,4 +1,4 @@
-package basic_scanner
+package basicscanner
 
 import (
 	"errors"
@@ -24,7 +24,7 @@ func NewBasicScanner(schema monoidprotocol.MonoidSchema) (*BasicScanner, error) 
 
 	parsedSchema := jsonschema.Schema{}
 	if err := mapstructure.Decode(schema.JsonSchema, &parsedSchema); err != nil {
-		return nil, scanner.HandleError(err, "")
+		return nil, err
 	}
 
 	valuePaths := getValuePaths(parsedSchema)
@@ -93,25 +93,25 @@ func getValuePaths(schema jsonschema.Schema) []scanner.ValuePath {
 func getValueByPath(valuePath scanner.ValuePath, data monoidprotocol.MonoidRecordData) (string, error) {
 	value, ok := data[valuePath.Path[0]]
 	if !ok {
-		return "", scanner.HandleError(errors.New("property doesn't match path "), "")
+		return "", errors.New("property doesn't match path ")
 	}
 	if len(valuePath.Path) == 1 {
 		valueString, ok := value.(string)
 		if !ok {
-			return "", scanner.HandleError(errors.New("value has incorrect type "), "")
+			return "", errors.New("value has incorrect type ")
 		}
 		return valueString, nil
 	}
 	valueData, ok := value.(monoidprotocol.MonoidRecordData)
 	if !ok {
-		return "", scanner.HandleError(errors.New("cannot parse value data into monoid data"), "")
+		return "", errors.New("cannot parse value data into monoid data")
 	}
 	valueString, err := getValueByPath(scanner.ValuePath{
 		Path: valuePath.Path[1:],
 		Type: valuePath.Type,
 	}, valueData)
 	if err != nil {
-		return "", scanner.HandleError(err, "")
+		return "", err
 	}
 	return valueString, nil
 }
@@ -122,19 +122,20 @@ func (r *BasicScanner) Scan(record *monoidprotocol.MonoidRecord) error {
 		group = *record.SchemaGroup
 	}
 	if record.SchemaName != r.SchemaName || group != r.SchemaGroup {
-		return scanner.HandleError(errors.New("record not compatible with scanner's schema"), "")
+		return errors.New("record not compatible with scanner's schema")
 	}
 
 	for _, valuePath := range r.ValuePaths {
 		if valuePath.Type != "string" {
 			continue
 		}
+
 		value, err := getValueByPath(valuePath, record.Data)
 		if err != nil {
-			panic(err)
+			return err
 		}
-		r.MatchFinder.ScanString(value, valuePath.Path)
 
+		r.MatchFinder.ScanString(value, valuePath.Path)
 	}
 	// TODO: parse numbers as well
 
@@ -170,7 +171,17 @@ func (r *BasicScanner) Summary() []scanner.RuleMatch {
 				for _, line := range matchedData {
 					stringMatchedData = append(stringMatchedData, line.Line)
 				}
-				ruleMatches = append(ruleMatches, scanner.RuleMatch{SchemaName: r.SchemaName, SchemaGroup: &r.SchemaGroup, RuleName: rule.Name, DisplayName: rule.DisplayName, Confidence: confidence, Identifier: path, MatchedData: stringMatchedData, LineCount: lineCount, MatchType: "value"})
+				ruleMatches = append(ruleMatches, scanner.RuleMatch{
+					SchemaName:  r.SchemaName,
+					SchemaGroup: &r.SchemaGroup,
+					RuleName:    rule.Name,
+					DisplayName: rule.DisplayName,
+					Confidence:  confidence,
+					Identifier:  path,
+					MatchedData: stringMatchedData,
+					LineCount:   lineCount,
+					MatchType:   "value",
+				})
 
 			}
 		}
@@ -182,7 +193,14 @@ func (r *BasicScanner) Summary() []scanner.RuleMatch {
 			paths = append(paths, lineMatch.Path)
 		}
 		if len(paths) > 0 {
-			ruleMatches = append(ruleMatches, scanner.RuleMatch{RuleName: rule.Name, DisplayName: rule.DisplayName, Confidence: "medium", Identifier: "", MatchedData: paths, MatchType: "name"})
+			ruleMatches = append(ruleMatches, scanner.RuleMatch{
+				RuleName:    rule.Name,
+				DisplayName: rule.DisplayName,
+				Confidence:  "medium",
+				Identifier:  pathToString(paths),
+				MatchedData: paths,
+				MatchType:   "name",
+			})
 		}
 	}
 

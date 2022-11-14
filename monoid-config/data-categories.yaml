@@ -8,6 +8,8 @@
   id: postal_code
 - name: Oauth Token
   id: oauth_token
+- name: User ID
+  id: user_id
 - name: Location
   id: location
 - name: Email

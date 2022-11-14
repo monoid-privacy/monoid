@@ -1,4 +1,4 @@
-package basic_scanner
+package basicscanner
 
 type ScanOpts struct {
 	Limit       int

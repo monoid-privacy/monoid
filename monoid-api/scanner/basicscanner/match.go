@@ -1,6 +1,12 @@
-package scanner
+package basicscanner
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/brist-ai/monoid/scanner"
+)
+
+// make matchfinder an interface with its own config
 
 func NewMatchConfig() MatchConfig {
 	return MatchConfig{
@@ -22,21 +28,15 @@ func NewMatchFinder(matchConfig *MatchConfig) MatchFinder {
 	return MatchFinder{
 		make([][]MatchLine, len(matchConfig.RegexRules)),
 		make([][]MatchLine, len(matchConfig.TokenRules)),
+		make([][]MatchLine, len(matchConfig.NameRules)),
 		0,
 		matchConfig,
 	}
 }
 
-func (m *MatchFinder) ScanValues(values []string) {
-	for i, v := range values {
-		m.Scan(v, i)
-	}
-	m.Count += len(values)
-}
-
-func (m *MatchFinder) CheckMatches(colIdentifier string) []ruleMatch {
+func (m *MatchFinder) CheckMatches(colIdentifier string, schemaName string, schemaGroup *string) []scanner.RuleMatch {
 	// TODO: handle onlyvalues?
-	matchList := []ruleMatch{}
+	matchList := []scanner.RuleMatch{}
 
 	matchedValues := m.MatchedValues
 	count := m.Count
@@ -52,8 +52,6 @@ func (m *MatchFinder) CheckMatches(colIdentifier string) []ruleMatch {
 			newMatchedData := matchedData
 			matchedData = []string{}
 			for _, v := range newMatchedData {
-				// replace urls and check for email match again
-				// TODO preserve offset
 				v2 := urlPassword.ReplaceAllString(v, "[FILTERED]")
 				if rule.Regex.MatchString(v2) {
 					matchedData = append(matchedData, v)
@@ -73,7 +71,7 @@ func (m *MatchFinder) CheckMatches(colIdentifier string) []ruleMatch {
 			}
 			lineCount := len(matchedData)
 
-			matchList = append(matchList, ruleMatch{RuleName: rule.Name, DisplayName: rule.DisplayName, Confidence: confidence, Identifier: colIdentifier, MatchedData: matchedData, LineCount: lineCount, MatchType: "value"})
+			matchList = append(matchList, scanner.RuleMatch{SchemaName: schemaName, SchemaGroup: schemaGroup, RuleName: rule.Name, DisplayName: rule.DisplayName, Confidence: confidence, Identifier: colIdentifier, MatchedData: matchedData, LineCount: lineCount, MatchType: "value"})
 
 		}
 
@@ -92,17 +90,29 @@ func (m *MatchFinder) CheckMatches(colIdentifier string) []ruleMatch {
 			}
 
 			lineCount := len(matchedData)
-			matchList = append(matchList, ruleMatch{RuleName: rule.Name, DisplayName: rule.DisplayName, Confidence: confidence, Identifier: colIdentifier, MatchedData: matchedData, LineCount: lineCount, MatchType: "value"})
+			matchList = append(matchList, scanner.RuleMatch{
+				RuleName:    rule.Name,
+				DisplayName: rule.DisplayName,
+				Confidence:  confidence,
+				Identifier:  colIdentifier,
+				MatchedData: matchedData,
+				LineCount:   lineCount,
+				MatchType:   "value",
+			})
 		}
 	}
 
 	return matchList
 }
 
-func (m *MatchFinder) Scan(v string, index int) {
+func pathToString(path []string) string {
+	return strings.Join(path[:], ".")
+}
+
+func (m *MatchFinder) ScanString(v string, path []string) {
 	for i, rule := range m.matchConfig.RegexRules {
 		if rule.Regex.MatchString(v) {
-			m.MatchedValues[i] = append(m.MatchedValues[i], MatchLine{index, v})
+			m.MatchedValues[i] = append(m.MatchedValues[i], MatchLine{Path: pathToString(path), Line: v})
 		}
 	}
 
@@ -110,8 +120,10 @@ func (m *MatchFinder) Scan(v string, index int) {
 		tokens := tokenizer.Split(strings.ToLower(v), -1)
 		for i, rule := range m.matchConfig.TokenRules {
 			if anyMatches(rule, tokens) {
-				m.TokenValues[i] = append(m.TokenValues[i], MatchLine{index, v})
+				m.TokenValues[i] = append(m.TokenValues[i], MatchLine{Path: pathToString(path), Line: v})
 			}
 		}
 	}
+
+	m.Count++
 }

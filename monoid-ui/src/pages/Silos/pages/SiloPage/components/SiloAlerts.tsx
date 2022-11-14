@@ -18,19 +18,22 @@ import AlertRegion from '../../../../../components/AlertRegion';
 import Card, { CardHeader, CardDivider } from '../../../../../components/Card';
 import Spinner from '../../../../../components/Spinner';
 import {
-  DataDiscovery, DataSource, NewDataSourceDiscoveryData, NewPropertyDiscoveryData,
+  DataDiscovery, DataSource, NewDataSourceDiscoveryData, NewPropertyDiscoveryData, Property,
 } from '../../../../../lib/models';
 import Text from '../../../../../components/Text';
 import Badge from '../../../../../components/Badge';
 import Button from '../../../../../components/Button';
 import Table from '../../../../../components/Table';
 import ToastContext from '../../../../../contexts/ToastContext';
+import CategoryBadge from './CategoryBadge';
+import { dedup } from '../../../../../utils/utils';
 
 dayjs.extend(updateLocale);
 dayjs.extend(duration);
 dayjs.extend(relativeTime);
 
 const deletedDatasourceError = 'Error finding data source.';
+const deletedPropertyError = 'Error finding property.';
 
 const GET_DISCOVERIES = gql`
   query GetScanSchedule($id: ID!, $workspaceId: ID!) {
@@ -49,11 +52,17 @@ const GET_DISCOVERIES = gql`
               group
               properties {
                 name
+                categories {
+                  categoryId
+                }
               }
             }
             ... on NewPropertyDiscovery {
               name
               dataSourceId
+              categories {
+                categoryId
+              }
             }
             ... on NewCategoryDiscovery {
               propertyId
@@ -78,6 +87,18 @@ const GET_DATA_SOURCE = gql`
       properties {
         id
         name
+      }
+    }
+  }
+`;
+
+const GET_PROPERTY = gql`
+  query GetProperty($id: ID!) {
+    property(id: $id) {
+      id
+      name
+      dataSource {
+        id
       }
     }
   }
@@ -108,11 +129,21 @@ function DataSourceBody(props: {
           <FolderIcon className="w-3 h-3 mr-1" />
           {dataSource.group}
         </Text>
-        <Badge className="mt-2">
-          {dataSource.properties?.length}
-          {' '}
-          Properties
-        </Badge>
+        <div className="mt-2 space-x-2">
+          <Badge className="mt-2">
+            {dataSource.properties?.length}
+            {' '}
+            Properties
+          </Badge>
+          {dedup(
+            dataSource.properties?.flatMap(
+              (p) => p.categories || [],
+            ) || [],
+            (v) => v.categoryId,
+          ).map(
+            (c) => <CategoryBadge categoryID={c.categoryId} color="red" />,
+          )}
+        </div>
       </div>
       {open
         && (
@@ -122,6 +153,10 @@ function DataSourceBody(props: {
                 header: 'Property Name',
                 key: 'name',
               },
+              {
+                header: 'Categories',
+                key: 'categories',
+              },
             ]}
             tableRows={dataSource.properties?.map((d) => (
               {
@@ -129,6 +164,13 @@ function DataSourceBody(props: {
                 columns: [{
                   key: 'name',
                   content: d.name!,
+                }, {
+                  key: 'categories',
+                  content: (
+                    d.categories?.map(
+                      (c) => <CategoryBadge key={c.categoryId} categoryID={c.categoryId} />,
+                    )
+                  ),
                 }],
               }
             ))}
@@ -160,28 +202,78 @@ function PropertyBody(props: {
   }
 
   return (
-    <div className="mt-2">
-      <Text size="sm">
-        {property.name}
-      </Text>
-      <Text size="xs" em="light" className="flex items-center mt-1">
-        {
-          error?.message === deletedDatasourceError ? 'Data Source has been removed.'
-            : (
-              <>
-                <CircleStackIcon className="w-3 h-3 mr-1" />
+    <>
+      {
+        (property.categories?.length || 0) > 0
+        && (
+          <div className="flex items-start mt-2">
+            {
+              property.categories?.map((c) => (
+                <CategoryBadge categoryID={c.categoryId!} key={c.categoryId} />
+              ))
+            }
+          </div>
+        )
+      }
+      <div className="mt-2">
+        <Text size="sm">
+          {property.name}
+        </Text>
+        <Text size="xs" em="light" className="flex items-center mt-1">
+          {
+            error?.message === deletedDatasourceError ? 'Data Source has been removed.'
+              : (
+                <>
+                  <CircleStackIcon className="w-3 h-3 mr-1" />
 
-                <div className="mr-5">
-                  {dataSource?.name}
-                </div>
-                <FolderIcon className="w-3 h-3 mr-1" />
-                <div>{dataSource?.group}</div>
-              </>
-            )
-        }
-      </Text>
-    </div>
+                  <div className="mr-5">
+                    {dataSource?.name}
+                  </div>
+                  <FolderIcon className="w-3 h-3 mr-1" />
+                  <div>{dataSource?.group}</div>
+                </>
+              )
+          }
+        </Text>
+      </div>
+    </>
 
+  );
+}
+
+function LodaedPropertyBody(props: {
+  propertyId: string,
+}) {
+  const { propertyId } = props;
+  const { data, loading, error } = useQuery<{ property: Property }>(GET_PROPERTY, {
+    variables: {
+      id: propertyId!,
+    },
+  });
+
+  if (loading) {
+    return <Spinner />;
+  }
+
+  if (error) {
+    if (error.message === deletedPropertyError) {
+      return (
+        <Text size="xs" em="light" className="flex items-center mt-1">
+          This property has been deleted.
+        </Text>
+      );
+    }
+
+    return <AlertRegion alertTitle="Error">{error.message}</AlertRegion>;
+  }
+
+  return (
+    <PropertyBody
+      property={{
+        name: data?.property.name!,
+        dataSourceId: data?.property.dataSource?.id!,
+      }}
+    />
   );
 }
 
@@ -263,7 +355,16 @@ function DiscoveryItem(props: { discovery: DataDiscovery }) {
   let body: ReactNode;
 
   if (discovery.type === 'CATEGORY_FOUND') {
-    title = '';
+    title = 'New Category Found';
+
+    body = (
+      <>
+        <div className="flex items-start mt-2">
+          <CategoryBadge categoryID={discovery.data?.categoryId!} />
+        </div>
+        <LodaedPropertyBody propertyId={discovery.data!.propertyId!} />
+      </>
+    );
   } else if (discovery.type === 'DATA_SOURCE_FOUND') {
     title = 'New Data Source Found';
     body = (
@@ -288,6 +389,9 @@ function DiscoveryItem(props: { discovery: DataDiscovery }) {
     );
   } else if (discovery.type === 'PROPERTY_MISSING') {
     title = 'Property Deleted';
+    body = (
+      <LodaedPropertyBody propertyId={discovery.data!.id!} />
+    );
   }
 
   let statusIcon = <ExclamationCircleIcon className="w-6 h-6 mr-2 text-blue-600" />;

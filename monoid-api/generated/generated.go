@@ -240,6 +240,7 @@ type MutationResolver interface {
 }
 type PropertyResolver interface {
 	Categories(ctx context.Context, obj *model.Property) ([]*model.Category, error)
+	DataSource(ctx context.Context, obj *model.Property) (*model.DataSource, error)
 }
 type QueryResolver interface {
 	Workspaces(ctx context.Context) ([]*model.Workspace, error)
@@ -5272,7 +5273,7 @@ func (ec *executionContext) _Property_dataSource(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.DataSource, nil
+		return ec.resolvers.Property().DataSource(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5284,17 +5285,17 @@ func (ec *executionContext) _Property_dataSource(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.DataSource)
+	res := resTmp.(*model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Property_dataSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Property",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -10783,12 +10784,25 @@ func (ec *executionContext) _Property(ctx context.Context, sel ast.SelectionSet,
 
 			})
 		case "dataSource":
+			field := field
 
-			out.Values[i] = ec._Property_dataSource(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Property_dataSource(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "purposes":
 
 			out.Values[i] = ec._Property_purposes(ctx, field, obj)

@@ -1,11 +1,10 @@
-package basic_scanner
+package basicscanner
 
 import (
 	"errors"
 	"regexp"
 
 	"github.com/brist-ai/monoid/monoidprotocol"
-	"github.com/brist-ai/monoid/scanner"
 )
 
 func stringInSlice(a string, list []string) bool {
@@ -60,11 +59,11 @@ func getValues[T any](key string, records []monoidprotocol.MonoidRecord) ([]T, e
 	for _, record := range records {
 		value, ok := record.Data[key]
 		if !ok {
-			return nil, scanner.HandleError(errors.New("monoid record missing key present in schema"), "Error scanning Monoid record.")
+			return nil, errors.New("monoid record missing key present in schema")
 		}
 		valueParsed, ok := value.(T)
 		if !ok {
-			return nil, scanner.HandleError(errors.New("could not parse data as schema type"), "Error scanning Monoid record.")
+			return nil, errors.New("could not parse data as schema type")
 		}
 		values = append(values, valueParsed)
 	}

@@ -76,16 +76,19 @@ func loadCategories(conf *config.BaseConfig, configPath string) {
 
 	for _, yamlCat := range categories {
 		cat := model.Category{}
-		if err := conf.DB.Where("id = ?", yamlCat.ID).First(&cat); err != nil {
+		if err := conf.DB.Where("id = ?", yamlCat.ID).First(&cat).Error; err != nil {
 			if err := conf.DB.Create(&yamlCat).Error; err != nil {
 				log.Err(err).Msgf("Error creating category: %s", yamlCat.Name)
 			}
+
+			fmt.Printf("Successfully created category %s (%s)\n", cat.ID, cat.Name)
 
 			continue
 		}
 
 		if err := conf.DB.Updates(&yamlCat).Error; err != nil {
 			log.Err(err).Msgf("Error updating category: %s", yamlCat.Name)
+			continue
 		}
 	}
 }

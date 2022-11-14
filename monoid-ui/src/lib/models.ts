@@ -19,6 +19,7 @@ export interface Property {
   name?: string
   tentative?: TentativeValue
   categories?: Category[]
+  dataSource?: DataSource
 }
 
 export interface DataSource {
@@ -52,6 +53,7 @@ export interface NewDataSourceDiscoveryData {
 export interface NewPropertyDiscoveryData {
   name: string
   dataSourceId?: string
+  categories?: NewCategoryDiscoveryData[]
 }
 
 export interface NewCategoryDiscoveryData {

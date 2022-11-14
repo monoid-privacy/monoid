@@ -3,10 +3,15 @@ package activity
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/brist-ai/monoid/jsonschema"
 	"github.com/brist-ai/monoid/model"
+	"github.com/brist-ai/monoid/monoidprotocol"
 	"github.com/brist-ai/monoid/monoidprotocol/docker"
+	"github.com/brist-ai/monoid/scanner"
+	"github.com/brist-ai/monoid/scanner/basicscanner"
+
 	"github.com/google/uuid"
 	"github.com/mitchellh/mapstructure"
 	"github.com/rs/zerolog/log"
@@ -19,12 +24,64 @@ type dataSourceMatcher struct {
 	Name  string
 }
 
+func newDataSourceMatcher(name string, group *string) dataSourceMatcher {
+	gr := ""
+	if group != nil {
+		gr = *group
+	}
+
+	return dataSourceMatcher{
+		Name:  name,
+		Group: gr,
+	}
+}
+
+func dedupCategories(
+	propertyID string,
+	prevCategories []*model.Category,
+	newCategories []model.NewCategoryDiscovery,
+) []*model.DataDiscovery {
+	categoryMap := map[string]*model.Category{}
+	for _, c := range prevCategories {
+		categoryMap[c.ID] = c
+	}
+
+	res := []*model.DataDiscovery{}
+
+	for _, cat := range newCategories {
+		if _, ok := categoryMap[cat.CategoryID]; ok {
+			continue
+		}
+
+		data, err := json.Marshal(model.NewCategoryDiscovery{
+			PropertyID: &propertyID,
+			CategoryID: cat.CategoryID,
+		})
+
+		if err != nil {
+			continue
+		}
+
+		discovery := model.DataDiscovery{
+			ID:     uuid.NewString(),
+			Type:   model.DiscoveryTypeCategoryFound,
+			Status: model.DiscoveryStatusOpen,
+			Data:   data,
+		}
+
+		res = append(res, &discovery)
+	}
+
+	return res
+}
+
 // getPropertyDiscoveries matches newProperties with prevProperties, and returns a
 // list with all the discoveries.
 func getPropertyDiscoveries(
 	prevProperties []*model.Property,
 	newProperties map[string]*jsonschema.Schema,
-	sourceID *string,
+	categoryMatches map[dataSourceMatcher]map[string][]scanner.RuleMatch,
+	dataSource *model.DataSource,
 ) []*model.DataDiscovery {
 	propMap := map[string]*model.Property{}
 	for _, p := range prevProperties {
@@ -32,18 +89,38 @@ func getPropertyDiscoveries(
 	}
 
 	resPropMap := map[string]*model.DataDiscovery{}
+	res := []*model.DataDiscovery{}
 
 	// Detect properties in the new list of properties,
 	// add them to the result map and mark then as tentatively created.
 	for p := range newProperties {
 		if prop, ok := propMap[p]; ok {
 			resPropMap[prop.Name] = nil
+
+			// Create the discoveries for the updated categories for new properties.
+			cats := getCategories(
+				categoryMatches,
+				newDataSourceMatcher(dataSource.Name, dataSource.Group),
+				p,
+			)
+
+			newCats := dedupCategories(prop.ID, prop.Categories, cats)
+			res = append(res, newCats...)
+
 			continue
 		}
 
+		// Process the new property.
+		cats := getCategories(
+			categoryMatches,
+			newDataSourceMatcher(dataSource.Name, dataSource.Group),
+			p,
+		)
+
 		data, err := json.Marshal(model.NewPropertyDiscovery{
 			Name:         p,
-			DataSourceId: sourceID,
+			DataSourceId: &dataSource.ID,
+			Categories:   cats,
 		})
 
 		if err != nil {
@@ -60,13 +137,13 @@ func getPropertyDiscoveries(
 
 	// Detect properties that have been removed in the new schema and mark them as
 	// deleted.
-	for p := range propMap {
+	for p, v := range propMap {
 		if _, ok := resPropMap[p]; ok {
 			continue
 		}
 
 		delObj := model.ObjectMissingDiscovery{
-			ID: p,
+			ID: v.ID,
 		}
 
 		delObjJSON, err := json.Marshal(delObj)
@@ -81,8 +158,6 @@ func getPropertyDiscoveries(
 			Data:   delObjJSON,
 		}
 	}
-
-	res := make([]*model.DataDiscovery, 0, len(resPropMap))
 
 	for _, p := range resPropMap {
 		if p == nil {
@@ -190,6 +265,94 @@ func processDiscoveries(db *gorm.DB, silo *model.SiloDefinition, discoveries []*
 	})
 }
 
+// getCategories finds the new category discoveries from the
+// result of scanProtocol and the data source and
+// property names.
+func getCategories(
+	matches map[dataSourceMatcher]map[string][]scanner.RuleMatch,
+	source dataSourceMatcher,
+	propertyName string,
+) []model.NewCategoryDiscovery {
+	catMatcher, ok := matches[source]
+
+	if ok {
+		matches, pok := catMatcher[propertyName]
+
+		if pok {
+			res := make([]model.NewCategoryDiscovery, len(matches))
+
+			for i, m := range matches {
+				res[i] = model.NewCategoryDiscovery{
+					CategoryID: m.RuleName,
+				}
+			}
+
+			return res
+		}
+	}
+
+	return []model.NewCategoryDiscovery{}
+}
+
+// scanProtocol runs the PII scan using the monoid protocol,
+// and returns a 2D map, the first dimension of which is a dataSourceMatcher
+// key, and the second of which has the property path as a key.
+func scanProtocol(
+	ctx context.Context,
+	mp monoidprotocol.MonoidProtocol,
+	config map[string]interface{},
+	schemas []monoidprotocol.MonoidSchema,
+) (map[dataSourceMatcher]map[string][]scanner.RuleMatch, error) {
+	matchers := map[dataSourceMatcher]scanner.Scanner{}
+	for _, s := range schemas {
+		sc, err := basicscanner.NewBasicScanner(s)
+
+		if err != nil {
+			return nil, err
+		}
+
+		matchers[newDataSourceMatcher(s.Name, s.Group)] = sc
+	}
+
+	recordChan, err := mp.Sample(
+		ctx,
+		config,
+		monoidprotocol.MonoidSchemasMessage{Schemas: schemas},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for record := range recordChan {
+		matcher := matchers[newDataSourceMatcher(
+			record.SchemaName,
+			record.SchemaGroup,
+		)]
+
+		if err := matcher.Scan(&record); err != nil {
+			log.Err(err).Msg("Error scanning record")
+		}
+	}
+
+	res := map[dataSourceMatcher]map[string][]scanner.RuleMatch{}
+	for k, v := range matchers {
+		if _, ok := res[k]; !ok {
+			res[k] = map[string][]scanner.RuleMatch{}
+		}
+
+		for _, match := range v.Summary() {
+			if _, ok := res[k][match.Identifier]; !ok {
+				res[k][match.Identifier] = []scanner.RuleMatch{}
+			}
+
+			res[k][match.Identifier] = append(res[k][match.Identifier], match)
+		}
+	}
+
+	return res, nil
+}
+
 // DetectDSArgs are the arguments passed into a the activity.
 type DetectDSArgs struct {
 	SiloID string
@@ -236,10 +399,18 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) err
 		return err
 	}
 
+	matches, err := scanProtocol(ctx, mp, conf, schemas.Schemas)
+	if err != nil {
+		logger.Error("Error running scan: %v", err)
+		return err
+	}
+
+	fmt.Println(matches)
+
 	// Get all the data sources (with properties) that currently exist
 	// for this silo.
 	sources := []model.DataSource{}
-	if err := a.Conf.DB.Preload("Properties").Where(
+	if err := a.Conf.DB.Preload("Properties").Preload("Properties.Categories").Where(
 		"silo_definition_id = ?", dataSilo.ID,
 	).Find(&sources).Error; err != nil {
 		logger.Error("Error getting silo def %v", err)
@@ -249,16 +420,8 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) err
 	// Detect the new data sources.
 	sourceMap := map[dataSourceMatcher]*model.DataSource{}
 	for _, s := range sources {
-		group := ""
-		if s.Group != nil {
-			group = *s.Group
-		}
-
 		scp := s
-		sourceMap[dataSourceMatcher{
-			Group: group,
-			Name:  s.Name,
-		}] = &scp
+		sourceMap[newDataSourceMatcher(s.Name, s.Group)] = &scp
 	}
 
 	dataDiscoveries := []*model.DataDiscovery{}
@@ -269,15 +432,11 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) err
 	logger.Info("Schemas", schemas.Schemas, sourceMap, len(sourceMap), len(sources))
 
 	for _, schema := range schemas.Schemas {
-		group := ""
-		if schema.Group != nil {
-			group = *schema.Group
-		}
-
-		currSource, ok := sourceMap[dataSourceMatcher{
-			Name:  schema.Name,
-			Group: group,
-		}]
+		sourceMatcher := newDataSourceMatcher(
+			schema.Name,
+			schema.Group,
+		)
+		currSource, ok := sourceMap[sourceMatcher]
 
 		parsedSchema := jsonschema.Schema{}
 		err := mapstructure.Decode(schema.JsonSchema, &parsedSchema)
@@ -286,11 +445,13 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) err
 			continue
 		}
 
+		// Process just the properties if the data source already exists.
 		if ok {
 			propDiscoveries := getPropertyDiscoveries(
 				currSource.Properties,
 				parsedSchema.Properties,
-				&currSource.ID,
+				matches,
+				currSource,
 			)
 
 			dataDiscoveries = append(dataDiscoveries, propDiscoveries...)
@@ -300,11 +461,16 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) err
 			continue
 		}
 
+		// If the data source doesn't exist, create the properties manually,
+		// and add the new data source discovery.
 		properties := []model.NewPropertyDiscovery{}
 		for p := range parsedSchema.Properties {
-			properties = append(properties, model.NewPropertyDiscovery{
-				Name: p,
-			})
+			discovery := model.NewPropertyDiscovery{
+				Name:       p,
+				Categories: getCategories(matches, sourceMatcher, p),
+			}
+
+			properties = append(properties, discovery)
 		}
 
 		sourceData, err := json.Marshal(model.NewDataSourceDiscovery{

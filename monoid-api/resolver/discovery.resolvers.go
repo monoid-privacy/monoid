@@ -44,11 +44,23 @@ func (r *mutationResolver) HandleDiscovery(ctx context.Context, input *model.Han
 			return nil, handleError(err, "Error getting data")
 		}
 
-		if err := r.Conf.DB.Model(model.Property{ID: *data.PropertyID}).Association("Categories").Append(
-			model.Category{
-				ID: data.CategoryID,
-			},
-		); err != nil {
+		if err := r.Conf.DB.Transaction(func(tx *gorm.DB) error {
+			if err := r.Conf.DB.Model(&model.Property{ID: *data.PropertyID}).Association("Categories").Append(
+				&model.Category{
+					ID: data.CategoryID,
+				},
+			); err != nil {
+				return err
+			}
+
+			if err := tx.Model(&discovery).Update(
+				"status", model.DiscoveryStatusAccepted,
+			).Error; err != nil {
+				return err
+			}
+
+			return nil
+		}); err != nil {
 			return nil, handleError(err, "Could not update category.")
 		}
 	case model.DiscoveryTypeDataSourceFound:
@@ -147,6 +159,26 @@ func (r *mutationResolver) HandleDiscovery(ctx context.Context, input *model.Han
 			return nil, handleError(err, "Error deleting data source")
 		}
 	case model.DiscoveryTypePropertyMissing:
+		data := model.ObjectMissingDiscovery{}
+		if err := json.Unmarshal(discovery.Data, &data); err != nil {
+			return nil, handleError(err, "Error getting data")
+		}
+
+		if err := r.Conf.DB.Transaction(func(tx *gorm.DB) error {
+			if err := tx.Select("Categories").Delete(&model.Property{ID: data.ID}).Error; err != nil {
+				return err
+			}
+
+			if err := tx.Model(&discovery).Update(
+				"status", model.DiscoveryStatusAccepted,
+			).Error; err != nil {
+				return err
+			}
+
+			return nil
+		}); err != nil {
+			return nil, handleError(err, "Error deleting data source")
+		}
 	}
 
 	return &discovery, nil
