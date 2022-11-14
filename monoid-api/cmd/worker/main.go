@@ -46,9 +46,12 @@ func main() {
 	w.RegisterActivity(a.DetectDataSources)
 	w.RegisterActivity(a.FindOrCreateJob)
 	w.RegisterActivity(a.UpdateJobStatus)
+	w.RegisterActivity(a.ExecuteRequest)
+	w.RegisterActivity(a.ExecuteRequestOnDataSource)
 
 	w.RegisterWorkflow(mwf.ValidateDSWorkflow)
 	w.RegisterWorkflow(mwf.DetectDSWorkflow)
+	w.RegisterWorkflow(mwf.HandleRequestWorkflow)
 
 	// Start listening to the Task Queue
 	err = w.Run(worker.InterruptCh())
