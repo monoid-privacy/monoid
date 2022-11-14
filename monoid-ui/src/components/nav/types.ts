@@ -3,4 +3,5 @@ export interface NavLink {
   onClick: () => void
   current: boolean
   icon?: (props?: any) => JSX.Element
+  key: string
 }

@@ -18,11 +18,12 @@ export default function AppContainer(props: {
   const { id } = useParams();
 
   const { children } = props;
-  console.log(children);
   const sidebarSections: {
+    key: string,
     name: string,
     links: NavLink[]
   }[] = [{
+    key: 'base',
     name: '',
     links: [
       {
@@ -32,6 +33,7 @@ export default function AppContainer(props: {
           navigate('/dashboard');
         },
         current: location.pathname.startsWith('/dashboard'),
+        key: 'dashboard',
       },
       {
         title: 'Data Silos',
@@ -40,9 +42,11 @@ export default function AppContainer(props: {
           navigate(`/workspaces/${id}/silos`);
         },
         current: location.pathname.startsWith(`/workspaces/${id}/silos`),
+        key: 'data_silos',
       },
     ],
   }, {
+    key: 'help',
     name: 'Help',
     links: [
       {
@@ -52,6 +56,7 @@ export default function AppContainer(props: {
           window.open('https://docs.monoid.co', '_blank');
         },
         current: false,
+        key: 'docs',
       },
       {
         title: 'Community',
@@ -60,6 +65,7 @@ export default function AppContainer(props: {
           window.location.href = 'mailto:vignesh@brist.ai?subject=Feature Request';
         },
         current: false,
+        key: 'community',
       },
       {
         title: 'Issues/Feature Requests',
@@ -68,6 +74,7 @@ export default function AppContainer(props: {
           window.location.href = 'mailto:vignesh@brist.ai';
         },
         current: false,
+        key: 'issues',
       },
     ],
   }];

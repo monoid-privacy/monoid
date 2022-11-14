@@ -4,6 +4,7 @@ import { Bars3Icon, XMarkIcon, UserCircleIcon } from '@heroicons/react/24/solid'
 import { classNames } from '../../utils/utils';
 import { NavLink } from './types';
 import logo from '../../logo.svg';
+import wordmark from '../../wordmark.svg';
 
 export default function Navbar(props: {
   links: NavLink[],
@@ -26,13 +27,13 @@ export default function Navbar(props: {
                 <div className="flex">
                   <div className="flex-shrink-0 flex items-center">
                     <img
-                      className="block h-10 mr-2 w-auto"
+                      className="lg:hidden block h-10 mr-2 w-auto"
                       src={logo}
                       alt="Brist Logo"
                     />
                     <img
-                      className="hidden lg:block h-5 w-auto"
-                      src={logo}
+                      className="hidden lg:block h-10 w-auto"
+                      src={wordmark}
                       alt="Brist Wordmark"
                     />
                   </div>
