@@ -9,13 +9,13 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-type HandleRequestArgs struct {
+type ExecuteRequestArgs struct {
 	RequestID string
 }
 
-func (w *Workflow) HandleRequestWorkflow(
+func (w *Workflow) ExecuteRequestWorkflow(
 	ctx workflow.Context,
-	args HandleRequestArgs,
+	args ExecuteRequestArgs,
 ) ([]monoidprotocol.MonoidRecord, error) {
 	options := workflow.ActivityOptions{
 		StartToCloseTimeout: time.Minute * 2,

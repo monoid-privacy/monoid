@@ -74,10 +74,6 @@ func (a *Activity) ExecuteRequest(ctx context.Context, requestId string) (*[]mon
 	return &records, newCombinedErrors(allErrors)
 }
 
-func (a *Activity) QueryUserFromDataSource(ctx context.Context, requestStatusId string) (*[]monoidprotocol.MonoidRecord, error) {
-	return nil, nil
-}
-
 func (a *Activity) ExecuteRequestOnDataSource(ctx context.Context, requestStatusId string, requestType string) (*[]monoidprotocol.MonoidRecord, error) {
 	var conf map[string]interface{}
 	var recordChan chan monoidprotocol.MonoidRecord

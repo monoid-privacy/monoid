@@ -51,7 +51,7 @@ func main() {
 
 	w.RegisterWorkflow(mwf.ValidateDSWorkflow)
 	w.RegisterWorkflow(mwf.DetectDSWorkflow)
-	w.RegisterWorkflow(mwf.HandleRequestWorkflow)
+	w.RegisterWorkflow(mwf.ExecuteRequestWorkflow)
 
 	// Start listening to the Task Queue
 	err = w.Run(worker.InterruptCh())

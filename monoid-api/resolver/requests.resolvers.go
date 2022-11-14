@@ -10,7 +10,10 @@ import (
 
 	"github.com/brist-ai/monoid/generated"
 	"github.com/brist-ai/monoid/model"
+	"github.com/brist-ai/monoid/monoidprotocol"
+	"github.com/brist-ai/monoid/workflow"
 	"github.com/google/uuid"
+	"go.temporal.io/sdk/client"
 )
 
 // CreateUserPrimaryKey is the resolver for the createUserPrimaryKey field.
@@ -116,7 +119,41 @@ func (r *mutationResolver) CreateUserDataRequest(ctx context.Context, input *mod
 
 // ExecuteUserDataRequest is the resolver for the executeUserDataRequest field.
 func (r *mutationResolver) ExecuteUserDataRequest(ctx context.Context, requestID string) ([]*model.MonoidRecordResponse, error) {
-	panic(fmt.Errorf("not implemented: ExecuteUserDataRequest - executeUserDataRequest"))
+	workflowID := fmt.Sprintf("request-%s", requestID)
+	options := client.StartWorkflowOptions{
+		ID:        workflowID,
+		TaskQueue: workflow.DockerRunnerQueue,
+	}
+
+	sf := workflow.Workflow{
+		Conf: r.Conf,
+	}
+
+	we, err := r.Conf.TemporalClient.ExecuteWorkflow(ctx, options, sf.ExecuteRequestWorkflow, workflow.ExecuteRequestArgs{
+		RequestID: requestID,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	var res []monoidprotocol.MonoidRecord
+
+	if err = we.Get(ctx, &res); err != nil {
+		return nil, err
+	}
+
+	recordResponses := make([]*model.MonoidRecordResponse, len(res))
+
+	for _, record := range res {
+		recordResponses = append(recordResponses, &model.MonoidRecordResponse{
+			Data:        fmt.Sprintf("%v", record.Data),
+			SchemaGroup: record.SchemaGroup,
+			SchemaName:  record.SchemaName,
+		})
+	}
+
+	return recordResponses, nil
 }
 
 // UserPrimaryKey is the resolver for the userPrimaryKey field.
