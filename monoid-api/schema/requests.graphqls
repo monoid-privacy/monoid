@@ -53,6 +53,9 @@ type RequestStatus {
 extend type Query {
     userPrimaryKey(id: ID!): UserPrimaryKey
     request(id: ID!): Request 
+    requestStatus(id: ID!): RequestStatus 
+    primaryKeyValue(id: ID!): PrimaryKeyValue
+
 }
 
 extend type Mutation {

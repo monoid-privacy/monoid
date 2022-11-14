@@ -126,7 +126,7 @@ func (r *primaryKeyValueResolver) UserPrimaryKey(ctx context.Context, obj *model
 
 // Request is the resolver for the request field.
 func (r *primaryKeyValueResolver) Request(ctx context.Context, obj *model.PrimaryKeyValue) (*model.Request, error) {
-	panic(fmt.Errorf("not implemented: Request - request"))
+	return findObjectByID[model.Request](obj.RequestID, r.Conf.DB, "Error finding request.")
 }
 
 // UserPrimaryKey is the resolver for the userPrimaryKey field.
@@ -137,6 +137,16 @@ func (r *queryResolver) UserPrimaryKey(ctx context.Context, id string) (*model.U
 // Request is the resolver for the request field.
 func (r *queryResolver) Request(ctx context.Context, id string) (*model.Request, error) {
 	return findObjectByID[model.Request](id, r.Conf.DB, "Error finding request.")
+}
+
+// RequestStatus is the resolver for the requestStatus field.
+func (r *queryResolver) RequestStatus(ctx context.Context, id string) (*model.RequestStatus, error) {
+	return findObjectByID[model.RequestStatus](id, r.Conf.DB, "Error finding request status.")
+}
+
+// PrimaryKeyValue is the resolver for the primaryKeyValue field.
+func (r *queryResolver) PrimaryKeyValue(ctx context.Context, id string) (*model.PrimaryKeyValue, error) {
+	return findObjectByID[model.PrimaryKeyValue](id, r.Conf.DB, "Error finding primary key value.")
 }
 
 // PrimaryKeyValues is the resolver for the primaryKeyValues field.
