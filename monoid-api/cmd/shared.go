@@ -101,7 +101,7 @@ func encryptionKey(keyFile string) ([]byte, error) {
 func GetBaseConfig(runMigrations bool, models []interface{}) config.BaseConfig {
 	err := godotenv.Load()
 	if err != nil {
-		panic(err)
+		log.Debug().Msg("No .env file found")
 	}
 
 	rand.Seed(time.Now().UTC().UnixNano())

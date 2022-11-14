@@ -22,8 +22,6 @@ services:
     build:
       dockerfile: Dockerfile
       context: ./monoid-ui
-    ports:
-      - 3000:3000
     networks:
       - monoid-network
   temporal:

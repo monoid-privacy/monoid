@@ -6,7 +6,9 @@ WORKDIR /app
 RUN yarn install
 RUN yarn run build
 
-ENV NODE_ENV production
-EXPOSE 3000
+FROM nginx:1.15
 
-CMD [ "npx", "serve", "build" ]
+COPY --from=0 /app/build /usr/share/nginx/html
+COPY --from=0 /app/nginx/default.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
