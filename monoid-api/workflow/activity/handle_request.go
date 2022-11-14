@@ -44,7 +44,10 @@ func succeedRequest(requestStatusId string, db *gorm.DB) error {
 	return nil
 }
 
-func (a *Activity) ExecuteDeletion(ctx context.Context, requestId string) (*[]monoidprotocol.MonoidRecord, error) {
+func (a *Activity) ExecuteRequest(ctx context.Context, requestId string) (*[]monoidprotocol.MonoidRecord, error) {
+	var newRecords *[]monoidprotocol.MonoidRecord
+	var err error
+	allErrors := []error{}
 	records := []monoidprotocol.MonoidRecord{}
 	request := model.Request{}
 
@@ -52,25 +55,37 @@ func (a *Activity) ExecuteDeletion(ctx context.Context, requestId string) (*[]mo
 		return nil, err
 	}
 
-	if request.Type != model.Delete {
-		return nil, errors.New("incorrect request type")
+	if request.Type != model.Delete && request.Type != model.Query {
+		return nil, errors.New("invalid request type")
 	}
 
 	for _, requestStatus := range request.RequestStatuses {
-		newRecords, err := a.DeleteUserFromDataSource(ctx, requestStatus.ID)
+		err = nil
+		newRecords, err = a.ExecuteRequestOnDataSource(ctx, requestStatus.ID, request.Type)
 		if err != nil {
-			return &records, err
+			allErrors = append(allErrors, err)
 		}
+
 		if err = succeedRequest(requestStatus.ID, a.Conf.DB); err != nil {
-			return &records, err
+			allErrors = append(allErrors, err)
 		}
 		records = append(records, *newRecords...)
 	}
-	return &records, nil
+	return &records, newCombinedErrors(allErrors)
 }
 
-func (a *Activity) DeleteUserFromDataSource(ctx context.Context, requestStatusId string) (*[]monoidprotocol.MonoidRecord, error) {
+func (a *Activity) QueryUserFromDataSource(ctx context.Context, requestStatusId string) (*[]monoidprotocol.MonoidRecord, error) {
+	return nil, nil
+}
+
+func (a *Activity) ExecuteRequestOnDataSource(ctx context.Context, requestStatusId string, requestType string) (*[]monoidprotocol.MonoidRecord, error) {
 	var conf map[string]interface{}
+	var recordChan chan monoidprotocol.MonoidRecord
+	var err error
+
+	if requestType != model.Delete && requestType != model.Query {
+		return nil, errors.New("invalid request type")
+	}
 
 	// TODO: Is this query correct?
 	records := []monoidprotocol.MonoidRecord{}
@@ -156,15 +171,28 @@ func (a *Activity) DeleteUserFromDataSource(ctx context.Context, requestStatusId
 		return nil, failRequest(requestStatusId, errors.New("data source's primary key type not defined"), a.Conf.DB)
 	}
 
-	recordChan, err := protocol.Delete(context.Background(), conf, monoidprotocol.MonoidQuery{
-		Identifiers: []monoidprotocol.MonoidQueryIdentifier{{
-			SchemaName:      dataSource.Name,
-			SchemaGroup:     dataSource.Group,
-			JsonSchema:      monoidprotocol.MonoidQueryIdentifierJsonSchema(schema.JsonSchema),
-			Identifier:      primaryKey,
-			IdentifierQuery: userKey,
-		}},
-	})
+	switch requestType {
+	case model.Delete:
+		recordChan, err = protocol.Delete(context.Background(), conf, monoidprotocol.MonoidQuery{
+			Identifiers: []monoidprotocol.MonoidQueryIdentifier{{
+				SchemaName:      dataSource.Name,
+				SchemaGroup:     dataSource.Group,
+				JsonSchema:      monoidprotocol.MonoidQueryIdentifierJsonSchema(schema.JsonSchema),
+				Identifier:      primaryKey,
+				IdentifierQuery: userKey,
+			}},
+		})
+	case model.Query:
+		recordChan, err = protocol.Query(context.Background(), conf, monoidprotocol.MonoidQuery{
+			Identifiers: []monoidprotocol.MonoidQueryIdentifier{{
+				SchemaName:      dataSource.Name,
+				SchemaGroup:     dataSource.Group,
+				JsonSchema:      monoidprotocol.MonoidQueryIdentifierJsonSchema(schema.JsonSchema),
+				Identifier:      primaryKey,
+				IdentifierQuery: userKey,
+			}},
+		})
+	}
 
 	if err != nil {
 		return nil, failRequest(requestStatusId, err, a.Conf.DB)
