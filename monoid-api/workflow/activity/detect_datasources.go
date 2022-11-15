@@ -140,7 +140,7 @@ func getPropertyDiscoveries(
 			continue
 		}
 
-		delObj := model.ObjectMissingDiscovery{
+		delObj := model.PropertyMissingDiscovery{
 			ID: v.ID,
 		}
 
@@ -509,7 +509,7 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) (in
 			continue
 		}
 
-		delObj := model.ObjectMissingDiscovery{
+		delObj := model.DataSourceMissingDiscovery{
 			ID: s.ID,
 		}
 

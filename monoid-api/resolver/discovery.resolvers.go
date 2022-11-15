@@ -5,6 +5,7 @@ package resolver
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/brist-ai/monoid/generated"
@@ -20,6 +21,20 @@ func (r *dataDiscoveryResolver) Data(ctx context.Context, obj *model.DataDiscove
 	}
 
 	return data, nil
+}
+
+// DataSource is the resolver for the dataSource field.
+func (r *dataSourceMissingDiscoveryResolver) DataSource(ctx context.Context, obj *model.DataSourceMissingDiscovery) (*model.DataSource, error) {
+	dataSource := model.DataSource{}
+	if err := r.Conf.DB.Where("id = ?", obj.ID).First(&dataSource).Error; err != nil {
+		if errors.Is(gorm.ErrRecordNotFound, err) {
+			return nil, nil
+		}
+
+		return nil, handleError(err, "Error finding data source")
+	}
+
+	return &dataSource, nil
 }
 
 // HandleDiscovery is the resolver for the handleDiscovery field.
@@ -58,6 +73,66 @@ func (r *mutationResolver) HandleAllOpenDiscoveries(ctx context.Context, input *
 	return res, nil
 }
 
+// Category is the resolver for the category field.
+func (r *newCategoryDiscoveryResolver) Category(ctx context.Context, obj *model.NewCategoryDiscovery) (*model.Category, error) {
+	category := model.Category{}
+	if err := r.Conf.DB.Where("id = ?", obj.CategoryID).First(&category).Error; err != nil {
+		return nil, handleError(err, "Error finding category")
+	}
+
+	return &category, nil
+}
+
+// Property is the resolver for the property field.
+func (r *newCategoryDiscoveryResolver) Property(ctx context.Context, obj *model.NewCategoryDiscovery) (*model.Property, error) {
+	if obj.PropertyID == nil {
+		return nil, nil
+	}
+
+	property := model.Property{}
+	if err := r.Conf.DB.Where("id = ?", obj.PropertyID).First(&property).Error; err != nil {
+		if errors.Is(gorm.ErrRecordNotFound, err) {
+			return nil, nil
+		}
+
+		return nil, handleError(err, "Error finding property")
+	}
+
+	return &property, nil
+}
+
+// DataSource is the resolver for the dataSource field.
+func (r *newPropertyDiscoveryResolver) DataSource(ctx context.Context, obj *model.NewPropertyDiscovery) (*model.DataSource, error) {
+	if obj.DataSourceId == nil {
+		return nil, nil
+	}
+
+	dataSource := model.DataSource{}
+	if err := r.Conf.DB.Where("id = ?", obj.DataSourceId).First(&dataSource).Error; err != nil {
+		if errors.Is(gorm.ErrRecordNotFound, err) {
+			return nil, nil
+		}
+
+		return nil, handleError(err, "Error finding data source")
+	}
+
+	return &dataSource, nil
+}
+
+// Property is the resolver for the property field.
+func (r *propertyMissingDiscoveryResolver) Property(ctx context.Context, obj *model.PropertyMissingDiscovery) (*model.Property, error) {
+	property := model.Property{}
+	if err := r.Conf.DB.Where("id = ?", obj.ID).First(&property).Error; err != nil {
+		if errors.Is(gorm.ErrRecordNotFound, err) {
+			return nil, nil
+		}
+
+		return nil, handleError(err, "Error finding data source")
+	}
+
+	return &property, nil
+}
+
 // Discoveries is the resolver for the discoveries field.
 func (r *siloDefinitionResolver) Discoveries(ctx context.Context, obj *model.SiloDefinition, statuses []*model.DiscoveryStatus, limit int, offset int) (*model.DataDiscoveriesListResult, error) {
 	discoveries := []*model.DataDiscovery{}
@@ -92,4 +167,28 @@ func (r *siloDefinitionResolver) Discoveries(ctx context.Context, obj *model.Sil
 // DataDiscovery returns generated.DataDiscoveryResolver implementation.
 func (r *Resolver) DataDiscovery() generated.DataDiscoveryResolver { return &dataDiscoveryResolver{r} }
 
+// DataSourceMissingDiscovery returns generated.DataSourceMissingDiscoveryResolver implementation.
+func (r *Resolver) DataSourceMissingDiscovery() generated.DataSourceMissingDiscoveryResolver {
+	return &dataSourceMissingDiscoveryResolver{r}
+}
+
+// NewCategoryDiscovery returns generated.NewCategoryDiscoveryResolver implementation.
+func (r *Resolver) NewCategoryDiscovery() generated.NewCategoryDiscoveryResolver {
+	return &newCategoryDiscoveryResolver{r}
+}
+
+// NewPropertyDiscovery returns generated.NewPropertyDiscoveryResolver implementation.
+func (r *Resolver) NewPropertyDiscovery() generated.NewPropertyDiscoveryResolver {
+	return &newPropertyDiscoveryResolver{r}
+}
+
+// PropertyMissingDiscovery returns generated.PropertyMissingDiscoveryResolver implementation.
+func (r *Resolver) PropertyMissingDiscovery() generated.PropertyMissingDiscoveryResolver {
+	return &propertyMissingDiscoveryResolver{r}
+}
+
 type dataDiscoveryResolver struct{ *Resolver }
+type dataSourceMissingDiscoveryResolver struct{ *Resolver }
+type newCategoryDiscoveryResolver struct{ *Resolver }
+type newPropertyDiscoveryResolver struct{ *Resolver }
+type propertyMissingDiscoveryResolver struct{ *Resolver }

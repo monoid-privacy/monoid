@@ -154,7 +154,7 @@ func applyDiscoveries(
 				continue
 			}
 		case model.DiscoveryTypeDataSourceMissing:
-			data := model.ObjectMissingDiscovery{}
+			data := model.DataSourceMissingDiscovery{}
 			if err := json.Unmarshal(discovery.Data, &data); err != nil {
 				log.Err(err).Msgf("Error updating %s", discovery.ID)
 				errors = append(errors, err)
@@ -200,7 +200,7 @@ func applyDiscoveries(
 				continue
 			}
 		case model.DiscoveryTypePropertyMissing:
-			data := model.ObjectMissingDiscovery{}
+			data := model.PropertyMissingDiscovery{}
 			if err := json.Unmarshal(discovery.Data, &data); err != nil {
 				log.Err(err).Msgf("Error updating %s", discovery.ID)
 				errors = append(errors, err)

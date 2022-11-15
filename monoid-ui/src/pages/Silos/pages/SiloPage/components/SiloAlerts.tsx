@@ -18,23 +18,20 @@ import AlertRegion from '../../../../../components/AlertRegion';
 import Card, { CardHeader, CardDivider } from '../../../../../components/Card';
 import Spinner from '../../../../../components/Spinner';
 import {
-  DataDiscovery, DataSource, NewDataSourceDiscoveryData, NewPropertyDiscoveryData, Property,
+  DataDiscovery, NewDataSourceDiscoveryData, NewPropertyDiscoveryData,
 } from '../../../../../lib/models';
 import Text from '../../../../../components/Text';
 import Badge from '../../../../../components/Badge';
 import Button from '../../../../../components/Button';
 import Table from '../../../../../components/Table';
 import ToastContext from '../../../../../contexts/ToastContext';
-import CategoryBadge from './CategoryBadge';
 import { dedup } from '../../../../../utils/utils';
 import Pagination from '../../../../../components/Pagination';
+import { GET_DISCOVERIES } from '../graphql/discovery_query';
 
 dayjs.extend(updateLocale);
 dayjs.extend(duration);
 dayjs.extend(relativeTime);
-
-const deletedDatasourceError = 'Error finding data source.';
-const deletedPropertyError = 'Error finding property.';
 
 const GET_NUM_ACTIVE_DISCOVERIES = gql`
   query GetNumActiveDiscoveries($id: ID!, $workspaceId: ID!) {
@@ -43,78 +40,6 @@ const GET_NUM_ACTIVE_DISCOVERIES = gql`
         discoveries(limit: 1, offset: 0, statuses: [OPEN]) {
           numDiscoveries
         }
-      }
-    }
-  }
-`;
-
-const GET_DISCOVERIES = gql`
-  query GetDiscoveries($id: ID!, $workspaceId: ID!, $limit: Int!, $offset: Int!) {
-    workspace(id: $workspaceId) {
-      siloDefinition(id: $id) {
-        id
-        discoveries(limit: $limit, offset: $offset) {
-          discoveries {
-            id
-            type
-            status
-            createdAt
-            data {
-              __typename
-              ... on NewDataSourceDiscovery {
-                name
-                group
-                properties {
-                  name
-                  categories {
-                    categoryId
-                  }
-                }
-              }
-              ... on NewPropertyDiscovery {
-                name
-                dataSourceId
-                categories {
-                  categoryId
-                }
-              }
-              ... on NewCategoryDiscovery {
-                propertyId
-                categoryId
-              }
-              ... on ObjectMissingDiscovery {
-                id
-              }
-            }
-          }
-          numDiscoveries
-        }
-      }
-    }
-  }
-  `;
-
-const GET_DATA_SOURCE = gql`
-  query GetDataSource($id: ID!) {
-    dataSource(id: $id) {
-      id
-      name
-      group
-      properties {
-        id
-        name
-      }
-    }
-  }
-`;
-
-const GET_PROPERTY = gql`
-  query GetProperty($id: ID!) {
-    property(id: $id) {
-      id
-      name
-      dataSource {
-        id
       }
     }
   }
@@ -166,7 +91,13 @@ function DataSourceBody(props: {
             ) || [],
             (v) => v.categoryId,
           ).map(
-            (c) => <CategoryBadge key={c.categoryId} categoryID={c.categoryId} color="red" />,
+            (c) => (
+              <Badge key={c.categoryId} color="red">
+                {
+                  c.category.name
+                }
+              </Badge>
+            ),
           )}
         </div>
       </div>
@@ -193,7 +124,13 @@ function DataSourceBody(props: {
                   key: 'categories',
                   content: (
                     d.categories?.map(
-                      (c) => <CategoryBadge key={c.categoryId} categoryID={c.categoryId} />,
+                      (c) => (
+                        <Badge key={c.categoryId} color="red">
+                          {
+                            c.category.name
+                          }
+                        </Badge>
+                      ),
                     )
                   ),
                 }],
@@ -211,20 +148,7 @@ function PropertyBody(props: {
   property: NewPropertyDiscoveryData,
 }) {
   const { property } = props;
-  const { data, loading, error } = useQuery<{ dataSource: DataSource }>(GET_DATA_SOURCE, {
-    variables: {
-      id: property.dataSourceId!,
-    },
-  });
-  const dataSource = data?.dataSource;
-
-  if (loading) {
-    return <Spinner />;
-  }
-
-  if (error && error.message !== deletedDatasourceError) {
-    return <AlertRegion alertTitle="Error">{error.message}</AlertRegion>;
-  }
+  const { dataSource } = property;
 
   return (
     <>
@@ -234,7 +158,11 @@ function PropertyBody(props: {
           <div className="flex items-start mt-2">
             {
               property.categories?.map((c) => (
-                <CategoryBadge categoryID={c.categoryId!} key={c.categoryId} />
+                <Badge key={c.categoryId} color="red">
+                  {
+                    c.category.name
+                  }
+                </Badge>
               ))
             }
           </div>
@@ -246,7 +174,7 @@ function PropertyBody(props: {
         </Text>
         <Text size="xs" em="light" className="flex items-center mt-1">
           {
-            error?.message === deletedDatasourceError ? 'Data Source has been removed.'
+            !dataSource ? 'Data Source has been removed.'
               : (
                 <>
                   <CircleStackIcon className="w-3 h-3 mr-1" />
@@ -263,85 +191,6 @@ function PropertyBody(props: {
       </div>
     </>
 
-  );
-}
-
-function LodaedPropertyBody(props: {
-  propertyId: string,
-}) {
-  const { propertyId } = props;
-  const { data, loading, error } = useQuery<{ property: Property }>(GET_PROPERTY, {
-    variables: {
-      id: propertyId!,
-    },
-  });
-
-  if (loading) {
-    return <Spinner />;
-  }
-
-  if (error) {
-    if (error.message === deletedPropertyError) {
-      return (
-        <Text size="xs" em="light" className="flex items-center mt-1">
-          This property has been deleted.
-        </Text>
-      );
-    }
-
-    return <AlertRegion alertTitle="Error">{error.message}</AlertRegion>;
-  }
-
-  return (
-    <PropertyBody
-      property={{
-        name: data?.property.name!,
-        dataSourceId: data?.property.dataSource?.id!,
-      }}
-    />
-  );
-}
-
-function LoadedDataSourceBody(props: {
-  dataSourceId: string,
-  open: boolean
-}) {
-  const { dataSourceId, open } = props;
-
-  const { data, loading, error } = useQuery<{ dataSource: DataSource }>(GET_DATA_SOURCE, {
-    variables: {
-      id: dataSourceId,
-    },
-  });
-
-  if (loading) {
-    return <Spinner />;
-  }
-
-  if (error) {
-    if (error.message === deletedDatasourceError) {
-      return (
-        <Text size="sm" className="mt-2">
-          Data Source has been removed.
-        </Text>
-      );
-    }
-    return <AlertRegion alertTitle="error">{error.message}</AlertRegion>;
-  }
-
-  return (
-    <DataSourceBody
-      dataSource={
-        {
-          name: data!.dataSource.name!,
-          group: data!.dataSource.group,
-          properties: data!.dataSource.properties?.map((p) => ({
-            name: p.name!,
-          })),
-        }
-      }
-      open={open}
-    />
   );
 }
 
@@ -385,9 +234,23 @@ function DiscoveryItem(props: { discovery: DataDiscovery }) {
     body = (
       <>
         <div className="flex items-start mt-2">
-          <CategoryBadge categoryID={discovery.data?.categoryId!} />
+          <Badge color="blue">
+            {discovery.data!.category.name!}
+          </Badge>
         </div>
-        <LodaedPropertyBody propertyId={discovery.data!.propertyId!} />
+        {
+          discovery.data?.property
+            ? (
+              <PropertyBody
+                property={{
+                  name: discovery.data.property.name!,
+                  dataSourceId: discovery.data.property.dataSource?.id!,
+                  dataSource: discovery.data.property.dataSource,
+                }}
+              />
+            )
+            : <Text size="sm"> The associated property has been deleted. </Text>
+        }
       </>
     );
   } else if (discovery.type === 'DATA_SOURCE_FOUND') {
@@ -400,13 +263,22 @@ function DiscoveryItem(props: { discovery: DataDiscovery }) {
     );
   } else if (discovery.type === 'DATA_SOURCE_MISSING') {
     title = 'Data Source Deleted';
-    body = discovery.data!.id!;
-    body = (
-      <LoadedDataSourceBody
-        dataSourceId={discovery.data!.id!}
-        open={open}
-      />
-    );
+    if (discovery.data?.dataSource) {
+      body = (
+        <DataSourceBody
+          dataSource={{
+            name: discovery.data!.dataSource.name!,
+            group: discovery.data!.dataSource.group,
+            properties: discovery.data!.dataSource.properties?.map((p) => ({
+              name: p.name!,
+            })),
+          }}
+          open={open}
+        />
+      );
+    } else {
+      body = 'Data Source not found';
+    }
   } else if (discovery.type === 'PROPERTY_FOUND') {
     title = 'New Property Found';
     body = (
@@ -414,9 +286,18 @@ function DiscoveryItem(props: { discovery: DataDiscovery }) {
     );
   } else if (discovery.type === 'PROPERTY_MISSING') {
     title = 'Property Deleted';
-    body = (
-      <LodaedPropertyBody propertyId={discovery.data!.id!} />
-    );
+    if (discovery.data?.property) {
+      body = (
+        <PropertyBody property={{
+          name: discovery.data.property.name!,
+          dataSourceId: discovery.data.property.dataSource?.id!,
+          dataSource: discovery.data.property.dataSource,
+        }}
+        />
+      );
+    } else {
+      body = <Text size="sm" className="mt-2"> Could not find Property </Text>;
+    }
   }
 
   let statusIcon = <ExclamationCircleIcon className="w-6 h-6 mr-2 text-blue-600" />;

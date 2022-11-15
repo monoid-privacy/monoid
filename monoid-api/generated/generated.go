@@ -39,8 +39,12 @@ type Config struct {
 type ResolverRoot interface {
 	DataDiscovery() DataDiscoveryResolver
 	DataSource() DataSourceResolver
+	DataSourceMissingDiscovery() DataSourceMissingDiscoveryResolver
 	Mutation() MutationResolver
+	NewCategoryDiscovery() NewCategoryDiscoveryResolver
+	NewPropertyDiscovery() NewPropertyDiscoveryResolver
 	Property() PropertyResolver
+	PropertyMissingDiscovery() PropertyMissingDiscoveryResolver
 	Query() QueryResolver
 	SiloDefinition() SiloDefinitionResolver
 	Workspace() WorkspaceResolver
@@ -75,6 +79,11 @@ type ComplexityRoot struct {
 		Name           func(childComplexity int) int
 		Properties     func(childComplexity int) int
 		SiloDefinition func(childComplexity int) int
+	}
+
+	DataSourceMissingDiscovery struct {
+		DataSource func(childComplexity int) int
+		ID         func(childComplexity int) int
 	}
 
 	Job struct {
@@ -123,7 +132,9 @@ type ComplexityRoot struct {
 	}
 
 	NewCategoryDiscovery struct {
+		Category   func(childComplexity int) int
 		CategoryID func(childComplexity int) int
+		Property   func(childComplexity int) int
 		PropertyID func(childComplexity int) int
 	}
 
@@ -135,12 +146,9 @@ type ComplexityRoot struct {
 
 	NewPropertyDiscovery struct {
 		Categories   func(childComplexity int) int
+		DataSource   func(childComplexity int) int
 		DataSourceId func(childComplexity int) int
 		Name         func(childComplexity int) int
-	}
-
-	ObjectMissingDiscovery struct {
-		ID func(childComplexity int) int
 	}
 
 	Property struct {
@@ -149,6 +157,11 @@ type ComplexityRoot struct {
 		ID         func(childComplexity int) int
 		Name       func(childComplexity int) int
 		Purposes   func(childComplexity int) int
+	}
+
+	PropertyMissingDiscovery struct {
+		ID       func(childComplexity int) int
+		Property func(childComplexity int) int
 	}
 
 	Purpose struct {
@@ -220,6 +233,9 @@ type DataDiscoveryResolver interface {
 type DataSourceResolver interface {
 	Properties(ctx context.Context, obj *model.DataSource) ([]*model.Property, error)
 }
+type DataSourceMissingDiscoveryResolver interface {
+	DataSource(ctx context.Context, obj *model.DataSourceMissingDiscovery) (*model.DataSource, error)
+}
 type MutationResolver interface {
 	CreateWorkspace(ctx context.Context, input model.CreateWorkspaceInput) (*model.Workspace, error)
 	UpdateWorkspaceSettings(ctx context.Context, input model.UpdateWorkspaceSettingsInput) (*model.Workspace, error)
@@ -250,9 +266,19 @@ type MutationResolver interface {
 	DeleteSiloDefinition(ctx context.Context, id string) (*string, error)
 	UpdateSiloScanConfig(ctx context.Context, input model.SiloScanConfigInput) (*model.SiloDefinition, error)
 }
+type NewCategoryDiscoveryResolver interface {
+	Category(ctx context.Context, obj *model.NewCategoryDiscovery) (*model.Category, error)
+	Property(ctx context.Context, obj *model.NewCategoryDiscovery) (*model.Property, error)
+}
+type NewPropertyDiscoveryResolver interface {
+	DataSource(ctx context.Context, obj *model.NewPropertyDiscovery) (*model.DataSource, error)
+}
 type PropertyResolver interface {
 	Categories(ctx context.Context, obj *model.Property) ([]*model.Category, error)
 	DataSource(ctx context.Context, obj *model.Property) (*model.DataSource, error)
+}
+type PropertyMissingDiscoveryResolver interface {
+	Property(ctx context.Context, obj *model.PropertyMissingDiscovery) (*model.Property, error)
 }
 type QueryResolver interface {
 	Workspaces(ctx context.Context) ([]*model.Workspace, error)
@@ -403,6 +429,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DataSource.SiloDefinition(childComplexity), true
+
+	case "DataSourceMissingDiscovery.dataSource":
+		if e.complexity.DataSourceMissingDiscovery.DataSource == nil {
+			break
+		}
+
+		return e.complexity.DataSourceMissingDiscovery.DataSource(childComplexity), true
+
+	case "DataSourceMissingDiscovery.id":
+		if e.complexity.DataSourceMissingDiscovery.ID == nil {
+			break
+		}
+
+		return e.complexity.DataSourceMissingDiscovery.ID(childComplexity), true
 
 	case "Job.createdAt":
 		if e.complexity.Job.CreatedAt == nil {
@@ -796,12 +836,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateWorkspaceSettings(childComplexity, args["input"].(model.UpdateWorkspaceSettingsInput)), true
 
+	case "NewCategoryDiscovery.category":
+		if e.complexity.NewCategoryDiscovery.Category == nil {
+			break
+		}
+
+		return e.complexity.NewCategoryDiscovery.Category(childComplexity), true
+
 	case "NewCategoryDiscovery.categoryId":
 		if e.complexity.NewCategoryDiscovery.CategoryID == nil {
 			break
 		}
 
 		return e.complexity.NewCategoryDiscovery.CategoryID(childComplexity), true
+
+	case "NewCategoryDiscovery.property":
+		if e.complexity.NewCategoryDiscovery.Property == nil {
+			break
+		}
+
+		return e.complexity.NewCategoryDiscovery.Property(childComplexity), true
 
 	case "NewCategoryDiscovery.propertyId":
 		if e.complexity.NewCategoryDiscovery.PropertyID == nil {
@@ -838,6 +892,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.NewPropertyDiscovery.Categories(childComplexity), true
 
+	case "NewPropertyDiscovery.dataSource":
+		if e.complexity.NewPropertyDiscovery.DataSource == nil {
+			break
+		}
+
+		return e.complexity.NewPropertyDiscovery.DataSource(childComplexity), true
+
 	case "NewPropertyDiscovery.dataSourceId":
 		if e.complexity.NewPropertyDiscovery.DataSourceId == nil {
 			break
@@ -851,13 +912,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.NewPropertyDiscovery.Name(childComplexity), true
-
-	case "ObjectMissingDiscovery.id":
-		if e.complexity.ObjectMissingDiscovery.ID == nil {
-			break
-		}
-
-		return e.complexity.ObjectMissingDiscovery.ID(childComplexity), true
 
 	case "Property.categories":
 		if e.complexity.Property.Categories == nil {
@@ -893,6 +947,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Property.Purposes(childComplexity), true
+
+	case "PropertyMissingDiscovery.id":
+		if e.complexity.PropertyMissingDiscovery.ID == nil {
+			break
+		}
+
+		return e.complexity.PropertyMissingDiscovery.ID(childComplexity), true
+
+	case "PropertyMissingDiscovery.property":
+		if e.complexity.PropertyMissingDiscovery.Property == nil {
+			break
+		}
+
+		return e.complexity.PropertyMissingDiscovery.Property(childComplexity), true
 
 	case "Purpose.id":
 		if e.complexity.Purpose.ID == nil {
@@ -1532,18 +1600,29 @@ type NewPropertyDiscovery {
     name: String!
     categories: [NewCategoryDiscovery]
     dataSourceId: String
+    dataSource: DataSource
 }
 
 type NewCategoryDiscovery {
     propertyId: String
     categoryId: String!
+    category: Category!
+    property: Property
 }
 
-type ObjectMissingDiscovery {
+type PropertyMissingDiscovery {
     id: String!
+    property: Property
 }
 
-union DataDiscoveryData = NewDataSourceDiscovery | NewPropertyDiscovery | NewCategoryDiscovery | ObjectMissingDiscovery
+type DataSourceMissingDiscovery {
+    id: String!
+    dataSource: DataSource
+}
+
+union DataDiscoveryData = NewDataSourceDiscovery | NewPropertyDiscovery |
+    NewCategoryDiscovery | PropertyMissingDiscovery |
+    DataSourceMissingDiscovery
 
 type DataDiscovery {
     id: ID!
@@ -3054,6 +3133,105 @@ func (ec *executionContext) fieldContext_DataSource_description(ctx context.Cont
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DataSourceMissingDiscovery_id(ctx context.Context, field graphql.CollectedField, obj *model.DataSourceMissingDiscovery) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DataSourceMissingDiscovery_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DataSourceMissingDiscovery_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DataSourceMissingDiscovery",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DataSourceMissingDiscovery_dataSource(ctx context.Context, field graphql.CollectedField, obj *model.DataSourceMissingDiscovery) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DataSourceMissingDiscovery_dataSource(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.DataSourceMissingDiscovery().DataSource(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.DataSource)
+	fc.Result = res
+	return ec.marshalODataSource2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DataSourceMissingDiscovery_dataSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DataSourceMissingDiscovery",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_DataSource_id(ctx, field)
+			case "name":
+				return ec.fieldContext_DataSource_name(ctx, field)
+			case "group":
+				return ec.fieldContext_DataSource_group(ctx, field)
+			case "siloDefinition":
+				return ec.fieldContext_DataSource_siloDefinition(ctx, field)
+			case "properties":
+				return ec.fieldContext_DataSource_properties(ctx, field)
+			case "description":
+				return ec.fieldContext_DataSource_description(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DataSource", field.Name)
 		},
 	}
 	return fc, nil
@@ -5216,6 +5394,109 @@ func (ec *executionContext) fieldContext_NewCategoryDiscovery_categoryId(ctx con
 	return fc, nil
 }
 
+func (ec *executionContext) _NewCategoryDiscovery_category(ctx context.Context, field graphql.CollectedField, obj *model.NewCategoryDiscovery) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NewCategoryDiscovery_category(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.NewCategoryDiscovery().Category(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Category)
+	fc.Result = res
+	return ec.marshalNCategory2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCategory(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NewCategoryDiscovery_category(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NewCategoryDiscovery",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Category_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Category_name(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Category", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NewCategoryDiscovery_property(ctx context.Context, field graphql.CollectedField, obj *model.NewCategoryDiscovery) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NewCategoryDiscovery_property(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.NewCategoryDiscovery().Property(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Property)
+	fc.Result = res
+	return ec.marshalOProperty2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐProperty(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NewCategoryDiscovery_property(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NewCategoryDiscovery",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Property_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Property_name(ctx, field)
+			case "categories":
+				return ec.fieldContext_Property_categories(ctx, field)
+			case "dataSource":
+				return ec.fieldContext_Property_dataSource(ctx, field)
+			case "purposes":
+				return ec.fieldContext_Property_purposes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Property", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _NewDataSourceDiscovery_name(ctx context.Context, field graphql.CollectedField, obj *model.NewDataSourceDiscovery) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_NewDataSourceDiscovery_name(ctx, field)
 	if err != nil {
@@ -5343,6 +5624,8 @@ func (ec *executionContext) fieldContext_NewDataSourceDiscovery_properties(ctx c
 				return ec.fieldContext_NewPropertyDiscovery_categories(ctx, field)
 			case "dataSourceId":
 				return ec.fieldContext_NewPropertyDiscovery_dataSourceId(ctx, field)
+			case "dataSource":
+				return ec.fieldContext_NewPropertyDiscovery_dataSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type NewPropertyDiscovery", field.Name)
 		},
@@ -5434,6 +5717,10 @@ func (ec *executionContext) fieldContext_NewPropertyDiscovery_categories(ctx con
 				return ec.fieldContext_NewCategoryDiscovery_propertyId(ctx, field)
 			case "categoryId":
 				return ec.fieldContext_NewCategoryDiscovery_categoryId(ctx, field)
+			case "category":
+				return ec.fieldContext_NewCategoryDiscovery_category(ctx, field)
+			case "property":
+				return ec.fieldContext_NewCategoryDiscovery_property(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type NewCategoryDiscovery", field.Name)
 		},
@@ -5482,8 +5769,8 @@ func (ec *executionContext) fieldContext_NewPropertyDiscovery_dataSourceId(ctx c
 	return fc, nil
 }
 
-func (ec *executionContext) _ObjectMissingDiscovery_id(ctx context.Context, field graphql.CollectedField, obj *model.ObjectMissingDiscovery) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ObjectMissingDiscovery_id(ctx, field)
+func (ec *executionContext) _NewPropertyDiscovery_dataSource(ctx context.Context, field graphql.CollectedField, obj *model.NewPropertyDiscovery) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NewPropertyDiscovery_dataSource(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -5496,31 +5783,42 @@ func (ec *executionContext) _ObjectMissingDiscovery_id(ctx context.Context, fiel
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
+		return ec.resolvers.NewPropertyDiscovery().DataSource(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*model.DataSource)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalODataSource2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_ObjectMissingDiscovery_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NewPropertyDiscovery_dataSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "ObjectMissingDiscovery",
+		Object:     "NewPropertyDiscovery",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_DataSource_id(ctx, field)
+			case "name":
+				return ec.fieldContext_DataSource_name(ctx, field)
+			case "group":
+				return ec.fieldContext_DataSource_group(ctx, field)
+			case "siloDefinition":
+				return ec.fieldContext_DataSource_siloDefinition(ctx, field)
+			case "properties":
+				return ec.fieldContext_DataSource_properties(ctx, field)
+			case "description":
+				return ec.fieldContext_DataSource_description(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DataSource", field.Name)
 		},
 	}
 	return fc, nil
@@ -5761,6 +6059,103 @@ func (ec *executionContext) fieldContext_Property_purposes(ctx context.Context, 
 				return ec.fieldContext_Purpose_name(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Purpose", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PropertyMissingDiscovery_id(ctx context.Context, field graphql.CollectedField, obj *model.PropertyMissingDiscovery) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PropertyMissingDiscovery_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PropertyMissingDiscovery_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PropertyMissingDiscovery",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PropertyMissingDiscovery_property(ctx context.Context, field graphql.CollectedField, obj *model.PropertyMissingDiscovery) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PropertyMissingDiscovery_property(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.PropertyMissingDiscovery().Property(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Property)
+	fc.Result = res
+	return ec.marshalOProperty2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐProperty(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PropertyMissingDiscovery_property(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PropertyMissingDiscovery",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Property_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Property_name(ctx, field)
+			case "categories":
+				return ec.fieldContext_Property_categories(ctx, field)
+			case "dataSource":
+				return ec.fieldContext_Property_dataSource(ctx, field)
+			case "purposes":
+				return ec.fieldContext_Property_purposes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Property", field.Name)
 		},
 	}
 	return fc, nil
@@ -10606,13 +11001,20 @@ func (ec *executionContext) _DataDiscoveryData(ctx context.Context, sel ast.Sele
 			return graphql.Null
 		}
 		return ec._NewCategoryDiscovery(ctx, sel, obj)
-	case model.ObjectMissingDiscovery:
-		return ec._ObjectMissingDiscovery(ctx, sel, &obj)
-	case *model.ObjectMissingDiscovery:
+	case model.PropertyMissingDiscovery:
+		return ec._PropertyMissingDiscovery(ctx, sel, &obj)
+	case *model.PropertyMissingDiscovery:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._ObjectMissingDiscovery(ctx, sel, obj)
+		return ec._PropertyMissingDiscovery(ctx, sel, obj)
+	case model.DataSourceMissingDiscovery:
+		return ec._DataSourceMissingDiscovery(ctx, sel, &obj)
+	case *model.DataSourceMissingDiscovery:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._DataSourceMissingDiscovery(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -10814,6 +11216,51 @@ func (ec *executionContext) _DataSource(ctx context.Context, sel ast.SelectionSe
 
 			out.Values[i] = ec._DataSource_description(ctx, field, obj)
 
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var dataSourceMissingDiscoveryImplementors = []string{"DataSourceMissingDiscovery", "DataDiscoveryData"}
+
+func (ec *executionContext) _DataSourceMissingDiscovery(ctx context.Context, sel ast.SelectionSet, obj *model.DataSourceMissingDiscovery) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, dataSourceMissingDiscoveryImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DataSourceMissingDiscovery")
+		case "id":
+
+			out.Values[i] = ec._DataSourceMissingDiscovery_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "dataSource":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._DataSourceMissingDiscovery_dataSource(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -11140,8 +11587,45 @@ func (ec *executionContext) _NewCategoryDiscovery(ctx context.Context, sel ast.S
 			out.Values[i] = ec._NewCategoryDiscovery_categoryId(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
+		case "category":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._NewCategoryDiscovery_category(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "property":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._NewCategoryDiscovery_property(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -11204,7 +11688,7 @@ func (ec *executionContext) _NewPropertyDiscovery(ctx context.Context, sel ast.S
 			out.Values[i] = ec._NewPropertyDiscovery_name(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "categories":
 
@@ -11214,34 +11698,23 @@ func (ec *executionContext) _NewPropertyDiscovery(ctx context.Context, sel ast.S
 
 			out.Values[i] = ec._NewPropertyDiscovery_dataSourceId(ctx, field, obj)
 
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
+		case "dataSource":
+			field := field
 
-var objectMissingDiscoveryImplementors = []string{"ObjectMissingDiscovery", "DataDiscoveryData"}
-
-func (ec *executionContext) _ObjectMissingDiscovery(ctx context.Context, sel ast.SelectionSet, obj *model.ObjectMissingDiscovery) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, objectMissingDiscoveryImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("ObjectMissingDiscovery")
-		case "id":
-
-			out.Values[i] = ec._ObjectMissingDiscovery_id(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._NewPropertyDiscovery_dataSource(ctx, field, obj)
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -11318,6 +11791,51 @@ func (ec *executionContext) _Property(ctx context.Context, sel ast.SelectionSet,
 
 			out.Values[i] = ec._Property_purposes(ctx, field, obj)
 
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var propertyMissingDiscoveryImplementors = []string{"PropertyMissingDiscovery", "DataDiscoveryData"}
+
+func (ec *executionContext) _PropertyMissingDiscovery(ctx context.Context, sel ast.SelectionSet, obj *model.PropertyMissingDiscovery) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, propertyMissingDiscoveryImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PropertyMissingDiscovery")
+		case "id":
+
+			out.Values[i] = ec._PropertyMissingDiscovery_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "property":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PropertyMissingDiscovery_property(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

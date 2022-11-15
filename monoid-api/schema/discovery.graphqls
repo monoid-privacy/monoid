@@ -22,18 +22,29 @@ type NewPropertyDiscovery {
     name: String!
     categories: [NewCategoryDiscovery]
     dataSourceId: String
+    dataSource: DataSource
 }
 
 type NewCategoryDiscovery {
     propertyId: String
     categoryId: String!
+    category: Category!
+    property: Property
 }
 
-type ObjectMissingDiscovery {
+type PropertyMissingDiscovery {
     id: String!
+    property: Property
 }
 
-union DataDiscoveryData = NewDataSourceDiscovery | NewPropertyDiscovery | NewCategoryDiscovery | ObjectMissingDiscovery
+type DataSourceMissingDiscovery {
+    id: String!
+    dataSource: DataSource
+}
+
+union DataDiscoveryData = NewDataSourceDiscovery | NewPropertyDiscovery |
+    NewCategoryDiscovery | PropertyMissingDiscovery |
+    DataSourceMissingDiscovery
 
 type DataDiscovery {
     id: ID!

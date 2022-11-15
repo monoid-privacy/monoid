@@ -53,16 +53,25 @@ export interface NewDataSourceDiscoveryData {
 export interface NewPropertyDiscoveryData {
   name: string
   dataSourceId?: string
+  dataSource?: DataSource | null
   categories?: NewCategoryDiscoveryData[]
 }
 
 export interface NewCategoryDiscoveryData {
   propertyId?: string
   categoryId: string
+  category: Category
+  property?: Property | null
 }
 
-export interface ObjectMissingDiscoveryData {
+export interface PropertyMissingDiscoveryData {
   id?: string
+  property?: Property | null
+}
+
+export interface DataSourceMissingDiscoveryData {
+  id?: string
+  dataSource?: DataSource | null
 }
 
 type CoreDataDiscovery = {
@@ -87,18 +96,13 @@ type NewCategoryDiscovery = CoreDataDiscovery & {
 };
 
 type MissingDataSourceDiscovery = CoreDataDiscovery & {
-  data?: ObjectMissingDiscoveryData,
+  data?: DataSourceMissingDiscoveryData,
   type?: 'DATA_SOURCE_MISSING'
 };
 
 type MissingPropertyDiscovery = CoreDataDiscovery & {
-  data?: ObjectMissingDiscoveryData,
+  data?: PropertyMissingDiscoveryData,
   type?: 'PROPERTY_MISSING'
-};
-
-type MissingCategoryDiscovery = CoreDataDiscovery & {
-  data?: ObjectMissingDiscoveryData,
-  type?: 'CATEGORY_MISSING'
 };
 
 export type DataDiscovery = (
@@ -106,6 +110,5 @@ export type DataDiscovery = (
   NewPropertyDiscovery |
   NewCategoryDiscovery |
   MissingDataSourceDiscovery |
-  MissingPropertyDiscovery |
-  MissingCategoryDiscovery
+  MissingPropertyDiscovery
 );

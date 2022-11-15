@@ -53,9 +53,13 @@ func (dd *DataDiscovery) DeserializeData() (DataDiscoveryData, error) {
 
 		return res, nil
 	case DiscoveryTypePropertyMissing:
-		fallthrough
+		res := PropertyMissingDiscovery{}
+		if err := json.Unmarshal(dd.Data, &res); err != nil {
+			return nil, err
+		}
+		return res, nil
 	case DiscoveryTypeDataSourceMissing:
-		res := ObjectMissingDiscovery{}
+		res := DataSourceMissingDiscovery{}
 		if err := json.Unmarshal(dd.Data, &res); err != nil {
 			return nil, err
 		}
@@ -142,11 +146,20 @@ func (d NewCategoryDiscovery) Mappable() interface{} {
 	}
 }
 
-type ObjectMissingDiscovery struct {
+type PropertyMissingDiscovery struct {
 	ID string `json:"id"`
 }
 
-func (ObjectMissingDiscovery) IsDataDiscoveryData() {}
-func (d ObjectMissingDiscovery) Mappable() interface{} {
+func (PropertyMissingDiscovery) IsDataDiscoveryData() {}
+func (d PropertyMissingDiscovery) Mappable() interface{} {
+	return d
+}
+
+type DataSourceMissingDiscovery struct {
+	ID string `json:"id"`
+}
+
+func (DataSourceMissingDiscovery) IsDataDiscoveryData() {}
+func (d DataSourceMissingDiscovery) Mappable() interface{} {
 	return d
 }
