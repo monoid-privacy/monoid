@@ -97,6 +97,8 @@ models:
         resolver: true 
       dataSource: 
         resolver: true 
+      queryRecords: 
+        resolver: true 
   Request: 
     fields: 
       primaryKeyValues: 
@@ -119,4 +121,7 @@ models:
     fields:
       siloDefinition:
         resolver: true
-
+  QueryRecord: 
+    fields: 
+      requestStatus: 
+        resolver: true

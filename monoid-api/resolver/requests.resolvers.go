@@ -186,6 +186,11 @@ func (r *queryResolver) PrimaryKeyValue(ctx context.Context, id string) (*model.
 	return findObjectByID[model.PrimaryKeyValue](id, r.Conf.DB, "Error finding primary key value.")
 }
 
+// RequestStatus is the resolver for the requestStatus field.
+func (r *queryRecordResolver) RequestStatus(ctx context.Context, obj *model.QueryRecord) (*model.RequestStatus, error) {
+	return findObjectByID[model.RequestStatus](obj.RequestStatusID, r.Conf.DB, "Error finding request status.")
+}
+
 // PrimaryKeyValues is the resolver for the primaryKeyValues field.
 func (r *requestResolver) PrimaryKeyValues(ctx context.Context, obj *model.Request) ([]*model.PrimaryKeyValue, error) {
 	return findChildObjects[model.PrimaryKeyValue](r.Conf.DB, obj.ID, "request_id")
@@ -206,10 +211,18 @@ func (r *requestStatusResolver) DataSource(ctx context.Context, obj *model.Reque
 	return findObjectByID[model.DataSource](obj.DataSourceID, r.Conf.DB, "Error finding data source.")
 }
 
+// QueryRecords is the resolver for the queryRecords field.
+func (r *requestStatusResolver) QueryRecords(ctx context.Context, obj *model.RequestStatus) ([]*model.QueryRecord, error) {
+	return findChildObjects[model.QueryRecord](r.Conf.DB, obj.ID, "query_record_id")
+}
+
 // PrimaryKeyValue returns generated.PrimaryKeyValueResolver implementation.
 func (r *Resolver) PrimaryKeyValue() generated.PrimaryKeyValueResolver {
 	return &primaryKeyValueResolver{r}
 }
+
+// QueryRecord returns generated.QueryRecordResolver implementation.
+func (r *Resolver) QueryRecord() generated.QueryRecordResolver { return &queryRecordResolver{r} }
 
 // Request returns generated.RequestResolver implementation.
 func (r *Resolver) Request() generated.RequestResolver { return &requestResolver{r} }
@@ -218,5 +231,6 @@ func (r *Resolver) Request() generated.RequestResolver { return &requestResolver
 func (r *Resolver) RequestStatus() generated.RequestStatusResolver { return &requestStatusResolver{r} }
 
 type primaryKeyValueResolver struct{ *Resolver }
+type queryRecordResolver struct{ *Resolver }
 type requestResolver struct{ *Resolver }
 type requestStatusResolver struct{ *Resolver }

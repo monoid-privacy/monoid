@@ -48,6 +48,7 @@ type ResolverRoot interface {
 	Property() PropertyResolver
 	PropertyMissingDiscovery() PropertyMissingDiscoveryResolver
 	Query() QueryResolver
+	QueryRecord() QueryRecordResolver
 	Request() RequestResolver
 	RequestStatus() RequestStatusResolver
 	SiloDefinition() SiloDefinitionResolver
@@ -216,6 +217,12 @@ type ComplexityRoot struct {
 		Workspaces         func(childComplexity int) int
 	}
 
+	QueryRecord struct {
+		ID            func(childComplexity int) int
+		Records       func(childComplexity int) int
+		RequestStatus func(childComplexity int) int
+	}
+
 	Request struct {
 		ID               func(childComplexity int) int
 		PrimaryKeyValues func(childComplexity int) int
@@ -224,10 +231,11 @@ type ComplexityRoot struct {
 	}
 
 	RequestStatus struct {
-		DataSource func(childComplexity int) int
-		ID         func(childComplexity int) int
-		Request    func(childComplexity int) int
-		Status     func(childComplexity int) int
+		DataSource   func(childComplexity int) int
+		ID           func(childComplexity int) int
+		QueryRecords func(childComplexity int) int
+		Request      func(childComplexity int) int
+		Status       func(childComplexity int) int
 	}
 
 	SiloDefinition struct {
@@ -373,6 +381,9 @@ type QueryResolver interface {
 	RequestStatus(ctx context.Context, id string) (*model.RequestStatus, error)
 	PrimaryKeyValue(ctx context.Context, id string) (*model.PrimaryKeyValue, error)
 }
+type QueryRecordResolver interface {
+	RequestStatus(ctx context.Context, obj *model.QueryRecord) (*model.RequestStatus, error)
+}
 type RequestResolver interface {
 	PrimaryKeyValues(ctx context.Context, obj *model.Request) ([]*model.PrimaryKeyValue, error)
 	RequestStatuses(ctx context.Context, obj *model.Request) ([]*model.RequestStatus, error)
@@ -380,6 +391,8 @@ type RequestResolver interface {
 type RequestStatusResolver interface {
 	Request(ctx context.Context, obj *model.RequestStatus) (*model.Request, error)
 	DataSource(ctx context.Context, obj *model.RequestStatus) (*model.DataSource, error)
+
+	QueryRecords(ctx context.Context, obj *model.RequestStatus) ([]*model.QueryRecord, error)
 }
 type SiloDefinitionResolver interface {
 	SiloSpecification(ctx context.Context, obj *model.SiloDefinition) (*model.SiloSpecification, error)
@@ -1389,6 +1402,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Workspaces(childComplexity), true
 
+	case "QueryRecord.id":
+		if e.complexity.QueryRecord.ID == nil {
+			break
+		}
+
+		return e.complexity.QueryRecord.ID(childComplexity), true
+
+	case "QueryRecord.records":
+		if e.complexity.QueryRecord.Records == nil {
+			break
+		}
+
+		return e.complexity.QueryRecord.Records(childComplexity), true
+
+	case "QueryRecord.requestStatus":
+		if e.complexity.QueryRecord.RequestStatus == nil {
+			break
+		}
+
+		return e.complexity.QueryRecord.RequestStatus(childComplexity), true
+
 	case "Request.id":
 		if e.complexity.Request.ID == nil {
 			break
@@ -1430,6 +1464,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.RequestStatus.ID(childComplexity), true
+
+	case "RequestStatus.queryRecords":
+		if e.complexity.RequestStatus.QueryRecords == nil {
+			break
+		}
+
+		return e.complexity.RequestStatus.QueryRecords(childComplexity), true
 
 	case "RequestStatus.request":
 		if e.complexity.RequestStatus.Request == nil {
@@ -2194,6 +2235,13 @@ type RequestStatus {
     request: Request! 
     dataSource: DataSource! 
     status: String! 
+    queryRecords: [QueryRecord!]
+}
+
+type QueryRecord {
+  id: ID! 
+  requestStatus: RequestStatus!
+  records: String
 }
 
 extend type Query {
@@ -4070,6 +4118,8 @@ func (ec *executionContext) fieldContext_DataSource_requestStatuses(ctx context.
 				return ec.fieldContext_RequestStatus_dataSource(ctx, field)
 			case "status":
 				return ec.fieldContext_RequestStatus_status(ctx, field)
+			case "queryRecords":
+				return ec.fieldContext_RequestStatus_queryRecords(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type RequestStatus", field.Name)
 		},
@@ -8924,6 +8974,8 @@ func (ec *executionContext) fieldContext_Query_requestStatus(ctx context.Context
 				return ec.fieldContext_RequestStatus_dataSource(ctx, field)
 			case "status":
 				return ec.fieldContext_RequestStatus_status(ctx, field)
+			case "queryRecords":
+				return ec.fieldContext_RequestStatus_queryRecords(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type RequestStatus", field.Name)
 		},
@@ -9133,6 +9185,147 @@ func (ec *executionContext) fieldContext_Query___schema(ctx context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _QueryRecord_id(ctx context.Context, field graphql.CollectedField, obj *model.QueryRecord) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_QueryRecord_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_QueryRecord_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QueryRecord",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QueryRecord_requestStatus(ctx context.Context, field graphql.CollectedField, obj *model.QueryRecord) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_QueryRecord_requestStatus(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.QueryRecord().RequestStatus(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.RequestStatus)
+	fc.Result = res
+	return ec.marshalNRequestStatus2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatus(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_QueryRecord_requestStatus(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QueryRecord",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_RequestStatus_id(ctx, field)
+			case "request":
+				return ec.fieldContext_RequestStatus_request(ctx, field)
+			case "dataSource":
+				return ec.fieldContext_RequestStatus_dataSource(ctx, field)
+			case "status":
+				return ec.fieldContext_RequestStatus_status(ctx, field)
+			case "queryRecords":
+				return ec.fieldContext_RequestStatus_queryRecords(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RequestStatus", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QueryRecord_records(ctx context.Context, field graphql.CollectedField, obj *model.QueryRecord) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_QueryRecord_records(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Records, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalOString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_QueryRecord_records(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QueryRecord",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Request_id(ctx context.Context, field graphql.CollectedField, obj *model.Request) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Request_id(ctx, field)
 	if err != nil {
@@ -9272,6 +9465,8 @@ func (ec *executionContext) fieldContext_Request_requestStatuses(ctx context.Con
 				return ec.fieldContext_RequestStatus_dataSource(ctx, field)
 			case "status":
 				return ec.fieldContext_RequestStatus_status(ctx, field)
+			case "queryRecords":
+				return ec.fieldContext_RequestStatus_queryRecords(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type RequestStatus", field.Name)
 		},
@@ -9520,6 +9715,55 @@ func (ec *executionContext) fieldContext_RequestStatus_status(ctx context.Contex
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RequestStatus_queryRecords(ctx context.Context, field graphql.CollectedField, obj *model.RequestStatus) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RequestStatus_queryRecords(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.RequestStatus().QueryRecords(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.QueryRecord)
+	fc.Result = res
+	return ec.marshalOQueryRecord2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐQueryRecordᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RequestStatus_queryRecords(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RequestStatus",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_QueryRecord_id(ctx, field)
+			case "requestStatus":
+				return ec.fieldContext_QueryRecord_requestStatus(ctx, field)
+			case "records":
+				return ec.fieldContext_QueryRecord_records(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type QueryRecord", field.Name)
 		},
 	}
 	return fc, nil
@@ -15448,6 +15692,58 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 	return out
 }
 
+var queryRecordImplementors = []string{"QueryRecord"}
+
+func (ec *executionContext) _QueryRecord(ctx context.Context, sel ast.SelectionSet, obj *model.QueryRecord) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, queryRecordImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("QueryRecord")
+		case "id":
+
+			out.Values[i] = ec._QueryRecord_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "requestStatus":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._QueryRecord_requestStatus(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "records":
+
+			out.Values[i] = ec._QueryRecord_records(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var requestImplementors = []string{"Request"}
 
 func (ec *executionContext) _Request(ctx context.Context, sel ast.SelectionSet, obj *model.Request) graphql.Marshaler {
@@ -15581,6 +15877,23 @@ func (ec *executionContext) _RequestStatus(ctx context.Context, sel ast.Selectio
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "queryRecords":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._RequestStatus_queryRecords(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -16606,6 +16919,16 @@ func (ec *executionContext) marshalNPurpose2ᚖgithubᚗcomᚋbristᚑaiᚋmonoi
 	return ec._Purpose(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNQueryRecord2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐQueryRecord(ctx context.Context, sel ast.SelectionSet, v *model.QueryRecord) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._QueryRecord(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNRequest2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequest(ctx context.Context, sel ast.SelectionSet, v model.Request) graphql.Marshaler {
 	return ec._Request(ctx, sel, &v)
 }
@@ -16618,6 +16941,10 @@ func (ec *executionContext) marshalNRequest2ᚖgithubᚗcomᚋbristᚑaiᚋmonoi
 		return graphql.Null
 	}
 	return ec._Request(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNRequestStatus2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatus(ctx context.Context, sel ast.SelectionSet, v model.RequestStatus) graphql.Marshaler {
+	return ec._RequestStatus(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNRequestStatus2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatus(ctx context.Context, sel ast.SelectionSet, v *model.RequestStatus) graphql.Marshaler {
@@ -17930,6 +18257,53 @@ func (ec *executionContext) marshalOPurpose2ᚖgithubᚗcomᚋbristᚑaiᚋmonoi
 		return graphql.Null
 	}
 	return ec._Purpose(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOQueryRecord2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐQueryRecordᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.QueryRecord) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNQueryRecord2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐQueryRecord(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalORequest2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Request) graphql.Marshaler {
