@@ -25,6 +25,7 @@ export default function MonoidRouter() {
             <Route path="alerts" element={<WorkspaceAlertsPage />} />
             <Route path="scans" element={<WorkspaceScansPage />} />
             <Route path="silos/*" element={<SiloRoutes />} />
+            <Route path="requests/*" element={<SiloRoutes />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
         </Route>

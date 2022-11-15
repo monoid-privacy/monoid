@@ -191,9 +191,14 @@ func (r *workspaceResolver) Settings(ctx context.Context, obj *model.Workspace) 
 	return res, nil
 }
 
+// Requests is the resolver for the requests field.
+func (r *workspaceResolver) Requests(ctx context.Context, obj *model.Workspace) ([]*model.Request, error) {
+	return findChildObjects[model.Request](r.Conf.DB, obj.ID, "workspace_id")
+}
+
 // UserPrimaryKeys is the resolver for the userPrimaryKeys field.
 func (r *workspaceResolver) UserPrimaryKeys(ctx context.Context, obj *model.Workspace) ([]*model.UserPrimaryKey, error) {
-	panic(fmt.Errorf("not implemented: UserPrimaryKeys - userPrimaryKeys"))
+	return findChildObjects[model.UserPrimaryKey](r.Conf.DB, obj.ID, "workspace_id")
 }
 
 // Mutation returns generated.MutationResolver implementation.

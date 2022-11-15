@@ -6,6 +6,7 @@ type MonoidRecordResponse {
 
 input CreateUserPrimaryKeyInput {
     name: String! 
+    workspaceId: ID!
 }
 
 input UpdateUserPrimaryKeyInput {
@@ -26,6 +27,7 @@ input UserPrimaryKeyInput {
 
 type UserPrimaryKey {
     id: ID! 
+    workspaceId: ID!
     name: String! 
     properties: [Property!]
 }
@@ -41,6 +43,7 @@ type Request {
     id: ID! 
     primaryKeyValues: [PrimaryKeyValue!]
     requestStatuses: [RequestStatus!]
+    type: String!
 }
 
 type RequestStatus {

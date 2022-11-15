@@ -17,6 +17,13 @@ type RequestStatus struct {
 	Status       string
 }
 
+type UserPrimaryKey struct {
+	ID          string      `json:"id"`
+	WorkspaceID string      `json:"workspaceId"`
+	Name        string      `json:"name"`
+	Properties  []*Property `json:"properties"`
+}
+
 type Request struct {
 	ID               string
 	PrimaryKeyValues []PrimaryKeyValue

@@ -22,7 +22,7 @@ func handleError(err error, msg string) *gqlerror.Error {
 }
 
 func sliceToPointerSlice[T any](slice []T) []*T {
-	pointerSlice := make([]*T, len(slice))
+	pointerSlice := []*T{}
 	for _, elem := range slice {
 		pointerSlice = append(pointerSlice, &elem)
 	}

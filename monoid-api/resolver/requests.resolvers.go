@@ -19,8 +19,9 @@ import (
 // CreateUserPrimaryKey is the resolver for the createUserPrimaryKey field.
 func (r *mutationResolver) CreateUserPrimaryKey(ctx context.Context, input model.CreateUserPrimaryKeyInput) (*model.UserPrimaryKey, error) {
 	userPrimaryKey := model.UserPrimaryKey{
-		ID:   uuid.NewString(),
-		Name: input.Name,
+		ID:          uuid.NewString(),
+		Name:        input.Name,
+		WorkspaceID: input.WorkspaceID,
 	}
 
 	if err := r.Conf.DB.Create(&userPrimaryKey).Error; err != nil {
@@ -80,32 +81,28 @@ func (r *mutationResolver) CreateUserDataRequest(ctx context.Context, input *mod
 		}
 	}
 
-	type ID struct {
-		ID string
-	}
-
-	siloDefinitionIDs := []ID{}
-	dataSourceIDs := []ID{}
+	siloDefinitions := []model.SiloDefinition{}
+	dataSources := []model.DataSource{}
 
 	// TODO: Do this properly with a join
-	if err := r.Conf.DB.Model(model.DataSource{}).Where("workspace_id = ?", input.WorkspaceID).Find(&siloDefinitionIDs).Error; err != nil {
+	if err := r.Conf.DB.Where("workspace_id = ?", input.WorkspaceID).Find(&siloDefinitions).Error; err != nil {
 		return nil, handleError(err, "Error creating user data request.")
 	}
 
-	siloDefinitionIDStrings := []string{}
-	for _, id := range siloDefinitionIDs {
-		siloDefinitionIDStrings = append(siloDefinitionIDStrings, id.ID)
+	siloDefinitionIDStrings := make([]string, len(siloDefinitions))
+	for _, sd := range siloDefinitions {
+		siloDefinitionIDStrings = append(siloDefinitionIDStrings, sd.ID)
 	}
 
-	if err := r.Conf.DB.Model(model.DataSource{}).Where("silo_definition_id IN", siloDefinitionIDStrings).Find(&dataSourceIDs).Error; err != nil {
+	if err := r.Conf.DB.Where("silo_definition_id IN ?", siloDefinitionIDStrings).Find(&dataSources).Error; err != nil {
 		return nil, handleError(err, "Error creating user data request.")
 	}
 
-	for _, id := range dataSourceIDs {
+	for _, ds := range dataSources {
 		requestStatus := model.RequestStatus{
 			ID:           uuid.NewString(),
 			RequestID:    request.ID,
-			DataSourceID: id.ID,
+			DataSourceID: ds.ID,
 			Status:       model.Created,
 		}
 
@@ -143,7 +140,7 @@ func (r *mutationResolver) ExecuteUserDataRequest(ctx context.Context, requestID
 		return nil, err
 	}
 
-	recordResponses := make([]*model.MonoidRecordResponse, len(res))
+	recordResponses := []*model.MonoidRecordResponse{}
 
 	for _, record := range res {
 		recordResponses = append(recordResponses, &model.MonoidRecordResponse{

@@ -38,7 +38,7 @@ func failRequest(requestStatusId string, err error, db *gorm.DB) error {
 }
 
 func succeedRequest(requestStatusId string, db *gorm.DB) error {
-	if flagErr := db.Model(&model.RequestStatus{}).Where("id = ?", requestStatusId).Update("status", model.Created).Error; flagErr != nil {
+	if flagErr := db.Model(&model.RequestStatus{}).Where("id = ?", requestStatusId).Update("status", model.Executed).Error; flagErr != nil {
 		return flagErr
 	}
 	return nil
@@ -71,7 +71,12 @@ func (a *Activity) ExecuteRequest(ctx context.Context, requestId string) (*[]mon
 		}
 		records = append(records, *newRecords...)
 	}
-	return &records, newCombinedErrors(allErrors)
+
+	allErrorsCombined := newCombinedErrors(allErrors)
+	if len(allErrors) == 0 {
+		return &records, nil
+	}
+	return &records, allErrorsCombined
 }
 
 func (a *Activity) ExecuteRequestOnDataSource(ctx context.Context, requestStatusId string, requestType string) (*[]monoidprotocol.MonoidRecord, error) {
@@ -88,14 +93,18 @@ func (a *Activity) ExecuteRequestOnDataSource(ctx context.Context, requestStatus
 	requestStatus := model.RequestStatus{}
 
 	if err := a.Conf.DB.Model(model.RequestStatus{}).
-		Preload("Properties").
 		Preload("DataSource").
 		Preload("DataSource.SiloDefinition").
 		Preload("DataSource.SiloDefinition.SiloSpecification").
+		Preload("DataSource.Properties").
 		Preload("Request").
-		Preload("PrimaryKeyValues").
+		Preload("Request.PrimaryKeyValues").
 		Where("id = ?", requestStatusId).First(&requestStatus).Error; err != nil {
 		return nil, failRequest(requestStatusId, err, a.Conf.DB)
+	}
+
+	if requestStatus.Status == model.Executed {
+		return &[]monoidprotocol.MonoidRecord{}, nil
 	}
 
 	request := requestStatus.Request
@@ -120,7 +129,6 @@ func (a *Activity) ExecuteRequestOnDataSource(ctx context.Context, requestStatus
 	}
 
 	sch, err := protocol.Schema(context.Background(), conf)
-
 	schema := monoidprotocol.MonoidSchema{}
 	found := false
 	for _, candidate := range sch.Schemas {
@@ -159,34 +167,35 @@ func (a *Activity) ExecuteRequestOnDataSource(ctx context.Context, requestStatus
 
 	if primaryKey == "" {
 		// No user primary key in this data source
-		return nil, nil
+		return &[]monoidprotocol.MonoidRecord{}, nil
 	}
-
 	userKey, ok := primaryKeyMap[primaryKey]
 	if !ok {
 		return nil, failRequest(requestStatusId, errors.New("data source's primary key type not defined"), a.Conf.DB)
 	}
 
+	primaryKeyIdentifier := model.UserPrimaryKey{}
+
+	if err = a.Conf.DB.Where("id = ?", primaryKey).First(&primaryKeyIdentifier).Error; err != nil {
+		return nil, failRequest(requestStatusId, errors.New("data source's primary key type not defined"), a.Conf.DB)
+	}
+
+	identifier := monoidprotocol.MonoidQueryIdentifier{
+		SchemaName:      dataSource.Name,
+		SchemaGroup:     dataSource.Group,
+		JsonSchema:      monoidprotocol.MonoidQueryIdentifierJsonSchema(schema.JsonSchema),
+		Identifier:      primaryKeyIdentifier.Name,
+		IdentifierQuery: userKey,
+	}
+
 	switch requestType {
 	case model.Delete:
 		recordChan, err = protocol.Delete(context.Background(), conf, monoidprotocol.MonoidQuery{
-			Identifiers: []monoidprotocol.MonoidQueryIdentifier{{
-				SchemaName:      dataSource.Name,
-				SchemaGroup:     dataSource.Group,
-				JsonSchema:      monoidprotocol.MonoidQueryIdentifierJsonSchema(schema.JsonSchema),
-				Identifier:      primaryKey,
-				IdentifierQuery: userKey,
-			}},
+			Identifiers: []monoidprotocol.MonoidQueryIdentifier{identifier},
 		})
 	case model.Query:
 		recordChan, err = protocol.Query(context.Background(), conf, monoidprotocol.MonoidQuery{
-			Identifiers: []monoidprotocol.MonoidQueryIdentifier{{
-				SchemaName:      dataSource.Name,
-				SchemaGroup:     dataSource.Group,
-				JsonSchema:      monoidprotocol.MonoidQueryIdentifierJsonSchema(schema.JsonSchema),
-				Identifier:      primaryKey,
-				IdentifierQuery: userKey,
-			}},
+			Identifiers: []monoidprotocol.MonoidQueryIdentifier{identifier},
 		})
 	}
 

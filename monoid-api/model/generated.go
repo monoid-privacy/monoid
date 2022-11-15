@@ -53,7 +53,8 @@ type CreateSubjectInput struct {
 }
 
 type CreateUserPrimaryKeyInput struct {
-	Name string `json:"name"`
+	Name        string `json:"name"`
+	WorkspaceID string `json:"workspaceId"`
 }
 
 type CreateWorkspaceInput struct {
@@ -154,12 +155,6 @@ type UserDataRequestInput struct {
 	PrimaryKeys []*UserPrimaryKeyInput `json:"primaryKeys"`
 	WorkspaceID string                 `json:"workspaceId"`
 	Type        string                 `json:"type"`
-}
-
-type UserPrimaryKey struct {
-	ID         string      `json:"id"`
-	Name       string      `json:"name"`
-	Properties []*Property `json:"properties"`
 }
 
 type UserPrimaryKeyInput struct {

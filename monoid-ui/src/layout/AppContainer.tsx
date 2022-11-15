@@ -2,6 +2,7 @@ import React from 'react';
 
 import {
   BeakerIcon, BellAlertIcon, CloudIcon, CogIcon, DocumentIcon, MagnifyingGlassIcon,
+  InboxIcon,
 } from '@heroicons/react/24/outline';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { faSlack, faGithub } from '@fortawesome/free-brands-svg-icons';
@@ -70,6 +71,15 @@ export default function AppContainer(props: {
         },
         current: location.pathname.startsWith(`/workspaces/${id}/settings`),
         key: 'settings',
+      },
+      {
+        title: 'User Data Requests',
+        icon: InboxIcon,
+        onClick: () => {
+          navigate(`/workspaces/${id}/requests`);
+        },
+        current: location.pathname.startsWith(`/workspaces/${id}/requests`),
+        key: 'data_requests',
       },
     ],
   }, {
