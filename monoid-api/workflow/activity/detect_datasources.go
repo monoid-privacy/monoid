@@ -3,7 +3,6 @@ package activity
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/brist-ai/monoid/jsonschema"
 	"github.com/brist-ai/monoid/model"
@@ -172,13 +171,14 @@ func getPropertyDiscoveries(
 
 // processDiscoveries processes the list of new discoveries, eliminating any duplicates,
 // updating them instead of creating, and closing any discoveries that are no longer relevant.
-func processDiscoveries(db *gorm.DB, silo *model.SiloDefinition, discoveries []*model.DataDiscovery) error {
+// Returns the number of new discoveries made.
+func processDiscoveries(db *gorm.DB, silo *model.SiloDefinition, discoveries []*model.DataDiscovery) (int, error) {
 	openDiscoveries := []*model.DataDiscovery{}
 	if err := db.Where("silo_definition_id = ?", silo.ID).Where(
 		"status = ?",
 		model.DiscoveryStatusOpen,
 	).Find(&openDiscoveries).Error; err != nil {
-		return err
+		return 0, err
 	}
 
 	type discoveryKey struct {
@@ -200,7 +200,9 @@ func processDiscoveries(db *gorm.DB, silo *model.SiloDefinition, discoveries []*
 		}] = d
 	}
 
-	return db.Transaction(func(tx *gorm.DB) error {
+	nDiscoveries := 0
+
+	if err := db.Transaction(func(tx *gorm.DB) error {
 		currDiscoveries := map[interface{}]bool{}
 
 		for _, d := range discoveries {
@@ -224,6 +226,7 @@ func processDiscoveries(db *gorm.DB, silo *model.SiloDefinition, discoveries []*
 					return err
 				}
 
+				nDiscoveries += 1
 				continue
 			}
 
@@ -262,7 +265,11 @@ func processDiscoveries(db *gorm.DB, silo *model.SiloDefinition, discoveries []*
 		}
 
 		return nil
-	})
+	}); err != nil {
+		return 0, err
+	}
+
+	return nDiscoveries, nil
 }
 
 // getCategories finds the new category discoveries from the
@@ -358,15 +365,16 @@ type DetectDSArgs struct {
 	SiloID string
 }
 
-// DetectDataSources scans for the data sources for a data silo.
-func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) error {
+// DetectDataSources scans for the data sources for a data silo, and returns the number of
+// discoveries that were made.
+func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) (int, error) {
 	logger := activity.GetLogger(ctx)
 
 	dataSilo := model.SiloDefinition{}
 	if err := a.Conf.DB.Preload(
 		"SiloSpecification",
 	).Where("id = ?", args.SiloID).First(&dataSilo).Error; err != nil {
-		return err
+		return 0, err
 	}
 
 	logger.Info("Getting schemas")
@@ -377,14 +385,14 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) err
 	)
 	if err != nil {
 		logger.Error("Error creating docker client: %v", err)
-		return err
+		return 0, err
 	}
 
 	defer mp.Teardown(ctx)
 
 	if err := mp.InitConn(ctx); err != nil {
 		logger.Error("Error creating docker connection: %v", err)
-		return err
+		return 0, err
 	}
 
 	conf := map[string]interface{}{}
@@ -396,16 +404,14 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) err
 
 	if err != nil {
 		logger.Error("Error running schema: %v", err)
-		return err
+		return 0, err
 	}
 
 	matches, err := scanProtocol(ctx, mp, conf, schemas.Schemas)
 	if err != nil {
 		logger.Error("Error running scan: %v", err)
-		return err
+		return 0, err
 	}
-
-	fmt.Println(matches)
 
 	// Get all the data sources (with properties) that currently exist
 	// for this silo.
@@ -414,7 +420,7 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) err
 		"silo_definition_id = ?", dataSilo.ID,
 	).Find(&sources).Error; err != nil {
 		logger.Error("Error getting silo def %v", err)
-		return err
+		return 0, err
 	}
 
 	// Detect the new data sources.
@@ -513,9 +519,10 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) err
 		})
 	}
 
-	if err := processDiscoveries(a.Conf.DB, &dataSilo, dataDiscoveries); err != nil {
-		return err
+	nDiscoveries, err := processDiscoveries(a.Conf.DB, &dataSilo, dataDiscoveries)
+	if err != nil {
+		return 0, err
 	}
 
-	return nil
+	return nDiscoveries, nil
 }

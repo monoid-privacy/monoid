@@ -10,6 +10,7 @@ import (
 	"github.com/brist-ai/monoid/config"
 	"github.com/brist-ai/monoid/model"
 	"github.com/brist-ai/monoid/specimport"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
@@ -94,6 +95,21 @@ func loadCategories(conf *config.BaseConfig, configPath string) {
 	}
 }
 
+func register(conf *config.BaseConfig) (model.OSSRegistration, error) {
+	registration := model.OSSRegistration{}
+	if err := conf.DB.First(&registration).Error; err != nil {
+		registration.ID = uuid.NewString()
+
+		if err := conf.DB.Create(&registration).Error; err != nil {
+			return model.OSSRegistration{}, err
+		}
+	}
+
+	conf.AnalyticsIngestor.Track("startup", &registration.ID, map[string]interface{}{})
+
+	return registration, nil
+}
+
 func main() {
 	if len(os.Args) != 2 {
 		fmt.Println("Usage ./loader [config directory]")
@@ -103,6 +119,11 @@ func main() {
 	godotenv.Load()
 
 	conf := cmd.GetBaseConfig(true, cmd.Models)
+	defer conf.AnalyticsIngestor.Close()
+
+	if _, err := register(&conf); err != nil {
+		panic("Error creating OSS registration.")
+	}
 
 	loadSpecs(&conf, os.Args[1])
 	loadCategories(&conf, os.Args[1])

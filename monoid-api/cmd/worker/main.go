@@ -20,6 +20,7 @@ func main() {
 	}
 
 	conf := cmd.GetBaseConfig(false, cmd.Models)
+	defer conf.AnalyticsIngestor.Close()
 
 	// Create the client object just once per process
 	c, err := client.Dial(client.Options{

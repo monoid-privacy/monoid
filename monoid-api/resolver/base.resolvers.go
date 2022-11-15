@@ -54,6 +54,19 @@ func (r *mutationResolver) CreateWorkspace(ctx context.Context, input model.Crea
 		return nil, err
 	}
 
+	data := map[string]interface{}{
+		"sendNews":      workspaceSettings.SendNews,
+		"anonymizeData": workspaceSettings.AnonymizeData,
+		"workspaceId":   workspace.ID,
+	}
+
+	if !workspaceSettings.AnonymizeData {
+		data["email"] = workspaceSettings.Email
+		r.Conf.AnalyticsIngestor.Identify(nil, map[string]interface{}{"email": workspaceSettings.Email})
+	}
+
+	r.Conf.AnalyticsIngestor.Track("createWorkspace", nil, data)
+
 	return &workspace, nil
 }
 
@@ -68,6 +81,13 @@ func (r *mutationResolver) DeleteWorkspace(ctx context.Context, id *string) (*st
 	if err := r.Conf.DB.Delete(workspace).Error; err != nil {
 		return nil, handleError(err, "Error deleting workspace.")
 	}
+
+	data := map[string]interface{}{
+		"action":      "delete",
+		"workspaceId": workspace.ID,
+	}
+
+	r.Conf.AnalyticsIngestor.Track("workspaceAction", nil, data)
 
 	return id, nil
 }

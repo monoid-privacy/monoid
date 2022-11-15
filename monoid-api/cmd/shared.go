@@ -6,11 +6,12 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
-	"strings"
 	"time"
 
+	"github.com/brist-ai/monoid/analytics/ingestor"
 	"github.com/brist-ai/monoid/config"
 	"github.com/brist-ai/monoid/model"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog/log"
 	"gorm.io/driver/postgres"
@@ -45,6 +46,7 @@ var Models = []interface{}{
 	model.Property{},
 	model.Job{},
 	model.DataDiscovery{},
+	model.OSSRegistration{},
 }
 
 func InitDb(dbInfo DBInfo) *gorm.DB {
@@ -83,21 +85,6 @@ func InitDb(dbInfo DBInfo) *gorm.DB {
 	return db
 }
 
-func encryptionKey(keyFile string) ([]byte, error) {
-	dat, err := os.ReadFile(keyFile)
-	if err != nil {
-		return nil, err
-	}
-
-	strDat := strings.Trim(string(dat), " \n")
-	key, err := base64.StdEncoding.DecodeString(strDat)
-	if err != nil {
-		return nil, err
-	}
-
-	return key, nil
-}
-
 func GetBaseConfig(runMigrations bool, models []interface{}) config.BaseConfig {
 	err := godotenv.Load()
 	if err != nil {
@@ -127,11 +114,20 @@ func GetBaseConfig(runMigrations bool, models []interface{}) config.BaseConfig {
 
 	model.SetEncryptionKey(key)
 
+	reg := model.OSSRegistration{}
+	if err := db.First(&reg).Error; err != nil {
+		reg.ID = "temp_" + uuid.NewString()
+	}
+
 	conf := config.BaseConfig{
 		DB:          db,
 		TokenSecret: os.Getenv("TOKEN_SECRET"),
 		ApiURL:      os.Getenv("API_URL"),
 		WebURL:      os.Getenv("WEB_URL"),
+		AnalyticsIngestor: ingestor.NewSegmentIngestor(
+			os.Getenv("SEGMENT_KEY"),
+			&reg.ID,
+		),
 	}
 
 	return conf

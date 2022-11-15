@@ -296,6 +296,13 @@ func (r *mutationResolver) DetectSiloSources(ctx context.Context, workspaceID st
 		ResourceID:  id,
 	}
 
+	analyticsData := map[string]interface{}{
+		"action": "detect_silos",
+		"siloId": silo.ID,
+	}
+
+	r.Conf.AnalyticsIngestor.Track("siloAction", nil, analyticsData)
+
 	if err := r.Conf.DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(&job).Error; err != nil {
 			return err

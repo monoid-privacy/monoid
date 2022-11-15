@@ -6,17 +6,19 @@ import (
 
 type SegmentIngestor struct {
 	client analytics.Client
+	UserID *string
 }
 
-func NewSegmentIngestor(key string) Ingestor {
+func NewSegmentIngestor(key string, userID *string) Ingestor {
 	cli := analytics.New(key)
 
 	return &SegmentIngestor{
 		client: cli,
+		UserID: userID,
 	}
 }
 
-func (si *SegmentIngestor) Identify(userID string, traits map[string]interface{}) {
+func (si *SegmentIngestor) Identify(userID *string, traits map[string]interface{}) {
 	segTraits := analytics.NewTraits()
 	for k, v := range traits {
 		switch k {
@@ -39,21 +41,38 @@ func (si *SegmentIngestor) Identify(userID string, traits map[string]interface{}
 		}
 	}
 
+	if userID == nil {
+		if si.UserID == nil {
+			return
+		}
+
+		userID = si.UserID
+	}
+
 	si.client.Enqueue(analytics.Identify{
-		UserId: userID,
+		UserId: *userID,
 		Traits: analytics.NewTraits(),
 	})
 }
 
-func (si *SegmentIngestor) Track(event string, userID string, properties map[string]interface{}) {
+func (si *SegmentIngestor) Track(event string, userID *string, properties map[string]interface{}) {
 	props := analytics.NewProperties()
+
+	if userID == nil {
+		if si.UserID != nil {
+			userID = si.UserID
+		} else {
+			u := ""
+			userID = &u
+		}
+	}
 
 	for k, v := range properties {
 		props.Set(k, v)
 	}
 
 	si.client.Enqueue(analytics.Track{
-		UserId:     userID,
+		UserId:     *userID,
 		Event:      event,
 		Properties: props,
 	})

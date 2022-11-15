@@ -24,6 +24,7 @@ func main() {
 	}
 
 	conf := cmd.GetBaseConfig(true, cmd.Models)
+	defer conf.AnalyticsIngestor.Close()
 
 	c, err := client.Dial(client.Options{
 		HostPort: os.Getenv("TEMPORAL"),

@@ -3,16 +3,18 @@ package config
 import (
 	"net/http"
 
+	"github.com/brist-ai/monoid/analytics/ingestor"
 	"go.temporal.io/sdk/client"
 	"gorm.io/gorm"
 )
 
 type BaseConfig struct {
-	DB             *gorm.DB
-	TokenSecret    string
-	ApiURL         string
-	WebURL         string
-	TemporalClient client.Client
+	DB                *gorm.DB
+	TokenSecret       string
+	ApiURL            string
+	WebURL            string
+	TemporalClient    client.Client
+	AnalyticsIngestor ingestor.Ingestor
 }
 
 func (c BaseConfig) PreFlightHandler(next http.Handler) http.Handler {

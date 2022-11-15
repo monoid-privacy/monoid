@@ -30,6 +30,13 @@ func (r *mutationResolver) HandleDiscovery(ctx context.Context, input *model.Han
 		return nil, handleError(err, "Could not find discovery.")
 	}
 
+	analyticsData := map[string]interface{}{
+		"action": input.Action.String(),
+		"siloId": discovery.SiloDefinitionID,
+	}
+
+	r.Conf.AnalyticsIngestor.Track("discoveryAction", nil, analyticsData)
+
 	if input.Action == model.DiscoveryActionReject {
 		if err := r.Conf.DB.Model(&discovery).Update("status", model.DiscoveryStatusRejected).Error; err != nil {
 			return nil, handleError(err, "Error updating discovery.")

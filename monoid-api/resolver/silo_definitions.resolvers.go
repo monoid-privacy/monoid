@@ -49,11 +49,19 @@ func (r *mutationResolver) CreateSiloDefinition(ctx context.Context, input *mode
 		siloDefinition,
 	)
 
+	analyticsData := map[string]interface{}{
+		"action": "create",
+		"siloId": siloDefinition.ID,
+	}
+
 	if err != nil {
 		return nil, handleError(err, "Error validating silo definition")
 	}
 
 	if !res.success {
+		analyticsData["action"] = "create_validate_failed"
+		r.Conf.AnalyticsIngestor.Track("siloAction", nil, analyticsData)
+
 		return nil, gqlerror.Errorf(res.message)
 	}
 
@@ -70,6 +78,8 @@ func (r *mutationResolver) CreateSiloDefinition(ctx context.Context, input *mode
 	if err := r.Conf.DB.Model(&siloDefinition).Association("Subjects").Append(subjects); err != nil {
 		return nil, handleError(err, "Error creating subjects.")
 	}
+
+	r.Conf.AnalyticsIngestor.Track("siloAction", nil, analyticsData)
 
 	return &siloDefinition, nil
 }
@@ -104,6 +114,11 @@ func (r *mutationResolver) UpdateSiloDefinition(ctx context.Context, input *mode
 		return nil, handleError(err, "Error updating silo definition.")
 	}
 
+	analyticsData := map[string]interface{}{
+		"action": "update",
+		"siloId": siloDefinition.ID,
+	}
+
 	// Validate the definition before saving it
 	res, err := r.validateSiloDef(
 		ctx,
@@ -121,6 +136,8 @@ func (r *mutationResolver) UpdateSiloDefinition(ctx context.Context, input *mode
 	}
 
 	if !res.success {
+		analyticsData["action"] = "update_validate_failed"
+		r.Conf.AnalyticsIngestor.Track("siloAction", nil, analyticsData)
 		return nil, gqlerror.Errorf(res.message)
 	}
 
@@ -131,6 +148,8 @@ func (r *mutationResolver) UpdateSiloDefinition(ctx context.Context, input *mode
 	if err := r.Conf.DB.Omit("Subjects").Updates(&siloDefinition).Error; err != nil {
 		return nil, handleError(err, "Error updating silo definition.")
 	}
+
+	r.Conf.AnalyticsIngestor.Track("siloAction", nil, analyticsData)
 
 	return &siloDefinition, nil
 }
@@ -146,6 +165,11 @@ func (r *mutationResolver) DeleteSiloDefinition(ctx context.Context, id string) 
 	if err := r.Conf.DB.Delete(siloDefinition).Error; err != nil {
 		return nil, handleError(err, "Error deleting silo definition.")
 	}
+
+	r.Conf.AnalyticsIngestor.Track("siloAction", nil, map[string]interface{}{
+		"action": "delete",
+		"siloId": id,
+	})
 
 	// TODO: Check that deletes properly cascade to subjects (m2m) and datasources (12m)
 
@@ -167,13 +191,23 @@ func (r *mutationResolver) UpdateSiloScanConfig(ctx context.Context, input model
 		}
 	}
 
+	analyticsData := map[string]interface{}{
+		"siloId": silo.ID,
+	}
+
 	if input.Cron == "" {
+		analyticsData["action"] = "updateScanTimeManual"
+
 		if err := r.Conf.DB.Model(&silo).Association("ScanConfig").Clear(); err != nil {
 			return nil, handleError(err, "Unable to save new scan configuration.")
 		}
 
+		r.Conf.AnalyticsIngestor.Track("siloAction", nil, analyticsData)
+
 		return &silo, nil
 	}
+
+	analyticsData["action"] = "updateScanTimeAuto"
 
 	// Validate that the cron config is valid, and will run at most once per hour.
 	validator := cron.NewParser(
@@ -242,6 +276,9 @@ func (r *mutationResolver) UpdateSiloScanConfig(ctx context.Context, input model
 	}); err != nil {
 		return nil, handleError(err, "Unable to save new scan configuration.")
 	}
+
+	r.Conf.AnalyticsIngestor.Track("siloAction", nil, analyticsData)
+
 	return &silo, nil
 }
 

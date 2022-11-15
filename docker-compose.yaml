@@ -66,6 +66,7 @@ services:
       - DB_PORT=5432
       - DB_NAME=${DATABASE_NAME}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - SEGMENT_KEY=${SEGMENT_KEY}
       - TEMPORAL=monoid-temporal:7233
     depends_on:
       db:
@@ -89,6 +90,7 @@ services:
       - DB_PORT=5432
       - DB_NAME=${DATABASE_NAME}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - SEGMENT_KEY=${SEGMENT_KEY}
     volumes:
       - ./monoid-config:/monoid-config
     depends_on:
@@ -109,6 +111,7 @@ services:
       - DB_PORT=5432
       - DB_NAME=${DATABASE_NAME}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - SEGMENT_KEY=${SEGMENT_KEY}
       - TEMPORAL=monoid-temporal:7233
     depends_on:
       db:

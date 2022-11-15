@@ -25,7 +25,7 @@ func (h *AnalyticsHandler) HandleTrack(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Ingestor.Track(payload.Event, payload.UserID, payload.Properties)
+	h.Ingestor.Track(payload.Event, &payload.UserID, payload.Properties)
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -42,6 +42,6 @@ func (h *AnalyticsHandler) HandleIdentify(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	h.Ingestor.Identify(payload.UserID, payload.Traits)
+	h.Ingestor.Identify(&payload.UserID, payload.Traits)
 	w.WriteHeader(http.StatusOK)
 }
