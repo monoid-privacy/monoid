@@ -28,7 +28,7 @@ export default function PageHeader(props: PageHeaderProps) {
     case 'top':
     default:
       header = (
-        <H1 className="leading-7 sm:truncate mr-auto">
+        <H1 className="leading-10 sm:truncate mr-auto">
           {title}
         </H1>
       );

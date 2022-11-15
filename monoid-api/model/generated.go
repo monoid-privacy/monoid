@@ -130,6 +130,11 @@ type UpdateSubjectInput struct {
 	Name *string `json:"name"`
 }
 
+type UpdateWorkspaceSettingsInput struct {
+	WorkspaceID string    `json:"workspaceID"`
+	Settings    []*KVPair `json:"settings"`
+}
+
 type DiscoveryAction string
 
 const (

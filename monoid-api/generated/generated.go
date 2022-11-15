@@ -119,6 +119,7 @@ type ComplexityRoot struct {
 		UpdateSiloScanConfig     func(childComplexity int, input model.SiloScanConfigInput) int
 		UpdateSiloSpecification  func(childComplexity int, input *model.UpdateSiloSpecificationInput) int
 		UpdateSubject            func(childComplexity int, input *model.UpdateSubjectInput) int
+		UpdateWorkspaceSettings  func(childComplexity int, input model.UpdateWorkspaceSettingsInput) int
 	}
 
 	NewCategoryDiscovery struct {
@@ -221,6 +222,7 @@ type DataSourceResolver interface {
 }
 type MutationResolver interface {
 	CreateWorkspace(ctx context.Context, input model.CreateWorkspaceInput) (*model.Workspace, error)
+	UpdateWorkspaceSettings(ctx context.Context, input model.UpdateWorkspaceSettingsInput) (*model.Workspace, error)
 	DeleteWorkspace(ctx context.Context, id *string) (*string, error)
 	CreateDataSource(ctx context.Context, input *model.CreateDataSourceInput) (*model.DataSource, error)
 	CreateSiloSpecification(ctx context.Context, input *model.CreateSiloSpecificationInput) (*model.SiloSpecification, error)
@@ -276,7 +278,7 @@ type SiloDefinitionResolver interface {
 	Discoveries(ctx context.Context, obj *model.SiloDefinition, statuses []*model.DiscoveryStatus, limit int, offset int) (*model.DataDiscoveriesListResult, error)
 }
 type WorkspaceResolver interface {
-	Settings(ctx context.Context, obj *model.Workspace) (string, error)
+	Settings(ctx context.Context, obj *model.Workspace) (map[string]interface{}, error)
 
 	SiloDefinitions(ctx context.Context, obj *model.Workspace) ([]*model.SiloDefinition, error)
 	SiloDefinition(ctx context.Context, obj *model.Workspace, id string) (*model.SiloDefinition, error)
@@ -782,6 +784,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateSubject(childComplexity, args["input"].(*model.UpdateSubjectInput)), true
 
+	case "Mutation.updateWorkspaceSettings":
+		if e.complexity.Mutation.UpdateWorkspaceSettings == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateWorkspaceSettings_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateWorkspaceSettings(childComplexity, args["input"].(model.UpdateWorkspaceSettingsInput)), true
+
 	case "NewCategoryDiscovery.categoryId":
 		if e.complexity.NewCategoryDiscovery.CategoryID == nil {
 			break
@@ -1244,6 +1258,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUpdateSiloDefinitionInput,
 		ec.unmarshalInputUpdateSiloSpecificationInput,
 		ec.unmarshalInputUpdateSubjectInput,
+		ec.unmarshalInputUpdateWorkspaceSettingsInput,
 	)
 	first := true
 
@@ -1312,7 +1327,7 @@ type Workspace {
   id: ID!
   name: String
   siloSpecifications: [SiloSpecification!]
-  settings: String!
+  settings: Map!
   subjects: [Subject!]
   purposes: [Purpose!]
   categories: [Category!]
@@ -1333,8 +1348,14 @@ input CreateWorkspaceInput {
   settings: [KVPair]
 }
 
+input UpdateWorkspaceSettingsInput {
+  workspaceID: ID!
+  settings: [KVPair]
+}
+
 extend type Mutation {
   createWorkspace(input: CreateWorkspaceInput!): Workspace
+  updateWorkspaceSettings(input: UpdateWorkspaceSettingsInput!): Workspace
   deleteWorkspace(id: ID): ID
 }`, BuiltIn: false},
 	{Name: "../schema/data_mapping.graphqls", Input: `# GraphQL schema example
@@ -2066,6 +2087,21 @@ func (ec *executionContext) field_Mutation_updateSubject_args(ctx context.Contex
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalOUpdateSubjectInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUpdateSubjectInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateWorkspaceSettings_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.UpdateWorkspaceSettingsInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNUpdateWorkspaceSettingsInput2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUpdateWorkspaceSettingsInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3452,6 +3488,78 @@ func (ec *executionContext) fieldContext_Mutation_createWorkspace(ctx context.Co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_createWorkspace_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateWorkspaceSettings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateWorkspaceSettings(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateWorkspaceSettings(rctx, fc.Args["input"].(model.UpdateWorkspaceSettingsInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Workspace)
+	fc.Result = res
+	return ec.marshalOWorkspace2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐWorkspace(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateWorkspaceSettings(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Workspace_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Workspace_name(ctx, field)
+			case "siloSpecifications":
+				return ec.fieldContext_Workspace_siloSpecifications(ctx, field)
+			case "settings":
+				return ec.fieldContext_Workspace_settings(ctx, field)
+			case "subjects":
+				return ec.fieldContext_Workspace_subjects(ctx, field)
+			case "purposes":
+				return ec.fieldContext_Workspace_purposes(ctx, field)
+			case "categories":
+				return ec.fieldContext_Workspace_categories(ctx, field)
+			case "siloDefinitions":
+				return ec.fieldContext_Workspace_siloDefinitions(ctx, field)
+			case "siloDefinition":
+				return ec.fieldContext_Workspace_siloDefinition(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Workspace", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateWorkspaceSettings_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -7572,9 +7680,9 @@ func (ec *executionContext) _Workspace_settings(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(map[string]interface{})
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNMap2map(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Workspace_settings(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -7584,7 +7692,7 @@ func (ec *executionContext) fieldContext_Workspace_settings(ctx context.Context,
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type Map does not have child fields")
 		},
 	}
 	return fc, nil
@@ -10433,6 +10541,42 @@ func (ec *executionContext) unmarshalInputUpdateSubjectInput(ctx context.Context
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUpdateWorkspaceSettingsInput(ctx context.Context, obj interface{}) (model.UpdateWorkspaceSettingsInput, error) {
+	var it model.UpdateWorkspaceSettingsInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"workspaceID", "settings"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "workspaceID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workspaceID"))
+			it.WorkspaceID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "settings":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("settings"))
+			it.Settings, err = ec.unmarshalOKVPair2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐKVPair(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -10799,6 +10943,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createWorkspace(ctx, field)
+			})
+
+		case "updateWorkspaceSettings":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateWorkspaceSettings(ctx, field)
 			})
 
 		case "deleteWorkspace":
@@ -12353,6 +12503,27 @@ func (ec *executionContext) marshalNJobsResult2ᚖgithubᚗcomᚋbristᚑaiᚋmo
 	return ec._JobsResult(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNMap2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
+	res, err := graphql.UnmarshalMap(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNMap2map(ctx context.Context, sel ast.SelectionSet, v map[string]interface{}) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	res := graphql.MarshalMap(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) marshalNProperty2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐProperty(ctx context.Context, sel ast.SelectionSet, v *model.Property) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -12473,6 +12644,11 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNUpdateWorkspaceSettingsInput2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUpdateWorkspaceSettingsInput(ctx context.Context, v interface{}) (model.UpdateWorkspaceSettingsInput, error) {
+	res, err := ec.unmarshalInputUpdateWorkspaceSettingsInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {

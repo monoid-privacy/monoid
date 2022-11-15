@@ -7,6 +7,7 @@ import {
 } from 'react-router-dom';
 import AppContainer from '../layout/AppContainer';
 import WorkspaceSelect from './Onboarding/WorkspaceAutoSelect';
+import SettingsPage from './Settings/SettingsPage';
 import SiloRoutes from './Silos/SiloRoutes';
 
 export default function MonoidRouter() {
@@ -18,6 +19,7 @@ export default function MonoidRouter() {
           <Route index element={<WorkspaceSelect />} />
           <Route path=":id" element={<AppContainer><Outlet /></AppContainer>}>
             <Route path="silos/*" element={<SiloRoutes />} />
+            <Route path="settings" element={<SettingsPage />} />
           </Route>
         </Route>
       </Routes>

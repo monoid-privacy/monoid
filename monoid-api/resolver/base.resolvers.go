@@ -5,6 +5,7 @@ package resolver
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/brist-ai/monoid/generated"
@@ -50,6 +51,13 @@ func (r *mutationResolver) CreateWorkspace(ctx context.Context, input model.Crea
 		return nil, handleError(fmt.Errorf("invalid email %s", workspaceSettings.Email), "Invalid email.")
 	}
 
+	settingsJSON, err := json.Marshal(workspaceSettings)
+	if err != nil {
+		return nil, handleError(err, "Error saving workspace settings.")
+	}
+
+	workspace.Settings = settingsJSON
+
 	if err := r.Conf.DB.Create(&workspace).Error; err != nil {
 		return nil, err
 	}
@@ -69,6 +77,74 @@ func (r *mutationResolver) CreateWorkspace(ctx context.Context, input model.Crea
 
 	r.Conf.AnalyticsIngestor.Identify(nil, identifyData)
 	r.Conf.AnalyticsIngestor.Track("createWorkspace", nil, data)
+
+	return &workspace, nil
+}
+
+// UpdateWorkspaceSettings is the resolver for the updateWorkspaceSettings field.
+func (r *mutationResolver) UpdateWorkspaceSettings(ctx context.Context, input model.UpdateWorkspaceSettingsInput) (*model.Workspace, error) {
+	workspace := model.Workspace{}
+	if err := r.Conf.DB.Where("id = ?", input.WorkspaceID).First(&workspace).Error; err != nil {
+		return nil, handleError(err, "Could not find workspace.")
+	}
+
+	settings := model.WorkspaceSettings{}
+	if err := json.Unmarshal(workspace.Settings, &settings); err != nil {
+		return nil, handleError(err, "Error getting workspace settings.")
+	}
+
+	emailUpdated := false
+
+	for _, s := range input.Settings {
+		if s.Key == "email" {
+			if s.Value != settings.Email {
+				emailUpdated = true
+			}
+
+			settings.Email = s.Value
+		}
+
+		if s.Key == "sendNews" {
+			if s.Value == "t" {
+				settings.SendNews = true
+			} else {
+				settings.SendNews = false
+			}
+		}
+	}
+
+	if valid := model.ValidateEmail(settings.Email); !valid {
+		return nil, handleError(fmt.Errorf("invalid email %s", settings.Email), "Invalid email.")
+	}
+
+	settingsJSON, err := json.Marshal(settings)
+	if err != nil {
+		return nil, handleError(err, "Error saving settings.")
+	}
+
+	workspace.Settings = settingsJSON
+
+	data := map[string]interface{}{
+		"sendNews":    settings.SendNews,
+		"workspaceId": workspace.ID,
+	}
+
+	identifyData := map[string]interface{}{}
+
+	if !settings.AnonymizeData {
+		data["email"] = settings.Email
+		identifyData["email"] = settings.Email
+
+		if emailUpdated {
+			r.Conf.AnalyticsIngestor.Identify(nil, identifyData)
+		}
+	}
+
+	r.Conf.AnalyticsIngestor.Track("updateWorkspace", nil, data)
+
+	if err := r.Conf.DB.Updates(&workspace).Error; err != nil {
+		return nil, handleError(err, "Error updating workspace.")
+	}
 
 	return &workspace, nil
 }
@@ -106,8 +182,13 @@ func (r *queryResolver) Workspace(ctx context.Context, id string) (*model.Worksp
 }
 
 // Settings is the resolver for the settings field.
-func (r *workspaceResolver) Settings(ctx context.Context, obj *model.Workspace) (string, error) {
-	panic(fmt.Errorf("not implemented: Settings - settings"))
+func (r *workspaceResolver) Settings(ctx context.Context, obj *model.Workspace) (map[string]interface{}, error) {
+	res := map[string]interface{}{}
+	if err := json.Unmarshal(obj.Settings, &res); err != nil {
+		return nil, handleError(err, "Error getting settings")
+	}
+
+	return res, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

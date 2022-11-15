@@ -6,7 +6,7 @@ type Workspace {
   id: ID!
   name: String
   siloSpecifications: [SiloSpecification!]
-  settings: String!
+  settings: Map!
   subjects: [Subject!]
   purposes: [Purpose!]
   categories: [Category!]
@@ -27,7 +27,13 @@ input CreateWorkspaceInput {
   settings: [KVPair]
 }
 
+input UpdateWorkspaceSettingsInput {
+  workspaceID: ID!
+  settings: [KVPair]
+}
+
 extend type Mutation {
   createWorkspace(input: CreateWorkspaceInput!): Workspace
+  updateWorkspaceSettings(input: UpdateWorkspaceSettingsInput!): Workspace
   deleteWorkspace(id: ID): ID
 }
