@@ -5,11 +5,10 @@ package resolver
 
 import (
 	"context"
-	"encoding/json"
+	"fmt"
 
 	"github.com/brist-ai/monoid/generated"
 	"github.com/brist-ai/monoid/model"
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -30,165 +29,33 @@ func (r *mutationResolver) HandleDiscovery(ctx context.Context, input *model.Han
 		return nil, handleError(err, "Could not find discovery.")
 	}
 
-	analyticsData := map[string]interface{}{
-		"action": input.Action.String(),
-		"siloId": discovery.SiloDefinitionID,
+	res, errs := applyDiscoveries(r.Conf, []*model.DataDiscovery{&discovery}, input.Action)
+	if len(errs) != 0 {
+		return nil, handleError(errs[0], "Error applying discovery.")
 	}
 
-	r.Conf.AnalyticsIngestor.Track("discoveryAction", nil, analyticsData)
+	return res[0], nil
+}
 
-	if input.Action == model.DiscoveryActionReject {
-		if err := r.Conf.DB.Model(&discovery).Update("status", model.DiscoveryStatusRejected).Error; err != nil {
-			return nil, handleError(err, "Error updating discovery.")
-		}
-		return &discovery, nil
+// HandleAllOpenDiscoveries is the resolver for the handleAllOpenDiscoveries field.
+func (r *mutationResolver) HandleAllOpenDiscoveries(ctx context.Context, input *model.HandleAllDiscoveriesInput) ([]*model.DataDiscovery, error) {
+	discoveries := []*model.DataDiscovery{}
+	if err := r.Conf.DB.Where(
+		"status = ?",
+		model.DiscoveryStatusOpen,
+	).Where(
+		"silo_definition_id = ?",
+		input.SiloID,
+	).Find(&discoveries).Error; err != nil {
+		return nil, handleError(err, "Error finding discoveries.")
 	}
 
-	switch discovery.Type {
-	case model.DiscoveryTypeCategoryFound:
-		data := model.NewCategoryDiscovery{}
-		if err := json.Unmarshal(discovery.Data, &data); err != nil || data.PropertyID == nil {
-			return nil, handleError(err, "Error getting data")
-		}
-
-		if err := r.Conf.DB.Transaction(func(tx *gorm.DB) error {
-			if err := r.Conf.DB.Model(&model.Property{ID: *data.PropertyID}).Association("Categories").Append(
-				&model.Category{
-					ID: data.CategoryID,
-				},
-			); err != nil {
-				return err
-			}
-
-			if err := tx.Model(&discovery).Update(
-				"status", model.DiscoveryStatusAccepted,
-			).Error; err != nil {
-				return err
-			}
-
-			return nil
-		}); err != nil {
-			return nil, handleError(err, "Could not update category.")
-		}
-	case model.DiscoveryTypeDataSourceFound:
-		data := model.NewDataSourceDiscovery{}
-		if err := json.Unmarshal(discovery.Data, &data); err != nil {
-			return nil, handleError(err, "Error getting data")
-		}
-
-		if err := r.Conf.DB.Transaction(func(tx *gorm.DB) error {
-			dataSource := model.DataSource{
-				ID:               uuid.NewString(),
-				Group:            data.Group,
-				Name:             data.Name,
-				SiloDefinitionID: discovery.SiloDefinitionID,
-				Properties:       propertiesForDiscoveries(data.Properties),
-			}
-
-			if err := tx.Create(&dataSource).Error; err != nil {
-				return err
-			}
-
-			if err := tx.Model(&discovery).Update(
-				"status", model.DiscoveryStatusAccepted,
-			).Error; err != nil {
-				return err
-			}
-
-			return nil
-		}); err != nil {
-			return nil, handleError(err, "Could not update data source.")
-		}
-	case model.DiscoveryTypePropertyFound:
-		data := model.NewPropertyDiscovery{}
-		if err := json.Unmarshal(discovery.Data, &data); err != nil || data.DataSourceId == nil {
-			return nil, handleError(err, "Error getting data")
-		}
-
-		if err := r.Conf.DB.Transaction(func(tx *gorm.DB) error {
-			prop := propertiesForDiscoveries([]model.NewPropertyDiscovery{data})[0]
-			prop.DataSourceID = *data.DataSourceId
-
-			if err := tx.Create(&prop).Error; err != nil {
-				return err
-			}
-
-			if err := tx.Model(&discovery).Update(
-				"status", model.DiscoveryStatusAccepted,
-			).Error; err != nil {
-				return err
-			}
-
-			return nil
-		}); err != nil {
-			return nil, handleError(err, "Could not update property.")
-		}
-	case model.DiscoveryTypeDataSourceMissing:
-		data := model.ObjectMissingDiscovery{}
-		if err := json.Unmarshal(discovery.Data, &data); err != nil {
-			return nil, handleError(err, "Error getting data")
-		}
-
-		if err := r.Conf.DB.Transaction(func(tx *gorm.DB) error {
-			ds := model.DataSource{}
-			if err := tx.Model(&model.DataSource{}).Preload("Properties").Where(
-				"id = ?",
-				data.ID,
-			).First(&ds).Error; err != nil {
-				return err
-			}
-
-			if err := tx.Model(&ds.Properties).Association("Categories").Clear(); err != nil {
-				return err
-			}
-
-			if err := tx.Model(&model.Property{}).Where(
-				"data_source_id = ?", data.ID,
-			).Delete(nil).Error; err != nil {
-				return err
-			}
-
-			if err := tx.Model(&model.DataSource{}).Where(
-				"id = ?",
-				data.ID,
-			).Delete(nil).Error; err != nil {
-				return err
-			}
-
-			if err := tx.Model(&discovery).Update(
-				"status", model.DiscoveryStatusAccepted,
-			).Error; err != nil {
-				return err
-			}
-
-			return nil
-		}); err != nil {
-			return nil, handleError(err, "Error deleting data source")
-		}
-	case model.DiscoveryTypePropertyMissing:
-		data := model.ObjectMissingDiscovery{}
-		if err := json.Unmarshal(discovery.Data, &data); err != nil {
-			return nil, handleError(err, "Error getting data")
-		}
-
-		if err := r.Conf.DB.Transaction(func(tx *gorm.DB) error {
-			if err := tx.Select("Categories").Delete(&model.Property{ID: data.ID}).Error; err != nil {
-				return err
-			}
-
-			if err := tx.Model(&discovery).Update(
-				"status", model.DiscoveryStatusAccepted,
-			).Error; err != nil {
-				return err
-			}
-
-			return nil
-		}); err != nil {
-			return nil, handleError(err, "Error deleting data source")
-		}
+	res, errs := applyDiscoveries(r.Conf, discoveries, input.Action)
+	if len(errs) != 0 {
+		return nil, handleError(errs[0], fmt.Sprintf("Errors applying %d discoveries.", len(errs)))
 	}
 
-	return &discovery, nil
+	return res, nil
 }
 
 // Discoveries is the resolver for the discoveries field.
@@ -212,7 +79,7 @@ func (r *siloDefinitionResolver) Discoveries(ctx context.Context, obj *model.Sil
 	}
 
 	count := int64(0)
-	if err := q.Debug().Session(&gorm.Session{}).Model(&model.DataDiscovery{}).Count(&count).Error; err != nil {
+	if err := q.Session(&gorm.Session{}).Model(&model.DataDiscovery{}).Count(&count).Error; err != nil {
 		return nil, handleError(err, "Error getting discovery count.")
 	}
 

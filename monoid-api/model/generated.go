@@ -62,6 +62,11 @@ type DataDiscoveriesListResult struct {
 	NumDiscoveries int              `json:"numDiscoveries"`
 }
 
+type HandleAllDiscoveriesInput struct {
+	SiloID string          `json:"siloId"`
+	Action DiscoveryAction `json:"action"`
+}
+
 type HandleDiscoveryInput struct {
 	DiscoveryID string          `json:"discoveryId"`
 	Action      DiscoveryAction `json:"action"`

@@ -5,7 +5,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/brist-ai/monoid/model"
 	"gorm.io/gorm"
@@ -28,8 +27,6 @@ func (r *queryResolver) Jobs(ctx context.Context, resourceID string, jobType str
 	if err := q.Session(&gorm.Session{}).Model(&model.Job{}).Count(&numJobs).Error; err != nil {
 		return nil, handleError(err, "Error getting job count.")
 	}
-
-	fmt.Println(numJobs)
 
 	return &model.JobsResult{
 		Jobs:    jobs,

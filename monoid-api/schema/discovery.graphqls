@@ -50,7 +50,7 @@ type DataDiscoveriesListResult {
 }
 
 extend type SiloDefinition {
-    discoveries(limit: Int!, offset: Int!): DataDiscoveriesListResult!
+    discoveries(statuses: [DiscoveryStatus], limit: Int!, offset: Int!): DataDiscoveriesListResult!
 }
 
 enum DiscoveryAction {
@@ -63,6 +63,12 @@ input HandleDiscoveryInput {
     action: DiscoveryAction!
 }
 
+input HandleAllDiscoveriesInput {
+    siloId: ID!
+    action: DiscoveryAction!
+}
+
 extend type Mutation {
     handleDiscovery(input: HandleDiscoveryInput): DataDiscovery
+    handleAllOpenDiscoveries(input: HandleAllDiscoveriesInput): [DataDiscovery]
 }

@@ -40,7 +40,7 @@ func (c *PropertyCategoryReader) GetCategories(ctx context.Context, keys dataloa
 
 	pcs := []propertyCategory{}
 
-	if err := c.conf.DB.Debug().Where(
+	if err := c.conf.DB.Where(
 		"property_id IN ?",
 		propertyIDs,
 	).Preload("Category").Find(&pcs).Error; err != nil {

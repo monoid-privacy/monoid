@@ -129,6 +129,15 @@ const APPLY_DISCOVERY = gql`
   }
 `;
 
+const APPLY_ALL_DISCOVERIES = gql`
+  mutation ApplyAllDiscoveries($input: HandleAllDiscoveriesInput!) {
+    handleAllOpenDiscoveries(input: $input) {
+      id
+      status
+    }
+  }
+`;
+
 function DataSourceBody(props: {
   dataSource: NewDataSourceDiscoveryData,
   open: boolean,
@@ -572,11 +581,92 @@ function SiloCardBody() {
   );
 }
 
+function ApplyAlertsButton() {
+  const { siloId, id } = useParams<{ siloId: string, id: string }>();
+  const toastCtx = useContext(ToastContext);
+
+  const {
+    data, loading, error, refetch,
+  } = useQuery(GET_NUM_ACTIVE_DISCOVERIES, {
+    variables: {
+      id: siloId,
+      workspaceId: id,
+    },
+  });
+
+  const [handleDiscoveries, handleDiscoveriesRes] = useMutation(APPLY_ALL_DISCOVERIES, {
+    variables: {
+      input: {
+        siloId,
+        action: 'ACCEPT',
+      },
+    },
+    update: (cache, res) => {
+      (res.data.handleAllOpenDiscoveries as DataDiscovery[]).forEach((v) => {
+        cache.modify({
+          id: cache.identify(v),
+          fields: {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            status(_currStatus) {
+              return v.status;
+            },
+          },
+        });
+      });
+    },
+  });
+
+  const numDiscoveries = data?.workspace.siloDefinition.discoveries.numDiscoveries;
+  if (loading || error || numDiscoveries === 0) {
+    return <div />;
+  }
+
+  if (error) {
+    return <div />;
+  }
+
+  return (
+    <Button
+      className="ml-auto"
+      onClick={() => handleDiscoveries().then(() => {
+        toastCtx.showToast({
+          title: 'Success',
+          message: 'Applied alerts!',
+          variant: 'success',
+          icon: CheckCircleIcon,
+        });
+        refetch();
+      }).catch((err: ApolloError) => {
+        toastCtx.showToast({
+          title: 'Error',
+          message: err.message,
+          variant: 'danger',
+          icon: XCircleIcon,
+        });
+      })}
+    >
+      {
+        handleDiscoveriesRes.loading ? <Spinner /> : (
+          <>
+            Apply All Open Alerts (
+            {numDiscoveries}
+            )
+          </>
+        )
+      }
+
+    </Button>
+  );
+}
+
 export default function SiloAlerts() {
   return (
     <Card innerClassName="py-0 pt-5 pb-0 sm:pb-0">
-      <CardHeader>
-        Alerts
+      <CardHeader className="flex items-center">
+        <div>
+          Alerts
+        </div>
+        <ApplyAlertsButton />
       </CardHeader>
       <CardDivider />
       <SiloCardBody />

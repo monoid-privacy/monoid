@@ -92,32 +92,33 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateCategory          func(childComplexity int, input *model.CreateCategoryInput) int
-		CreateDataSource        func(childComplexity int, input *model.CreateDataSourceInput) int
-		CreateProperty          func(childComplexity int, input *model.CreatePropertyInput) int
-		CreatePurpose           func(childComplexity int, input *model.CreatePurposeInput) int
-		CreateSiloDefinition    func(childComplexity int, input *model.CreateSiloDefinitionInput) int
-		CreateSiloSpecification func(childComplexity int, input *model.CreateSiloSpecificationInput) int
-		CreateSubject           func(childComplexity int, input *model.CreateSubjectInput) int
-		CreateWorkspace         func(childComplexity int, input model.CreateWorkspaceInput) int
-		DeleteCategory          func(childComplexity int, id string) int
-		DeleteDataSource        func(childComplexity int, id string) int
-		DeleteProperty          func(childComplexity int, id string) int
-		DeletePurpose           func(childComplexity int, id string) int
-		DeleteSiloDefinition    func(childComplexity int, id string) int
-		DeleteSiloSpecification func(childComplexity int, id string) int
-		DeleteSubject           func(childComplexity int, id string) int
-		DeleteWorkspace         func(childComplexity int, id *string) int
-		DetectSiloSources       func(childComplexity int, workspaceID string, id string) int
-		HandleDiscovery         func(childComplexity int, input *model.HandleDiscoveryInput) int
-		UpdateCategory          func(childComplexity int, input *model.UpdateCategoryInput) int
-		UpdateDataSource        func(childComplexity int, input *model.UpdateDataSourceInput) int
-		UpdateProperty          func(childComplexity int, input *model.UpdatePropertyInput) int
-		UpdatePurpose           func(childComplexity int, input *model.UpdatePurposeInput) int
-		UpdateSiloDefinition    func(childComplexity int, input *model.UpdateSiloDefinitionInput) int
-		UpdateSiloScanConfig    func(childComplexity int, input model.SiloScanConfigInput) int
-		UpdateSiloSpecification func(childComplexity int, input *model.UpdateSiloSpecificationInput) int
-		UpdateSubject           func(childComplexity int, input *model.UpdateSubjectInput) int
+		CreateCategory           func(childComplexity int, input *model.CreateCategoryInput) int
+		CreateDataSource         func(childComplexity int, input *model.CreateDataSourceInput) int
+		CreateProperty           func(childComplexity int, input *model.CreatePropertyInput) int
+		CreatePurpose            func(childComplexity int, input *model.CreatePurposeInput) int
+		CreateSiloDefinition     func(childComplexity int, input *model.CreateSiloDefinitionInput) int
+		CreateSiloSpecification  func(childComplexity int, input *model.CreateSiloSpecificationInput) int
+		CreateSubject            func(childComplexity int, input *model.CreateSubjectInput) int
+		CreateWorkspace          func(childComplexity int, input model.CreateWorkspaceInput) int
+		DeleteCategory           func(childComplexity int, id string) int
+		DeleteDataSource         func(childComplexity int, id string) int
+		DeleteProperty           func(childComplexity int, id string) int
+		DeletePurpose            func(childComplexity int, id string) int
+		DeleteSiloDefinition     func(childComplexity int, id string) int
+		DeleteSiloSpecification  func(childComplexity int, id string) int
+		DeleteSubject            func(childComplexity int, id string) int
+		DeleteWorkspace          func(childComplexity int, id *string) int
+		DetectSiloSources        func(childComplexity int, workspaceID string, id string) int
+		HandleAllOpenDiscoveries func(childComplexity int, input *model.HandleAllDiscoveriesInput) int
+		HandleDiscovery          func(childComplexity int, input *model.HandleDiscoveryInput) int
+		UpdateCategory           func(childComplexity int, input *model.UpdateCategoryInput) int
+		UpdateDataSource         func(childComplexity int, input *model.UpdateDataSourceInput) int
+		UpdateProperty           func(childComplexity int, input *model.UpdatePropertyInput) int
+		UpdatePurpose            func(childComplexity int, input *model.UpdatePurposeInput) int
+		UpdateSiloDefinition     func(childComplexity int, input *model.UpdateSiloDefinitionInput) int
+		UpdateSiloScanConfig     func(childComplexity int, input model.SiloScanConfigInput) int
+		UpdateSiloSpecification  func(childComplexity int, input *model.UpdateSiloSpecificationInput) int
+		UpdateSubject            func(childComplexity int, input *model.UpdateSubjectInput) int
 	}
 
 	NewCategoryDiscovery struct {
@@ -241,6 +242,7 @@ type MutationResolver interface {
 	DeleteSubject(ctx context.Context, id string) (*string, error)
 	DetectSiloSources(ctx context.Context, workspaceID string, id string) (*model.Job, error)
 	HandleDiscovery(ctx context.Context, input *model.HandleDiscoveryInput) (*model.DataDiscovery, error)
+	HandleAllOpenDiscoveries(ctx context.Context, input *model.HandleAllDiscoveriesInput) ([]*model.DataDiscovery, error)
 	CreateSiloDefinition(ctx context.Context, input *model.CreateSiloDefinitionInput) (*model.SiloDefinition, error)
 	UpdateSiloDefinition(ctx context.Context, input *model.UpdateSiloDefinitionInput) (*model.SiloDefinition, error)
 	DeleteSiloDefinition(ctx context.Context, id string) (*string, error)
@@ -659,6 +661,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DetectSiloSources(childComplexity, args["workspaceId"].(string), args["id"].(string)), true
+
+	case "Mutation.handleAllOpenDiscoveries":
+		if e.complexity.Mutation.HandleAllOpenDiscoveries == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_handleAllOpenDiscoveries_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.HandleAllOpenDiscoveries(childComplexity, args["input"].(*model.HandleAllDiscoveriesInput)), true
 
 	case "Mutation.handleDiscovery":
 		if e.complexity.Mutation.HandleDiscovery == nil {
@@ -1219,6 +1233,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateSiloSpecificationInput,
 		ec.unmarshalInputCreateSubjectInput,
 		ec.unmarshalInputCreateWorkspaceInput,
+		ec.unmarshalInputHandleAllDiscoveriesInput,
 		ec.unmarshalInputHandleDiscoveryInput,
 		ec.unmarshalInputKVPair,
 		ec.unmarshalInputSiloScanConfigInput,
@@ -1537,8 +1552,14 @@ input HandleDiscoveryInput {
     action: DiscoveryAction!
 }
 
+input HandleAllDiscoveriesInput {
+    siloId: ID!
+    action: DiscoveryAction!
+}
+
 extend type Mutation {
     handleDiscovery(input: HandleDiscoveryInput): DataDiscovery
+    handleAllOpenDiscoveries(input: HandleAllDiscoveriesInput): [DataDiscovery]
 }`, BuiltIn: false},
 	{Name: "../schema/jobs.graphqls", Input: `scalar Time
 
@@ -1900,6 +1921,21 @@ func (ec *executionContext) field_Mutation_detectSiloSources_args(ctx context.Co
 		}
 	}
 	args["id"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_handleAllOpenDiscoveries_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.HandleAllDiscoveriesInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOHandleAllDiscoveriesInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐHandleAllDiscoveriesInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -4649,6 +4685,70 @@ func (ec *executionContext) fieldContext_Mutation_handleDiscovery(ctx context.Co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_handleDiscovery_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_handleAllOpenDiscoveries(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_handleAllOpenDiscoveries(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().HandleAllOpenDiscoveries(rctx, fc.Args["input"].(*model.HandleAllDiscoveriesInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.DataDiscovery)
+	fc.Result = res
+	return ec.marshalODataDiscovery2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataDiscovery(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_handleAllOpenDiscoveries(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_DataDiscovery_id(ctx, field)
+			case "type":
+				return ec.fieldContext_DataDiscovery_type(ctx, field)
+			case "status":
+				return ec.fieldContext_DataDiscovery_status(ctx, field)
+			case "data":
+				return ec.fieldContext_DataDiscovery_data(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_DataDiscovery_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DataDiscovery", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_handleAllOpenDiscoveries_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -9897,6 +9997,42 @@ func (ec *executionContext) unmarshalInputCreateWorkspaceInput(ctx context.Conte
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputHandleAllDiscoveriesInput(ctx context.Context, obj interface{}) (model.HandleAllDiscoveriesInput, error) {
+	var it model.HandleAllDiscoveriesInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"siloId", "action"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "siloId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("siloId"))
+			it.SiloID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "action":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("action"))
+			it.Action, err = ec.unmarshalNDiscoveryAction2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryAction(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputHandleDiscoveryInput(ctx context.Context, obj interface{}) (model.HandleDiscoveryInput, error) {
 	var it model.HandleDiscoveryInput
 	asMap := map[string]interface{}{}
@@ -10792,6 +10928,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_handleDiscovery(ctx, field)
+			})
+
+		case "handleAllOpenDiscoveries":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_handleAllOpenDiscoveries(ctx, field)
 			})
 
 		case "createSiloDefinition":
@@ -12946,6 +13088,14 @@ func (ec *executionContext) marshalODiscoveryStatus2ᚖgithubᚗcomᚋbristᚑai
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) unmarshalOHandleAllDiscoveriesInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐHandleAllDiscoveriesInput(ctx context.Context, v interface{}) (*model.HandleAllDiscoveriesInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputHandleAllDiscoveriesInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOHandleDiscoveryInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐHandleDiscoveryInput(ctx context.Context, v interface{}) (*model.HandleDiscoveryInput, error) {
