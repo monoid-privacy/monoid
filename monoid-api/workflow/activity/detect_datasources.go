@@ -13,7 +13,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/mitchellh/mapstructure"
-	"github.com/rs/zerolog/log"
 	"go.temporal.io/sdk/activity"
 	"gorm.io/gorm"
 )
@@ -172,7 +171,14 @@ func getPropertyDiscoveries(
 // processDiscoveries processes the list of new discoveries, eliminating any duplicates,
 // updating them instead of creating, and closing any discoveries that are no longer relevant.
 // Returns the number of new discoveries made.
-func processDiscoveries(db *gorm.DB, silo *model.SiloDefinition, discoveries []*model.DataDiscovery) (int, error) {
+func processDiscoveries(
+	ctx context.Context,
+	db *gorm.DB,
+	silo *model.SiloDefinition,
+	discoveries []*model.DataDiscovery,
+) (int, error) {
+	logger := activity.GetLogger(ctx)
+
 	openDiscoveries := []*model.DataDiscovery{}
 	if err := db.Where("silo_definition_id = ?", silo.ID).Where(
 		"status = ?",
@@ -190,7 +196,7 @@ func processDiscoveries(db *gorm.DB, silo *model.SiloDefinition, discoveries []*
 	for _, d := range openDiscoveries {
 		ds, err := d.DeserializeData()
 		if err != nil {
-			log.Err(err).Msg("Error deserializing data")
+			logger.Error("Error deserializing data: %v", err)
 			continue
 		}
 
@@ -208,7 +214,7 @@ func processDiscoveries(db *gorm.DB, silo *model.SiloDefinition, discoveries []*
 		for _, d := range discoveries {
 			ds, err := d.DeserializeData()
 			if err != nil {
-				log.Err(err).Msg("Error deserializing data")
+				logger.Error("Error deserializing data: %v", err)
 				continue
 			}
 
@@ -246,7 +252,7 @@ func processDiscoveries(db *gorm.DB, silo *model.SiloDefinition, discoveries []*
 		for _, d := range openDiscoveries {
 			ds, err := d.DeserializeData()
 			if err != nil {
-				log.Err(err).Msg("Error deserializing data")
+				logger.Error("Error deserializing data: %v", err)
 				continue
 			}
 
@@ -310,6 +316,7 @@ func scanProtocol(
 	config map[string]interface{},
 	schemas []monoidprotocol.MonoidSchema,
 ) (map[dataSourceMatcher]map[string][]scanner.RuleMatch, error) {
+	logger := activity.GetLogger(ctx)
 	matchers := map[dataSourceMatcher]scanner.Scanner{}
 	for _, s := range schemas {
 		sc, err := basicscanner.NewBasicScanner(s)
@@ -338,7 +345,7 @@ func scanProtocol(
 		)]
 
 		if err := matcher.Scan(&record); err != nil {
-			log.Err(err).Msg("Error scanning record")
+			logger.Error("Error scanning record: %v", err)
 		}
 	}
 
@@ -519,7 +526,7 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) (in
 		})
 	}
 
-	nDiscoveries, err := processDiscoveries(a.Conf.DB, &dataSilo, dataDiscoveries)
+	nDiscoveries, err := processDiscoveries(ctx, a.Conf.DB, &dataSilo, dataDiscoveries)
 	if err != nil {
 		return 0, err
 	}

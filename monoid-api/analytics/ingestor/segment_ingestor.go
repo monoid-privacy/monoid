@@ -51,7 +51,7 @@ func (si *SegmentIngestor) Identify(userID *string, traits map[string]interface{
 
 	si.client.Enqueue(analytics.Identify{
 		UserId: *userID,
-		Traits: analytics.NewTraits(),
+		Traits: segTraits,
 	})
 }
 

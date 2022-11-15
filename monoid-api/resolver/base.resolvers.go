@@ -60,11 +60,14 @@ func (r *mutationResolver) CreateWorkspace(ctx context.Context, input model.Crea
 		"workspaceId":   workspace.ID,
 	}
 
+	identifyData := map[string]interface{}{}
+
 	if !workspaceSettings.AnonymizeData {
 		data["email"] = workspaceSettings.Email
-		r.Conf.AnalyticsIngestor.Identify(nil, map[string]interface{}{"email": workspaceSettings.Email})
+		identifyData["email"] = workspaceSettings.Email
 	}
 
+	r.Conf.AnalyticsIngestor.Identify(nil, identifyData)
 	r.Conf.AnalyticsIngestor.Track("createWorkspace", nil, data)
 
 	return &workspace, nil
