@@ -27,6 +27,7 @@ import Table from '../../../../../components/Table';
 import ToastContext from '../../../../../contexts/ToastContext';
 import CategoryBadge from './CategoryBadge';
 import { dedup } from '../../../../../utils/utils';
+import Pagination from '../../../../../components/Pagination';
 
 dayjs.extend(updateLocale);
 dayjs.extend(duration);
@@ -36,42 +37,45 @@ const deletedDatasourceError = 'Error finding data source.';
 const deletedPropertyError = 'Error finding property.';
 
 const GET_DISCOVERIES = gql`
-  query GetScanSchedule($id: ID!, $workspaceId: ID!) {
+  query GetDiscoveries($id: ID!, $workspaceId: ID!, $limit: Int!, $offset: Int!) {
     workspace(id: $workspaceId) {
       siloDefinition(id: $id) {
         id
-        discoveries {
-          id
-          type
-          status
-          createdAt
-          data {
-            __typename
-            ... on NewDataSourceDiscovery {
-              name
-              group
-              properties {
+        discoveries(limit: $limit, offset: $offset) {
+          discoveries {
+            id
+            type
+            status
+            createdAt
+            data {
+              __typename
+              ... on NewDataSourceDiscovery {
                 name
+                group
+                properties {
+                  name
+                  categories {
+                    categoryId
+                  }
+                }
+              }
+              ... on NewPropertyDiscovery {
+                name
+                dataSourceId
                 categories {
                   categoryId
                 }
               }
-            }
-            ... on NewPropertyDiscovery {
-              name
-              dataSourceId
-              categories {
+              ... on NewCategoryDiscovery {
+                propertyId
                 categoryId
               }
-            }
-            ... on NewCategoryDiscovery {
-              propertyId
-              categoryId
-            }
-            ... on ObjectMissingDiscovery {
-              id
+              ... on ObjectMissingDiscovery {
+                id
+              }
             }
           }
+          numDiscoveries
         }
       }
     }
@@ -475,12 +479,19 @@ function DiscoveryItem(props: { discovery: DataDiscovery }) {
   );
 }
 
+const limit = 10;
+
 function SiloCardBody() {
   const { siloId, id } = useParams<{ siloId: string, id: string }>();
-  const { data, loading, error } = useQuery(GET_DISCOVERIES, {
+  const [offset, setOffset] = useState(0);
+  const {
+    data, loading, error, fetchMore,
+  } = useQuery(GET_DISCOVERIES, {
     variables: {
       id: siloId,
       workspaceId: id,
+      limit,
+      offset,
     },
   });
 
@@ -497,19 +508,32 @@ function SiloCardBody() {
   }
 
   return (
-    <ul className="divide-y divide-gray-200">
-      {
-        data.workspace.siloDefinition.discoveries.map((d: DataDiscovery) => (
-          <DiscoveryItem key={d.id!} discovery={d} />
-        ))
-      }
-    </ul>
+    <>
+      <ul className="divide-y divide-gray-200">
+        {
+          data.workspace.siloDefinition.discoveries.discoveries.map((d: DataDiscovery) => (
+            <DiscoveryItem key={d.id!} discovery={d} />
+          ))
+        }
+      </ul>
+      <Pagination
+        className="mt-5"
+        limit={limit}
+        offset={offset}
+        onOffsetChange={(o) => fetchMore({
+          variables: {
+            offset: o,
+          },
+        }).then(() => setOffset(o))}
+        totalCount={data?.workspace.siloDefinition.discoveries.numDiscoveries || 0}
+      />
+    </>
   );
 }
 
 export default function SiloAlerts() {
   return (
-    <Card>
+    <Card innerClassName="py-0 pt-5 pb-0 sm:pb-0">
       <CardHeader>
         Alerts
       </CardHeader>

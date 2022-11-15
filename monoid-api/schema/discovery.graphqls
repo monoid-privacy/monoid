@@ -44,8 +44,13 @@ type DataDiscovery {
     createdAt: Time!
 }
 
-extend type SiloDefinition {
+type DataDiscoveriesListResult {
     discoveries: [DataDiscovery]
+    numDiscoveries: Int!
+}
+
+extend type SiloDefinition {
+    discoveries(limit: Int!, offset: Int!): DataDiscoveriesListResult!
 }
 
 enum DiscoveryAction {

@@ -4,7 +4,7 @@ import { classNames } from '../utils/utils';
 
 interface ButtonProps extends Omit<React.HTMLProps<HTMLButtonElement>, 'size'> {
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl',
-  variant?: 'primary' | 'white' | 'danger',
+  variant?: 'primary' | 'white' | 'outline-white' | 'danger',
   type?: 'button' | 'link',
   to?: string
 }
@@ -40,12 +40,24 @@ export default function Button(props: ButtonProps) {
     case 'danger':
       classes = classNames(classes, 'text-white bg-red-600 hover:bg-red-700 focus:ring-red-500 border-transparent');
       break;
+    case 'outline-white': {
+      let colorClasses = 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50';
+
+      if (disabled) {
+        colorClasses = 'border border-gray-100 bg-white text-gray-200';
+      }
+
+      classes = classNames(classes, colorClasses);
+
+      break;
+    }
     default: {
       let colorClasses = 'text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500 border-transparent';
 
       if (disabled) {
         colorClasses = 'text-gray-200 bg-indigo-400 border-transparent';
       }
+
       classes = classNames(classes, colorClasses);
     }
   }

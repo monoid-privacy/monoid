@@ -34,10 +34,12 @@ const RUN_SOURCE_SCAN = gql`
 
 const RUNNING_DETECT_SILO_JOBS = gql`
   query RunningDiscoverJobs($resourceId: ID!) {
-    jobs(resourceId: $resourceId, jobType: "discover_sources", status: [RUNNING, QUEUED]) {
-      id
-      jobType
-      status
+    jobs(resourceId: $resourceId, jobType: "discover_sources", status: [RUNNING, QUEUED], limit: 1, offset: 0) {
+      jobs {
+        id
+        jobType
+        status
+      }
     }
   }
 `;
@@ -84,11 +86,12 @@ function ScanRegion(props: {
     previousData,
     loading,
     error,
-  } = useQuery<{ jobs: Job[] }>(RUNNING_DETECT_SILO_JOBS, {
+  } = useQuery<{ jobs: { jobs: Job[] } }>(RUNNING_DETECT_SILO_JOBS, {
     variables: {
       resourceId: siloId,
     },
     pollInterval: 5000,
+    fetchPolicy: 'network-only',
   });
 
   useEffect(() => {
@@ -96,11 +99,11 @@ function ScanRegion(props: {
       return;
     }
 
-    if (previousData?.jobs.length === 0 && data?.jobs.length !== 0) {
+    if (previousData?.jobs.jobs.length === 0 && data?.jobs.jobs.length !== 0) {
       onScanStatusChange('STARTED');
     }
 
-    if (previousData?.jobs.length !== 0 && data?.jobs.length === 0) {
+    if (previousData?.jobs.jobs.length !== 0 && data?.jobs.jobs.length === 0) {
       onScanStatusChange('COMPLETED');
     }
   }, [data, previousData]);
@@ -115,7 +118,7 @@ function ScanRegion(props: {
     );
   }
 
-  if (data!.jobs.length === 0) {
+  if (data!.jobs.jobs.length === 0) {
     return (
       <div>
         {children}
@@ -266,7 +269,10 @@ export default function SiloDataSources() {
                 client.writeQuery({
                   query: RUNNING_DETECT_SILO_JOBS,
                   data: {
-                    jobs: [resData!.detectSiloSources],
+                    jobs: {
+                      jobs: [resData!.detectSiloSources],
+                      numJobs: 1,
+                    },
                   },
                   variables: {
                     resourceId: siloId,

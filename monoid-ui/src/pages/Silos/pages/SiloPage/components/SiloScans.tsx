@@ -1,7 +1,7 @@
 import {
   ApolloError, gql, useMutation, useQuery,
 } from '@apollo/client';
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { CheckCircleIcon, QuestionMarkCircleIcon, XCircleIcon } from '@heroicons/react/24/solid';
 import dayjs from 'dayjs';
@@ -17,18 +17,27 @@ import Spinner from '../../../../../components/Spinner';
 import { Job } from '../../../../../lib/models';
 import Text from '../../../../../components/Text';
 import ToastContext from '../../../../../contexts/ToastContext';
+import Pagination from '../../../../../components/Pagination';
 
 dayjs.extend(updateLocale);
 dayjs.extend(duration);
 dayjs.extend(relativeTime);
 
 const GET_SCANS = gql`
-  query RunningDiscoverJobs($resourceId: ID!) {
-    jobs(resourceId: $resourceId, jobType: "discover_sources") {
-      id
-      jobType
-      status
-      createdAt
+  query DiscoverJobs($resourceId: ID!, $limit: Int!, $offset: Int!) {
+    jobs(
+      resourceId: $resourceId,
+      jobType: "discover_sources",
+      limit: $limit,
+      offset: $offset
+    ) {
+      jobs {
+        id
+        jobType
+        status
+        createdAt
+      }
+      numJobs
     }
   }
 `;
@@ -134,16 +143,26 @@ function JobRow(props: {
   );
 }
 
+const limit = 10;
+
 function JobList(props: {
   siloID: string
 }) {
   const { siloID } = props;
+  const [offset, setOffset] = useState(0);
 
-  const { data, loading, error } = useQuery<{
-    jobs: Job[]
+  const {
+    data, loading, error, fetchMore,
+  } = useQuery<{
+    jobs: {
+      jobs: Job[],
+      numJobs: number
+    }
   }>(GET_SCANS, {
     variables: {
       resourceId: siloID,
+      limit,
+      offset,
     },
   });
 
@@ -160,13 +179,26 @@ function JobList(props: {
   }
 
   return (
-    <ul className="divide-y divide-gray-200">
-      {
-        data?.jobs.map((j) => (
-          <JobRow key={j.id} job={j} />
-        ))
-      }
-    </ul>
+    <>
+      <ul className="divide-y divide-gray-200">
+        {
+          data?.jobs.jobs.map((j) => (
+            <JobRow key={j.id} job={j} />
+          ))
+        }
+      </ul>
+      <Pagination
+        className="mt-5"
+        limit={limit}
+        offset={offset}
+        onOffsetChange={(o) => fetchMore({
+          variables: {
+            offset: o,
+          },
+        }).then(() => setOffset(o))}
+        totalCount={data?.jobs.numJobs || 0}
+      />
+    </>
   );
 }
 
@@ -246,7 +278,7 @@ export default function SiloScans() {
   return (
     <div className="space-y-4">
       <ScanSettingsCard />
-      <Card>
+      <Card innerClassName="py-0 pt-5 pb-0 sm:pb-0">
         <CardHeader>
           Scan History
         </CardHeader>

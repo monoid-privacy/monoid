@@ -53,11 +53,6 @@ func (r *mutationResolver) CreateDataSource(ctx context.Context, input *model.Cr
 	return &dataSource, nil
 }
 
-// ReviewDataSource is the resolver for the reviewDataSource field.
-func (r *mutationResolver) ReviewDataSource(ctx context.Context, input model.ReviewDataSourcesInput) ([]*model.Property, error) {
-	panic(fmt.Errorf("not implemented: ReviewDataSource - reviewDataSource"))
-}
-
 // CreateSiloSpecification is the resolver for the createSiloSpecification field.
 func (r *mutationResolver) CreateSiloSpecification(ctx context.Context, input *model.CreateSiloSpecificationInput) (*model.SiloSpecification, error) {
 	siloSpecification := model.SiloSpecification{

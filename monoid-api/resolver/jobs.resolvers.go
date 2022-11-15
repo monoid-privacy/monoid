@@ -5,22 +5,34 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/brist-ai/monoid/model"
+	"gorm.io/gorm"
 )
 
 // Jobs is the resolver for the jobs field.
-func (r *queryResolver) Jobs(ctx context.Context, resourceID string, jobType string, status []*model.JobStatus) ([]*model.Job, error) {
+func (r *queryResolver) Jobs(ctx context.Context, resourceID string, jobType string, status []*model.JobStatus, limit int, offset int) (*model.JobsResult, error) {
 	jobs := []*model.Job{}
 
-	q := r.Conf.DB.Order("created_at desc").Where("resource_id = ?", resourceID).Where("job_type = ?", jobType)
+	q := r.Conf.DB.Debug().Order("created_at desc").Where("resource_id = ?", resourceID).Where("job_type = ?", jobType)
 	if len(status) != 0 {
 		q = q.Where("status IN ?", status)
 	}
 
-	if err := q.Find(&jobs).Error; err != nil {
+	if err := q.Session(&gorm.Session{}).Offset(offset).Limit(limit).Find(&jobs).Error; err != nil {
 		return nil, handleError(err, "Could not find jobs.")
 	}
 
-	return jobs, nil
+	numJobs := int64(0)
+	if err := q.Session(&gorm.Session{}).Model(&model.Job{}).Count(&numJobs).Error; err != nil {
+		return nil, handleError(err, "Error getting job count.")
+	}
+
+	fmt.Println(numJobs)
+
+	return &model.JobsResult{
+		Jobs:    jobs,
+		NumJobs: int(numJobs),
+	}, nil
 }

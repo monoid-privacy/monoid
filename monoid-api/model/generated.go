@@ -57,19 +57,24 @@ type CreateWorkspaceInput struct {
 	Settings []*KVPair `json:"settings"`
 }
 
+type DataDiscoveriesListResult struct {
+	Discoveries    []*DataDiscovery `json:"discoveries"`
+	NumDiscoveries int              `json:"numDiscoveries"`
+}
+
 type HandleDiscoveryInput struct {
 	DiscoveryID string          `json:"discoveryId"`
 	Action      DiscoveryAction `json:"action"`
 }
 
+type JobsResult struct {
+	Jobs    []*Job `json:"jobs"`
+	NumJobs int    `json:"numJobs"`
+}
+
 type KVPair struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
-}
-
-type ReviewDataSourcesInput struct {
-	DataSourceIDs []string     `json:"dataSourceIDs"`
-	ReviewResult  ReviewResult `json:"reviewResult"`
 }
 
 type SiloScanConfigInput struct {
@@ -293,46 +298,5 @@ func (e *JobStatus) UnmarshalGQL(v interface{}) error {
 }
 
 func (e JobStatus) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type ReviewResult string
-
-const (
-	ReviewResultApprove ReviewResult = "APPROVE"
-	ReviewResultDeny    ReviewResult = "DENY"
-)
-
-var AllReviewResult = []ReviewResult{
-	ReviewResultApprove,
-	ReviewResultDeny,
-}
-
-func (e ReviewResult) IsValid() bool {
-	switch e {
-	case ReviewResultApprove, ReviewResultDeny:
-		return true
-	}
-	return false
-}
-
-func (e ReviewResult) String() string {
-	return string(e)
-}
-
-func (e *ReviewResult) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = ReviewResult(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid ReviewResult", str)
-	}
-	return nil
-}
-
-func (e ReviewResult) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }

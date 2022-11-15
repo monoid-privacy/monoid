@@ -16,6 +16,17 @@ type Job {
     updatedAt: Time!
 }
 
+type JobsResult {
+    jobs: [Job!]
+    numJobs: Int!
+}
+
 extend type Query {
-    jobs(resourceId: ID!, jobType: String!, status: [JobStatus]): [Job]
+    jobs(
+        resourceId: ID!,
+        jobType: String!,
+        status: [JobStatus],
+        limit: Int!,
+        offset: Int!
+    ): JobsResult!
 }

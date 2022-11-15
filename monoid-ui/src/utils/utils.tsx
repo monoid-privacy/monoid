@@ -48,6 +48,14 @@ export function faComponent(icon: IconDefinition) {
   return comp;
 }
 
+export function min(a: number, b: number) {
+  return a > b ? b : a;
+}
+
+export function max(a: number, b: number) {
+  return a < b ? b : a;
+}
+
 export function dedup<T>(arr: T[], subset: (t: T) => any) {
   return Array.from(new Map(arr.map((m) => [subset(m), m])).values());
 }
