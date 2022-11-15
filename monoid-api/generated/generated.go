@@ -173,7 +173,7 @@ type ComplexityRoot struct {
 	SiloDefinition struct {
 		DataSources       func(childComplexity int) int
 		Description       func(childComplexity int) int
-		Discoveries       func(childComplexity int, limit int, offset int) int
+		Discoveries       func(childComplexity int, statuses []*model.DiscoveryStatus, limit int, offset int) int
 		ID                func(childComplexity int) int
 		Name              func(childComplexity int) int
 		ScanConfig        func(childComplexity int) int
@@ -271,7 +271,7 @@ type SiloDefinitionResolver interface {
 
 	SiloConfig(ctx context.Context, obj *model.SiloDefinition) (map[string]interface{}, error)
 	ScanConfig(ctx context.Context, obj *model.SiloDefinition) (*model.SiloScanConfig, error)
-	Discoveries(ctx context.Context, obj *model.SiloDefinition, limit int, offset int) (*model.DataDiscoveriesListResult, error)
+	Discoveries(ctx context.Context, obj *model.SiloDefinition, statuses []*model.DiscoveryStatus, limit int, offset int) (*model.DataDiscoveriesListResult, error)
 }
 type WorkspaceResolver interface {
 	Settings(ctx context.Context, obj *model.Workspace) (string, error)
@@ -1035,7 +1035,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.SiloDefinition.Discoveries(childComplexity, args["limit"].(int), args["offset"].(int)), true
+		return e.complexity.SiloDefinition.Discoveries(childComplexity, args["statuses"].([]*model.DiscoveryStatus), args["limit"].(int), args["offset"].(int)), true
 
 	case "SiloDefinition.id":
 		if e.complexity.SiloDefinition.ID == nil {
@@ -1524,7 +1524,7 @@ type DataDiscoveriesListResult {
 }
 
 extend type SiloDefinition {
-    discoveries(limit: Int!, offset: Int!): DataDiscoveriesListResult!
+    discoveries(statuses: [DiscoveryStatus], limit: Int!, offset: Int!): DataDiscoveriesListResult!
 }
 
 enum DiscoveryAction {
@@ -2212,24 +2212,33 @@ func (ec *executionContext) field_Query_workspace_args(ctx context.Context, rawA
 func (ec *executionContext) field_SiloDefinition_discoveries_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["limit"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+	var arg0 []*model.DiscoveryStatus
+	if tmp, ok := rawArgs["statuses"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statuses"))
+		arg0, err = ec.unmarshalODiscoveryStatus2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryStatus(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["limit"] = arg0
+	args["statuses"] = arg0
 	var arg1 int
-	if tmp, ok := rawArgs["offset"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
 		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["offset"] = arg1
+	args["limit"] = arg1
+	var arg2 int
+	if tmp, ok := rawArgs["offset"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+		arg2, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["offset"] = arg2
 	return args, nil
 }
 
@@ -6906,7 +6915,7 @@ func (ec *executionContext) _SiloDefinition_discoveries(ctx context.Context, fie
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.SiloDefinition().Discoveries(rctx, obj, fc.Args["limit"].(int), fc.Args["offset"].(int))
+		return ec.resolvers.SiloDefinition().Discoveries(rctx, obj, fc.Args["statuses"].([]*model.DiscoveryStatus), fc.Args["limit"].(int), fc.Args["offset"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12860,6 +12869,83 @@ func (ec *executionContext) marshalODataSource2ᚖgithubᚗcomᚋbristᚑaiᚋmo
 		return graphql.Null
 	}
 	return ec._DataSource(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalODiscoveryStatus2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryStatus(ctx context.Context, v interface{}) ([]*model.DiscoveryStatus, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.DiscoveryStatus, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalODiscoveryStatus2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryStatus(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalODiscoveryStatus2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryStatus(ctx context.Context, sel ast.SelectionSet, v []*model.DiscoveryStatus) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalODiscoveryStatus2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryStatus(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalODiscoveryStatus2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryStatus(ctx context.Context, v interface{}) (*model.DiscoveryStatus, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.DiscoveryStatus)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalODiscoveryStatus2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryStatus(ctx context.Context, sel ast.SelectionSet, v *model.DiscoveryStatus) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalOHandleDiscoveryInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐHandleDiscoveryInput(ctx context.Context, v interface{}) (*model.HandleDiscoveryInput, error) {

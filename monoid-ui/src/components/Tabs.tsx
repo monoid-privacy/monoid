@@ -3,7 +3,7 @@ import { classNames } from '../utils/utils';
 
 interface TabsProps extends React.HTMLProps<HTMLDivElement> {
   tabs: {
-    tabName: string,
+    tabName: React.ReactNode,
     tabKey: string,
     tabBody: React.ReactNode
   }[],

@@ -3,8 +3,9 @@ import { classNames } from '../utils/utils';
 
 export type BadgeColor = 'blue' | 'green' | 'yellow' | 'red';
 
-interface BadgeProps extends React.HTMLProps<HTMLSpanElement> {
+interface BadgeProps extends Omit<React.HTMLProps<HTMLSpanElement>, 'size'> {
   color?: BadgeColor
+  size?: 'sm' | 'md'
   actions?: {
     onClick: () => void
     content: React.ReactNode,
@@ -13,7 +14,7 @@ interface BadgeProps extends React.HTMLProps<HTMLSpanElement> {
 
 export default function Badge(props: BadgeProps) {
   const {
-    className, children, color, actions, ...rest
+    className, children, color, actions, size, ...rest
   } = props;
   let colorClasses = '';
   let actionClasses = '';
@@ -35,11 +36,23 @@ export default function Badge(props: BadgeProps) {
       colorClasses = 'bg-blue-100 text-blue-800';
       actionClasses = 'hover:bg-blue-500';
   }
+
+  let textClasses: string;
+  switch (size) {
+    case 'sm':
+      textClasses = 'text-xs';
+      break;
+    case 'md':
+    default:
+      textClasses = 'text-sm';
+  }
+
   return (
     <span
       className={
         classNames(
-          'inline-flex items-center rounded-md text-sm font-medium overflow-hidden',
+          'inline-flex items-center rounded-md font-medium overflow-hidden',
+          textClasses,
           colorClasses,
           className,
         )
@@ -69,4 +82,5 @@ export default function Badge(props: BadgeProps) {
 Badge.defaultProps = {
   color: 'blue',
   actions: [],
+  size: 'md',
 };

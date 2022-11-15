@@ -17,6 +17,7 @@ const SILO_DATA_SOURCES = gql`
 const UPDATE_CATEGORIES = gql`
   mutation UpdateCategories($input: UpdatePropertyInput!) {
     updateProperty(input: $input) {
+      __typename
       id
       categories {
         id

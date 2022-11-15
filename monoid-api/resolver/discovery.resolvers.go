@@ -192,12 +192,18 @@ func (r *mutationResolver) HandleDiscovery(ctx context.Context, input *model.Han
 }
 
 // Discoveries is the resolver for the discoveries field.
-func (r *siloDefinitionResolver) Discoveries(ctx context.Context, obj *model.SiloDefinition, limit int, offset int) (*model.DataDiscoveriesListResult, error) {
+func (r *siloDefinitionResolver) Discoveries(ctx context.Context, obj *model.SiloDefinition, statuses []*model.DiscoveryStatus, limit int, offset int) (*model.DataDiscoveriesListResult, error) {
 	discoveries := []*model.DataDiscovery{}
 	q := r.Conf.DB.Where(
 		"silo_definition_id = ?",
 		obj.ID,
-	).Order(
+	)
+
+	if len(statuses) != 0 {
+		q = q.Where("status IN ?", statuses)
+	}
+
+	q = q.Order(
 		"(CASE WHEN status = 'OPEN' THEN 1 ELSE 2 END) asc, created_at desc, id desc",
 	)
 
@@ -206,7 +212,7 @@ func (r *siloDefinitionResolver) Discoveries(ctx context.Context, obj *model.Sil
 	}
 
 	count := int64(0)
-	if err := q.Session(&gorm.Session{}).Model(&model.DataDiscovery{}).Count(&count).Error; err != nil {
+	if err := q.Debug().Session(&gorm.Session{}).Model(&model.DataDiscovery{}).Count(&count).Error; err != nil {
 		return nil, handleError(err, "Error getting discovery count.")
 	}
 

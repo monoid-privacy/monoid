@@ -6,7 +6,7 @@ import PageHeader from '../../../../components/PageHeader';
 import Spinner from '../../../../components/Spinner';
 import Tabs from '../../../../components/Tabs';
 import { SiloDefinition } from '../../../../lib/models';
-import SiloAlerts from './components/SiloAlerts';
+import SiloAlerts, { SiloAlertsTabHeader } from './components/SiloAlerts';
 import SiloConfig from './components/SiloConfig';
 import SiloDataSources from './components/SiloDataSources';
 import SiloScans from './components/SiloScans';
@@ -81,7 +81,7 @@ export default function SiloPage(
             tabKey: 'scanning',
             tabBody: <SiloScans />,
           }, {
-            tabName: 'Alerts',
+            tabName: <SiloAlertsTabHeader />,
             tabKey: 'alerts',
             tabBody: <SiloAlerts />,
           },

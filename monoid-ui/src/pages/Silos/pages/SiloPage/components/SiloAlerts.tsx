@@ -36,6 +36,18 @@ dayjs.extend(relativeTime);
 const deletedDatasourceError = 'Error finding data source.';
 const deletedPropertyError = 'Error finding property.';
 
+const GET_NUM_ACTIVE_DISCOVERIES = gql`
+  query GetNumActiveDiscoveries($id: ID!, $workspaceId: ID!) {
+    workspace(id: $workspaceId) {
+      siloDefinition(id: $id) {
+        discoveries(limit: 1, offset: 0, statuses: [OPEN]) {
+          numDiscoveries
+        }
+      }
+    }
+  }
+`;
+
 const GET_DISCOVERIES = gql`
   query GetDiscoveries($id: ID!, $workspaceId: ID!, $limit: Int!, $offset: Int!) {
     workspace(id: $workspaceId) {
@@ -145,7 +157,7 @@ function DataSourceBody(props: {
             ) || [],
             (v) => v.categoryId,
           ).map(
-            (c) => <CategoryBadge categoryID={c.categoryId} color="red" />,
+            (c) => <CategoryBadge key={c.categoryId} categoryID={c.categoryId} color="red" />,
           )}
         </div>
       </div>
@@ -480,6 +492,35 @@ function DiscoveryItem(props: { discovery: DataDiscovery }) {
 }
 
 const limit = 10;
+
+export function SiloAlertsTabHeader() {
+  const { siloId, id } = useParams<{ siloId: string, id: string }>();
+  const { data, loading, error } = useQuery(GET_NUM_ACTIVE_DISCOVERIES, {
+    variables: {
+      id: siloId,
+      workspaceId: id,
+    },
+  });
+
+  let badge: React.ReactNode;
+
+  if (!loading && !error
+    && data.workspace.siloDefinition.discoveries.numDiscoveries !== 0) {
+    badge = (
+      <Badge size="sm">
+        {data.workspace.siloDefinition.discoveries.numDiscoveries}
+      </Badge>
+    );
+  }
+
+  return (
+    <div className="flex space-x-2">
+      <div>Alerts</div>
+      {' '}
+      {badge}
+    </div>
+  );
+}
 
 function SiloCardBody() {
   const { siloId, id } = useParams<{ siloId: string, id: string }>();
