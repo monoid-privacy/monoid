@@ -51,6 +51,7 @@ var Models = []interface{}{
 	model.PrimaryKeyValue{},
 	model.DataDiscovery{},
 	model.OSSRegistration{},
+	model.QueryRecord{},
 }
 
 func InitDb(dbInfo DBInfo) *gorm.DB {

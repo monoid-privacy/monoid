@@ -68,5 +68,5 @@ extend type Mutation {
 
 
     createUserDataRequest(input: UserDataRequestInput): Request
-    executeUserDataRequest(requestId: ID!): [MonoidRecordResponse!]
+    executeUserDataRequest(requestId: ID!, workspaceId: ID!): Job
 }

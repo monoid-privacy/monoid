@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/brist-ai/monoid/model"
 	"github.com/brist-ai/monoid/monoidprotocol"
 	"github.com/brist-ai/monoid/monoidprotocol/docker"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -44,19 +46,23 @@ func succeedRequest(requestStatusId string, db *gorm.DB) error {
 	return nil
 }
 
-func (a *Activity) ExecuteRequest(ctx context.Context, requestId string) (*[]monoidprotocol.MonoidRecord, error) {
+func monoidRecordToString(record monoidprotocol.MonoidRecord) string {
+	return fmt.Sprintf("%v", record.Data)
+}
+
+func (a *Activity) ExecuteRequest(ctx context.Context, requestId string) error {
 	var newRecords *[]monoidprotocol.MonoidRecord
 	var err error
 	allErrors := []error{}
-	records := []monoidprotocol.MonoidRecord{}
 	request := model.Request{}
+	queryRecords := []model.QueryRecord{}
 
 	if err := a.Conf.DB.Preload("PrimaryKeyValues").Preload("RequestStatuses").Where("id = ?", requestId).First(&request).Error; err != nil {
-		return nil, err
+		return err
 	}
 
 	if request.Type != model.Delete && request.Type != model.Query {
-		return nil, errors.New("invalid request type")
+		return errors.New("invalid request type")
 	}
 
 	for _, requestStatus := range request.RequestStatuses {
@@ -69,14 +75,31 @@ func (a *Activity) ExecuteRequest(ctx context.Context, requestId string) (*[]mon
 		if err = succeedRequest(requestStatus.ID, a.Conf.DB); err != nil {
 			allErrors = append(allErrors, err)
 		}
-		records = append(records, *newRecords...)
+
+		if request.Type == model.Query {
+			stringRecords := []string{}
+			if newRecords != nil && len(*newRecords) > 0 {
+				for _, newRecord := range *newRecords {
+					stringRecords = append(stringRecords, monoidRecordToString(newRecord))
+				}
+				queryRecords = append(queryRecords, model.QueryRecord{
+					ID:              uuid.NewString(),
+					RequestStatusID: requestStatus.ID,
+					Records:         fmt.Sprintf("%v", stringRecords),
+				})
+
+				if err = a.Conf.DB.Create(&queryRecords).Error; err != nil {
+					allErrors = append(allErrors, err)
+				}
+			}
+		}
 	}
 
 	allErrorsCombined := newCombinedErrors(allErrors)
 	if len(allErrors) == 0 {
-		return &records, nil
+		return nil
 	}
-	return &records, allErrorsCombined
+	return allErrorsCombined
 }
 
 func (a *Activity) ExecuteRequestOnDataSource(ctx context.Context, requestStatusId string, requestType string) (*[]monoidprotocol.MonoidRecord, error) {
@@ -88,7 +111,6 @@ func (a *Activity) ExecuteRequestOnDataSource(ctx context.Context, requestStatus
 		return nil, errors.New("invalid request type")
 	}
 
-	// TODO: Is this query correct?
 	records := []monoidprotocol.MonoidRecord{}
 	requestStatus := model.RequestStatus{}
 
@@ -120,6 +142,7 @@ func (a *Activity) ExecuteRequestOnDataSource(ctx context.Context, requestStatus
 	}
 
 	protocol, err := docker.NewDockerMP(siloSpecification.DockerImage, siloSpecification.DockerTag)
+	defer protocol.Teardown(ctx)
 	if err != nil {
 		return nil, failRequest(requestStatusId, err, a.Conf.DB)
 	}

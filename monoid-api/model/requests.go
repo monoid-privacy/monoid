@@ -41,3 +41,10 @@ type PrimaryKeyValue struct {
 	Request          Request `gorm:"constraint:OnDelete:CASCADE;"`
 	Value            string
 }
+
+type QueryRecord struct {
+	ID              string
+	RequestStatusID string
+	RequestStatus   RequestStatus
+	Records         string
+}

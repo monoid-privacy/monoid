@@ -135,7 +135,7 @@ type ComplexityRoot struct {
 		DeleteUserPrimaryKey     func(childComplexity int, id string) int
 		DeleteWorkspace          func(childComplexity int, id *string) int
 		DetectSiloSources        func(childComplexity int, workspaceID string, id string) int
-		ExecuteUserDataRequest   func(childComplexity int, requestID string) int
+		ExecuteUserDataRequest   func(childComplexity int, requestID string, workspaceID string) int
 		HandleAllOpenDiscoveries func(childComplexity int, input *model.HandleAllDiscoveriesInput) int
 		HandleDiscovery          func(childComplexity int, input *model.HandleDiscoveryInput) int
 		UpdateCategory           func(childComplexity int, input *model.UpdateCategoryInput) int
@@ -328,7 +328,7 @@ type MutationResolver interface {
 	UpdateUserPrimaryKey(ctx context.Context, input model.UpdateUserPrimaryKeyInput) (*model.UserPrimaryKey, error)
 	DeleteUserPrimaryKey(ctx context.Context, id string) (*string, error)
 	CreateUserDataRequest(ctx context.Context, input *model.UserDataRequestInput) (*model.Request, error)
-	ExecuteUserDataRequest(ctx context.Context, requestID string) ([]*model.MonoidRecordResponse, error)
+	ExecuteUserDataRequest(ctx context.Context, requestID string, workspaceID string) (*model.Job, error)
 	CreateSiloDefinition(ctx context.Context, input *model.CreateSiloDefinitionInput) (*model.SiloDefinition, error)
 	UpdateSiloDefinition(ctx context.Context, input *model.UpdateSiloDefinitionInput) (*model.SiloDefinition, error)
 	DeleteSiloDefinition(ctx context.Context, id string) (*string, error)
@@ -889,7 +889,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ExecuteUserDataRequest(childComplexity, args["requestId"].(string)), true
+		return e.complexity.Mutation.ExecuteUserDataRequest(childComplexity, args["requestId"].(string), args["workspaceId"].(string)), true
 
 	case "Mutation.handleAllOpenDiscoveries":
 		if e.complexity.Mutation.HandleAllOpenDiscoveries == nil {
@@ -2211,7 +2211,7 @@ extend type Mutation {
 
 
     createUserDataRequest(input: UserDataRequestInput): Request
-    executeUserDataRequest(requestId: ID!): [MonoidRecordResponse!]
+    executeUserDataRequest(requestId: ID!, workspaceId: ID!): Job
 }`, BuiltIn: false},
 	{Name: "../schema/silo_definitions.graphqls", Input: `scalar Map
 
@@ -2600,6 +2600,15 @@ func (ec *executionContext) field_Mutation_executeUserDataRequest_args(ctx conte
 		}
 	}
 	args["requestId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["workspaceId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workspaceId"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["workspaceId"] = arg1
 	return args, nil
 }
 
@@ -4857,6 +4866,8 @@ func (ec *executionContext) fieldContext_Mutation_updateWorkspaceSettings(ctx co
 				return ec.fieldContext_Workspace_purposes(ctx, field)
 			case "categories":
 				return ec.fieldContext_Workspace_categories(ctx, field)
+			case "requests":
+				return ec.fieldContext_Workspace_requests(ctx, field)
 			case "userPrimaryKeys":
 				return ec.fieldContext_Workspace_userPrimaryKeys(ctx, field)
 			case "discoveries":
@@ -6452,7 +6463,7 @@ func (ec *executionContext) _Mutation_executeUserDataRequest(ctx context.Context
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ExecuteUserDataRequest(rctx, fc.Args["requestId"].(string))
+		return ec.resolvers.Mutation().ExecuteUserDataRequest(rctx, fc.Args["requestId"].(string), fc.Args["workspaceId"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6461,9 +6472,9 @@ func (ec *executionContext) _Mutation_executeUserDataRequest(ctx context.Context
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*model.MonoidRecordResponse)
+	res := resTmp.(*model.Job)
 	fc.Result = res
-	return ec.marshalOMonoidRecordResponse2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐMonoidRecordResponseᚄ(ctx, field.Selections, res)
+	return ec.marshalOJob2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJob(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_executeUserDataRequest(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -6474,14 +6485,22 @@ func (ec *executionContext) fieldContext_Mutation_executeUserDataRequest(ctx con
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "data":
-				return ec.fieldContext_MonoidRecordResponse_data(ctx, field)
-			case "SchemaGroup":
-				return ec.fieldContext_MonoidRecordResponse_SchemaGroup(ctx, field)
-			case "SchemaName":
-				return ec.fieldContext_MonoidRecordResponse_SchemaName(ctx, field)
+			case "id":
+				return ec.fieldContext_Job_id(ctx, field)
+			case "jobType":
+				return ec.fieldContext_Job_jobType(ctx, field)
+			case "resourceId":
+				return ec.fieldContext_Job_resourceId(ctx, field)
+			case "status":
+				return ec.fieldContext_Job_status(ctx, field)
+			case "siloDefinition":
+				return ec.fieldContext_Job_siloDefinition(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Job_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Job_updatedAt(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type MonoidRecordResponse", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Job", field.Name)
 		},
 	}
 	defer func() {
@@ -16553,16 +16572,6 @@ func (ec *executionContext) marshalNMap2map(ctx context.Context, sel ast.Selecti
 	return res
 }
 
-func (ec *executionContext) marshalNMonoidRecordResponse2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐMonoidRecordResponse(ctx context.Context, sel ast.SelectionSet, v *model.MonoidRecordResponse) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._MonoidRecordResponse(ctx, sel, v)
-}
-
 func (ec *executionContext) marshalNPrimaryKeyValue2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPrimaryKeyValue(ctx context.Context, sel ast.SelectionSet, v *model.PrimaryKeyValue) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -17496,6 +17505,13 @@ func (ec *executionContext) marshalOJob2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoid
 	return ret
 }
 
+func (ec *executionContext) marshalOJob2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJob(ctx context.Context, sel ast.SelectionSet, v *model.Job) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Job(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalOJobStatus2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJobStatus(ctx context.Context, v interface{}) ([]*model.JobStatus, error) {
 	if v == nil {
 		return nil, nil
@@ -17615,53 +17631,6 @@ func (ec *executionContext) marshalOMap2map(ctx context.Context, sel ast.Selecti
 	}
 	res := graphql.MarshalMap(v)
 	return res
-}
-
-func (ec *executionContext) marshalOMonoidRecordResponse2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐMonoidRecordResponseᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.MonoidRecordResponse) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNMonoidRecordResponse2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐMonoidRecordResponse(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
 }
 
 func (ec *executionContext) marshalONewCategoryDiscovery2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐNewCategoryDiscovery(ctx context.Context, sel ast.SelectionSet, v model.NewCategoryDiscovery) graphql.Marshaler {

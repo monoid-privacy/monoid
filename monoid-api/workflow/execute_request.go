@@ -3,20 +3,22 @@ package workflow
 import (
 	"time"
 
-	"github.com/brist-ai/monoid/monoidprotocol"
+	"github.com/brist-ai/monoid/model"
 	"github.com/brist-ai/monoid/workflow/activity"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
 
 type ExecuteRequestArgs struct {
-	RequestID string
+	RequestID   string
+	JobID       string
+	WorkspaceID string
 }
 
 func (w *Workflow) ExecuteRequestWorkflow(
 	ctx workflow.Context,
 	args ExecuteRequestArgs,
-) ([]monoidprotocol.MonoidRecord, error) {
+) error {
 	options := workflow.ActivityOptions{
 		StartToCloseTimeout: time.Minute * 2,
 		RetryPolicy: &temporal.RetryPolicy{
@@ -24,13 +26,44 @@ func (w *Workflow) ExecuteRequestWorkflow(
 		},
 	}
 
-	records := []monoidprotocol.MonoidRecord{}
-
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	ac := activity.Activity{}
 
-	err := workflow.ExecuteActivity(ctx, ac.ExecuteRequest, args.RequestID).Get(ctx, &records)
+	// Get or create (if this is scheduled) the job
+	job := model.Job{}
+	err := workflow.ExecuteActivity(ctx, ac.FindOrCreateJob, activity.JobInput{
+		ID:          args.JobID,
+		WorkspaceID: args.WorkspaceID,
+		JobType:     model.JobTypeDiscoverSources,
+		ResourceID:  args.RequestID,
+		Status:      model.JobStatusRunning,
+	}).Get(ctx, &job)
 
-	return records, err
+	if err != nil {
+		err := workflow.ExecuteActivity(ctx, ac.UpdateJobStatus, activity.JobStatusInput{
+			ID:     args.JobID,
+			Status: model.JobStatusFailed,
+		}).Get(ctx, nil)
+
+		return err
+	}
+
+	err = workflow.ExecuteActivity(ctx, ac.ExecuteRequest, args.RequestID).Get(ctx, nil)
+
+	if err != nil {
+		err := workflow.ExecuteActivity(ctx, ac.UpdateJobStatus, activity.JobStatusInput{
+			ID:     args.JobID,
+			Status: model.JobStatusFailed,
+		}).Get(ctx, nil)
+
+		return err
+	}
+
+	err = workflow.ExecuteActivity(ctx, ac.UpdateJobStatus, activity.JobStatusInput{
+		ID:     job.ID,
+		Status: model.JobStatusCompleted,
+	}).Get(ctx, nil)
+
+	return err
 }

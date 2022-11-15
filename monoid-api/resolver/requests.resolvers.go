@@ -6,14 +6,13 @@ package resolver
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/brist-ai/monoid/generated"
 	"github.com/brist-ai/monoid/model"
-	"github.com/brist-ai/monoid/monoidprotocol"
 	"github.com/brist-ai/monoid/workflow"
 	"github.com/google/uuid"
 	"go.temporal.io/sdk/client"
+	"gorm.io/gorm"
 )
 
 // CreateUserPrimaryKey is the resolver for the createUserPrimaryKey field.
@@ -115,42 +114,46 @@ func (r *mutationResolver) CreateUserDataRequest(ctx context.Context, input *mod
 }
 
 // ExecuteUserDataRequest is the resolver for the executeUserDataRequest field.
-func (r *mutationResolver) ExecuteUserDataRequest(ctx context.Context, requestID string) ([]*model.MonoidRecordResponse, error) {
-	workflowID := fmt.Sprintf("request-%s", requestID)
-	options := client.StartWorkflowOptions{
-		ID:        workflowID,
-		TaskQueue: workflow.DockerRunnerQueue,
+func (r *mutationResolver) ExecuteUserDataRequest(ctx context.Context, requestID string, workspaceID string) (*model.Job, error) {
+	job := model.Job{
+		ID:          uuid.NewString(),
+		WorkspaceID: workspaceID,
+		JobType:     model.JobTypeDiscoverSources,
+		Status:      model.JobStatusQueued,
+		ResourceID:  requestID,
 	}
 
-	sf := workflow.Workflow{
-		Conf: r.Conf,
-	}
+	if err := r.Conf.DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(&job).Error; err != nil {
+			return err
+		}
 
-	we, err := r.Conf.TemporalClient.ExecuteWorkflow(ctx, options, sf.ExecuteRequestWorkflow, workflow.ExecuteRequestArgs{
-		RequestID: requestID,
-	})
+		options := client.StartWorkflowOptions{
+			ID:        job.ID,
+			TaskQueue: workflow.DockerRunnerQueue,
+		}
 
-	if err != nil {
-		return nil, err
-	}
+		sf := workflow.Workflow{
+			Conf: r.Conf,
+		}
 
-	var res []monoidprotocol.MonoidRecord
-
-	if err = we.Get(ctx, &res); err != nil {
-		return nil, err
-	}
-
-	recordResponses := []*model.MonoidRecordResponse{}
-
-	for _, record := range res {
-		recordResponses = append(recordResponses, &model.MonoidRecordResponse{
-			Data:        fmt.Sprintf("%v", record.Data),
-			SchemaGroup: record.SchemaGroup,
-			SchemaName:  record.SchemaName,
+		_, err := r.Conf.TemporalClient.ExecuteWorkflow(ctx, options, sf.ExecuteRequestWorkflow, workflow.ExecuteRequestArgs{
+			RequestID:   requestID,
+			WorkspaceID: workspaceID,
+			JobID:       job.ID,
 		})
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+
+	}); err != nil {
+		return nil, handleError(err, "Error running job.")
 	}
 
-	return recordResponses, nil
+	return &job, nil
 }
 
 // UserPrimaryKey is the resolver for the userPrimaryKey field.
