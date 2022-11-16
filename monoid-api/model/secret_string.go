@@ -68,11 +68,11 @@ func (s SecretString) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 	return "bytea"
 }
 
-func (s SecretString) Value() (driver.Value, error) {
+func (s SecretString) ValueBytes() ([]byte, error) {
 	gcm, err := gcmCipher()
 
 	if err != nil {
-		return driver.Value(nil), err
+		return nil, err
 	}
 
 	// https://tutorialedge.net/golang/go-encrypt-decrypt-aes-tutorial/
@@ -88,5 +88,14 @@ func (s SecretString) Value() (driver.Value, error) {
 
 	res := gcm.Seal(nonce, nonce, []byte(s), nil)
 
-	return driver.Value(res), nil
+	return res, nil
+}
+
+func (s SecretString) Value() (driver.Value, error) {
+	v, err := s.ValueBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	return driver.Value(v), nil
 }

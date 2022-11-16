@@ -3,14 +3,18 @@ package workflow
 import (
 	"time"
 
-	"github.com/brist-ai/monoid/model"
 	"github.com/brist-ai/monoid/monoidprotocol"
 	"github.com/brist-ai/monoid/workflow/activity"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
 
-func (w *Workflow) ValidateDSWorkflow(ctx workflow.Context, dataSourceDef model.SiloDefinition) (monoidprotocol.MonoidValidateMessage, error) {
+type ValidateDSArgs struct {
+	SiloSpecID string
+	Config     []byte
+}
+
+func (w *Workflow) ValidateDSWorkflow(ctx workflow.Context, args ValidateDSArgs) (monoidprotocol.MonoidValidateMessage, error) {
 	options := workflow.ActivityOptions{
 		StartToCloseTimeout: time.Minute * 2,
 		RetryPolicy: &temporal.RetryPolicy{
@@ -22,7 +26,7 @@ func (w *Workflow) ValidateDSWorkflow(ctx workflow.Context, dataSourceDef model.
 	res := monoidprotocol.MonoidValidateMessage{}
 
 	ac := activity.Activity{}
-	err := workflow.ExecuteActivity(ctx, ac.ValidateDataSiloDef, dataSourceDef).Get(ctx, &res)
+	err := workflow.ExecuteActivity(ctx, ac.ValidateDataSiloDef, args).Get(ctx, &res)
 
 	return res, err
 }

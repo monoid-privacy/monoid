@@ -25,7 +25,15 @@ func (r *Resolver) validateSiloDef(ctx context.Context, workflowID string, siloD
 		Conf: r.Conf,
 	}
 
-	we, err := r.Conf.TemporalClient.ExecuteWorkflow(ctx, options, sf.ValidateDSWorkflow, siloDefinition)
+	confSecret, err := siloDefinition.Config.ValueBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	we, err := r.Conf.TemporalClient.ExecuteWorkflow(ctx, options, sf.ValidateDSWorkflow, workflow.ValidateDSArgs{
+		SiloSpecID: siloDefinition.SiloSpecificationID,
+		Config:     confSecret,
+	})
 	if err != nil {
 		return nil, err
 	}
