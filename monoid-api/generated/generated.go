@@ -2238,8 +2238,8 @@ input UserDataRequestInput {
 }
 
 input UserPrimaryKeyInput {
-    UserPrimaryKeyId: ID! 
-    Value: String! 
+    userPrimaryKeyId: ID! 
+    value: String! 
 }
 
 type UserPrimaryKey {
@@ -14352,25 +14352,25 @@ func (ec *executionContext) unmarshalInputUserPrimaryKeyInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"UserPrimaryKeyId", "Value"}
+	fieldsInOrder := [...]string{"userPrimaryKeyId", "value"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "UserPrimaryKeyId":
+		case "userPrimaryKeyId":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("UserPrimaryKeyId"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userPrimaryKeyId"))
 			it.UserPrimaryKeyID, err = ec.unmarshalNID2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-		case "Value":
+		case "value":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Value"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
 			it.Value, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err

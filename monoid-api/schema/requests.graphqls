@@ -21,8 +21,8 @@ input UserDataRequestInput {
 }
 
 input UserPrimaryKeyInput {
-    UserPrimaryKeyId: ID! 
-    Value: String! 
+    userPrimaryKeyId: ID! 
+    value: String! 
 }
 
 type UserPrimaryKey {

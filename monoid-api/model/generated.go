@@ -163,8 +163,8 @@ type UserDataRequestInput struct {
 }
 
 type UserPrimaryKeyInput struct {
-	UserPrimaryKeyID string `json:"UserPrimaryKeyId"`
-	Value            string `json:"Value"`
+	UserPrimaryKeyID string `json:"userPrimaryKeyId"`
+	Value            string `json:"value"`
 }
 
 type DiscoveryAction string
