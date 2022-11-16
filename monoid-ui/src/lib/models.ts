@@ -12,6 +12,12 @@ export interface SiloDefinition {
   siloConfig?: object
 }
 
+export interface Workspace {
+  id?: string,
+  requests?: Request[]
+  userPrimaryKeys?: UserPrimaryKey[]
+}
+
 type TentativeValue = 'CREATED' | 'DELETED' | null;
 
 export interface Request {
@@ -35,16 +41,23 @@ export interface PrimaryKeyValue {
   value?: string
 }
 
+export interface UserDataRequestInput {
+  primaryKeys?: UserPrimaryKeyInput[]
+  workspaceId?: string
+  type?: string
+}
+
+export interface UserPrimaryKeyInput {
+  userPrimaryKeyId?: string
+  value?: string
+}
+
 export interface UserPrimaryKey {
   id?: string
   name?: string
   properties?: Property[]
 }
 
-export interface UserPrimaryKeyInput {
-  userPrimarykeyId?: string
-  value: string
-}
 
 export interface Property {
   id?: string

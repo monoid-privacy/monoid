@@ -9,9 +9,14 @@ export default function RequestIndex() {
       <PageHeader
         title="User Data Requests "
         actionItem={(
-          <Button to="new" type="link">
-            New User Data Request
-          </Button>
+          <>
+            <Button to="new_primary_key" type="link">
+              New Primary Key
+            </Button>
+            <Button to="new" type="link">
+              New User Data Request
+            </Button>
+          </>
         )}
       />
       <RequestList />

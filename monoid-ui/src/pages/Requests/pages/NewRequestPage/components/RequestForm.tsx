@@ -1,39 +1,48 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import AlertRegion from '../../../../../components/AlertRegion';
 import Button from '../../../../../components/Button';
-import { InputLabel } from '../../../../../components/Input';
+import Input, { InputLabel } from '../../../../../components/Input';
 import Spinner from '../../../../../components/Spinner';
-import { PrimaryKeyValue, Request } from '../../../../../lib/models';
-import RequestsCombobox from './RequestsCombobox';
+import Select from '../../../../../components/Select';
+import {
+  UserPrimaryKey, UserDataRequestInput,
+} from '../../../../../lib/models';
 
-interface RequestFormData {
-  type: string,
-  primaryKeys: PrimaryKeyValue[]
+function PrimaryKeyInputs(props: {
+  userPrimaryKey: UserPrimaryKey,
+  onChange: (v: any) => void,
+  value: string | undefined,
+}) {
+  const { userPrimaryKey, onChange, value } = props;
+
+  return (
+    <>
+      <InputLabel>{ userPrimaryKey.name }</InputLabel>
+      <Input
+        value={value}
+        onChange={onChange}
+      />
+    </>
+  );
 }
 
 export default function RequestForm(props: {
-  onSubmit: (req: RequestFormData) => void,
-  defaultRequest?: Request,
-  loading?: boolean,
-  error?: Error,
+  onSubmit: (req: UserDataRequestInput) => void,
+  userPrimaryKeys?: UserPrimaryKey[],
+  formLoading?: boolean,
+  formError?: Error,
 }) {
   const {
-    onSubmit, loading, defaultRequest, error,
+    onSubmit, formLoading, formError, userPrimaryKeys,
   } = props;
-  const [req, setReq] = useState<RequestFormData>({
-    type: '',
-    primaryKeys: [],
-  });
-  useEffect(() => {
-    if (!defaultRequest) {
-      return;
-    }
 
-    setReq({
-      type: defaultRequest.type!,
-      primaryKeys: defaultRequest.primaryKeyValues!,
-    });
-  }, [defaultRequest]);
+  const [req, setReq] = useState<UserDataRequestInput>({
+    type: 'query',
+    primaryKeys: userPrimaryKeys!.map((key) => ({
+      userPrimaryKeyId: key.id,
+      value: '',
+    })),
+  });
 
   return (
     <div className="space-y-6">
@@ -42,23 +51,46 @@ export default function RequestForm(props: {
           Request Type
         </InputLabel>
         <div className="mt-2">
-          <RequestsCombobox
+          <Select
             value={req.type}
-            setValue={(v) => {
+            onChange={(v) => {
               setReq({
                 ...req,
-                type: v,
+                type: v.target.value,
               });
             }}
-          />
+          >
+            <option value="query">Query</option>
+            <option value="delete">Delete</option>
+          </Select>
         </div>
       </div>
-
       {
-        error && (
+        req.primaryKeys!.map((key, i) => (
+          <div className="mt-2">
+            <PrimaryKeyInputs
+              userPrimaryKey={userPrimaryKeys![i]}
+              value={req.primaryKeys![i].value!}
+              onChange={(v) => {
+                const pk = req.primaryKeys!;
+                pk[i] = {
+                  userPrimaryKeyId: key.userPrimaryKeyId,
+                  value: v.target.value,
+                };
+                setReq({
+                  ...req,
+                  primaryKeys: pk,
+                });
+              }}
+            />
+          </div>
+        ))
+      }
+      {
+        formError && (
           <div>
             <AlertRegion alertTitle="Error Connecting Silo">
-              {error.message}
+              {formError?.message}
             </AlertRegion>
           </div>
         )
@@ -71,7 +103,7 @@ export default function RequestForm(props: {
             onSubmit(req);
           }}
         >
-          {loading ? <Spinner /> : 'Submit'}
+          {formLoading ? <Spinner /> : 'Submit'}
         </Button>
       </div>
     </div>
@@ -79,7 +111,7 @@ export default function RequestForm(props: {
 }
 
 RequestForm.defaultProps = {
-  defaultRequest: undefined,
-  loading: false,
-  error: undefined,
+  formLoading: false,
+  formError: undefined,
+  userPrimaryKeys: [],
 };
