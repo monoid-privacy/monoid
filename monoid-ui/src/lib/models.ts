@@ -14,6 +14,38 @@ export interface SiloDefinition {
 
 type TentativeValue = 'CREATED' | 'DELETED' | null;
 
+export interface Request {
+  id?: string
+  primaryKeyValues?: PrimaryKeyValue[]
+  requestStatuses?: RequestStatus[]
+  type?: string
+}
+
+export interface RequestStatus {
+  id?: string
+  request?: Request
+  dataSource?: DataSource
+  status?: string
+}
+
+export interface PrimaryKeyValue {
+  id?: string
+  userPrimaryKey?: UserPrimaryKey
+  request?: Request
+  value?: string
+}
+
+export interface UserPrimaryKey {
+  id?: string
+  name?: string
+  properties?: Property[]
+}
+
+export interface UserPrimaryKeyInput {
+  userPrimarykeyId?: string
+  value: string
+}
+
 export interface Property {
   id?: string
   name?: string
