@@ -35,7 +35,7 @@ func (w *Workflow) ExecuteRequestWorkflow(
 	err := workflow.ExecuteActivity(ctx, ac.FindOrCreateJob, activity.JobInput{
 		ID:          args.JobID,
 		WorkspaceID: args.WorkspaceID,
-		JobType:     model.JobTypeDiscoverSources,
+		JobType:     model.JobTypeExecuteRequest,
 		ResourceID:  args.RequestID,
 		Status:      model.JobStatusRunning,
 	}).Get(ctx, &job)

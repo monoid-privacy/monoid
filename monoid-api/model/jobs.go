@@ -4,6 +4,7 @@ import "time"
 
 const (
 	JobTypeDiscoverSources = "discover_sources"
+	JobTypeExecuteRequest  = "execute_request"
 )
 
 type Job struct {

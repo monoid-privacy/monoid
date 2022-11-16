@@ -53,10 +53,6 @@ func (w *Workflow) DetectDSWorkflow(
 			Status: model.JobStatusFailed,
 		}).Get(ctx, nil)
 
-		if err != nil {
-			return err
-		}
-
 		return err
 	}
 
@@ -79,10 +75,6 @@ func (w *Workflow) DetectDSWorkflow(
 			ID:     args.JobID,
 			Status: model.JobStatusFailed,
 		}).Get(ctx, nil)
-
-		if err != nil {
-			return err
-		}
 
 		return err
 	}

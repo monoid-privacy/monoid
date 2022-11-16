@@ -6,6 +6,7 @@ package resolver
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/brist-ai/monoid/generated"
 	"github.com/brist-ai/monoid/model"
@@ -115,10 +116,11 @@ func (r *mutationResolver) CreateUserDataRequest(ctx context.Context, input *mod
 
 // ExecuteUserDataRequest is the resolver for the executeUserDataRequest field.
 func (r *mutationResolver) ExecuteUserDataRequest(ctx context.Context, requestID string, workspaceID string) (*model.Job, error) {
+	fmt.Println("HERE I AM ONCE AGAIN")
 	job := model.Job{
 		ID:          uuid.NewString(),
 		WorkspaceID: workspaceID,
-		JobType:     model.JobTypeDiscoverSources,
+		JobType:     model.JobTypeExecuteRequest,
 		Status:      model.JobStatusQueued,
 		ResourceID:  requestID,
 	}
@@ -154,6 +156,24 @@ func (r *mutationResolver) ExecuteUserDataRequest(ctx context.Context, requestID
 	}
 
 	return &job, nil
+}
+
+// LinkPropertyToPrimaryKey is the resolver for the linkPropertyToPrimaryKey field.
+func (r *mutationResolver) LinkPropertyToPrimaryKey(ctx context.Context, propertyID string, userPrimaryKeyID string) (*model.LinkPropertyToPrimaryKeyResponse, error) {
+	var property model.Property
+	if err := r.Conf.DB.Where("id = ?", propertyID).First(&property).Error; err != nil {
+		return nil, handleError(err, "Error linking property to primary key.")
+	}
+
+	property.UserPrimaryKeyID = &userPrimaryKeyID
+	if err := r.Conf.DB.Save(&property).Error; err != nil {
+		return nil, handleError(err, "Error linking property to primary key.")
+	}
+
+	return &model.LinkPropertyToPrimaryKeyResponse{
+		UserPrimaryKeyID: userPrimaryKeyID,
+		PropertyID:       propertyID,
+	}, nil
 }
 
 // UserPrimaryKey is the resolver for the userPrimaryKey field.
