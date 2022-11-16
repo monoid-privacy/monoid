@@ -79,16 +79,18 @@ function SiloCardBody(props: { query?: string }) {
   const { query } = props;
 
   const [offset, setOffset] = useState(0);
+  const vars = {
+    id: siloId,
+    workspaceId: id,
+    query: query && query.trim() !== '' ? query : undefined,
+    statuses: [],
+    limit,
+    offset,
+  };
   const {
     data, loading, error, fetchMore,
   } = useQuery(GET_DISCOVERIES, {
-    variables: {
-      id: siloId,
-      workspaceId: id,
-      query: query && query.trim() !== '' ? query : undefined,
-      limit,
-      offset,
-    },
+    variables: vars,
   });
 
   if (loading) {

@@ -22,6 +22,7 @@ function AlertListCardBody(props: { query: string }) {
     variables: {
       workspaceId: id,
       query: query && query.trim() !== '' ? query : undefined,
+      statuses: [],
       limit: 10,
       offset,
     },

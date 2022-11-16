@@ -7,10 +7,12 @@ export default function discoveriesCache(): FieldPolicy<any> | FieldReadFunction
       const offset = args?.offset || 0;
       const limit = args?.limit || 0;
 
-      return existing && {
-        discoveries: existing.discoveries.slice(offset, offset + limit),
-        numDiscoveries: existing.numDiscoveries,
+      const res = existing && {
+        ...existing,
+        discoveries: existing.discoveries?.slice(offset, offset + limit),
       };
+
+      return res;
     },
     merge(existing, incoming, { args }) {
       if (!incoming) {
@@ -21,7 +23,7 @@ export default function discoveriesCache(): FieldPolicy<any> | FieldReadFunction
 
       // Slicing is necessary because the existing data is
       // immutable, and frozen in development.
-      const merged = existing ? existing.discoveries.slice(0) : [];
+      const merged = (existing && existing.discoveries) ? existing.discoveries.slice(0) : [];
 
       if (incoming && incoming.discoveries) {
         for (let i = 0; i < incoming.discoveries.length; i += 1) {
@@ -31,8 +33,8 @@ export default function discoveriesCache(): FieldPolicy<any> | FieldReadFunction
 
       const r = {
         ...incoming,
+        numDiscoveries: incoming?.numDiscoveries || existing?.numDiscoveries,
         discoveries: merged,
-        numDiscoveries: existing?.numDiscoveries,
       };
 
       return r;

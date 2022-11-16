@@ -21,6 +21,12 @@ const client = new ApolloClient({
           discoveries: discoveriesCache(),
         },
       },
+      Workspace: {
+        fields: {
+          jobs: jobsQueryCache(),
+          discoveries: discoveriesCache(),
+        },
+      },
     },
   }),
 });

@@ -8,8 +8,8 @@ export default function jobsQueryCache(): FieldPolicy<any> | FieldReadFunction<a
       const limit = args?.limit || 0;
 
       return existing && {
+        ...existing,
         jobs: existing.jobs.slice(offset, offset + limit),
-        numJobs: existing.numJobs,
       };
     },
     merge(existing, incoming, { args }) {

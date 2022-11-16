@@ -106,6 +106,7 @@ export const GET_WORKSPACE_DISCOVERIES = gql`
             name
           }
         }
+        numDiscoveries
       }
     }
   }

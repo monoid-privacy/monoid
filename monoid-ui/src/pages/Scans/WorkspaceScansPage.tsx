@@ -23,7 +23,7 @@ function ScansListCardBody(props: { query: string }) {
       workspaceId: id,
       status: [],
       limit: 10,
-      offset: 0,
+      offset,
       query: query && query.trim() !== '' ? query : undefined,
     },
   });
