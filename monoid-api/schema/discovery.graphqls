@@ -48,6 +48,10 @@ union DataDiscoveryData = NewDataSourceDiscovery | NewPropertyDiscovery |
 
 type DataDiscovery {
     id: ID!
+
+    siloDefinitionID: ID!
+    siloDefinition: SiloDefinition!
+
     type: DiscoveryType!
     status: DiscoveryStatus!
     data: DataDiscoveryData!
@@ -60,8 +64,21 @@ type DataDiscoveriesListResult {
     numDiscoveries: Int!
 }
 
+extend type Workspace {
+    discoveries(
+        statuses: [DiscoveryStatus],
+        query: String,
+        limit: Int!,
+        offset: Int
+    ): DataDiscoveriesListResult!
+}
+
 extend type SiloDefinition {
-    discoveries(statuses: [DiscoveryStatus], limit: Int!, offset: Int!): DataDiscoveriesListResult!
+    """
+    List the discoveries for a silo. If a query is specified, it is used to look up
+    a discovery by ID.
+    """
+    discoveries(statuses: [DiscoveryStatus], query: String, limit: Int!, offset: Int!): DataDiscoveriesListResult!
 }
 
 enum DiscoveryAction {

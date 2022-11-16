@@ -39,6 +39,7 @@ export interface Category {
 export interface Job {
   id?: string,
   jobType?: string,
+  siloDefinition?: SiloDefinition
   status?: 'RUNNING' | 'QUEUED' | 'FAILED' | 'COMPLETED'
   createdAt?: string
 }
@@ -78,6 +79,7 @@ type CoreDataDiscovery = {
   id?: string
   createdAt?: string
   status?: 'OPEN' | 'ACCEPTED' | 'REJECTED'
+  siloDefinition?: SiloDefinition
 };
 
 type NewDataSourceDiscovery = CoreDataDiscovery & {

@@ -1,9 +1,9 @@
 import {
   ApolloError, gql, useMutation, useQuery,
 } from '@apollo/client';
-import React, { useContext, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { CheckCircleIcon, QuestionMarkCircleIcon, XCircleIcon } from '@heroicons/react/24/solid';
+import React, { useContext, useEffect, useState } from 'react';
+import { useLocation, useParams } from 'react-router-dom';
+import { XCircleIcon } from '@heroicons/react/24/solid';
 import dayjs from 'dayjs';
 import updateLocale from 'dayjs/plugin/updateLocale';
 import duration from 'dayjs/plugin/duration';
@@ -11,23 +11,24 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 
 import AlertRegion from '../../../../../components/AlertRegion';
 import Card, { CardDivider, CardHeader } from '../../../../../components/Card';
-import { InputLabel } from '../../../../../components/Input';
+import Input, { InputLabel } from '../../../../../components/Input';
 import Select from '../../../../../components/Select';
 import Spinner from '../../../../../components/Spinner';
 import { Job } from '../../../../../lib/models';
-import Text from '../../../../../components/Text';
 import ToastContext from '../../../../../contexts/ToastContext';
 import Pagination from '../../../../../components/Pagination';
+import JobRow from './JobRow';
 
 dayjs.extend(updateLocale);
 dayjs.extend(duration);
 dayjs.extend(relativeTime);
 
 const GET_SCANS = gql`
-  query DiscoverJobs($resourceId: ID!, $limit: Int!, $offset: Int!) {
+  query DiscoverJobs($resourceId: ID!, $limit: Int!, $offset: Int!, $query: String) {
     jobs(
       resourceId: $resourceId,
       jobType: "discover_sources",
+      query: $query,
       limit: $limit,
       offset: $offset
     ) {
@@ -88,67 +89,13 @@ const scanOptions = [
   )),
 ];
 
-function JobRow(props: {
-  job: Job
-}) {
-  const { job } = props;
-  let jobStatusText = '';
-  let jobIcon = <QuestionMarkCircleIcon className="h-5 w-5" />;
-
-  switch (job.status) {
-    case 'RUNNING':
-      jobStatusText = 'Scan Running';
-      jobIcon = <Spinner />;
-      break;
-    case 'QUEUED':
-      jobStatusText = 'Scan Queued';
-      jobIcon = <Spinner />;
-      break;
-    case 'FAILED':
-      jobStatusText = 'Scan Failed';
-      jobIcon = <XCircleIcon className="h-7 w-7 text-red-600" />;
-      break;
-    case 'COMPLETED':
-      jobStatusText = 'Scan Succeeded';
-      jobIcon = <CheckCircleIcon className="h-7 w-7 text-green-400" />;
-      break;
-    default:
-      break;
-  }
-
-  return (
-    <li>
-      <div className="block hover:bg-gray-50">
-        <div className="px-4 py-4 sm:px-6 flex items-center">
-          <div className="flex flex-col">
-            <Text size="md">
-              {jobStatusText}
-            </Text>
-            <Text size="xs" em="light">
-              Ran
-              {' '}
-              {dayjs(job.createdAt!).fromNow()}
-              {' '}
-              |
-              {' '}
-              {dayjs(job.createdAt!).format('YYYY-MM-DD @ HH:MM:ss')}
-            </Text>
-          </div>
-          <div className="ml-auto">
-            {jobIcon}
-          </div>
-        </div>
-      </div>
-    </li>
-  );
-}
-
 const limit = 10;
 
 function JobList(props: {
-  siloID: string
+  siloID: string,
+  query: string
 }) {
-  const { siloID } = props;
+  const { siloID, query } = props;
   const [offset, setOffset] = useState(0);
 
   const {
@@ -161,6 +108,7 @@ function JobList(props: {
   }>(GET_SCANS, {
     variables: {
       resourceId: siloID,
+      query: query.trim() !== '' ? query : undefined,
       limit,
       offset,
     },
@@ -274,6 +222,16 @@ function ScanSettingsCard() {
 
 export default function SiloScans() {
   const { siloId } = useParams<{ siloId: string }>();
+  const [query, setQuery] = useState('');
+  const location = useLocation();
+
+  useEffect(() => {
+    const urlSearchParams = new URLSearchParams(location.search);
+    const q = urlSearchParams.get('query');
+    if (q && q.trim() !== '') {
+      setQuery(q);
+    }
+  }, [location.search]);
 
   return (
     <div className="space-y-4">
@@ -282,8 +240,9 @@ export default function SiloScans() {
         <CardHeader>
           Scan History
         </CardHeader>
+        <Input className="mt-4" placeholder="Job ID" value={query} onChange={(e) => setQuery(e.target.value)} />
         <CardDivider />
-        <JobList siloID={siloId!} />
+        <JobList siloID={siloId!} query={query} />
       </Card>
     </div>
   );

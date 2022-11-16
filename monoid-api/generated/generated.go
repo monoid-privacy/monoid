@@ -40,6 +40,7 @@ type ResolverRoot interface {
 	DataDiscovery() DataDiscoveryResolver
 	DataSource() DataSourceResolver
 	DataSourceMissingDiscovery() DataSourceMissingDiscoveryResolver
+	Job() JobResolver
 	Mutation() MutationResolver
 	NewCategoryDiscovery() NewCategoryDiscoveryResolver
 	NewPropertyDiscovery() NewPropertyDiscoveryResolver
@@ -65,11 +66,13 @@ type ComplexityRoot struct {
 	}
 
 	DataDiscovery struct {
-		CreatedAt func(childComplexity int) int
-		Data      func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Status    func(childComplexity int) int
-		Type      func(childComplexity int) int
+		CreatedAt        func(childComplexity int) int
+		Data             func(childComplexity int) int
+		ID               func(childComplexity int) int
+		SiloDefinition   func(childComplexity int) int
+		SiloDefinitionID func(childComplexity int) int
+		Status           func(childComplexity int) int
+		Type             func(childComplexity int) int
 	}
 
 	DataSource struct {
@@ -87,12 +90,13 @@ type ComplexityRoot struct {
 	}
 
 	Job struct {
-		CreatedAt  func(childComplexity int) int
-		ID         func(childComplexity int) int
-		JobType    func(childComplexity int) int
-		ResourceID func(childComplexity int) int
-		Status     func(childComplexity int) int
-		UpdatedAt  func(childComplexity int) int
+		CreatedAt      func(childComplexity int) int
+		ID             func(childComplexity int) int
+		JobType        func(childComplexity int) int
+		ResourceID     func(childComplexity int) int
+		SiloDefinition func(childComplexity int) int
+		Status         func(childComplexity int) int
+		UpdatedAt      func(childComplexity int) int
 	}
 
 	JobsResult struct {
@@ -173,7 +177,7 @@ type ComplexityRoot struct {
 		Categories         func(childComplexity int) int
 		Category           func(childComplexity int, id string) int
 		DataSource         func(childComplexity int, id string) int
-		Jobs               func(childComplexity int, resourceID string, jobType string, status []*model.JobStatus, limit int, offset int) int
+		Jobs               func(childComplexity int, resourceID string, jobType string, query *string, status []*model.JobStatus, limit int, offset int) int
 		Property           func(childComplexity int, id string) int
 		Purpose            func(childComplexity int, id string) int
 		Purposes           func(childComplexity int) int
@@ -188,7 +192,7 @@ type ComplexityRoot struct {
 	SiloDefinition struct {
 		DataSources       func(childComplexity int) int
 		Description       func(childComplexity int) int
-		Discoveries       func(childComplexity int, statuses []*model.DiscoveryStatus, limit int, offset int) int
+		Discoveries       func(childComplexity int, statuses []*model.DiscoveryStatus, query *string, limit int, offset int) int
 		ID                func(childComplexity int) int
 		Name              func(childComplexity int) int
 		ScanConfig        func(childComplexity int) int
@@ -216,7 +220,9 @@ type ComplexityRoot struct {
 
 	Workspace struct {
 		Categories         func(childComplexity int) int
+		Discoveries        func(childComplexity int, statuses []*model.DiscoveryStatus, query *string, limit int, offset *int) int
 		ID                 func(childComplexity int) int
+		Jobs               func(childComplexity int, jobType string, status []*model.JobStatus, query *string, limit int, offset int) int
 		Name               func(childComplexity int) int
 		Purposes           func(childComplexity int) int
 		Settings           func(childComplexity int) int
@@ -228,6 +234,8 @@ type ComplexityRoot struct {
 }
 
 type DataDiscoveryResolver interface {
+	SiloDefinition(ctx context.Context, obj *model.DataDiscovery) (*model.SiloDefinition, error)
+
 	Data(ctx context.Context, obj *model.DataDiscovery) (model.DataDiscoveryData, error)
 }
 type DataSourceResolver interface {
@@ -235,6 +243,9 @@ type DataSourceResolver interface {
 }
 type DataSourceMissingDiscoveryResolver interface {
 	DataSource(ctx context.Context, obj *model.DataSourceMissingDiscovery) (*model.DataSource, error)
+}
+type JobResolver interface {
+	SiloDefinition(ctx context.Context, obj *model.Job) (*model.SiloDefinition, error)
 }
 type MutationResolver interface {
 	CreateWorkspace(ctx context.Context, input model.CreateWorkspaceInput) (*model.Workspace, error)
@@ -293,7 +304,7 @@ type QueryResolver interface {
 	Category(ctx context.Context, id string) (*model.Category, error)
 	Subject(ctx context.Context, id string) (*model.Subject, error)
 	Property(ctx context.Context, id string) (*model.Property, error)
-	Jobs(ctx context.Context, resourceID string, jobType string, status []*model.JobStatus, limit int, offset int) (*model.JobsResult, error)
+	Jobs(ctx context.Context, resourceID string, jobType string, query *string, status []*model.JobStatus, limit int, offset int) (*model.JobsResult, error)
 }
 type SiloDefinitionResolver interface {
 	SiloSpecification(ctx context.Context, obj *model.SiloDefinition) (*model.SiloSpecification, error)
@@ -301,11 +312,13 @@ type SiloDefinitionResolver interface {
 
 	SiloConfig(ctx context.Context, obj *model.SiloDefinition) (map[string]interface{}, error)
 	ScanConfig(ctx context.Context, obj *model.SiloDefinition) (*model.SiloScanConfig, error)
-	Discoveries(ctx context.Context, obj *model.SiloDefinition, statuses []*model.DiscoveryStatus, limit int, offset int) (*model.DataDiscoveriesListResult, error)
+	Discoveries(ctx context.Context, obj *model.SiloDefinition, statuses []*model.DiscoveryStatus, query *string, limit int, offset int) (*model.DataDiscoveriesListResult, error)
 }
 type WorkspaceResolver interface {
 	Settings(ctx context.Context, obj *model.Workspace) (map[string]interface{}, error)
 
+	Discoveries(ctx context.Context, obj *model.Workspace, statuses []*model.DiscoveryStatus, query *string, limit int, offset *int) (*model.DataDiscoveriesListResult, error)
+	Jobs(ctx context.Context, obj *model.Workspace, jobType string, status []*model.JobStatus, query *string, limit int, offset int) (*model.JobsResult, error)
 	SiloDefinitions(ctx context.Context, obj *model.Workspace) ([]*model.SiloDefinition, error)
 	SiloDefinition(ctx context.Context, obj *model.Workspace, id string) (*model.SiloDefinition, error)
 }
@@ -373,6 +386,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DataDiscovery.ID(childComplexity), true
+
+	case "DataDiscovery.siloDefinition":
+		if e.complexity.DataDiscovery.SiloDefinition == nil {
+			break
+		}
+
+		return e.complexity.DataDiscovery.SiloDefinition(childComplexity), true
+
+	case "DataDiscovery.siloDefinitionID":
+		if e.complexity.DataDiscovery.SiloDefinitionID == nil {
+			break
+		}
+
+		return e.complexity.DataDiscovery.SiloDefinitionID(childComplexity), true
 
 	case "DataDiscovery.status":
 		if e.complexity.DataDiscovery.Status == nil {
@@ -471,6 +498,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Job.ResourceID(childComplexity), true
+
+	case "Job.siloDefinition":
+		if e.complexity.Job.SiloDefinition == nil {
+			break
+		}
+
+		return e.complexity.Job.SiloDefinition(childComplexity), true
 
 	case "Job.status":
 		if e.complexity.Job.Status == nil {
@@ -1017,7 +1051,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Jobs(childComplexity, args["resourceId"].(string), args["jobType"].(string), args["status"].([]*model.JobStatus), args["limit"].(int), args["offset"].(int)), true
+		return e.complexity.Query.Jobs(childComplexity, args["resourceId"].(string), args["jobType"].(string), args["query"].(*string), args["status"].([]*model.JobStatus), args["limit"].(int), args["offset"].(int)), true
 
 	case "Query.property":
 		if e.complexity.Query.Property == nil {
@@ -1131,7 +1165,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.SiloDefinition.Discoveries(childComplexity, args["statuses"].([]*model.DiscoveryStatus), args["limit"].(int), args["offset"].(int)), true
+		return e.complexity.SiloDefinition.Discoveries(childComplexity, args["statuses"].([]*model.DiscoveryStatus), args["query"].(*string), args["limit"].(int), args["offset"].(int)), true
 
 	case "SiloDefinition.id":
 		if e.complexity.SiloDefinition.ID == nil {
@@ -1238,12 +1272,36 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Workspace.Categories(childComplexity), true
 
+	case "Workspace.discoveries":
+		if e.complexity.Workspace.Discoveries == nil {
+			break
+		}
+
+		args, err := ec.field_Workspace_discoveries_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Workspace.Discoveries(childComplexity, args["statuses"].([]*model.DiscoveryStatus), args["query"].(*string), args["limit"].(int), args["offset"].(*int)), true
+
 	case "Workspace.id":
 		if e.complexity.Workspace.ID == nil {
 			break
 		}
 
 		return e.complexity.Workspace.ID(childComplexity), true
+
+	case "Workspace.jobs":
+		if e.complexity.Workspace.Jobs == nil {
+			break
+		}
+
+		args, err := ec.field_Workspace_jobs_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Workspace.Jobs(childComplexity, args["jobType"].(string), args["status"].([]*model.JobStatus), args["query"].(*string), args["limit"].(int), args["offset"].(int)), true
 
 	case "Workspace.name":
 		if e.complexity.Workspace.Name == nil {
@@ -1626,6 +1684,10 @@ union DataDiscoveryData = NewDataSourceDiscovery | NewPropertyDiscovery |
 
 type DataDiscovery {
     id: ID!
+
+    siloDefinitionID: ID!
+    siloDefinition: SiloDefinition!
+
     type: DiscoveryType!
     status: DiscoveryStatus!
     data: DataDiscoveryData!
@@ -1638,8 +1700,21 @@ type DataDiscoveriesListResult {
     numDiscoveries: Int!
 }
 
+extend type Workspace {
+    discoveries(
+        statuses: [DiscoveryStatus],
+        query: String,
+        limit: Int!,
+        offset: Int
+    ): DataDiscoveriesListResult!
+}
+
 extend type SiloDefinition {
-    discoveries(statuses: [DiscoveryStatus], limit: Int!, offset: Int!): DataDiscoveriesListResult!
+    """
+    List the discoveries for a silo. If a query is specified, it is used to look up
+    a discovery by ID.
+    """
+    discoveries(statuses: [DiscoveryStatus], query: String, limit: Int!, offset: Int!): DataDiscoveriesListResult!
 }
 
 enum DiscoveryAction {
@@ -1675,6 +1750,9 @@ type Job {
     jobType: String!
     resourceId: ID!
     status: JobStatus!
+
+    siloDefinition: SiloDefinition!
+
     createdAt: Time!
     updatedAt: Time!
 }
@@ -1684,10 +1762,20 @@ type JobsResult {
     numJobs: Int!
 }
 
+extend type Workspace {
+    jobs(
+        jobType: String!,
+        status: [JobStatus],
+        query: String,
+        limit: Int!,
+        offset: Int!
+    ): JobsResult!
+}
 extend type Query {
     jobs(
         resourceId: ID!,
         jobType: String!,
+        query: String
         status: [JobStatus],
         limit: Int!,
         offset: Int!
@@ -2255,33 +2343,42 @@ func (ec *executionContext) field_Query_jobs_args(ctx context.Context, rawArgs m
 		}
 	}
 	args["jobType"] = arg1
-	var arg2 []*model.JobStatus
+	var arg2 *string
+	if tmp, ok := rawArgs["query"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("query"))
+		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["query"] = arg2
+	var arg3 []*model.JobStatus
 	if tmp, ok := rawArgs["status"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
-		arg2, err = ec.unmarshalOJobStatus2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJobStatus(ctx, tmp)
+		arg3, err = ec.unmarshalOJobStatus2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJobStatus(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["status"] = arg2
-	var arg3 int
+	args["status"] = arg3
+	var arg4 int
 	if tmp, ok := rawArgs["limit"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
-		arg3, err = ec.unmarshalNInt2int(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["limit"] = arg3
-	var arg4 int
-	if tmp, ok := rawArgs["offset"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
 		arg4, err = ec.unmarshalNInt2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["offset"] = arg4
+	args["limit"] = arg4
+	var arg5 int
+	if tmp, ok := rawArgs["offset"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+		arg5, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["offset"] = arg5
 	return args, nil
 }
 
@@ -2372,24 +2469,126 @@ func (ec *executionContext) field_SiloDefinition_discoveries_args(ctx context.Co
 		}
 	}
 	args["statuses"] = arg0
-	var arg1 int
-	if tmp, ok := rawArgs["limit"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
-		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+	var arg1 *string
+	if tmp, ok := rawArgs["query"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("query"))
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["limit"] = arg1
+	args["query"] = arg1
 	var arg2 int
-	if tmp, ok := rawArgs["offset"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
 		arg2, err = ec.unmarshalNInt2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["offset"] = arg2
+	args["limit"] = arg2
+	var arg3 int
+	if tmp, ok := rawArgs["offset"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+		arg3, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["offset"] = arg3
+	return args, nil
+}
+
+func (ec *executionContext) field_Workspace_discoveries_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []*model.DiscoveryStatus
+	if tmp, ok := rawArgs["statuses"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statuses"))
+		arg0, err = ec.unmarshalODiscoveryStatus2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryStatus(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["statuses"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["query"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("query"))
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["query"] = arg1
+	var arg2 int
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+		arg2, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg2
+	var arg3 *int
+	if tmp, ok := rawArgs["offset"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+		arg3, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["offset"] = arg3
+	return args, nil
+}
+
+func (ec *executionContext) field_Workspace_jobs_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["jobType"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("jobType"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["jobType"] = arg0
+	var arg1 []*model.JobStatus
+	if tmp, ok := rawArgs["status"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+		arg1, err = ec.unmarshalOJobStatus2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJobStatus(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["status"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["query"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("query"))
+		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["query"] = arg2
+	var arg3 int
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+		arg3, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg3
+	var arg4 int
+	if tmp, ok := rawArgs["offset"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+		arg4, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["offset"] = arg4
 	return args, nil
 }
 
@@ -2572,6 +2771,10 @@ func (ec *executionContext) fieldContext_DataDiscoveriesListResult_discoveries(c
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_DataDiscovery_id(ctx, field)
+			case "siloDefinitionID":
+				return ec.fieldContext_DataDiscovery_siloDefinitionID(ctx, field)
+			case "siloDefinition":
+				return ec.fieldContext_DataDiscovery_siloDefinition(ctx, field)
 			case "type":
 				return ec.fieldContext_DataDiscovery_type(ctx, field)
 			case "status":
@@ -2670,6 +2873,114 @@ func (ec *executionContext) fieldContext_DataDiscovery_id(ctx context.Context, f
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DataDiscovery_siloDefinitionID(ctx context.Context, field graphql.CollectedField, obj *model.DataDiscovery) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DataDiscovery_siloDefinitionID(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SiloDefinitionID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DataDiscovery_siloDefinitionID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DataDiscovery",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DataDiscovery_siloDefinition(ctx context.Context, field graphql.CollectedField, obj *model.DataDiscovery) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DataDiscovery_siloDefinition(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.DataDiscovery().SiloDefinition(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.SiloDefinition)
+	fc.Result = res
+	return ec.marshalNSiloDefinition2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloDefinition(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DataDiscovery_siloDefinition(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DataDiscovery",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SiloDefinition_id(ctx, field)
+			case "name":
+				return ec.fieldContext_SiloDefinition_name(ctx, field)
+			case "description":
+				return ec.fieldContext_SiloDefinition_description(ctx, field)
+			case "siloSpecification":
+				return ec.fieldContext_SiloDefinition_siloSpecification(ctx, field)
+			case "dataSources":
+				return ec.fieldContext_SiloDefinition_dataSources(ctx, field)
+			case "subjects":
+				return ec.fieldContext_SiloDefinition_subjects(ctx, field)
+			case "siloConfig":
+				return ec.fieldContext_SiloDefinition_siloConfig(ctx, field)
+			case "scanConfig":
+				return ec.fieldContext_SiloDefinition_scanConfig(ctx, field)
+			case "discoveries":
+				return ec.fieldContext_SiloDefinition_discoveries(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SiloDefinition", field.Name)
 		},
 	}
 	return fc, nil
@@ -3413,6 +3724,70 @@ func (ec *executionContext) fieldContext_Job_status(ctx context.Context, field g
 	return fc, nil
 }
 
+func (ec *executionContext) _Job_siloDefinition(ctx context.Context, field graphql.CollectedField, obj *model.Job) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Job_siloDefinition(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Job().SiloDefinition(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.SiloDefinition)
+	fc.Result = res
+	return ec.marshalNSiloDefinition2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloDefinition(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Job_siloDefinition(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Job",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SiloDefinition_id(ctx, field)
+			case "name":
+				return ec.fieldContext_SiloDefinition_name(ctx, field)
+			case "description":
+				return ec.fieldContext_SiloDefinition_description(ctx, field)
+			case "siloSpecification":
+				return ec.fieldContext_SiloDefinition_siloSpecification(ctx, field)
+			case "dataSources":
+				return ec.fieldContext_SiloDefinition_dataSources(ctx, field)
+			case "subjects":
+				return ec.fieldContext_SiloDefinition_subjects(ctx, field)
+			case "siloConfig":
+				return ec.fieldContext_SiloDefinition_siloConfig(ctx, field)
+			case "scanConfig":
+				return ec.fieldContext_SiloDefinition_scanConfig(ctx, field)
+			case "discoveries":
+				return ec.fieldContext_SiloDefinition_discoveries(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SiloDefinition", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Job_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Job) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Job_createdAt(ctx, field)
 	if err != nil {
@@ -3545,6 +3920,8 @@ func (ec *executionContext) fieldContext_JobsResult_jobs(ctx context.Context, fi
 				return ec.fieldContext_Job_resourceId(ctx, field)
 			case "status":
 				return ec.fieldContext_Job_status(ctx, field)
+			case "siloDefinition":
+				return ec.fieldContext_Job_siloDefinition(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Job_createdAt(ctx, field)
 			case "updatedAt":
@@ -3650,6 +4027,10 @@ func (ec *executionContext) fieldContext_Mutation_createWorkspace(ctx context.Co
 				return ec.fieldContext_Workspace_purposes(ctx, field)
 			case "categories":
 				return ec.fieldContext_Workspace_categories(ctx, field)
+			case "discoveries":
+				return ec.fieldContext_Workspace_discoveries(ctx, field)
+			case "jobs":
+				return ec.fieldContext_Workspace_jobs(ctx, field)
 			case "siloDefinitions":
 				return ec.fieldContext_Workspace_siloDefinitions(ctx, field)
 			case "siloDefinition":
@@ -3722,6 +4103,10 @@ func (ec *executionContext) fieldContext_Mutation_updateWorkspaceSettings(ctx co
 				return ec.fieldContext_Workspace_purposes(ctx, field)
 			case "categories":
 				return ec.fieldContext_Workspace_categories(ctx, field)
+			case "discoveries":
+				return ec.fieldContext_Workspace_discoveries(ctx, field)
+			case "jobs":
+				return ec.fieldContext_Workspace_jobs(ctx, field)
 			case "siloDefinitions":
 				return ec.fieldContext_Workspace_siloDefinitions(ctx, field)
 			case "siloDefinition":
@@ -4891,6 +5276,8 @@ func (ec *executionContext) fieldContext_Mutation_detectSiloSources(ctx context.
 				return ec.fieldContext_Job_resourceId(ctx, field)
 			case "status":
 				return ec.fieldContext_Job_status(ctx, field)
+			case "siloDefinition":
+				return ec.fieldContext_Job_siloDefinition(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Job_createdAt(ctx, field)
 			case "updatedAt":
@@ -4951,6 +5338,10 @@ func (ec *executionContext) fieldContext_Mutation_handleDiscovery(ctx context.Co
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_DataDiscovery_id(ctx, field)
+			case "siloDefinitionID":
+				return ec.fieldContext_DataDiscovery_siloDefinitionID(ctx, field)
+			case "siloDefinition":
+				return ec.fieldContext_DataDiscovery_siloDefinition(ctx, field)
 			case "type":
 				return ec.fieldContext_DataDiscovery_type(ctx, field)
 			case "status":
@@ -5015,6 +5406,10 @@ func (ec *executionContext) fieldContext_Mutation_handleAllOpenDiscoveries(ctx c
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_DataDiscovery_id(ctx, field)
+			case "siloDefinitionID":
+				return ec.fieldContext_DataDiscovery_siloDefinitionID(ctx, field)
+			case "siloDefinition":
+				return ec.fieldContext_DataDiscovery_siloDefinition(ctx, field)
 			case "type":
 				return ec.fieldContext_DataDiscovery_type(ctx, field)
 			case "status":
@@ -6299,6 +6694,10 @@ func (ec *executionContext) fieldContext_Query_workspaces(ctx context.Context, f
 				return ec.fieldContext_Workspace_purposes(ctx, field)
 			case "categories":
 				return ec.fieldContext_Workspace_categories(ctx, field)
+			case "discoveries":
+				return ec.fieldContext_Workspace_discoveries(ctx, field)
+			case "jobs":
+				return ec.fieldContext_Workspace_jobs(ctx, field)
 			case "siloDefinitions":
 				return ec.fieldContext_Workspace_siloDefinitions(ctx, field)
 			case "siloDefinition":
@@ -6360,6 +6759,10 @@ func (ec *executionContext) fieldContext_Query_workspace(ctx context.Context, fi
 				return ec.fieldContext_Workspace_purposes(ctx, field)
 			case "categories":
 				return ec.fieldContext_Workspace_categories(ctx, field)
+			case "discoveries":
+				return ec.fieldContext_Workspace_discoveries(ctx, field)
+			case "jobs":
+				return ec.fieldContext_Workspace_jobs(ctx, field)
 			case "siloDefinitions":
 				return ec.fieldContext_Workspace_siloDefinitions(ctx, field)
 			case "siloDefinition":
@@ -6958,7 +7361,7 @@ func (ec *executionContext) _Query_jobs(ctx context.Context, field graphql.Colle
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Jobs(rctx, fc.Args["resourceId"].(string), fc.Args["jobType"].(string), fc.Args["status"].([]*model.JobStatus), fc.Args["limit"].(int), fc.Args["offset"].(int))
+		return ec.resolvers.Query().Jobs(rctx, fc.Args["resourceId"].(string), fc.Args["jobType"].(string), fc.Args["query"].(*string), fc.Args["status"].([]*model.JobStatus), fc.Args["limit"].(int), fc.Args["offset"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7518,7 +7921,7 @@ func (ec *executionContext) _SiloDefinition_discoveries(ctx context.Context, fie
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.SiloDefinition().Discoveries(rctx, obj, fc.Args["statuses"].([]*model.DiscoveryStatus), fc.Args["limit"].(int), fc.Args["offset"].(int))
+		return ec.resolvers.SiloDefinition().Discoveries(rctx, obj, fc.Args["statuses"].([]*model.DiscoveryStatus), fc.Args["query"].(*string), fc.Args["limit"].(int), fc.Args["offset"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8230,6 +8633,128 @@ func (ec *executionContext) fieldContext_Workspace_categories(ctx context.Contex
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Category", field.Name)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Workspace_discoveries(ctx context.Context, field graphql.CollectedField, obj *model.Workspace) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Workspace_discoveries(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Workspace().Discoveries(rctx, obj, fc.Args["statuses"].([]*model.DiscoveryStatus), fc.Args["query"].(*string), fc.Args["limit"].(int), fc.Args["offset"].(*int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.DataDiscoveriesListResult)
+	fc.Result = res
+	return ec.marshalNDataDiscoveriesListResult2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataDiscoveriesListResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Workspace_discoveries(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Workspace",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "discoveries":
+				return ec.fieldContext_DataDiscoveriesListResult_discoveries(ctx, field)
+			case "numDiscoveries":
+				return ec.fieldContext_DataDiscoveriesListResult_numDiscoveries(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DataDiscoveriesListResult", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Workspace_discoveries_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Workspace_jobs(ctx context.Context, field graphql.CollectedField, obj *model.Workspace) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Workspace_jobs(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Workspace().Jobs(rctx, obj, fc.Args["jobType"].(string), fc.Args["status"].([]*model.JobStatus), fc.Args["query"].(*string), fc.Args["limit"].(int), fc.Args["offset"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.JobsResult)
+	fc.Result = res
+	return ec.marshalNJobsResult2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJobsResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Workspace_jobs(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Workspace",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "jobs":
+				return ec.fieldContext_JobsResult_jobs(ctx, field)
+			case "numJobs":
+				return ec.fieldContext_JobsResult_numJobs(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type JobsResult", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Workspace_jobs_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -11108,6 +11633,33 @@ func (ec *executionContext) _DataDiscovery(ctx context.Context, sel ast.Selectio
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "siloDefinitionID":
+
+			out.Values[i] = ec._DataDiscovery_siloDefinitionID(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "siloDefinition":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._DataDiscovery_siloDefinition(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "type":
 
 			out.Values[i] = ec._DataDiscovery_type(ctx, field, obj)
@@ -11287,42 +11839,62 @@ func (ec *executionContext) _Job(ctx context.Context, sel ast.SelectionSet, obj 
 			out.Values[i] = ec._Job_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "jobType":
 
 			out.Values[i] = ec._Job_jobType(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "resourceId":
 
 			out.Values[i] = ec._Job_resourceId(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "status":
 
 			out.Values[i] = ec._Job_status(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
+		case "siloDefinition":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Job_siloDefinition(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "createdAt":
 
 			out.Values[i] = ec._Job_createdAt(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "updatedAt":
 
 			out.Values[i] = ec._Job_updatedAt(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -12488,6 +13060,46 @@ func (ec *executionContext) _Workspace(ctx context.Context, sel ast.SelectionSet
 
 			out.Values[i] = ec._Workspace_categories(ctx, field, obj)
 
+		case "discoveries":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Workspace_discoveries(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "jobs":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Workspace_jobs(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "siloDefinitions":
 			field := field
 
@@ -13851,6 +14463,22 @@ func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.Se
 		return graphql.Null
 	}
 	res := graphql.MarshalID(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalInt(*v)
 	return res
 }
 

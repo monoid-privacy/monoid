@@ -12,6 +12,9 @@ type Job {
     jobType: String!
     resourceId: ID!
     status: JobStatus!
+
+    siloDefinition: SiloDefinition!
+
     createdAt: Time!
     updatedAt: Time!
 }
@@ -21,10 +24,20 @@ type JobsResult {
     numJobs: Int!
 }
 
+extend type Workspace {
+    jobs(
+        jobType: String!,
+        status: [JobStatus],
+        query: String,
+        limit: Int!,
+        offset: Int!
+    ): JobsResult!
+}
 extend type Query {
     jobs(
         resourceId: ID!,
         jobType: String!,
+        query: String
         status: [JobStatus],
         limit: Int!,
         offset: Int!

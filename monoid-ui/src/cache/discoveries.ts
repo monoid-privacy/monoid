@@ -2,7 +2,7 @@ import { FieldPolicy, FieldReadFunction } from '@apollo/client';
 
 export default function discoveriesCache(): FieldPolicy<any> | FieldReadFunction<any> {
   return ({
-    keyArgs: ['statuses'],
+    keyArgs: ['query', 'statuses'],
     read(existing, { args }) {
       const offset = args?.offset || 0;
       const limit = args?.limit || 0;
@@ -30,7 +30,9 @@ export default function discoveriesCache(): FieldPolicy<any> | FieldReadFunction
       }
 
       const r = {
+        ...incoming,
         discoveries: merged,
+        numDiscoveries: existing?.numDiscoveries,
       };
 
       return r;

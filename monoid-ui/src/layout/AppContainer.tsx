@@ -1,7 +1,7 @@
 import React from 'react';
 
 import {
-  BeakerIcon, CloudIcon, CogIcon, DocumentIcon,
+  BeakerIcon, BellAlertIcon, CloudIcon, CogIcon, DocumentIcon,
 } from '@heroicons/react/24/outline';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { faSlack, faGithub } from '@fortawesome/free-brands-svg-icons';
@@ -30,9 +30,9 @@ export default function AppContainer(props: {
         title: 'Dashboard',
         icon: BeakerIcon,
         onClick: () => {
-          navigate('/dashboard');
+          navigate(`/workspaces/${id}/dashboard`);
         },
-        current: location.pathname.startsWith('/dashboard'),
+        current: location.pathname.startsWith(`/workspaces/${id}/dashboard`),
         key: 'dashboard',
       },
       {
@@ -43,6 +43,15 @@ export default function AppContainer(props: {
         },
         current: location.pathname.startsWith(`/workspaces/${id}/silos`),
         key: 'data_silos',
+      },
+      {
+        title: 'Alerts',
+        icon: BellAlertIcon,
+        onClick: () => {
+          navigate(`/workspaces/${id}/alerts`);
+        },
+        current: location.pathname.startsWith(`/workspaces/${id}/alerts`),
+        key: 'alerts',
       },
       {
         title: 'Settings',

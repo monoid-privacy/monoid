@@ -89,3 +89,10 @@ models:
     fields:
       data:
         resolver: true
+      siloDefinition:
+        resolver: true
+  Job:
+    fields:
+      siloDefinition:
+        resolver: true
+

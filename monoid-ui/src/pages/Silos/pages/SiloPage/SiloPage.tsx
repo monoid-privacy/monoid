@@ -27,7 +27,7 @@ const GET_SILO_TITLE_DATA = gql`
 
 export default function SiloPage(
   props: {
-    tab: 'settings' | 'data_sources' | 'alerts' | 'scanning'
+    tab: 'settings' | 'data_sources' | 'alerts' | 'scans'
   },
 ) {
   const { tab } = props;
@@ -77,8 +77,8 @@ export default function SiloPage(
             tabKey: 'settings',
             tabBody: <SiloConfig />,
           }, {
-            tabName: 'Scanning',
-            tabKey: 'scanning',
+            tabName: 'Scans',
+            tabKey: 'scans',
             tabBody: <SiloScans />,
           }, {
             tabName: <SiloAlertsTabHeader />,

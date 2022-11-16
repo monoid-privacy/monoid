@@ -2,7 +2,7 @@ import { FieldPolicy, FieldReadFunction } from '@apollo/client';
 
 export default function jobsQueryCache(): FieldPolicy<any> | FieldReadFunction<any> {
   return ({
-    keyArgs: ['resourceId', 'jobType', 'status'],
+    keyArgs: ['resourceId', 'jobType', 'status', 'query'],
     read(existing, { args }) {
       const offset = args?.offset || 0;
       const limit = args?.limit || 0;
@@ -31,6 +31,7 @@ export default function jobsQueryCache(): FieldPolicy<any> | FieldReadFunction<a
       }
 
       return {
+        ...incoming,
         jobs: merged,
         numJobs: incoming.numJobs || existing?.numJobs,
       };

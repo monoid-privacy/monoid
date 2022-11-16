@@ -7,11 +7,22 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/brist-ai/monoid/generated"
 	"github.com/brist-ai/monoid/model"
 	"gorm.io/gorm"
 )
+
+// SiloDefinition is the resolver for the siloDefinition field.
+func (r *dataDiscoveryResolver) SiloDefinition(ctx context.Context, obj *model.DataDiscovery) (*model.SiloDefinition, error) {
+	def := model.SiloDefinition{}
+	if err := r.Conf.DB.Where("id = ?", obj.SiloDefinitionID).First(&def).Error; err != nil {
+		return nil, handleError(err, "Error getting silo definition")
+	}
+
+	return &def, nil
+}
 
 // Data is the resolver for the data field.
 func (r *dataDiscoveryResolver) Data(ctx context.Context, obj *model.DataDiscovery) (model.DataDiscoveryData, error) {
@@ -134,7 +145,7 @@ func (r *propertyMissingDiscoveryResolver) Property(ctx context.Context, obj *mo
 }
 
 // Discoveries is the resolver for the discoveries field.
-func (r *siloDefinitionResolver) Discoveries(ctx context.Context, obj *model.SiloDefinition, statuses []*model.DiscoveryStatus, limit int, offset int) (*model.DataDiscoveriesListResult, error) {
+func (r *siloDefinitionResolver) Discoveries(ctx context.Context, obj *model.SiloDefinition, statuses []*model.DiscoveryStatus, query *string, limit int, offset int) (*model.DataDiscoveriesListResult, error) {
 	discoveries := []*model.DataDiscovery{}
 	q := r.Conf.DB.Where(
 		"silo_definition_id = ?",
@@ -149,7 +160,47 @@ func (r *siloDefinitionResolver) Discoveries(ctx context.Context, obj *model.Sil
 		"(CASE WHEN status = 'OPEN' THEN 1 ELSE 2 END) asc, created_at desc, id desc",
 	)
 
+	if query != nil && strings.TrimSpace(*query) != "" {
+		q.Where("id = ?", strings.TrimSpace(*query))
+	}
+
 	if err := q.Session(&gorm.Session{}).Limit(limit).Offset(offset).Find(&discoveries).Error; err != nil {
+		return nil, handleError(err, "Error getting discoveries")
+	}
+
+	count := int64(0)
+	if err := q.Session(&gorm.Session{}).Model(&model.DataDiscovery{}).Count(&count).Error; err != nil {
+		return nil, handleError(err, "Error getting discovery count.")
+	}
+
+	return &model.DataDiscoveriesListResult{
+		Discoveries:    discoveries,
+		NumDiscoveries: int(count),
+	}, nil
+}
+
+// Discoveries is the resolver for the discoveries field.
+func (r *workspaceResolver) Discoveries(ctx context.Context, obj *model.Workspace, statuses []*model.DiscoveryStatus, query *string, limit int, offset *int) (*model.DataDiscoveriesListResult, error) {
+	offsetVal := 0
+	if offset != nil {
+		offsetVal = *offset
+	}
+
+	discoveries := []*model.DataDiscovery{}
+
+	q := r.Conf.DB.Order(
+		"(CASE WHEN status = 'OPEN' THEN 1 ELSE 2 END) asc, created_at desc, id desc",
+	)
+
+	if query != nil && strings.TrimSpace(*query) != "" {
+		q.Where("id = ?", strings.TrimSpace(*query))
+	}
+
+	if len(statuses) != 0 {
+		q = q.Where("status IN ?", statuses)
+	}
+
+	if err := q.Session(&gorm.Session{}).Limit(limit).Offset(offsetVal).Find(&discoveries).Error; err != nil {
 		return nil, handleError(err, "Error getting discoveries")
 	}
 
