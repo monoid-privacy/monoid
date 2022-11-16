@@ -1,6 +1,7 @@
 import { useQuery } from '@apollo/client';
 import React, { useState, useEffect } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import AlertRegion from '../../components/AlertRegion';
 import Card, { CardDivider } from '../../components/Card';
 import Input from '../../components/Input';
@@ -10,6 +11,7 @@ import Spinner from '../../components/Spinner';
 import { Job } from '../../lib/models';
 import { GET_ALL_SCANS } from '../../graphql/jobs_queries';
 import JobRow from '../Silos/pages/SiloPage/components/JobRow';
+import EmptyState from '../../components/Empty';
 
 function ScansListCardBody(props: { query: string }) {
   const { query } = props;
@@ -37,6 +39,20 @@ function ScansListCardBody(props: { query: string }) {
       <AlertRegion alertTitle="Error">
         {error.message}
       </AlertRegion>
+    );
+  }
+
+  if (!data.workspace.jobs.jobs.length) {
+    return (
+      <EmptyState
+        icon={MagnifyingGlassIcon}
+        title="No Scans"
+        subtitle="When you scan a data silo, scans will show up here."
+        action={(
+          <div />
+        )}
+        className="py-8"
+      />
     );
   }
 

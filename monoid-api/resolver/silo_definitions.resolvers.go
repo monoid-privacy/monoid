@@ -12,10 +12,12 @@ import (
 	"strings"
 
 	"github.com/brist-ai/monoid/generated"
+	"github.com/brist-ai/monoid/jsonschema"
 	"github.com/brist-ai/monoid/model"
 	"github.com/brist-ai/monoid/workflow"
 	"github.com/google/uuid"
 	cron "github.com/robfig/cron/v3"
+	"github.com/rs/zerolog/log"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.temporal.io/sdk/client"
 	"gorm.io/gorm"
@@ -105,7 +107,35 @@ func (r *mutationResolver) UpdateSiloDefinition(ctx context.Context, input *mode
 	siloDefinition.Description = input.Description
 
 	if input.SiloData != nil {
-		siloDefinition.Config = model.SecretString(*input.SiloData)
+		data := map[string]interface{}{}
+		if err := json.Unmarshal([]byte(*input.SiloData), &data); err != nil {
+			return nil, handleError(err, "Invalid config.")
+		}
+
+		oldData := map[string]interface{}{}
+		if err := json.Unmarshal([]byte(siloDefinition.Config), &oldData); err != nil {
+			log.Err(err).Msg("Error unmarshalling old config.")
+		}
+
+		schemaStr := siloDefinition.SiloSpecification.Schema
+		if schemaStr != nil {
+			schema := jsonschema.Schema{}
+			if err := json.Unmarshal([]byte(*schemaStr), &schema); err != nil {
+				return nil, handleError(err, "Could not parse schema.")
+			}
+
+			res := jsonschema.MergeData(oldData, data, &schema)
+			fmt.Println("Merged", res)
+
+			resJSON, err := json.Marshal(&res)
+			if err != nil {
+				return nil, handleError(err, "Could not validate config.")
+			}
+
+			siloDefinition.Config = model.SecretString(resJSON)
+		} else {
+			siloDefinition.Config = model.SecretString(*input.SiloData)
+		}
 	}
 
 	subjects := []model.Subject{}
@@ -309,10 +339,27 @@ func (r *siloDefinitionResolver) DataSources(ctx context.Context, obj *model.Sil
 
 // SiloConfig is the resolver for the siloConfig field.
 func (r *siloDefinitionResolver) SiloConfig(ctx context.Context, obj *model.SiloDefinition) (map[string]interface{}, error) {
+	siloSpec := model.SiloSpecification{}
+
+	if err := r.Conf.DB.Where("id = ?", obj.SiloSpecificationID).First(&siloSpec).Error; err != nil {
+		return nil, err
+	}
+
 	res := map[string]interface{}{}
 	if err := json.Unmarshal([]byte(obj.Config), &res); err != nil {
-		return nil, handleError(err, "Error decoding config")
+		return nil, handleError(err, "Error decoding config.")
 	}
+
+	if siloSpec.Schema == nil {
+		return res, nil
+	}
+
+	schema := jsonschema.Schema{}
+	if err := json.Unmarshal([]byte(*siloSpec.Schema), &schema); err != nil {
+		return nil, handleError(err, "Could not parse schema.")
+	}
+
+	jsonschema.HideSecrets(res, &schema)
 
 	return res, nil
 }

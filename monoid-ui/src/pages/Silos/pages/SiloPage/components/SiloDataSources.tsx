@@ -1,48 +1,28 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext } from 'react';
 import {
   ApolloError,
-  gql, useApolloClient, useMutation, useQuery,
+  gql, useMutation, useQuery,
 } from '@apollo/client';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
-  CheckCircleIcon, MinusCircleIcon, PlusCircleIcon, XCircleIcon,
+  CheckCircleIcon, CircleStackIcon, MinusCircleIcon, PlusCircleIcon, XCircleIcon,
 } from '@heroicons/react/24/outline';
 import {
   CheckIcon, XMarkIcon,
 } from '@heroicons/react/24/solid';
 
-import Button from '../../../../../components/Button';
 import Spinner from '../../../../../components/Spinner';
 import AlertRegion from '../../../../../components/AlertRegion';
 import Table from '../../../../../components/Table';
-import { DataSource, Job, Property } from '../../../../../lib/models';
+import { DataSource, Property } from '../../../../../lib/models';
 import CategoryCombobox from './CategoryCombobox';
 import Badge from '../../../../../components/Badge';
-import { dedup } from '../../../../../utils/utils';
+import { classNames, dedup } from '../../../../../utils/utils';
 import ToastContext from '../../../../../contexts/ToastContext';
-import Card, { CardHeader } from '../../../../../components/Card';
-
-const RUN_SOURCE_SCAN = gql`
-  mutation RunSourceScan($id: ID!, $workspaceId: ID!) {
-    detectSiloSources(id: $id, workspaceId: $workspaceId) {
-      id
-      status
-      jobType
-    }
-  }
-`;
-
-const RUNNING_DETECT_SILO_JOBS = gql`
-  query RunningDiscoverJobs($resourceId: ID!) {
-    jobs(resourceId: $resourceId, jobType: "discover_sources", status: [RUNNING, QUEUED], limit: 1, offset: 0) {
-      jobs {
-        id
-        jobType
-        status
-      }
-    }
-  }
-`;
+import Card, { CardDivider, CardHeader } from '../../../../../components/Card';
+import ScanButtonRegion from './ScanButton';
+import EmptyState from '../../../../../components/Empty';
+import Button from '../../../../../components/Button';
 
 const SILO_DATA_SOURCES = gql`
   query SiloDataSources($id: ID!, $workspaceId: ID!) {
@@ -73,72 +53,6 @@ const REVIEW_PROPERTIES = gql`
     }
   }
 `;
-
-function ScanRegion(props: {
-  siloId: string,
-  children: React.ReactNode,
-  onScanStatusChange?: (status: 'COMPLETED' | 'STARTED') => void,
-}) {
-  const { siloId, children, onScanStatusChange } = props;
-
-  const {
-    data,
-    previousData,
-    loading,
-    error,
-  } = useQuery<{ jobs: { jobs: Job[] } }>(RUNNING_DETECT_SILO_JOBS, {
-    variables: {
-      resourceId: siloId,
-    },
-    pollInterval: 5000,
-    fetchPolicy: 'network-only',
-  });
-
-  useEffect(() => {
-    if (!onScanStatusChange || !previousData) {
-      return;
-    }
-
-    if (previousData?.jobs.jobs.length === 0 && data?.jobs.jobs.length !== 0) {
-      onScanStatusChange('STARTED');
-    }
-
-    if (previousData?.jobs.jobs.length !== 0 && data?.jobs.jobs.length === 0) {
-      onScanStatusChange('COMPLETED');
-    }
-  }, [data, previousData]);
-
-  if (loading) {
-    return <Spinner />;
-  }
-
-  if (error) {
-    return (
-      <AlertRegion alertTitle={error.message} />
-    );
-  }
-
-  if (data!.jobs.jobs.length === 0) {
-    return (
-      <div>
-        {children}
-      </div>
-    );
-  }
-
-  return (
-    <Button disabled>
-      <div className="flex items-center">
-        <div className="mr-1"> Scan In Progress </div>
-        <Spinner size="sm" color="white" />
-      </div>
-    </Button>
-  );
-}
-
-ScanRegion.defaultProps = {
-  onScanStatusChange: () => { },
-};
 
 function TentativePropertyBadge(props: { property: Property }) {
   const { property } = props;
@@ -215,7 +129,6 @@ function TentativePropertyBadge(props: { property: Property }) {
 }
 
 export default function SiloDataSources() {
-  const [runScan, runScanRes] = useMutation<{ detectSiloSources: Job }>(RUN_SOURCE_SCAN);
   const { siloId, id } = useParams<{ siloId: string, id: string }>();
   const {
     data, loading, error, refetch,
@@ -225,7 +138,7 @@ export default function SiloDataSources() {
       workspaceId: id,
     },
   });
-  const client = useApolloClient();
+  const navigate = useNavigate();
   const toastCtx = useContext(ToastContext);
 
   if (loading) {
@@ -240,13 +153,23 @@ export default function SiloDataSources() {
     );
   }
 
+  const empty = !data.workspace.siloDefinition.dataSources.length;
+
   return (
-    <Card innerClassName="px-0 py-0 sm:p-0" className="overflow-hidden">
-      <CardHeader className="flex items-center px-4 py-4 sm:px-6">
+    <Card
+      innerClassName={
+        classNames(
+          empty ? 'sm:pt-0' : 'py-0 px-0 sm:p-0',
+        )
+      }
+      className="overflow-hidden"
+    >
+      <CardHeader className={classNames('flex items-center px-4 sm:px-6', empty ? 'pt-5 sm:pt-6' : 'py-5 sm:py-6')}>
         Sources
         <div className="ml-auto">
-          <ScanRegion
+          <ScanButtonRegion
             siloId={siloId!}
+            workspaceId={id!}
             onScanStatusChange={(s) => {
               if (s === 'COMPLETED') {
                 refetch();
@@ -259,185 +182,176 @@ export default function SiloDataSources() {
               }
             }}
           >
-            <Button onClick={() => {
-              runScan({
-                variables: {
-                  id: siloId,
-                  workspaceId: id,
-                },
-              }).then(({ data: resData }) => {
-                client.writeQuery({
-                  query: RUNNING_DETECT_SILO_JOBS,
-                  data: {
-                    jobs: {
-                      jobs: [resData!.detectSiloSources],
-                      numJobs: 1,
-                    },
-                  },
-                  variables: {
-                    resourceId: siloId,
-                  },
-                });
-              }).catch((err: ApolloError) => {
-                toastCtx.showToast({
-                  variant: 'danger',
-                  title: 'Error',
-                  message: err.message,
-                  icon: XCircleIcon,
-                });
-              });
-            }}
-            >
-              {runScanRes.loading ? <Spinner color="white" size="sm" /> : 'Re-Scan'}
-            </Button>
-          </ScanRegion>
+            Scan
+          </ScanButtonRegion>
         </div>
       </CardHeader>
-      <Table
-        type="plain"
-        tableCols={[
-          {
-            header: 'Name',
-            key: 'name',
-          },
-          {
-            header: 'Tracked Properties',
-            key: 'properties',
-          },
-        ]}
-        tableRows={data?.workspace.siloDefinition.dataSources.map((ds: DataSource) => ({
-          key: ds.id!,
-          columns: [
-            {
-              key: 'name',
-              content: (
-                <div className="flex flex-col items-start">
-                  <div>{ds.name}</div>
-                  <div className="space-x-2">
-                    {
-                      ds.tentative
-                      && (
-                        <Badge color={ds.tentative === 'CREATED' ? 'green' : 'red'} className="mt-2">
-                          {ds.tentative === 'CREATED' ? 'Discovered' : 'Deleted'}
-                        </Badge>
-                      )
-                    }
-                    {
-                      (ds.properties?.filter((p) => p.tentative).length || 0) !== 0
-                      && (
-                        <Badge color="yellow" className="mt-2">
-                          Property Changes Discovered
-                        </Badge>
-                      )
-                    }
-                  </div>
-                </div>
-              ),
-            },
-            {
-              key: 'properties',
-              content: (
-                <div className="space-x-2">
+      {
+        !empty
+          ? (
+            <Table
+              type="plain"
+              tableCols={[
+                {
+                  header: 'Name',
+                  key: 'name',
+                },
+                {
+                  header: 'Tracked Properties',
+                  key: 'properties',
+                },
+              ]}
+              tableRows={data?.workspace.siloDefinition.dataSources.map((ds: DataSource) => ({
+                key: ds.id!,
+                columns: [
                   {
-                    dedup(
-                      // Get all the categories that are listed under the properties for
-                      // the data source.
-                      ds.properties?.flatMap((p) => p.categories?.map(((c) => {
-                        if (!p.tentative) {
-                          return {
-                            ...c,
-                            tentative: c.tentative,
-                          };
-                        }
-
-                        if (p.tentative === 'DELETED') {
-                          return {
-                            ...c,
-                            tentative: 'DELETED',
-                          };
-                        }
-                        return {
-                          ...c,
-                          tentative: c.tentative ? c.tentative : p.tentative,
-                        };
-                      })) || []) || [],
-                      (c) => c.id!,
-                    ).map((c) => (
-                      <Badge key={c.id} color={c.tentative ? 'yellow' : 'blue'}>
-                        <div className="mr-1">
-                          {c.tentative && (
-                            c.tentative === 'CREATED'
-                              ? <PlusCircleIcon className="w-4 h-4" />
-                              : <MinusCircleIcon className="w-4 h-4" />
-                          )}
+                    key: 'name',
+                    content: (
+                      <div className="flex flex-col items-start">
+                        <div>{ds.name}</div>
+                        <div className="space-x-2">
+                          {
+                            ds.tentative
+                            && (
+                              <Badge color={ds.tentative === 'CREATED' ? 'green' : 'red'} className="mt-2">
+                                {ds.tentative === 'CREATED' ? 'Discovered' : 'Deleted'}
+                              </Badge>
+                            )
+                          }
+                          {
+                            (ds.properties?.filter((p) => p.tentative).length || 0) !== 0
+                            && (
+                              <Badge color="yellow" className="mt-2">
+                                Property Changes Discovered
+                              </Badge>
+                            )
+                          }
                         </div>
-                        {c.name}
-                      </Badge>
-                    ))
-                  }
-                </div>
-              ),
-            },
-          ],
+                      </div>
+                    ),
+                  },
+                  {
+                    key: 'properties',
+                    content: (
+                      <div className="space-x-2">
+                        {
+                          dedup(
+                            // Get all the categories that are listed under the properties for
+                            // the data source.
+                            ds.properties?.flatMap((p) => p.categories?.map(((c) => {
+                              if (!p.tentative) {
+                                return {
+                                  ...c,
+                                  tentative: c.tentative,
+                                };
+                              }
 
-          nestedComponent: (
-            <tr>
-              <td colSpan={3} className="p-0">
-                <div>
-                  <Table
-                    tableCols={[{
-                      header: 'Property Name',
-                      key: 'name',
-                    }, {
-                      header: 'Category',
-                      key: 'cat',
-                    }]}
-                    tableRows={
-                      ds.properties?.map(
-                        (p: Property) => ({
-                          key: p.id!,
-                          columns: [
-                            {
-                              key: 'name',
-                              content: (
-                                <div className="flex flex-col items-start">
-                                  {p.name}
-                                  {p.tentative
-                                    && (
-                                      <TentativePropertyBadge
-                                        key={p.id}
-                                        property={p}
+                              if (p.tentative === 'DELETED') {
+                                return {
+                                  ...c,
+                                  tentative: 'DELETED',
+                                };
+                              }
+                              return {
+                                ...c,
+                                tentative: c.tentative ? c.tentative : p.tentative,
+                              };
+                            })) || []) || [],
+                            (c) => c.id!,
+                          ).map((c) => (
+                            <Badge key={c.id} color={c.tentative ? 'yellow' : 'blue'}>
+                              <div className="mr-1">
+                                {c.tentative && (
+                                  c.tentative === 'CREATED'
+                                    ? <PlusCircleIcon className="w-4 h-4" />
+                                    : <MinusCircleIcon className="w-4 h-4" />
+                                )}
+                              </div>
+                              {c.name}
+                            </Badge>
+                          ))
+                        }
+                      </div>
+                    ),
+                  },
+                ],
+
+                nestedComponent: (
+                  <tr>
+                    <td colSpan={3} className="p-0">
+                      <div>
+                        <Table
+                          tableCols={[{
+                            header: 'Property Name',
+                            key: 'name',
+                          }, {
+                            header: 'Category',
+                            key: 'cat',
+                          }]}
+                          tableRows={
+                            ds.properties?.map(
+                              (p: Property) => ({
+                                key: p.id!,
+                                columns: [
+                                  {
+                                    key: 'name',
+                                    content: (
+                                      <div className="flex flex-col items-start">
+                                        {p.name}
+                                        {p.tentative
+                                          && (
+                                            <TentativePropertyBadge
+                                              key={p.id}
+                                              property={p}
+                                            />
+                                          )}
+
+                                      </div>
+                                    ),
+                                  },
+                                  {
+                                    key: 'cat',
+                                    content: (
+                                      <CategoryCombobox
+                                        value={p.categories?.map((c) => c.id!) || []}
+                                        propertyId={p.id!}
                                       />
-                                    )}
-
-                                </div>
-                              ),
-                            },
-                            {
-                              key: 'cat',
-                              content: (
-                                <CategoryCombobox
-                                  value={p.categories?.map((c) => c.id!) || []}
-                                  propertyId={p.id!}
-                                />
-                              ),
-                            },
-                          ],
-                        }),
-                      )
-                    }
-                    type="plain"
-                    insetClass="pl-12"
-                    className="border-y-2 border-gray-300"
-                  />
-                </div>
-              </td>
-            </tr>
-          ),
-        }))}
-        innerClassName="border-t border-gray-300"
-        nested
-      />
+                                    ),
+                                  },
+                                ],
+                              }),
+                            )
+                          }
+                          type="plain"
+                          insetClass="pl-12"
+                          className="border-y-2 border-gray-300"
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                ),
+              }))}
+              innerClassName="border-t border-gray-300"
+              nested
+            />
+          )
+          : (
+            <>
+              <CardDivider />
+              <EmptyState
+                icon={CircleStackIcon}
+                title="No Data Sources"
+                subtitle="You can find data sources by running a scan and applying alerts."
+                action={(
+                  <Button onClick={() => navigate('../alerts')}>
+                    View Alerts
+                  </Button>
+                )}
+                className="py-8"
+              />
+            </>
+          )
+      }
     </Card>
   );
 }

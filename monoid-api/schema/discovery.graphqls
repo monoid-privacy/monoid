@@ -78,7 +78,12 @@ extend type SiloDefinition {
     List the discoveries for a silo. If a query is specified, it is used to look up
     a discovery by ID.
     """
-    discoveries(statuses: [DiscoveryStatus], query: String, limit: Int!, offset: Int!): DataDiscoveriesListResult!
+    discoveries(
+        statuses: [DiscoveryStatus],
+        query: String,
+        limit: Int!,
+        offset: Int!
+    ): DataDiscoveriesListResult!
 }
 
 enum DiscoveryAction {

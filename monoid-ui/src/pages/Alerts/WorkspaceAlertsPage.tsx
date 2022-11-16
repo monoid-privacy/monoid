@@ -1,6 +1,7 @@
 import { useQuery } from '@apollo/client';
 import React, { useState, useEffect } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
+import { BellAlertIcon } from '@heroicons/react/24/outline';
 import AlertRegion from '../../components/AlertRegion';
 import Card, { CardDivider } from '../../components/Card';
 import Input from '../../components/Input';
@@ -10,6 +11,7 @@ import Spinner from '../../components/Spinner';
 import { DataDiscovery } from '../../lib/models';
 import DataDiscoveryRow from '../Silos/pages/SiloPage/components/DataDiscoveryRow';
 import { GET_WORKSPACE_DISCOVERIES } from '../../graphql/discovery_query';
+import EmptyState from '../../components/Empty';
 
 function AlertListCardBody(props: { query: string }) {
   const { id } = useParams<{ siloId: string, id: string }>();
@@ -37,6 +39,20 @@ function AlertListCardBody(props: { query: string }) {
       <AlertRegion alertTitle="Error">
         {error.message}
       </AlertRegion>
+    );
+  }
+
+  if (!data.workspace.discoveries.discoveries.length) {
+    return (
+      <EmptyState
+        icon={BellAlertIcon}
+        title="No Alerts"
+        subtitle="Alerts will be created when you run a scan of a data silo."
+        action={(
+          <div />
+        )}
+        className="py-8"
+      />
     );
   }
 

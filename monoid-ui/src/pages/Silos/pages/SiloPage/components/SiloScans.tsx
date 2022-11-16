@@ -9,6 +9,7 @@ import updateLocale from 'dayjs/plugin/updateLocale';
 import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
+import { CheckCircleIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import AlertRegion from '../../../../../components/AlertRegion';
 import Card, { CardDivider, CardHeader } from '../../../../../components/Card';
 import Input, { InputLabel } from '../../../../../components/Input';
@@ -18,6 +19,8 @@ import { Job } from '../../../../../lib/models';
 import ToastContext from '../../../../../contexts/ToastContext';
 import Pagination from '../../../../../components/Pagination';
 import JobRow from './JobRow';
+import EmptyState from '../../../../../components/Empty';
+import ScanButtonRegion from './ScanButton';
 
 dayjs.extend(updateLocale);
 dayjs.extend(duration);
@@ -92,14 +95,15 @@ const scanOptions = [
 const limit = 10;
 
 function JobList(props: {
-  siloID: string,
   query: string
 }) {
-  const { siloID, query } = props;
+  const { siloId, id } = useParams<{ siloId: string, id: string }>();
+  const { query } = props;
   const [offset, setOffset] = useState(0);
+  const toastCtx = useContext(ToastContext);
 
   const {
-    data, loading, error, fetchMore,
+    data, loading, error, fetchMore, refetch,
   } = useQuery<{
     jobs: {
       jobs: Job[],
@@ -107,7 +111,7 @@ function JobList(props: {
     }
   }>(GET_SCANS, {
     variables: {
-      resourceId: siloID,
+      resourceId: siloId,
       query: query.trim() !== '' ? query : undefined,
       limit,
       offset,
@@ -123,6 +127,36 @@ function JobList(props: {
       <AlertRegion alertTitle="Error">
         {error.message}
       </AlertRegion>
+    );
+  }
+
+  if (!data?.jobs.jobs.length) {
+    return (
+      <EmptyState
+        icon={MagnifyingGlassIcon}
+        title="No Scans"
+        subtitle="When you run a scan, it will show up here"
+        action={(
+          <ScanButtonRegion
+            siloId={siloId!}
+            workspaceId={id!}
+            onScanStatusChange={(s) => {
+              if (s === 'COMPLETED') {
+                refetch();
+                toastCtx.showToast({
+                  variant: 'success',
+                  title: 'Scan Complete',
+                  message: 'Data silo has finished scanning sources.',
+                  icon: CheckCircleIcon,
+                });
+              }
+            }}
+          >
+            Scan
+          </ScanButtonRegion>
+        )}
+        className="pb-5"
+      />
     );
   }
 
@@ -221,7 +255,6 @@ function ScanSettingsCard() {
 }
 
 export default function SiloScans() {
-  const { siloId } = useParams<{ siloId: string }>();
   const [query, setQuery] = useState('');
   const location = useLocation();
 
@@ -237,12 +270,12 @@ export default function SiloScans() {
     <div className="space-y-4">
       <ScanSettingsCard />
       <Card innerClassName="py-0 pt-5 pb-0 sm:pb-0">
-        <CardHeader>
+        <CardHeader className="sm:pb-0 pb-0">
           Scan History
         </CardHeader>
         <Input className="mt-4" placeholder="Job ID" value={query} onChange={(e) => setQuery(e.target.value)} />
         <CardDivider />
-        <JobList siloID={siloId!} query={query} />
+        <JobList query={query} />
       </Card>
     </div>
   );

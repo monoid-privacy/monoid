@@ -29,8 +29,8 @@ export function CardDivider(props: CardDividerProps) {
   const { className, ...rest } = props;
 
   return (
-    <div className={classNames('relative py-5', className)} {...rest}>
-      <div className="absolute inset-0 flex items-center" aria-hidden="true">
+    <div className={classNames('relative py-5 sm:py-6', className)} {...rest}>
+      <div className="absolute inset-x-0 inset-top-1/2 flex items-center h-px" aria-hidden="true">
         <div className="w-full border-t border-gray-300" />
       </div>
     </div>

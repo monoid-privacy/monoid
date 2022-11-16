@@ -1,7 +1,7 @@
 import React from 'react';
 
 import {
-  BeakerIcon, BellAlertIcon, CloudIcon, CogIcon, DocumentIcon,
+  BeakerIcon, BellAlertIcon, CloudIcon, CogIcon, DocumentIcon, MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { faSlack, faGithub } from '@fortawesome/free-brands-svg-icons';
@@ -51,6 +51,15 @@ export default function AppContainer(props: {
           navigate(`/workspaces/${id}/alerts`);
         },
         current: location.pathname.startsWith(`/workspaces/${id}/alerts`),
+        key: 'alerts',
+      },
+      {
+        title: 'Scans',
+        icon: MagnifyingGlassIcon,
+        onClick: () => {
+          navigate(`/workspaces/${id}/scans`);
+        },
+        current: location.pathname.startsWith(`/workspaces/${id}/scans`),
         key: 'alerts',
       },
       {

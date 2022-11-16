@@ -1,5 +1,5 @@
 import { gql, useQuery } from '@apollo/client';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import Spinner from '../../../../../components/Spinner';
 import { SiloSpec } from '../../../../../lib/models';
 import Input, { InputLabel } from '../../../../../components/Input';
@@ -7,6 +7,7 @@ import { MonoidJSONSchema } from '../../../../../lib/types';
 import Toggle from '../../../../../components/Toggle';
 import TextMultiInput from '../../../../../components/TextMultiInput';
 import BorderedRegion from '../../../../../components/BorderedRegion';
+import Button from '../../../../../components/Button';
 
 const GET_SILO_DATA = gql`
   query GetSiloSpecs($id: ID!) {
@@ -24,6 +25,37 @@ const cmp = (v1?: number, v2?: number) => {
   return v1c - v2c;
 };
 
+const buildDefaultObject: (def: MonoidJSONSchema) => any = (def: MonoidJSONSchema) => {
+  if (def.default) {
+    return def.default;
+  }
+
+  switch (def.type) {
+    case 'array':
+      return [];
+    case 'boolean':
+      return false;
+    case 'integer':
+      return 0;
+    case 'number':
+      return 0;
+    case 'object':
+      return Object.fromEntries(
+        Object.keys(def.properties!).map((k) => (
+          { k, v: def.properties![k] as MonoidJSONSchema }
+        )).map(({ k, v }) => (
+          [k, buildDefaultObject(v)]
+        )),
+      );
+    case 'string':
+      return '';
+    default:
+      return null;
+  }
+
+  return null;
+};
+
 function JSONSchemaControl(
   props: {
     def: MonoidJSONSchema,
@@ -35,6 +67,17 @@ function JSONSchemaControl(
   const {
     def, value, onChange, root,
   } = props;
+
+  if (def.secret && value === undefined) {
+    return (
+      <Button onClick={() => {
+        onChange(buildDefaultObject(def));
+      }}
+      >
+        Edit
+      </Button>
+    );
+  }
 
   switch (def.type) {
     case 'string':
@@ -89,7 +132,6 @@ function JSONSchemaControl(
           );
         default:
           return <div />;
-          break;
       }
       break;
     case 'object': {
@@ -137,30 +179,26 @@ JSONSchemaControl.defaultProps = {
   root: false,
 };
 
-const buildDefaultObject: (def: MonoidJSONSchema) => any = (def: MonoidJSONSchema) => {
-  if (def.default) {
-    return def.default;
-  }
-
+const fillSecretVals: (def: MonoidJSONSchema, val: any) => any = (def, val) => {
   switch (def.type) {
     case 'array':
-      return [];
     case 'boolean':
-      return false;
     case 'integer':
-      return 0;
+    case 'string':
     case 'number':
-      return 0;
+      if (def.secret) {
+        return undefined;
+      }
+      return val;
     case 'object':
       return Object.fromEntries(
         Object.keys(def.properties!).map((k) => (
           { k, v: def.properties![k] as MonoidJSONSchema }
         )).map(({ k, v }) => (
-          [k, buildDefaultObject(v)]
+          [k, fillSecretVals(v, val[k])]
         )),
       );
-    case 'string':
-      return '';
+
     default:
       return null;
   }
@@ -214,12 +252,21 @@ export default function SiloFields(props: {
     }
 
     const schema = JSON.parse(data.siloSpecification.schema) as MonoidJSONSchema;
-    if (!prefilled) {
-      setSiloData(buildDefaultObject(schema));
-    }
 
     return schema;
   }, [data?.siloSpecification]);
+
+  useEffect(() => {
+    if (!jsonSchema) {
+      return;
+    }
+
+    if (!prefilled) {
+      setSiloData(buildDefaultObject(jsonSchema));
+    } else {
+      setSiloData(fillSecretVals(jsonSchema, siloData));
+    }
+  }, [jsonSchema, prefilled]);
 
   if (error) {
     return (

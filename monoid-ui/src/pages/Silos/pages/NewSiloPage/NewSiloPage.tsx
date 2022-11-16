@@ -1,6 +1,6 @@
 import { gql, useMutation } from '@apollo/client';
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import Card from '../../../../components/Card';
 import PageHeader from '../../../../components/PageHeader';
 import SiloForm from './components/SiloForm';
@@ -15,6 +15,7 @@ const CREATE_NEW_SILO = gql`
 
 export default function NewSiloPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
 
   const [createSilo, createSiloRes] = useMutation(CREATE_NEW_SILO);
 
@@ -33,7 +34,7 @@ export default function NewSiloPage() {
                   siloData: JSON.stringify(silo.siloData),
                 },
               },
-            });
+            }).then(({ data }) => navigate(`../${data.createSiloDefinition.id}`)).catch(() => { });
           }}
           loading={createSiloRes.loading}
           error={createSiloRes.error}

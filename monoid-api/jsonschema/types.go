@@ -1,7 +1,10 @@
 package jsonschema
 
 // From https://github.com/invopop/jsonschema
-// Schema represents a JSON Schema object type.
+
+// Schema represents a JSON Schema object type,
+// with added Monoid fields (secret).
+
 // RFC draft-bhutton-json-schema-00 section 4.3
 type Schema struct {
 	// RFC draft-bhutton-json-schema-00
@@ -66,6 +69,8 @@ type Schema struct {
 	ReadOnly    bool          `json:"readOnly,omitempty"`    // section 9.4
 	WriteOnly   bool          `json:"writeOnly,omitempty"`   // section 9.4
 	Examples    []interface{} `json:"examples,omitempty"`    // section 9.5
+
+	Secret bool `json:"secret,omitempty"`
 
 	Extras map[string]interface{} `json:"-"`
 

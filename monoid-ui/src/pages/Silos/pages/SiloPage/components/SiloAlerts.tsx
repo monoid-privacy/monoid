@@ -6,6 +6,7 @@ import React, {
 } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import {
+  BellAlertIcon,
   CheckCircleIcon, XCircleIcon,
 } from '@heroicons/react/24/outline';
 import AlertRegion from '../../../../../components/AlertRegion';
@@ -21,6 +22,8 @@ import Pagination from '../../../../../components/Pagination';
 import { GET_DISCOVERIES } from '../../../../../graphql/discovery_query';
 import DataDiscoveryRow from './DataDiscoveryRow';
 import Input from '../../../../../components/Input';
+import EmptyState from '../../../../../components/Empty';
+import ScanButtonRegion from './ScanButton';
 
 const GET_NUM_ACTIVE_DISCOVERIES = gql`
   query GetNumActiveDiscoveries($id: ID!, $workspaceId: ID!) {
@@ -77,6 +80,7 @@ export function SiloAlertsTabHeader() {
 function SiloCardBody(props: { query?: string }) {
   const { siloId, id } = useParams<{ siloId: string, id: string }>();
   const { query } = props;
+  const toastCtx = useContext(ToastContext);
 
   const [offset, setOffset] = useState(0);
   const vars = {
@@ -88,7 +92,7 @@ function SiloCardBody(props: { query?: string }) {
     offset,
   };
   const {
-    data, loading, error, fetchMore,
+    data, loading, error, fetchMore, refetch,
   } = useQuery(GET_DISCOVERIES, {
     variables: vars,
   });
@@ -102,6 +106,36 @@ function SiloCardBody(props: { query?: string }) {
       <AlertRegion alertTitle="Error">
         {error.message}
       </AlertRegion>
+    );
+  }
+
+  if (data.workspace.siloDefinition.discoveries.discoveries.length === 0) {
+    return (
+      <EmptyState
+        icon={BellAlertIcon}
+        title="No Alerts"
+        subtitle="Alerts will be created when you run a scan."
+        action={(
+          <ScanButtonRegion
+            siloId={siloId!}
+            workspaceId={id!}
+            onScanStatusChange={(s) => {
+              if (s === 'COMPLETED') {
+                refetch();
+                toastCtx.showToast({
+                  variant: 'success',
+                  title: 'Scan Complete',
+                  message: 'Data silo has finished scanning sources.',
+                  icon: CheckCircleIcon,
+                });
+              }
+            }}
+          >
+            Scan
+          </ScanButtonRegion>
+        )}
+        className="pb-5"
+      />
     );
   }
 
@@ -229,7 +263,7 @@ export default function SiloAlerts() {
 
   return (
     <Card innerClassName="py-0 pt-5 pb-0 sm:pb-0">
-      <CardHeader className="flex items-center">
+      <CardHeader className="flex items-center sm:pb-0 pb-0">
         <div>
           Alerts
         </div>
