@@ -65,10 +65,10 @@ type RequestStatus {
     request: Request!
     dataSource: DataSource!
     status: RequestStatusType!
-    queryRecords: [QueryRecord!]
+    queryResult: QueryResult
 }
 
-type QueryRecord {
+type QueryResult {
   id: ID!
   requestStatus: RequestStatus!
   records: String

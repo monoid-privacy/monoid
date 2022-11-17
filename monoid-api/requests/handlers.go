@@ -10,8 +10,8 @@ import (
 	"github.com/brist-ai/monoid/monoidprotocol/docker"
 )
 
-func (m *MonoidRequestHandler) HandleDeletion(request DeletionRequest) (*[]monoidprotocol.MonoidRecord, error) {
-	records := []monoidprotocol.MonoidRecord{}
+func (m *MonoidRequestHandler) HandleDeletion(request DeletionRequest) ([]*monoidprotocol.MonoidRecord, error) {
+	records := []*monoidprotocol.MonoidRecord{}
 
 	for _, siloDefinition := range request.SiloDefinitions {
 		newRecords, err := m.deleteUserFromSilo(request.PrimaryKeyMap, siloDefinition)
@@ -20,11 +20,11 @@ func (m *MonoidRequestHandler) HandleDeletion(request DeletionRequest) (*[]monoi
 		}
 		records = append(records, newRecords...)
 	}
-	return &records, nil
+	return records, nil
 }
 
-func (m *MonoidRequestHandler) HandleQuery(request QueryRequest) (*[]monoidprotocol.MonoidRecord, error) {
-	records := []monoidprotocol.MonoidRecord{}
+func (m *MonoidRequestHandler) HandleQuery(request QueryRequest) ([]*monoidprotocol.MonoidRecord, error) {
+	records := []*monoidprotocol.MonoidRecord{}
 
 	for _, siloDefinition := range request.SiloDefinitions {
 		newRecords, err := m.queryUserFromSilo(request.PrimaryKeyMap, siloDefinition)
@@ -33,14 +33,14 @@ func (m *MonoidRequestHandler) HandleQuery(request QueryRequest) (*[]monoidproto
 		}
 		records = append(records, newRecords...)
 	}
-	return &records, nil
+	return records, nil
 
 }
 
-func (m *MonoidRequestHandler) queryUserFromSilo(primaryKeyMap PrimaryKeyMap, siloDefinition model.SiloDefinition) ([]monoidprotocol.MonoidRecord, error) {
+func (m *MonoidRequestHandler) queryUserFromSilo(primaryKeyMap PrimaryKeyMap, siloDefinition model.SiloDefinition) ([]*monoidprotocol.MonoidRecord, error) {
 	var primaryKey string
 	var conf map[string]interface{}
-	var records []monoidprotocol.MonoidRecord
+	var records []*monoidprotocol.MonoidRecord
 
 	protocol, err := docker.NewDockerMP(siloDefinition.SiloSpecification.DockerImage, siloDefinition.SiloSpecification.DockerTag)
 
@@ -120,7 +120,8 @@ func (m *MonoidRequestHandler) queryUserFromSilo(primaryKeyMap PrimaryKeyMap, si
 		}
 
 		for record := range recordChan {
-			records = append(records, record)
+			r := record
+			records = append(records, &r)
 		}
 
 	}
@@ -128,10 +129,10 @@ func (m *MonoidRequestHandler) queryUserFromSilo(primaryKeyMap PrimaryKeyMap, si
 	return records, nil
 }
 
-func (m *MonoidRequestHandler) deleteUserFromSilo(primaryKeyMap PrimaryKeyMap, siloDefinition model.SiloDefinition) ([]monoidprotocol.MonoidRecord, error) {
+func (m *MonoidRequestHandler) deleteUserFromSilo(primaryKeyMap PrimaryKeyMap, siloDefinition model.SiloDefinition) ([]*monoidprotocol.MonoidRecord, error) {
 	var primaryKey string
 	var conf map[string]interface{}
-	var records []monoidprotocol.MonoidRecord
+	var records []*monoidprotocol.MonoidRecord
 
 	protocol, err := docker.NewDockerMP(siloDefinition.SiloSpecification.DockerImage, siloDefinition.SiloSpecification.DockerTag)
 
@@ -211,7 +212,8 @@ func (m *MonoidRequestHandler) deleteUserFromSilo(primaryKeyMap PrimaryKeyMap, s
 		}
 
 		for record := range recordChan {
-			records = append(records, record)
+			r := record
+			records = append(records, &r)
 		}
 
 	}

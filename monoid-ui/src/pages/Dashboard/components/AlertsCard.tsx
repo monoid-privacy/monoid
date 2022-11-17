@@ -35,7 +35,7 @@ function AlertsCardBody() {
   }
 
   return (
-    <ul className="divide-y divide-gray-200 overflow-scroll flex-0">
+    <ul className="divide-y divide-gray-200 overflow-scroll flex-1">
       {
         (data.workspace.discoveries.discoveries as DataDiscovery[]).map((d) => (
           <DataDiscoveryRow

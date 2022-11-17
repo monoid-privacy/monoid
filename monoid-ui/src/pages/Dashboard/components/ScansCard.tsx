@@ -34,7 +34,7 @@ function ScansCardBody() {
   }
 
   return (
-    <ul className="divide-y divide-gray-200 overflow-scroll">
+    <ul className="divide-y divide-gray-200 overflow-scroll flex-1">
       {
         (data.workspace.jobs.jobs as Job[]).map((j) => (
           <JobRow
@@ -61,7 +61,7 @@ export default function ScansCard() {
       <ScansCardBody />
       <CardDivider />
       <div className="flex">
-        <Button variant="outline-white" className="ml-auto">
+        <Button type="link" variant="outline-white" className="ml-auto" to="../scans">
           View All
         </Button>
       </div>

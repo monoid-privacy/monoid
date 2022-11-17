@@ -143,7 +143,7 @@ export default function AppContainer(props: {
         <Sidebar
           sections={sidebarSections}
         />
-        <div className="flex-grow bg-gray-100">
+        <div className="flex-grow bg-gray-100 min-w-0">
           <main>
             <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
               {children}

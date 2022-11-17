@@ -9,7 +9,6 @@ type RequestStatus struct {
 	DataSourceID string
 	DataSource   DataSource `gorm:"constraint:OnDelete:CASCADE;"`
 	Status       RequestStatusType
-	QueryRecords []QueryRecord
 }
 
 type UserPrimaryKey struct {
@@ -42,9 +41,9 @@ type PrimaryKeyValue struct {
 	Value            string
 }
 
-type QueryRecord struct {
+type QueryResult struct {
 	ID              string
 	RequestStatusID string
 	RequestStatus   RequestStatus
-	Records         string
+	Records         *SecretString
 }

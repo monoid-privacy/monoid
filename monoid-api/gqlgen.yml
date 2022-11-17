@@ -99,7 +99,7 @@ models:
         resolver: true
       dataSource:
         resolver: true
-      queryRecords:
+      queryResult:
         resolver: true
   Request:
     fields:
@@ -123,7 +123,7 @@ models:
     fields:
       siloDefinition:
         resolver: true
-  QueryRecord:
+  QueryResult:
     fields:
       requestStatus:
         resolver: true

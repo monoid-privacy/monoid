@@ -1,6 +1,6 @@
 import React from 'react';
 import { gql, useQuery } from '@apollo/client';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { CircleStackIcon, FolderIcon } from '@heroicons/react/24/outline';
 import Table from '../../../../../components/Table';
 import Spinner from '../../../../../components/Spinner';
@@ -33,6 +33,10 @@ query GetRequestData($id: ID!) {
           name
         }
       }
+      queryResult {
+        id
+        records
+      }
     }
   }
 }
@@ -61,7 +65,6 @@ function StatusBadge({ status }: { status: string }) {
 }
 export default function RequestStatuses() {
   const { requestId } = useParams<{ requestId: string }>();
-  const navigate = useNavigate();
   const { data, loading, error } = useQuery<{
     request: Request
   }>(GET_REQUEST_DATA, {
@@ -87,6 +90,7 @@ export default function RequestStatuses() {
   const request = data?.request;
   return (
     <Table
+      nested
       tableCols={[
         {
           header: 'Data Silo',
@@ -103,9 +107,15 @@ export default function RequestStatuses() {
       ]}
       tableRows={request?.requestStatuses?.map((req) => ({
         key: req.id!,
-        onClick: () => {
-          navigate(req.id!);
-        },
+        nestedComponent: req.queryResult && (
+          <tr>
+            <td colSpan={4} className="overflow-hidden">
+              <pre className="text-xs bg-gray-100 p-4">
+                {JSON.stringify(JSON.parse(req.queryResult?.records || ''), null, 2)}
+              </pre>
+            </td>
+          </tr>
+        ),
         columns: [
           {
             key: 'silo',

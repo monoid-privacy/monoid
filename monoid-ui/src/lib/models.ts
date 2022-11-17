@@ -28,11 +28,18 @@ export interface Request {
   type?: string
 }
 
+export interface QueryResult {
+  id?: string
+  requestStatus?: RequestStatus
+  records?: string
+}
+
 export interface RequestStatus {
   id?: string
   request?: Request
   dataSource?: DataSource
   status?: string
+  queryResult?: QueryResult | null
 }
 
 export interface PrimaryKeyValue {

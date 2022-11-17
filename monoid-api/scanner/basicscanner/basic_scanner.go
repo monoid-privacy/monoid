@@ -62,7 +62,7 @@ func (r *BasicScanner) ScanNames() {
 	}
 }
 
-func getValuePathsHelper(schema *jsonschema.Schema, path []string, valuePaths *[]scanner.ValuePath) {
+func getValuePathsHelper(schema *jsonschema.Schema, path []string, valuePaths []scanner.ValuePath) {
 	if schema == nil {
 		return
 	}
@@ -71,7 +71,7 @@ func getValuePathsHelper(schema *jsonschema.Schema, path []string, valuePaths *[
 		if stringInSlice(propertyValue.Type, []string{"string", "number", "integer"}) {
 			copiedPath := make([]string, len(path))
 			copy(copiedPath, path)
-			*valuePaths = append(*valuePaths, scanner.ValuePath{
+			valuePaths = append(valuePaths, scanner.ValuePath{
 				Path: copiedPath,
 				Type: propertyValue.Type,
 			})
@@ -86,7 +86,7 @@ func getValuePathsHelper(schema *jsonschema.Schema, path []string, valuePaths *[
 
 func getValuePaths(schema jsonschema.Schema) []scanner.ValuePath {
 	valuePaths := []scanner.ValuePath{}
-	getValuePathsHelper(&schema, []string{}, &valuePaths)
+	getValuePathsHelper(&schema, []string{}, valuePaths)
 	return valuePaths
 }
 

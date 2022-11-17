@@ -11,6 +11,7 @@ import (
 	"github.com/brist-ai/monoid/monoidprotocol"
 	"github.com/brist-ai/monoid/monoidprotocol/docker"
 	"github.com/google/uuid"
+	"go.temporal.io/sdk/activity"
 	"gorm.io/gorm"
 )
 
@@ -60,48 +61,41 @@ func succeedRequest(requestStatusId string, db *gorm.DB) error {
 	return nil
 }
 
-func monoidRecordToString(record monoidprotocol.MonoidRecord) string {
-	return fmt.Sprintf("%v", record.Data)
-}
-
 func (a *Activity) ExecuteRequest(ctx context.Context, requestId string) error {
-	var newRecords *[]monoidprotocol.MonoidRecord
-	var err error
 	allErrors := []error{}
 	request := model.Request{}
-	queryRecords := []model.QueryRecord{}
 
-	if err := a.Conf.DB.Preload("PrimaryKeyValues").Preload("RequestStatuses").Where("id = ?", requestId).First(&request).Error; err != nil {
+	if err := a.Conf.DB.Preload(
+		"PrimaryKeyValues",
+	).Preload("RequestStatuses").Where("id = ?", requestId).First(&request).Error; err != nil {
 		return err
 	}
 
 	for _, requestStatus := range request.RequestStatuses {
-		err = nil
-		newRecords, err = a.ExecuteRequestOnDataSource(ctx, requestStatus.ID, request.Type)
+		newRecords, err := a.ExecuteRequestOnDataSource(ctx, requestStatus.ID, request.Type)
 		if err != nil {
 			allErrors = append(allErrors, err)
 		}
 
-		if err = succeedRequest(requestStatus.ID, a.Conf.DB); err != nil {
-			allErrors = append(allErrors, err)
+		if request.Type == model.UserDataRequestTypeQuery {
+			records, err := json.Marshal(newRecords)
+			if err != nil {
+				allErrors = append(allErrors, err)
+			}
+
+			r := model.SecretString(records)
+
+			if err = a.Conf.DB.Create(&model.QueryResult{
+				ID:              uuid.NewString(),
+				RequestStatusID: requestStatus.ID,
+				Records:         &r,
+			}).Error; err != nil {
+				allErrors = append(allErrors, err)
+			}
 		}
 
-		if request.Type == model.UserDataRequestTypeQuery {
-			stringRecords := []string{}
-			if newRecords != nil && len(*newRecords) > 0 {
-				for _, newRecord := range *newRecords {
-					stringRecords = append(stringRecords, monoidRecordToString(newRecord))
-				}
-				queryRecords = append(queryRecords, model.QueryRecord{
-					ID:              uuid.NewString(),
-					RequestStatusID: requestStatus.ID,
-					Records:         fmt.Sprintf("%v", stringRecords),
-				})
-
-				if err = a.Conf.DB.Create(&queryRecords).Error; err != nil {
-					allErrors = append(allErrors, err)
-				}
-			}
+		if err = succeedRequest(requestStatus.ID, a.Conf.DB); err != nil {
+			allErrors = append(allErrors, err)
 		}
 	}
 
@@ -135,16 +129,25 @@ func findSchema(
 	return monoidprotocol.MonoidSchema{}, fmt.Errorf("error finding schema")
 }
 
+func safeDeref[T any](p *T) T {
+	if p == nil {
+		var v T
+		return v
+	}
+	return *p
+}
+
 func (a *Activity) ExecuteRequestOnDataSource(
 	ctx context.Context,
 	requestStatusId string,
 	requestType model.UserDataRequestType,
-) (*[]monoidprotocol.MonoidRecord, error) {
+) ([]*monoidprotocol.MonoidRecord, error) {
 	var conf map[string]interface{}
 	var recordChan chan monoidprotocol.MonoidRecord
 	var err error
+	logger := activity.GetLogger(ctx)
 
-	records := []monoidprotocol.MonoidRecord{}
+	records := []*monoidprotocol.MonoidRecord{}
 	requestStatus := model.RequestStatus{}
 
 	if err := a.Conf.DB.Model(model.RequestStatus{}).
@@ -159,7 +162,7 @@ func (a *Activity) ExecuteRequestOnDataSource(
 	}
 
 	if requestStatus.Status == model.RequestStatusTypeExecuted {
-		return &[]monoidprotocol.MonoidRecord{}, nil
+		return []*monoidprotocol.MonoidRecord{}, nil
 	}
 
 	request := requestStatus.Request
@@ -195,27 +198,29 @@ func (a *Activity) ExecuteRequestOnDataSource(
 		return nil, failRequest(requestStatusId, err, a.Conf.DB)
 	}
 
-	primaryKey := ""
+	var primaryKeyProperty *model.Property = nil
 
 	for _, prop := range dataSource.Properties {
 		if prop.UserPrimaryKeyID != nil {
-			primaryKey = *prop.UserPrimaryKeyID
+			primaryKeyProperty = prop
 		}
 	}
 
-	if primaryKey == "" {
+	if primaryKeyProperty == nil {
 		// No user primary key in this data source
-		return &[]monoidprotocol.MonoidRecord{}, nil
+		return []*monoidprotocol.MonoidRecord{}, nil
 	}
 
-	userKey, ok := primaryKeyMap[primaryKey]
+	userKey, ok := primaryKeyMap[*primaryKeyProperty.UserPrimaryKeyID]
 	if !ok {
 		return nil, failRequest(requestStatusId, errors.New("data source's primary key type not defined"), a.Conf.DB)
 	}
 
 	primaryKeyIdentifier := model.UserPrimaryKey{}
 
-	if err = a.Conf.DB.Where("id = ?", primaryKey).First(&primaryKeyIdentifier).Error; err != nil {
+	if err = a.Conf.DB.Where("id = ?", *primaryKeyProperty.UserPrimaryKeyID).First(
+		&primaryKeyIdentifier,
+	).Error; err != nil {
 		return nil, failRequest(requestStatusId, errors.New("data source's primary key type not defined"), a.Conf.DB)
 	}
 
@@ -223,7 +228,7 @@ func (a *Activity) ExecuteRequestOnDataSource(
 		SchemaName:      dataSource.Name,
 		SchemaGroup:     dataSource.Group,
 		JsonSchema:      monoidprotocol.MonoidQueryIdentifierJsonSchema(schema.JsonSchema),
-		Identifier:      primaryKeyIdentifier.Name,
+		Identifier:      primaryKeyProperty.Name,
 		IdentifierQuery: userKey,
 	}
 
@@ -238,13 +243,21 @@ func (a *Activity) ExecuteRequestOnDataSource(
 		})
 	}
 
+	logger.Debug(
+		"Querying:",
+		requestStatus.DataSource.SiloDefinition.Name,
+		safeDeref(requestStatus.DataSource.Group),
+		requestStatus.DataSource.Name,
+		identifier,
+	)
+
 	if err != nil {
 		return nil, failRequest(requestStatusId, err, a.Conf.DB)
 	}
 
 	for record := range recordChan {
-		records = append(records, record)
+		records = append(records, &record)
 	}
 
-	return &records, nil
+	return records, nil
 }

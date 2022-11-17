@@ -1,6 +1,5 @@
 import { gql } from '@apollo/client';
 
-// eslint-disable-next-line import/prefer-default-export
 export const GET_PRIMARY_KEYS = gql`
   query GetPrimaryKeys($id: ID!) {
     workspace(id: $id) {
@@ -12,4 +11,23 @@ export const GET_PRIMARY_KEYS = gql`
       }
     }
   }
+`;
+
+export const GET_REQUESTS = gql`
+query GetRequests($id: ID!, $limit: Int!, $offset: Int) {
+  workspace(id: $id) {
+    id
+    requests(limit: $limit, offset: $offset) {
+      requests {
+        id
+        type
+        createdAt
+        requestStatuses {
+          id
+        }
+      }
+      numRequests
+    }
+  }
+}
 `;

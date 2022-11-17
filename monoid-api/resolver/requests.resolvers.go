@@ -5,6 +5,7 @@ package resolver
 
 import (
 	"context"
+	"errors"
 
 	"github.com/brist-ai/monoid/generated"
 	"github.com/brist-ai/monoid/model"
@@ -233,8 +234,18 @@ func (r *queryResolver) PrimaryKeyValue(ctx context.Context, id string) (*model.
 }
 
 // RequestStatus is the resolver for the requestStatus field.
-func (r *queryRecordResolver) RequestStatus(ctx context.Context, obj *model.QueryRecord) (*model.RequestStatus, error) {
+func (r *queryResultResolver) RequestStatus(ctx context.Context, obj *model.QueryResult) (*model.RequestStatus, error) {
 	return findObjectByID[model.RequestStatus](obj.RequestStatusID, r.Conf.DB, "Error finding request status.")
+}
+
+// Records is the resolver for the records field.
+func (r *queryResultResolver) Records(ctx context.Context, obj *model.QueryResult) (*string, error) {
+	if obj.Records == nil {
+		return nil, nil
+	}
+
+	s := string(*obj.Records)
+	return &s, nil
 }
 
 // PrimaryKeyValues is the resolver for the primaryKeyValues field.
@@ -257,9 +268,18 @@ func (r *requestStatusResolver) DataSource(ctx context.Context, obj *model.Reque
 	return findObjectByID[model.DataSource](obj.DataSourceID, r.Conf.DB, "Error finding data source.")
 }
 
-// QueryRecords is the resolver for the queryRecords field.
-func (r *requestStatusResolver) QueryRecords(ctx context.Context, obj *model.RequestStatus) ([]*model.QueryRecord, error) {
-	return findChildObjects[model.QueryRecord](r.Conf.DB, obj.ID, "query_record_id")
+// QueryResult is the resolver for the queryResult field.
+func (r *requestStatusResolver) QueryResult(ctx context.Context, obj *model.RequestStatus) (*model.QueryResult, error) {
+	result := model.QueryResult{}
+	if err := r.Conf.DB.Where("request_status_id = ?", obj.ID).First(&result).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+
+		return nil, handleError(err, "Error accessing query.")
+	}
+
+	return &result, nil
 }
 
 // Requests is the resolver for the requests field.
@@ -299,8 +319,8 @@ func (r *Resolver) PrimaryKeyValue() generated.PrimaryKeyValueResolver {
 	return &primaryKeyValueResolver{r}
 }
 
-// QueryRecord returns generated.QueryRecordResolver implementation.
-func (r *Resolver) QueryRecord() generated.QueryRecordResolver { return &queryRecordResolver{r} }
+// QueryResult returns generated.QueryResultResolver implementation.
+func (r *Resolver) QueryResult() generated.QueryResultResolver { return &queryResultResolver{r} }
 
 // Request returns generated.RequestResolver implementation.
 func (r *Resolver) Request() generated.RequestResolver { return &requestResolver{r} }
@@ -309,6 +329,6 @@ func (r *Resolver) Request() generated.RequestResolver { return &requestResolver
 func (r *Resolver) RequestStatus() generated.RequestStatusResolver { return &requestStatusResolver{r} }
 
 type primaryKeyValueResolver struct{ *Resolver }
-type queryRecordResolver struct{ *Resolver }
+type queryResultResolver struct{ *Resolver }
 type requestResolver struct{ *Resolver }
 type requestStatusResolver struct{ *Resolver }
