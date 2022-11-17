@@ -64,6 +64,7 @@ export interface Property {
   id?: string
   name?: string
   tentative?: TentativeValue
+  userPrimaryKey?: UserPrimaryKey | null
   categories?: Category[]
   dataSource?: DataSource
 }

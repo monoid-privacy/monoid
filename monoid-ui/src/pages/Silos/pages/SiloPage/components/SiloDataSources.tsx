@@ -23,11 +23,14 @@ import Card, { CardDivider, CardHeader } from '../../../../../components/Card';
 import ScanButtonRegion from './ScanButton';
 import EmptyState from '../../../../../components/Empty';
 import Button from '../../../../../components/Button';
+import IdentifierSelect from './IdentifierSelect';
 
 const SILO_DATA_SOURCES = gql`
   query SiloDataSources($id: ID!, $workspaceId: ID!) {
     workspace(id: $workspaceId) {
+      id
       siloDefinition(id: $id) {
+        id
         dataSources {
           id
           name
@@ -35,6 +38,10 @@ const SILO_DATA_SOURCES = gql`
             id
             name
             categories {
+              id
+              name
+            }
+            userPrimaryKey {
               id
               name
             }
@@ -287,6 +294,9 @@ export default function SiloDataSources() {
                           }, {
                             header: 'Category',
                             key: 'cat',
+                          }, {
+                            header: 'User Identifier',
+                            key: 'user_identifier',
                           }]}
                           tableRows={
                             ds.properties?.map(
@@ -314,6 +324,16 @@ export default function SiloDataSources() {
                                     content: (
                                       <CategoryCombobox
                                         value={p.categories?.map((c) => c.id!) || []}
+                                        propertyId={p.id!}
+                                      />
+                                    ),
+                                  },
+                                  {
+                                    key: 'identifier',
+                                    content: (
+                                      <IdentifierSelect
+                                        value={p.userPrimaryKey?.id}
+                                        workspaceId={id!}
                                         propertyId={p.id!}
                                       />
                                     ),

@@ -10,7 +10,6 @@ type DataSource {
     siloDefinition: SiloDefinition!
     properties: [Property!]
     description: String
-    requestStatuses: [RequestStatus!]
 }
 
 type Property {
@@ -19,7 +18,6 @@ type Property {
     categories: [Category!]
     dataSource: DataSource!
     purposes: [Purpose!]
-    userPrimaryKey: UserPrimaryKey
 }
 
 type SiloSpecification {

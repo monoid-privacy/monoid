@@ -28,7 +28,9 @@ import ScanButtonRegion from './ScanButton';
 const GET_NUM_ACTIVE_DISCOVERIES = gql`
   query GetNumActiveDiscoveries($id: ID!, $workspaceId: ID!) {
     workspace(id: $workspaceId) {
+      id
       siloDefinition(id: $id) {
+        id
         discoveries(limit: 1, offset: 0, statuses: [OPEN]) {
           numDiscoveries
         }

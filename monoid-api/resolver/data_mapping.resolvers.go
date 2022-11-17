@@ -38,11 +38,6 @@ func (r *dataSourceResolver) Properties(ctx context.Context, obj *model.DataSour
 	return properties, nil
 }
 
-// RequestStatuses is the resolver for the requestStatuses field.
-func (r *dataSourceResolver) RequestStatuses(ctx context.Context, obj *model.DataSource) ([]*model.RequestStatus, error) {
-	return findChildObjects[model.RequestStatus](r.Conf.DB, obj.ID, "data_source_id")
-}
-
 // CreateDataSource is the resolver for the createDataSource field.
 func (r *mutationResolver) CreateDataSource(ctx context.Context, input *model.CreateDataSourceInput) (*model.DataSource, error) {
 	dataSource := model.DataSource{
@@ -368,15 +363,6 @@ func (r *propertyResolver) DataSource(ctx context.Context, obj *model.Property) 
 	}
 
 	return &ds, nil
-}
-
-// UserPrimaryKey is the resolver for the userPrimaryKey field.
-func (r *propertyResolver) UserPrimaryKey(ctx context.Context, obj *model.Property) (*model.UserPrimaryKey, error) {
-	if obj.UserPrimaryKeyID == nil {
-		return nil, nil
-	}
-	userPrimaryKeyId := obj.UserPrimaryKeyID
-	return findObjectByID[model.UserPrimaryKey](*userPrimaryKeyId, r.Conf.DB, "Error finding user primary key.")
 }
 
 // DataSource is the resolver for the dataSource field.

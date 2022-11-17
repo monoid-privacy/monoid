@@ -14,7 +14,9 @@ import SiloScans from './components/SiloScans';
 const GET_SILO_TITLE_DATA = gql`
   query GetSiloTitle($id: ID!, $workspaceId: ID!) {
     workspace(id: $workspaceId) {
+      id
       siloDefinition(id: $id) {
+        id
         name
         siloSpecification {
           name

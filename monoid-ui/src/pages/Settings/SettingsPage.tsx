@@ -18,6 +18,7 @@ import ToastContext from '../../contexts/ToastContext';
 const GET_SETTINGS = gql`
   query GetSettings($workspaceId: ID!) {
     workspace(id: $workspaceId) {
+      id
       settings
     }
   }

@@ -4,6 +4,7 @@ import { gql } from '@apollo/client';
 export const GET_PRIMARY_KEYS = gql`
   query GetPrimaryKeys($id: ID!) {
     workspace(id: $id) {
+      id
       userPrimaryKeys {
         id
         name

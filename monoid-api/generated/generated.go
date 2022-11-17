@@ -109,11 +109,6 @@ type ComplexityRoot struct {
 		NumJobs func(childComplexity int) int
 	}
 
-	LinkPropertyToPrimaryKeyResponse struct {
-		PropertyID       func(childComplexity int) int
-		UserPrimaryKeyID func(childComplexity int) int
-	}
-
 	MonoidRecordResponse struct {
 		Data        func(childComplexity int) int
 		SchemaGroup func(childComplexity int) int
@@ -144,7 +139,7 @@ type ComplexityRoot struct {
 		ExecuteUserDataRequest   func(childComplexity int, requestID string, workspaceID string) int
 		HandleAllOpenDiscoveries func(childComplexity int, input *model.HandleAllDiscoveriesInput) int
 		HandleDiscovery          func(childComplexity int, input *model.HandleDiscoveryInput) int
-		LinkPropertyToPrimaryKey func(childComplexity int, propertyID string, userPrimaryKeyID string) int
+		LinkPropertyToPrimaryKey func(childComplexity int, propertyID string, userPrimaryKeyID *string) int
 		UpdateCategory           func(childComplexity int, input *model.UpdateCategoryInput) int
 		UpdateDataSource         func(childComplexity int, input *model.UpdateDataSourceInput) int
 		UpdateProperty           func(childComplexity int, input *model.UpdatePropertyInput) int
@@ -351,7 +346,7 @@ type MutationResolver interface {
 	DeleteUserPrimaryKey(ctx context.Context, id string) (*string, error)
 	CreateUserDataRequest(ctx context.Context, input *model.UserDataRequestInput) (*model.Request, error)
 	ExecuteUserDataRequest(ctx context.Context, requestID string, workspaceID string) (*model.Job, error)
-	LinkPropertyToPrimaryKey(ctx context.Context, propertyID string, userPrimaryKeyID string) (*model.LinkPropertyToPrimaryKeyResponse, error)
+	LinkPropertyToPrimaryKey(ctx context.Context, propertyID string, userPrimaryKeyID *string) (*model.Property, error)
 	CreateSiloDefinition(ctx context.Context, input *model.CreateSiloDefinitionInput) (*model.SiloDefinition, error)
 	UpdateSiloDefinition(ctx context.Context, input *model.UpdateSiloDefinitionInput) (*model.SiloDefinition, error)
 	DeleteSiloDefinition(ctx context.Context, id string) (*string, error)
@@ -645,20 +640,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.JobsResult.NumJobs(childComplexity), true
-
-	case "LinkPropertyToPrimaryKeyResponse.propertyId":
-		if e.complexity.LinkPropertyToPrimaryKeyResponse.PropertyID == nil {
-			break
-		}
-
-		return e.complexity.LinkPropertyToPrimaryKeyResponse.PropertyID(childComplexity), true
-
-	case "LinkPropertyToPrimaryKeyResponse.userPrimaryKeyId":
-		if e.complexity.LinkPropertyToPrimaryKeyResponse.UserPrimaryKeyID == nil {
-			break
-		}
-
-		return e.complexity.LinkPropertyToPrimaryKeyResponse.UserPrimaryKeyID(childComplexity), true
 
 	case "MonoidRecordResponse.data":
 		if e.complexity.MonoidRecordResponse.Data == nil {
@@ -967,7 +948,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.LinkPropertyToPrimaryKey(childComplexity, args["propertyId"].(string), args["userPrimaryKeyId"].(string)), true
+		return e.complexity.Mutation.LinkPropertyToPrimaryKey(childComplexity, args["propertyId"].(string), args["userPrimaryKeyId"].(*string)), true
 
 	case "Mutation.updateCategory":
 		if e.complexity.Mutation.UpdateCategory == nil {
@@ -1961,7 +1942,6 @@ type DataSource {
     siloDefinition: SiloDefinition!
     properties: [Property!]
     description: String
-    requestStatuses: [RequestStatus!]
 }
 
 type Property {
@@ -1970,7 +1950,6 @@ type Property {
     categories: [Category!]
     dataSource: DataSource!
     purposes: [Purpose!]
-    userPrimaryKey: UserPrimaryKey
 }
 
 type SiloSpecification {
@@ -2330,11 +2309,6 @@ type QueryRecord {
   records: String
 }
 
-type LinkPropertyToPrimaryKeyResponse {
-  userPrimaryKeyId: ID!
-  propertyId: ID!
-}
-
 extend type Query {
     userPrimaryKey(id: ID!): UserPrimaryKey
     request(id: ID!): Request
@@ -2350,7 +2324,7 @@ extend type Mutation {
 
     createUserDataRequest(input: UserDataRequestInput): Request
     executeUserDataRequest(requestId: ID!, workspaceId: ID!): Job
-    linkPropertyToPrimaryKey(propertyId: ID!, userPrimaryKeyId: ID!): LinkPropertyToPrimaryKeyResponse
+    linkPropertyToPrimaryKey(propertyId: ID!, userPrimaryKeyId: ID): Property
 }
 
 type RequestsResult {
@@ -2361,6 +2335,14 @@ type RequestsResult {
 extend type Workspace {
     requests(offset: Int, limit: Int!): RequestsResult!
     userPrimaryKeys: [UserPrimaryKey!]
+}
+
+extend type DataSource {
+    requestStatuses: [RequestStatus!]
+}
+
+extend type Property {
+    userPrimaryKey: UserPrimaryKey
 }`, BuiltIn: false},
 	{Name: "../schema/silo_definitions.graphqls", Input: `scalar Map
 
@@ -2803,10 +2785,10 @@ func (ec *executionContext) field_Mutation_linkPropertyToPrimaryKey_args(ctx con
 		}
 	}
 	args["propertyId"] = arg0
-	var arg1 string
+	var arg1 *string
 	if tmp, ok := rawArgs["userPrimaryKeyId"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userPrimaryKeyId"))
-		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		arg1, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -4806,94 +4788,6 @@ func (ec *executionContext) fieldContext_JobsResult_numJobs(ctx context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _LinkPropertyToPrimaryKeyResponse_userPrimaryKeyId(ctx context.Context, field graphql.CollectedField, obj *model.LinkPropertyToPrimaryKeyResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_LinkPropertyToPrimaryKeyResponse_userPrimaryKeyId(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UserPrimaryKeyID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_LinkPropertyToPrimaryKeyResponse_userPrimaryKeyId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "LinkPropertyToPrimaryKeyResponse",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _LinkPropertyToPrimaryKeyResponse_propertyId(ctx context.Context, field graphql.CollectedField, obj *model.LinkPropertyToPrimaryKeyResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_LinkPropertyToPrimaryKeyResponse_propertyId(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.PropertyID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_LinkPropertyToPrimaryKeyResponse_propertyId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "LinkPropertyToPrimaryKeyResponse",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _MonoidRecordResponse_data(ctx context.Context, field graphql.CollectedField, obj *model.MonoidRecordResponse) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_MonoidRecordResponse_data(ctx, field)
 	if err != nil {
@@ -6824,7 +6718,7 @@ func (ec *executionContext) _Mutation_linkPropertyToPrimaryKey(ctx context.Conte
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().LinkPropertyToPrimaryKey(rctx, fc.Args["propertyId"].(string), fc.Args["userPrimaryKeyId"].(string))
+		return ec.resolvers.Mutation().LinkPropertyToPrimaryKey(rctx, fc.Args["propertyId"].(string), fc.Args["userPrimaryKeyId"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6833,9 +6727,9 @@ func (ec *executionContext) _Mutation_linkPropertyToPrimaryKey(ctx context.Conte
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.LinkPropertyToPrimaryKeyResponse)
+	res := resTmp.(*model.Property)
 	fc.Result = res
-	return ec.marshalOLinkPropertyToPrimaryKeyResponse2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐLinkPropertyToPrimaryKeyResponse(ctx, field.Selections, res)
+	return ec.marshalOProperty2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐProperty(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_linkPropertyToPrimaryKey(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -6846,12 +6740,20 @@ func (ec *executionContext) fieldContext_Mutation_linkPropertyToPrimaryKey(ctx c
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "userPrimaryKeyId":
-				return ec.fieldContext_LinkPropertyToPrimaryKeyResponse_userPrimaryKeyId(ctx, field)
-			case "propertyId":
-				return ec.fieldContext_LinkPropertyToPrimaryKeyResponse_propertyId(ctx, field)
+			case "id":
+				return ec.fieldContext_Property_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Property_name(ctx, field)
+			case "categories":
+				return ec.fieldContext_Property_categories(ctx, field)
+			case "dataSource":
+				return ec.fieldContext_Property_dataSource(ctx, field)
+			case "purposes":
+				return ec.fieldContext_Property_purposes(ctx, field)
+			case "userPrimaryKey":
+				return ec.fieldContext_Property_userPrimaryKey(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type LinkPropertyToPrimaryKeyResponse", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Property", field.Name)
 		},
 	}
 	defer func() {
@@ -15159,41 +15061,6 @@ func (ec *executionContext) _JobsResult(ctx context.Context, sel ast.SelectionSe
 	return out
 }
 
-var linkPropertyToPrimaryKeyResponseImplementors = []string{"LinkPropertyToPrimaryKeyResponse"}
-
-func (ec *executionContext) _LinkPropertyToPrimaryKeyResponse(ctx context.Context, sel ast.SelectionSet, obj *model.LinkPropertyToPrimaryKeyResponse) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, linkPropertyToPrimaryKeyResponseImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("LinkPropertyToPrimaryKeyResponse")
-		case "userPrimaryKeyId":
-
-			out.Values[i] = ec._LinkPropertyToPrimaryKeyResponse_userPrimaryKeyId(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "propertyId":
-
-			out.Values[i] = ec._LinkPropertyToPrimaryKeyResponse_propertyId(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
 var monoidRecordResponseImplementors = []string{"MonoidRecordResponse"}
 
 func (ec *executionContext) _MonoidRecordResponse(ctx context.Context, sel ast.SelectionSet, obj *model.MonoidRecordResponse) graphql.Marshaler {
@@ -18591,13 +18458,6 @@ func (ec *executionContext) unmarshalOKVPair2ᚖgithubᚗcomᚋbristᚑaiᚋmono
 	}
 	res, err := ec.unmarshalInputKVPair(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOLinkPropertyToPrimaryKeyResponse2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐLinkPropertyToPrimaryKeyResponse(ctx context.Context, sel ast.SelectionSet, v *model.LinkPropertyToPrimaryKeyResponse) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._LinkPropertyToPrimaryKeyResponse(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOMap2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {

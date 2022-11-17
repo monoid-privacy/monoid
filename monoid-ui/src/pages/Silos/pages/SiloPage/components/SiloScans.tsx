@@ -49,6 +49,7 @@ const GET_SCANS = gql`
 const GET_SCAN_SCHEDULE = gql`
   query GetScanSchedule($id: ID!, $workspaceId: ID!) {
     workspace(id: $workspaceId) {
+      id
       siloDefinition(id: $id) {
         id
         scanConfig {

@@ -10,7 +10,9 @@ import Card, { CardDivider, CardHeader } from '../../../../../components/Card';
 const GET_SILO_CONFIG = gql`
   query GetSiloConfig($id: ID!, $workspaceId: ID!) {
     workspace(id: $workspaceId) {
+      id
       siloDefinition(id: $id) {
+        id
         name
         siloSpecification {
           id

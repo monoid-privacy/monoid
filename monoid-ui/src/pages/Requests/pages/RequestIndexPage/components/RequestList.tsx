@@ -21,6 +21,7 @@ dayjs.extend(relativeTime);
 const GET_REQUESTS = gql`
   query GetRequests($id: ID!, $limit: Int!, $offset: Int) {
     workspace(id: $id) {
+      id
       requests(limit: $limit, offset: $offset) {
         requests {
           id

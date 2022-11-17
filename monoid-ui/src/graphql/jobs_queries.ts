@@ -4,6 +4,7 @@ import { gql } from '@apollo/client';
 export const GET_ALL_SCANS = gql`
   query GetWorkspaceScans($workspaceId: ID!, $status: [JobStatus], $query: String, $limit: Int!, $offset: Int!) {
     workspace(id: $workspaceId) {
+      id
       jobs(
         jobType: "discover_sources",
         status: $status,

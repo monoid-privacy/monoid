@@ -88,11 +88,6 @@ type KVPair struct {
 	Value string `json:"value"`
 }
 
-type LinkPropertyToPrimaryKeyResponse struct {
-	UserPrimaryKeyID string `json:"userPrimaryKeyId"`
-	PropertyID       string `json:"propertyId"`
-}
-
 type MonoidRecordResponse struct {
 	Data        string  `json:"data"`
 	SchemaGroup *string `json:"SchemaGroup"`

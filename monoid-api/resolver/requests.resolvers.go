@@ -14,6 +14,11 @@ import (
 	"gorm.io/gorm"
 )
 
+// RequestStatuses is the resolver for the requestStatuses field.
+func (r *dataSourceResolver) RequestStatuses(ctx context.Context, obj *model.DataSource) ([]*model.RequestStatus, error) {
+	return findChildObjects[model.RequestStatus](r.Conf.DB, obj.ID, "data_source_id")
+}
+
 // CreateUserPrimaryKey is the resolver for the createUserPrimaryKey field.
 func (r *mutationResolver) CreateUserPrimaryKey(ctx context.Context, input model.CreateUserPrimaryKeyInput) (*model.UserPrimaryKey, error) {
 	userPrimaryKey := model.UserPrimaryKey{
@@ -175,21 +180,17 @@ func (r *mutationResolver) ExecuteUserDataRequest(ctx context.Context, requestID
 }
 
 // LinkPropertyToPrimaryKey is the resolver for the linkPropertyToPrimaryKey field.
-func (r *mutationResolver) LinkPropertyToPrimaryKey(ctx context.Context, propertyID string, userPrimaryKeyID string) (*model.LinkPropertyToPrimaryKeyResponse, error) {
+func (r *mutationResolver) LinkPropertyToPrimaryKey(ctx context.Context, propertyID string, userPrimaryKeyID *string) (*model.Property, error) {
 	var property model.Property
 	if err := r.Conf.DB.Where("id = ?", propertyID).First(&property).Error; err != nil {
 		return nil, handleError(err, "Error linking property to primary key.")
 	}
 
-	property.UserPrimaryKeyID = &userPrimaryKeyID
-	if err := r.Conf.DB.Save(&property).Error; err != nil {
+	if err := r.Conf.DB.Model(&property).Update("user_primary_key_id", userPrimaryKeyID).Error; err != nil {
 		return nil, handleError(err, "Error linking property to primary key.")
 	}
 
-	return &model.LinkPropertyToPrimaryKeyResponse{
-		UserPrimaryKeyID: userPrimaryKeyID,
-		PropertyID:       propertyID,
-	}, nil
+	return &property, nil
 }
 
 // UserPrimaryKey is the resolver for the userPrimaryKey field.
@@ -200,6 +201,15 @@ func (r *primaryKeyValueResolver) UserPrimaryKey(ctx context.Context, obj *model
 // Request is the resolver for the request field.
 func (r *primaryKeyValueResolver) Request(ctx context.Context, obj *model.PrimaryKeyValue) (*model.Request, error) {
 	return findObjectByID[model.Request](obj.RequestID, r.Conf.DB, "Error finding request.")
+}
+
+// UserPrimaryKey is the resolver for the userPrimaryKey field.
+func (r *propertyResolver) UserPrimaryKey(ctx context.Context, obj *model.Property) (*model.UserPrimaryKey, error) {
+	if obj.UserPrimaryKeyID == nil {
+		return nil, nil
+	}
+	userPrimaryKeyId := obj.UserPrimaryKeyID
+	return findObjectByID[model.UserPrimaryKey](*userPrimaryKeyId, r.Conf.DB, "Error finding user primary key.")
 }
 
 // UserPrimaryKey is the resolver for the userPrimaryKey field.

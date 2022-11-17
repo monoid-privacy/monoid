@@ -74,11 +74,6 @@ type QueryRecord {
   records: String
 }
 
-type LinkPropertyToPrimaryKeyResponse {
-  userPrimaryKeyId: ID!
-  propertyId: ID!
-}
-
 extend type Query {
     userPrimaryKey(id: ID!): UserPrimaryKey
     request(id: ID!): Request
@@ -94,7 +89,7 @@ extend type Mutation {
 
     createUserDataRequest(input: UserDataRequestInput): Request
     executeUserDataRequest(requestId: ID!, workspaceId: ID!): Job
-    linkPropertyToPrimaryKey(propertyId: ID!, userPrimaryKeyId: ID!): LinkPropertyToPrimaryKeyResponse
+    linkPropertyToPrimaryKey(propertyId: ID!, userPrimaryKeyId: ID): Property
 }
 
 type RequestsResult {
@@ -105,4 +100,12 @@ type RequestsResult {
 extend type Workspace {
     requests(offset: Int, limit: Int!): RequestsResult!
     userPrimaryKeys: [UserPrimaryKey!]
+}
+
+extend type DataSource {
+    requestStatuses: [RequestStatus!]
+}
+
+extend type Property {
+    userPrimaryKey: UserPrimaryKey
 }

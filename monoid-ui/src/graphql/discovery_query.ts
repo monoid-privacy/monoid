@@ -93,6 +93,7 @@ export const GET_WORKSPACE_DISCOVERIES = gql`
   ${DISCOVERY_FIELDS}
   query GetWorkspaceDiscoveries($workspaceId: ID!, $statuses: [DiscoveryStatus], $query: String, $limit: Int!, $offset: Int) {
     workspace(id: $workspaceId) {
+      id
       discoveries(
         statuses: $statuses,
         query: $query,
@@ -117,6 +118,7 @@ export const GET_DISCOVERIES = gql`
   ${DISCOVERY_FIELDS}
   query GetDiscoveries($id: ID!, $workspaceId: ID!, $limit: Int!, $offset: Int!, $query: String) {
     workspace(id: $workspaceId) {
+      id
       siloDefinition(id: $id) {
         id
         discoveries(limit: $limit, offset: $offset, query: $query) {
