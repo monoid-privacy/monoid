@@ -13,6 +13,7 @@ import { Request, Job } from '../../../../lib/models';
 import PrimaryKeyValues from './components/PrimaryKeyValues';
 import RequestStatuses from './components/RequestStatuses';
 import ToastContext from '../../../../contexts/ToastContext';
+import Badge from '../../../../components/Badge';
 
 const EXECUTE_REQUEST = gql`
   mutation ExecuteRequest($id: ID!, $workspaceId: ID!) {
@@ -41,10 +42,10 @@ const GET_REQUEST_DATA = gql`
         type
         primaryKeyValues {
           id
-          value 
+          value
           userPrimaryKey {
-              id 
-              name 
+              id
+              name
           }
         }
         requestStatuses {
@@ -52,7 +53,7 @@ const GET_REQUEST_DATA = gql`
             status
             dataSource {
                 id
-                name 
+                name
                 group
             }
         }
@@ -164,36 +165,42 @@ export default function RequestPage(
     <>
       <PageHeader
         title={request?.id}
-        subtitle={request?.type}
+        subtitle={(
+          <Badge>
+            {request?.type === 'QUERY' ? 'Query' : 'Delete'}
+          </Badge>
+        )}
+        actionItem={(
+          <Button onClick={() => {
+            executeReq({
+              variables: {
+                id: requestId,
+                workspaceId: id,
+              },
+            }).then(({ data: resData }) => {
+              client.writeQuery({
+                query: RUNNING_EXECUTE_REQUEST_JOBS,
+                data: {
+                  jobs: [resData!.executeUserDataRequest],
+                },
+                variables: {
+                  resourceId: requestId,
+                },
+              });
+            }).catch((err: ApolloError) => {
+              toastCtx.showToast({
+                variant: 'danger',
+                title: 'Error',
+                message: err.message,
+                icon: XCircleIcon,
+              });
+            });
+          }}
+          >
+            {executeReqRes.loading ? <Spinner color="white" size="sm" /> : 'Execute Request'}
+          </Button>
+        )}
       />
-      <Button onClick={() => {
-        executeReq({
-          variables: {
-            id: requestId,
-            workspaceId: id,
-          },
-        }).then(({ data: resData }) => {
-          client.writeQuery({
-            query: RUNNING_EXECUTE_REQUEST_JOBS,
-            data: {
-              jobs: [resData!.executeUserDataRequest],
-            },
-            variables: {
-              resourceId: requestId,
-            },
-          });
-        }).catch((err: ApolloError) => {
-          toastCtx.showToast({
-            variant: 'danger',
-            title: 'Error',
-            message: err.message,
-            icon: XCircleIcon,
-          });
-        });
-      }}
-      >
-        {executeReqRes.loading ? <Spinner color="white" size="sm" /> : 'Execute Request'}
-      </Button>
       <Tabs
         tabs={[
           {

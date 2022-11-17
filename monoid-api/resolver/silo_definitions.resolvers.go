@@ -125,7 +125,6 @@ func (r *mutationResolver) UpdateSiloDefinition(ctx context.Context, input *mode
 			}
 
 			res := jsonschema.MergeData(oldData, data, &schema)
-			fmt.Println("Merged", res)
 
 			resJSON, err := json.Marshal(&res)
 			if err != nil {

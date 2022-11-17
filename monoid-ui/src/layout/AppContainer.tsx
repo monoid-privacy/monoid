@@ -3,6 +3,7 @@ import React from 'react';
 import {
   BeakerIcon, BellAlertIcon, CloudIcon, CogIcon, DocumentIcon, MagnifyingGlassIcon,
   InboxIcon,
+  IdentificationIcon,
 } from '@heroicons/react/24/outline';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { faSlack, faGithub } from '@fortawesome/free-brands-svg-icons';
@@ -37,13 +38,13 @@ export default function AppContainer(props: {
         key: 'dashboard',
       },
       {
-        title: 'Data Silos',
-        icon: CloudIcon,
+        title: 'User Data Requests',
+        icon: InboxIcon,
         onClick: () => {
-          navigate(`/workspaces/${id}/silos`);
+          navigate(`/workspaces/${id}/requests`);
         },
-        current: location.pathname.startsWith(`/workspaces/${id}/silos`),
-        key: 'data_silos',
+        current: location.pathname.startsWith(`/workspaces/${id}/requests`),
+        key: 'data_requests',
       },
       {
         title: 'Alerts',
@@ -53,6 +54,20 @@ export default function AppContainer(props: {
         },
         current: location.pathname.startsWith(`/workspaces/${id}/alerts`),
         key: 'alerts',
+      },
+    ],
+  }, {
+    key: 'config',
+    name: 'Configuration',
+    links: [
+      {
+        title: 'Data Silos',
+        icon: CloudIcon,
+        onClick: () => {
+          navigate(`/workspaces/${id}/silos`);
+        },
+        current: location.pathname.startsWith(`/workspaces/${id}/silos`),
+        key: 'data_silos',
       },
       {
         title: 'Scans',
@@ -64,6 +79,15 @@ export default function AppContainer(props: {
         key: 'alerts',
       },
       {
+        title: 'Identifiers',
+        icon: IdentificationIcon,
+        onClick: () => {
+          navigate(`/workspaces/${id}/identifiers`);
+        },
+        current: location.pathname.startsWith(`/workspaces/${id}/identifiers`),
+        key: 'identifiers',
+      },
+      {
         title: 'Settings',
         icon: CogIcon,
         onClick: () => {
@@ -71,15 +95,6 @@ export default function AppContainer(props: {
         },
         current: location.pathname.startsWith(`/workspaces/${id}/settings`),
         key: 'settings',
-      },
-      {
-        title: 'User Data Requests',
-        icon: InboxIcon,
-        onClick: () => {
-          navigate(`/workspaces/${id}/requests`);
-        },
-        current: location.pathname.startsWith(`/workspaces/${id}/requests`),
-        key: 'data_requests',
       },
     ],
   }, {

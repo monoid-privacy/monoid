@@ -6,6 +6,7 @@ import MonoidRouter from './pages/router';
 import ToastDisplayer from './components/ToastDisplayer';
 import jobsQueryCache from './cache/jobs';
 import discoveriesCache from './cache/discoveries';
+import requestsCache from './cache/requests';
 
 const client = new ApolloClient({
   uri: `${process.env.REACT_APP_API_URL}/query`,
@@ -25,6 +26,7 @@ const client = new ApolloClient({
         fields: {
           jobs: jobsQueryCache(),
           discoveries: discoveriesCache(),
+          requests: requestsCache(),
         },
       },
     },

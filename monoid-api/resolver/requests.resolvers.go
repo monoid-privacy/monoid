@@ -5,8 +5,6 @@ package resolver
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
 	"github.com/brist-ai/monoid/generated"
 	"github.com/brist-ai/monoid/model"
@@ -19,9 +17,10 @@ import (
 // CreateUserPrimaryKey is the resolver for the createUserPrimaryKey field.
 func (r *mutationResolver) CreateUserPrimaryKey(ctx context.Context, input model.CreateUserPrimaryKeyInput) (*model.UserPrimaryKey, error) {
 	userPrimaryKey := model.UserPrimaryKey{
-		ID:          uuid.NewString(),
-		Name:        input.Name,
-		WorkspaceID: input.WorkspaceID,
+		ID:            uuid.NewString(),
+		Name:          input.Name,
+		APIIdentifier: input.APIIdentifier,
+		WorkspaceID:   input.WorkspaceID,
 	}
 
 	if err := r.Conf.DB.Create(&userPrimaryKey).Error; err != nil {
@@ -55,60 +54,78 @@ func (r *mutationResolver) DeleteUserPrimaryKey(ctx context.Context, id string) 
 
 // CreateUserDataRequest is the resolver for the createUserDataRequest field.
 func (r *mutationResolver) CreateUserDataRequest(ctx context.Context, input *model.UserDataRequestInput) (*model.Request, error) {
-	if input.Type != model.Delete && input.Type != model.Query {
-		return nil, handleError(errors.New("request type is not 'delete' or 'query'"), "Error creating user data request.")
-	}
 	request := model.Request{
 		ID:          uuid.NewString(),
 		WorkspaceID: input.WorkspaceID,
 		Type:        input.Type,
 	}
 
-	if err := r.Conf.DB.Create(&request).Error; err != nil {
-		return nil, handleError(err, "Error creating user data request.")
-	}
-
-	for _, primaryKey := range input.PrimaryKeys {
-		primaryKeyValue := model.PrimaryKeyValue{
-			ID:               uuid.NewString(),
-			UserPrimaryKeyID: primaryKey.UserPrimaryKeyID,
-			Value:            primaryKey.Value,
-			RequestID:        request.ID,
+	if err := r.Conf.DB.Transaction(func(tx *gorm.DB) error {
+		if err := r.Conf.DB.Create(&request).Error; err != nil {
+			return err
 		}
 
-		if err := r.Conf.DB.Create(&primaryKeyValue).Error; err != nil {
-			return nil, handleError(err, "Error creating user data request.")
-		}
-	}
+		// Get the primary keys that are present in this request.
+		primaryKeys := []*model.UserPrimaryKey{}
+		apiIdentifiers := make([]string, len(input.PrimaryKeys))
+		identifierMap := map[string]string{}
 
-	siloDefinitions := []model.SiloDefinition{}
-	dataSources := []model.DataSource{}
-
-	// TODO: Do this properly with a join
-	if err := r.Conf.DB.Where("workspace_id = ?", input.WorkspaceID).Find(&siloDefinitions).Error; err != nil {
-		return nil, handleError(err, "Error creating user data request.")
-	}
-
-	siloDefinitionIDStrings := make([]string, len(siloDefinitions))
-	for _, sd := range siloDefinitions {
-		siloDefinitionIDStrings = append(siloDefinitionIDStrings, sd.ID)
-	}
-
-	if err := r.Conf.DB.Where("silo_definition_id IN ?", siloDefinitionIDStrings).Find(&dataSources).Error; err != nil {
-		return nil, handleError(err, "Error creating user data request.")
-	}
-
-	for _, ds := range dataSources {
-		requestStatus := model.RequestStatus{
-			ID:           uuid.NewString(),
-			RequestID:    request.ID,
-			DataSourceID: ds.ID,
-			Status:       model.Created,
+		for i, primaryKey := range input.PrimaryKeys {
+			identifierMap[primaryKey.APIIdentifier] = primaryKey.Value
+			apiIdentifiers[i] = primaryKey.APIIdentifier
 		}
 
-		if err := r.Conf.DB.Create(&requestStatus).Error; err != nil {
-			return nil, handleError(err, "Error creating user data request.")
+		if err := r.Conf.DB.Where("workspace_id = ?", input.WorkspaceID).Where(
+			"api_identifier IN ?",
+			apiIdentifiers,
+		).Find(&primaryKeys).Error; err != nil {
+			return err
 		}
+
+		primaryValues := make([]*model.PrimaryKeyValue, len(primaryKeys))
+		for i, pk := range primaryKeys {
+			primaryValues[i] = &model.PrimaryKeyValue{
+				ID:               uuid.NewString(),
+				UserPrimaryKeyID: pk.ID,
+				Value:            identifierMap[pk.APIIdentifier],
+				RequestID:        request.ID,
+			}
+		}
+
+		if err := r.Conf.DB.Create(&primaryValues).Error; err != nil {
+			return err
+		}
+
+		siloDefinitions := []*model.SiloDefinition{}
+		dataSources := []*model.DataSource{}
+
+		if err := r.Conf.DB.Where(
+			"workspace_id = ?",
+			input.WorkspaceID,
+		).Preload("DataSources").Find(&siloDefinitions).Error; err != nil {
+			return err
+		}
+
+		for _, sd := range siloDefinitions {
+			dataSources = append(dataSources, sd.DataSources...)
+		}
+
+		for _, ds := range dataSources {
+			requestStatus := model.RequestStatus{
+				ID:           uuid.NewString(),
+				RequestID:    request.ID,
+				DataSourceID: ds.ID,
+				Status:       model.RequestStatusTypeCreated,
+			}
+
+			if err := r.Conf.DB.Create(&requestStatus).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}); err != nil {
+		return nil, handleError(err, "Error creating request")
 	}
 
 	return &request, nil
@@ -116,7 +133,6 @@ func (r *mutationResolver) CreateUserDataRequest(ctx context.Context, input *mod
 
 // ExecuteUserDataRequest is the resolver for the executeUserDataRequest field.
 func (r *mutationResolver) ExecuteUserDataRequest(ctx context.Context, requestID string, workspaceID string) (*model.Job, error) {
-	fmt.Println("HERE I AM ONCE AGAIN")
 	job := model.Job{
 		ID:          uuid.NewString(),
 		WorkspaceID: workspaceID,
@@ -234,6 +250,38 @@ func (r *requestStatusResolver) DataSource(ctx context.Context, obj *model.Reque
 // QueryRecords is the resolver for the queryRecords field.
 func (r *requestStatusResolver) QueryRecords(ctx context.Context, obj *model.RequestStatus) ([]*model.QueryRecord, error) {
 	return findChildObjects[model.QueryRecord](r.Conf.DB, obj.ID, "query_record_id")
+}
+
+// Requests is the resolver for the requests field.
+func (r *workspaceResolver) Requests(ctx context.Context, obj *model.Workspace, offset *int, limit int) (*model.RequestsResult, error) {
+	offsetD := 0
+	if offset != nil {
+		offsetD = *offset
+	}
+
+	requests := []*model.Request{}
+	q := r.Conf.DB.Where("workspace_id = ?", obj.ID)
+
+	if err := q.Session(&gorm.Session{}).Offset(offsetD).Limit(limit).Order(
+		"created_at desc",
+	).Find(&requests).Error; err != nil {
+		return nil, handleError(err, "Error getting requests")
+	}
+
+	numRequests := int64(0)
+	if err := q.Session(&gorm.Session{}).Model(&model.Request{}).Count(&numRequests).Error; err != nil {
+		return nil, handleError(err, "Error getting requests")
+	}
+
+	return &model.RequestsResult{
+		Requests:    requests,
+		NumRequests: int(numRequests),
+	}, nil
+}
+
+// UserPrimaryKeys is the resolver for the userPrimaryKeys field.
+func (r *workspaceResolver) UserPrimaryKeys(ctx context.Context, obj *model.Workspace) ([]*model.UserPrimaryKey, error) {
+	return findChildObjects[model.UserPrimaryKey](r.Conf.DB, obj.ID, "workspace_id")
 }
 
 // PrimaryKeyValue returns generated.PrimaryKeyValueResolver implementation.

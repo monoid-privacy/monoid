@@ -1,12 +1,6 @@
 package model
 
-const (
-	Created  = "created"
-	Executed = "executed"
-	Failed   = "failed"
-	Delete   = "delete"
-	Query    = "query"
-)
+import "time"
 
 type RequestStatus struct {
 	ID           string
@@ -14,15 +8,17 @@ type RequestStatus struct {
 	Request      Request `gorm:"constraint:OnDelete:CASCADE;"`
 	DataSourceID string
 	DataSource   DataSource `gorm:"constraint:OnDelete:CASCADE;"`
-	Status       string
+	Status       RequestStatusType
 	QueryRecords []QueryRecord
 }
 
 type UserPrimaryKey struct {
-	ID          string      `json:"id"`
-	WorkspaceID string      `json:"workspaceId"`
-	Name        string      `json:"name"`
-	Properties  []*Property `json:"properties"`
+	ID          string `json:"id"`
+	WorkspaceID string `json:"workspaceId" gorm:"uniqueIndex:idx_api_identifier"`
+
+	Name          string      `json:"name"`
+	APIIdentifier string      `json:"apiIdentifier" gorm:"uniqueIndex:idx_api_identifier"`
+	Properties    []*Property `json:"properties"`
 }
 
 type Request struct {
@@ -31,7 +27,10 @@ type Request struct {
 	WorkspaceID      string
 	Workspace        Workspace `gorm:"constraint:OnDelete:CASCADE;"`
 	RequestStatuses  []RequestStatus
-	Type             string
+	Type             UserDataRequestType
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type PrimaryKeyValue struct {

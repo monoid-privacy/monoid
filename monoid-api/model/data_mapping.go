@@ -25,7 +25,7 @@ type SiloDefinition struct {
 	Description         *string
 	SiloSpecificationID string
 	SiloSpecification   SiloSpecification `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	DataSources         []DataSource
+	DataSources         []*DataSource
 	Subjects            []Subject `gorm:"many2many:silo_definition_subjects;"`
 	Config              SecretString
 	ScanConfig          *SiloScanConfig

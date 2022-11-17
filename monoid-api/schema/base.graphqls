@@ -10,8 +10,6 @@ type Workspace {
   subjects: [Subject!]
   purposes: [Purpose!]
   categories: [Category!]
-  requests: [Request!]
-  userPrimaryKeys: [UserPrimaryKey!]
 }
 
 type Query {

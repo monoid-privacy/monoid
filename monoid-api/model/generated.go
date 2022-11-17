@@ -53,8 +53,9 @@ type CreateSubjectInput struct {
 }
 
 type CreateUserPrimaryKeyInput struct {
-	Name        string `json:"name"`
-	WorkspaceID string `json:"workspaceId"`
+	Name          string `json:"name"`
+	APIIdentifier string `json:"apiIdentifier"`
+	WorkspaceID   string `json:"workspaceId"`
 }
 
 type CreateWorkspaceInput struct {
@@ -96,6 +97,11 @@ type MonoidRecordResponse struct {
 	Data        string  `json:"data"`
 	SchemaGroup *string `json:"SchemaGroup"`
 	SchemaName  string  `json:"SchemaName"`
+}
+
+type RequestsResult struct {
+	Requests    []*Request `json:"requests"`
+	NumRequests int        `json:"numRequests"`
 }
 
 type SiloScanConfigInput struct {
@@ -159,12 +165,12 @@ type UpdateWorkspaceSettingsInput struct {
 type UserDataRequestInput struct {
 	PrimaryKeys []*UserPrimaryKeyInput `json:"primaryKeys"`
 	WorkspaceID string                 `json:"workspaceId"`
-	Type        string                 `json:"type"`
+	Type        UserDataRequestType    `json:"type"`
 }
 
 type UserPrimaryKeyInput struct {
-	UserPrimaryKeyID string `json:"userPrimaryKeyId"`
-	Value            string `json:"value"`
+	APIIdentifier string `json:"apiIdentifier"`
+	Value         string `json:"value"`
 }
 
 type DiscoveryAction string
@@ -340,5 +346,89 @@ func (e *JobStatus) UnmarshalGQL(v interface{}) error {
 }
 
 func (e JobStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type RequestStatusType string
+
+const (
+	RequestStatusTypeCreated  RequestStatusType = "CREATED"
+	RequestStatusTypeExecuted RequestStatusType = "EXECUTED"
+	RequestStatusTypeFailed   RequestStatusType = "FAILED"
+)
+
+var AllRequestStatusType = []RequestStatusType{
+	RequestStatusTypeCreated,
+	RequestStatusTypeExecuted,
+	RequestStatusTypeFailed,
+}
+
+func (e RequestStatusType) IsValid() bool {
+	switch e {
+	case RequestStatusTypeCreated, RequestStatusTypeExecuted, RequestStatusTypeFailed:
+		return true
+	}
+	return false
+}
+
+func (e RequestStatusType) String() string {
+	return string(e)
+}
+
+func (e *RequestStatusType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = RequestStatusType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid RequestStatusType", str)
+	}
+	return nil
+}
+
+func (e RequestStatusType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type UserDataRequestType string
+
+const (
+	UserDataRequestTypeDelete UserDataRequestType = "DELETE"
+	UserDataRequestTypeQuery  UserDataRequestType = "QUERY"
+)
+
+var AllUserDataRequestType = []UserDataRequestType{
+	UserDataRequestTypeDelete,
+	UserDataRequestTypeQuery,
+}
+
+func (e UserDataRequestType) IsValid() bool {
+	switch e {
+	case UserDataRequestTypeDelete, UserDataRequestTypeQuery:
+		return true
+	}
+	return false
+}
+
+func (e UserDataRequestType) String() string {
+	return string(e)
+}
+
+func (e *UserDataRequestType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = UserDataRequestType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid UserDataRequestType", str)
+	}
+	return nil
+}
+
+func (e UserDataRequestType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }

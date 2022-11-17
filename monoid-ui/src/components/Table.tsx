@@ -101,7 +101,7 @@ export function TableRowComp(props: {
       }
       {
         row.columns.map((c, i) => (
-          <TD key={c.key} className={!showLeftPlaceholder && i === 0 ? insetClass : ''}>
+          <TD key={c.key} className={!showLeftPlaceholder && i === 0 ? classNames('pl-4 sm:pl-6', insetClass) : ''}>
             {c.content}
           </TD>
         ))
@@ -146,7 +146,7 @@ export default function Table(props: TableProps) {
             }
             {
               tableCols.map((c, i) => (
-                <TH key={c.key} className={i === 0 && !nested ? insetClass : ''}>
+                <TH key={c.key} className={i === 0 && !nested ? classNames('pl-4 sm:pl-6', insetClass) : ''}>
                   {c.header}
                 </TH>
               ))

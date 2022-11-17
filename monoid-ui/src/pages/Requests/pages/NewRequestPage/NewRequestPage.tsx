@@ -1,12 +1,17 @@
-import { gql, useMutation, useQuery } from '@apollo/client';
-import React from 'react';
-import { useParams } from 'react-router-dom';
+import {
+  ApolloError, gql, useMutation, useQuery,
+} from '@apollo/client';
+import React, { useContext } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { XCircleIcon } from '@heroicons/react/24/outline';
 import Card from '../../../../components/Card';
 import PageHeader from '../../../../components/PageHeader';
 import RequestForm from './components/RequestForm';
 import { UserPrimaryKey } from '../../../../lib/models';
 import Spinner from '../../../../components/Spinner';
 import AlertRegion from '../../../../components/AlertRegion';
+import { GET_PRIMARY_KEYS } from '../../../../graphql/requests_queries';
+import ToastContext from '../../../../contexts/ToastContext';
 
 const CREATE_NEW_REQUEST = gql`
   mutation CreateRequest($input: UserDataRequestInput!) {
@@ -15,17 +20,6 @@ const CREATE_NEW_REQUEST = gql`
     }
   }
 `;
-
-const GET_PRIMARY_KEYS = gql`
-  query GetPrimaryKeys($id: ID!) {
-    workspace(id: $id) {
-      userPrimaryKeys {
-        id 
-        name
-      }
-    }
-  }
-  `;
 
 export default function NewRequestPage() {
   const { id } = useParams<{ id: string }>();
@@ -40,6 +34,9 @@ export default function NewRequestPage() {
       id,
     },
   });
+
+  const navigate = useNavigate();
+  const toastCtx = useContext(ToastContext);
 
   if (loading) {
     return <Spinner />;
@@ -72,7 +69,6 @@ export default function NewRequestPage() {
         <RequestForm
           userPrimaryKeys={data.workspace.userPrimaryKeys}
           onSubmit={(req) => {
-            console.log(req);
             createRequest({
               variables: {
                 input: {
@@ -81,6 +77,17 @@ export default function NewRequestPage() {
                   type: req.type,
                 },
               },
+            }).then(({ data: resData }) => {
+              navigate(`../${resData.createUserDataRequest.id}`);
+            }).catch((err: ApolloError) => {
+              toastCtx.showToast(
+                {
+                  title: 'Error Creating Request',
+                  message: err.message,
+                  variant: 'danger',
+                  icon: XCircleIcon,
+                },
+              );
             });
           }}
           formLoading={createRequestRes.loading}

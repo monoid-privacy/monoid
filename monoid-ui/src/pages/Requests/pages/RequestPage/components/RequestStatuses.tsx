@@ -1,10 +1,12 @@
 import React from 'react';
 import { gql, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
+import { CircleStackIcon, FolderIcon } from '@heroicons/react/24/outline';
 import Table from '../../../../../components/Table';
 import Spinner from '../../../../../components/Spinner';
 import AlertRegion from '../../../../../components/AlertRegion';
 import { Request } from '../../../../../lib/models';
+import Badge, { BadgeColor } from '../../../../../components/Badge';
 
 const GET_REQUEST_DATA = gql`
 query GetRequestData($id: ID!) {
@@ -13,10 +15,10 @@ query GetRequestData($id: ID!) {
     type
     primaryKeyValues {
       id
-      value 
+      value
       userPrimaryKey {
-        id 
-        name 
+        id
+        name
       }
     }
     requestStatuses {
@@ -24,14 +26,39 @@ query GetRequestData($id: ID!) {
       status
       dataSource {
         id
-        name 
+        name
         group
+        siloDefinition {
+          id
+          name
+        }
       }
     }
   }
 }
 `;
 
+function StatusBadge({ status }: { status: string }) {
+  let disp = status;
+  let badgeColor: BadgeColor = 'blue';
+
+  switch (status) {
+    case 'CREATED':
+      disp = 'Created';
+      break;
+    case 'FAILED':
+      disp = 'Failed';
+      badgeColor = 'red';
+      break;
+    case 'EXECUTED':
+      disp = 'Executed';
+      badgeColor = 'green';
+      break;
+    default:
+  }
+
+  return <Badge color={badgeColor}>{disp}</Badge>;
+}
 export default function RequestStatuses() {
   const { requestId } = useParams<{ requestId: string }>();
   const navigate = useNavigate();
@@ -62,16 +89,12 @@ export default function RequestStatuses() {
     <Table
       tableCols={[
         {
-          header: 'ID',
-          key: 'id',
+          header: 'Data Silo',
+          key: 'silo',
         },
         {
-          header: 'Data Source Name',
-          key: 'data_source_name',
-        },
-        {
-          header: 'Data Source Group',
-          key: 'data_source_group',
+          header: 'Data Source',
+          key: 'data_source',
         },
         {
           header: 'Status',
@@ -85,31 +108,35 @@ export default function RequestStatuses() {
         },
         columns: [
           {
-            key: 'id',
-            content: req.id,
-          },
-          {
-            key: 'data_source_name',
+            key: 'silo',
             content: (
               <div className="flex">
-                {req.dataSource?.name}
+                {req?.dataSource?.siloDefinition?.name}
               </div>
             ),
           },
           {
-            key: 'data_source_group',
+            key: 'data_source',
             content: (
-              <div className="flex">
-                {req.dataSource?.group}
+              <div className="flex flex-col space-y-1">
+                <div className="flex items-center space-x-1">
+                  <CircleStackIcon className="w-4 h-4" />
+                  <div>{req.dataSource?.name}</div>
+                </div>
+                {req.dataSource?.group
+                  && (
+                    <div className="flex items-center space-x-1 text-xs text-gray-400">
+                      <FolderIcon className="w-4 h-4" />
+                      <div>{req.dataSource?.group}</div>
+                    </div>
+                  )}
               </div>
             ),
           },
           {
             key: 'status',
             content: (
-              <div className="flex">
-                {req.status}
-              </div>
+              <StatusBadge status={req.status!} />
             ),
           },
         ],

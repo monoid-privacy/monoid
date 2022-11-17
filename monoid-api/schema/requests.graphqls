@@ -1,76 +1,89 @@
 type MonoidRecordResponse {
-    data: String! 
+    data: String!
     SchemaGroup: String
-    SchemaName: String! 
+    SchemaName: String!
 }
 
 input CreateUserPrimaryKeyInput {
-    name: String! 
+    name: String!
+    apiIdentifier: String!
     workspaceId: ID!
 }
 
 input UpdateUserPrimaryKeyInput {
-    id: ID! 
-    name: String! 
+    id: ID!
+    name: String!
+}
+
+enum UserDataRequestType {
+    DELETE
+    QUERY
 }
 
 input UserDataRequestInput {
     primaryKeys: [UserPrimaryKeyInput!]
     workspaceId: ID!
-    type: String!
+    type: UserDataRequestType!
 }
 
 input UserPrimaryKeyInput {
-    userPrimaryKeyId: ID! 
-    value: String! 
+    apiIdentifier: String!
+    value: String!
 }
 
 type UserPrimaryKey {
-    id: ID! 
+    id: ID!
     workspaceId: ID!
-    name: String! 
+    name: String!
+    apiIdentifier: String!
     properties: [Property!]
 }
 
 type PrimaryKeyValue {
-    id: ID! 
-    userPrimaryKey: UserPrimaryKey! 
-    request: Request! 
-    value: String! 
+    id: ID!
+    userPrimaryKey: UserPrimaryKey!
+    request: Request!
+    value: String!
 }
 
 type Request {
-    id: ID! 
+    id: ID!
     primaryKeyValues: [PrimaryKeyValue!]
     requestStatuses: [RequestStatus!]
-    type: String!
+    type: UserDataRequestType!
+    createdAt: Time
+}
+
+enum RequestStatusType {
+    CREATED
+    EXECUTED
+    FAILED
 }
 
 type RequestStatus {
-    id: ID! 
-    request: Request! 
-    dataSource: DataSource! 
-    status: String! 
+    id: ID!
+    request: Request!
+    dataSource: DataSource!
+    status: RequestStatusType!
     queryRecords: [QueryRecord!]
 }
 
 type QueryRecord {
-  id: ID! 
+  id: ID!
   requestStatus: RequestStatus!
   records: String
 }
 
 type LinkPropertyToPrimaryKeyResponse {
-  userPrimaryKeyId: ID! 
+  userPrimaryKeyId: ID!
   propertyId: ID!
 }
 
 extend type Query {
     userPrimaryKey(id: ID!): UserPrimaryKey
-    request(id: ID!): Request 
-    requestStatus(id: ID!): RequestStatus 
+    request(id: ID!): Request
+    requestStatus(id: ID!): RequestStatus
     primaryKeyValue(id: ID!): PrimaryKeyValue
-
 }
 
 extend type Mutation {
@@ -82,4 +95,14 @@ extend type Mutation {
     createUserDataRequest(input: UserDataRequestInput): Request
     executeUserDataRequest(requestId: ID!, workspaceId: ID!): Job
     linkPropertyToPrimaryKey(propertyId: ID!, userPrimaryKeyId: ID!): LinkPropertyToPrimaryKeyResponse
+}
+
+type RequestsResult {
+    requests: [Request!]
+    numRequests: Int!
+}
+
+extend type Workspace {
+    requests(offset: Int, limit: Int!): RequestsResult!
+    userPrimaryKeys: [UserPrimaryKey!]
 }

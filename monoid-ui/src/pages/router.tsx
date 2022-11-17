@@ -4,6 +4,7 @@ import {
   Routes,
   Route,
   Outlet,
+  Navigate,
 } from 'react-router-dom';
 import AppContainer from '../layout/AppContainer';
 import WorkspaceAlertsPage from './Alerts/WorkspaceAlertsPage';
@@ -13,6 +14,7 @@ import WorkspaceScansPage from './Scans/WorkspaceScansPage';
 import SettingsPage from './Settings/SettingsPage';
 import SiloRoutes from './Silos/SiloRoutes';
 import RequestRoutes from './Requests/RequestRoutes';
+import IdentifierRoutes from './Identifiers/IdentifierRoutes';
 
 export default function MonoidRouter() {
   return (
@@ -22,12 +24,14 @@ export default function MonoidRouter() {
         <Route path="workspaces">
           <Route index element={<WorkspaceSelect />} />
           <Route path=":id" element={<AppContainer><Outlet /></AppContainer>}>
+            <Route element={<Navigate to="dashboard" />} index />
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="alerts" element={<WorkspaceAlertsPage />} />
             <Route path="scans" element={<WorkspaceScansPage />} />
             <Route path="silos/*" element={<SiloRoutes />} />
-            <Route path="settings" element={<SettingsPage />} />
             <Route path="requests/*" element={<RequestRoutes />} />
+            <Route path="identifiers/*" element={<IdentifierRoutes />} />
+            <Route path="settings" element={<SettingsPage />} />
           </Route>
         </Route>
       </Routes>

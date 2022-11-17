@@ -17,6 +17,16 @@ import (
 	"gorm.io/gorm"
 )
 
+// SiloDefinition is the resolver for the siloDefinition field.
+func (r *dataSourceResolver) SiloDefinition(ctx context.Context, obj *model.DataSource) (*model.SiloDefinition, error) {
+	definition := model.SiloDefinition{}
+	if err := r.Conf.DB.Where("id = ?", obj.SiloDefinitionID).First(&definition).Error; err != nil {
+		return nil, err
+	}
+
+	return &definition, nil
+}
+
 // Properties is the resolver for the properties field.
 func (r *dataSourceResolver) Properties(ctx context.Context, obj *model.DataSource) ([]*model.Property, error) {
 	properties := []*model.Property{}

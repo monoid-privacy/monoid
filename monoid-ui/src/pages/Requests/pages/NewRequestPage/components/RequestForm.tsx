@@ -17,7 +17,7 @@ function PrimaryKeyInputs(props: {
 
   return (
     <>
-      <InputLabel>{ userPrimaryKey.name }</InputLabel>
+      <InputLabel className="mb-2">{userPrimaryKey.name}</InputLabel>
       <Input
         value={value}
         onChange={onChange}
@@ -37,9 +37,9 @@ export default function RequestForm(props: {
   } = props;
 
   const [req, setReq] = useState<UserDataRequestInput>({
-    type: 'query',
+    type: 'QUERY',
     primaryKeys: userPrimaryKeys!.map((key) => ({
-      userPrimaryKeyId: key.id,
+      apiIdentifier: key.apiIdentifier,
       value: '',
     })),
   });
@@ -60,21 +60,21 @@ export default function RequestForm(props: {
               });
             }}
           >
-            <option value="query">Query</option>
-            <option value="delete">Delete</option>
+            <option value="QUERY">Query</option>
+            <option value="DELETE">Delete</option>
           </Select>
         </div>
       </div>
       {
         req.primaryKeys!.map((key, i) => (
-          <div className="mt-2">
+          <div>
             <PrimaryKeyInputs
               userPrimaryKey={userPrimaryKeys![i]}
               value={req.primaryKeys![i].value!}
               onChange={(v) => {
-                const pk = req.primaryKeys!;
+                const pk = [...req.primaryKeys!];
                 pk[i] = {
-                  userPrimaryKeyId: key.userPrimaryKeyId,
+                  apiIdentifier: key.apiIdentifier,
                   value: v.target.value,
                 };
                 setReq({

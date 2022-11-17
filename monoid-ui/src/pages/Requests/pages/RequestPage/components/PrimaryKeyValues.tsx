@@ -1,6 +1,6 @@
 import React from 'react';
 import { gql, useQuery } from '@apollo/client';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import Table from '../../../../../components/Table';
 import Spinner from '../../../../../components/Spinner';
 import AlertRegion from '../../../../../components/AlertRegion';
@@ -13,10 +13,11 @@ query GetRequestData($id: ID!) {
     type
     primaryKeyValues {
       id
-      value 
+      value
       userPrimaryKey {
-        id 
-        name 
+        id
+        name
+        apiIdentifier
       }
     }
     requestStatuses {
@@ -24,7 +25,7 @@ query GetRequestData($id: ID!) {
       status
       dataSource {
         id
-        name 
+        name
         group
       }
     }
@@ -34,7 +35,6 @@ query GetRequestData($id: ID!) {
 
 export default function PrimaryKeyValues() {
   const { requestId } = useParams<{ requestId: string }>();
-  const navigate = useNavigate();
   const { data, loading, error } = useQuery<{
     request: Request
   }>(GET_REQUEST_DATA, {
@@ -62,12 +62,12 @@ export default function PrimaryKeyValues() {
     <Table
       tableCols={[
         {
-          header: 'ID',
-          key: 'id',
-        },
-        {
           header: 'Key',
           key: 'key',
+        },
+        {
+          header: 'Identifier',
+          key: 'id',
         },
         {
           header: 'Value',
@@ -76,14 +76,7 @@ export default function PrimaryKeyValues() {
       ]}
       tableRows={request?.primaryKeyValues?.map((pk) => ({
         key: pk.id!,
-        onClick: () => {
-          navigate(pk.id!);
-        },
         columns: [
-          {
-            key: 'id',
-            content: pk.id,
-          },
           {
             key: 'key',
             content: (
@@ -91,6 +84,10 @@ export default function PrimaryKeyValues() {
                 {pk.userPrimaryKey?.name}
               </div>
             ),
+          },
+          {
+            key: 'id',
+            content: pk.userPrimaryKey?.apiIdentifier,
           },
           {
             key: 'value',

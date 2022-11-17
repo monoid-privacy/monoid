@@ -22,6 +22,7 @@ type TentativeValue = 'CREATED' | 'DELETED' | null;
 
 export interface Request {
   id?: string
+  createdAt?: string
   primaryKeyValues?: PrimaryKeyValue[]
   requestStatuses?: RequestStatus[]
   type?: string
@@ -48,16 +49,16 @@ export interface UserDataRequestInput {
 }
 
 export interface UserPrimaryKeyInput {
-  userPrimaryKeyId?: string
+  apiIdentifier?: string
   value?: string
 }
 
 export interface UserPrimaryKey {
   id?: string
   name?: string
+  apiIdentifier?: string
   properties?: Property[]
 }
-
 
 export interface Property {
   id?: string
@@ -73,6 +74,7 @@ export interface DataSource {
   group?: string
   properties?: Property[]
   tentative?: TentativeValue
+  siloDefinition?: SiloDefinition
 }
 
 export interface Category {

@@ -33,16 +33,30 @@ func newCombinedErrors(errors []error) combinedErrors {
 }
 
 func failRequest(requestStatusId string, err error, db *gorm.DB) error {
-	if flagErr := db.Model(&model.RequestStatus{}).Where("id = ?", requestStatusId).Update("status", model.Failed).Error; flagErr != nil {
+	if flagErr := db.Model(&model.RequestStatus{}).Where(
+		"id = ?",
+		requestStatusId,
+	).Update(
+		"status",
+		model.RequestStatusTypeFailed,
+	).Error; flagErr != nil {
 		return newCombinedErrors([]error{flagErr, err})
 	}
+
 	return err
 }
 
 func succeedRequest(requestStatusId string, db *gorm.DB) error {
-	if flagErr := db.Model(&model.RequestStatus{}).Where("id = ?", requestStatusId).Update("status", model.Executed).Error; flagErr != nil {
-		return flagErr
+	if err := db.Model(&model.RequestStatus{}).Where(
+		"id = ?",
+		requestStatusId,
+	).Update(
+		"status",
+		model.RequestStatusTypeExecuted,
+	).Error; err != nil {
+		return err
 	}
+
 	return nil
 }
 
@@ -61,10 +75,6 @@ func (a *Activity) ExecuteRequest(ctx context.Context, requestId string) error {
 		return err
 	}
 
-	if request.Type != model.Delete && request.Type != model.Query {
-		return errors.New("invalid request type")
-	}
-
 	for _, requestStatus := range request.RequestStatuses {
 		err = nil
 		newRecords, err = a.ExecuteRequestOnDataSource(ctx, requestStatus.ID, request.Type)
@@ -76,7 +86,7 @@ func (a *Activity) ExecuteRequest(ctx context.Context, requestId string) error {
 			allErrors = append(allErrors, err)
 		}
 
-		if request.Type == model.Query {
+		if request.Type == model.UserDataRequestTypeQuery {
 			stringRecords := []string{}
 			if newRecords != nil && len(*newRecords) > 0 {
 				for _, newRecord := range *newRecords {
@@ -102,14 +112,37 @@ func (a *Activity) ExecuteRequest(ctx context.Context, requestId string) error {
 	return allErrorsCombined
 }
 
-func (a *Activity) ExecuteRequestOnDataSource(ctx context.Context, requestStatusId string, requestType string) (*[]monoidprotocol.MonoidRecord, error) {
+func findSchema(
+	dataSource *model.DataSource,
+	schemas *monoidprotocol.MonoidSchemasMessage,
+) (monoidprotocol.MonoidSchema, error) {
+	for _, candidate := range schemas.Schemas {
+		candidateGroup := ""
+		if candidate.Group != nil {
+			candidateGroup = *candidate.Group
+		}
+
+		desiredGroup := ""
+		if dataSource.Group != nil {
+			desiredGroup = *dataSource.Group
+		}
+
+		if desiredGroup == candidateGroup && candidate.Name == dataSource.Name {
+			return candidate, nil
+		}
+	}
+
+	return monoidprotocol.MonoidSchema{}, fmt.Errorf("error finding schema")
+}
+
+func (a *Activity) ExecuteRequestOnDataSource(
+	ctx context.Context,
+	requestStatusId string,
+	requestType model.UserDataRequestType,
+) (*[]monoidprotocol.MonoidRecord, error) {
 	var conf map[string]interface{}
 	var recordChan chan monoidprotocol.MonoidRecord
 	var err error
-
-	if requestType != model.Delete && requestType != model.Query {
-		return nil, errors.New("invalid request type")
-	}
 
 	records := []monoidprotocol.MonoidRecord{}
 	requestStatus := model.RequestStatus{}
@@ -125,7 +158,7 @@ func (a *Activity) ExecuteRequestOnDataSource(ctx context.Context, requestStatus
 		return nil, failRequest(requestStatusId, err, a.Conf.DB)
 	}
 
-	if requestStatus.Status == model.Executed {
+	if requestStatus.Status == model.RequestStatusTypeExecuted {
 		return &[]monoidprotocol.MonoidRecord{}, nil
 	}
 
@@ -142,40 +175,22 @@ func (a *Activity) ExecuteRequestOnDataSource(ctx context.Context, requestStatus
 	}
 
 	protocol, err := docker.NewDockerMP(siloSpecification.DockerImage, siloSpecification.DockerTag)
-	defer protocol.Teardown(ctx)
 	if err != nil {
 		return nil, failRequest(requestStatusId, err, a.Conf.DB)
 	}
+
+	defer protocol.Teardown(ctx)
 
 	if err := json.Unmarshal([]byte(siloDefinition.Config), &conf); err != nil {
 		return nil, failRequest(requestStatusId, err, a.Conf.DB)
 	}
 
 	sch, err := protocol.Schema(context.Background(), conf)
-	schema := monoidprotocol.MonoidSchema{}
-	found := false
-	for _, candidate := range sch.Schemas {
-		candidateGroup := ""
-		if candidate.Group != nil {
-			candidateGroup = *candidate.Group
-		}
-
-		desiredGroup := ""
-		if dataSource.Group != nil {
-			desiredGroup = *dataSource.Group
-		}
-
-		if desiredGroup == candidateGroup && candidate.Name == dataSource.Name {
-			found = true
-			schema = candidate
-			break
-		}
+	if err != nil {
+		return nil, failRequest(requestStatusId, err, a.Conf.DB)
 	}
 
-	if !found {
-		return nil, failRequest(requestStatusId, errors.New("could not find dataSource schema"), a.Conf.DB)
-	}
-
+	schema, err := findSchema(&dataSource, sch)
 	if err != nil {
 		return nil, failRequest(requestStatusId, err, a.Conf.DB)
 	}
@@ -192,6 +207,7 @@ func (a *Activity) ExecuteRequestOnDataSource(ctx context.Context, requestStatus
 		// No user primary key in this data source
 		return &[]monoidprotocol.MonoidRecord{}, nil
 	}
+
 	userKey, ok := primaryKeyMap[primaryKey]
 	if !ok {
 		return nil, failRequest(requestStatusId, errors.New("data source's primary key type not defined"), a.Conf.DB)
@@ -212,12 +228,12 @@ func (a *Activity) ExecuteRequestOnDataSource(ctx context.Context, requestStatus
 	}
 
 	switch requestType {
-	case model.Delete:
-		recordChan, err = protocol.Delete(context.Background(), conf, monoidprotocol.MonoidQuery{
+	case model.UserDataRequestTypeDelete:
+		recordChan, err = protocol.Delete(ctx, conf, monoidprotocol.MonoidQuery{
 			Identifiers: []monoidprotocol.MonoidQueryIdentifier{identifier},
 		})
-	case model.Query:
-		recordChan, err = protocol.Query(context.Background(), conf, monoidprotocol.MonoidQuery{
+	case model.UserDataRequestTypeQuery:
+		recordChan, err = protocol.Query(ctx, conf, monoidprotocol.MonoidQuery{
 			Identifiers: []monoidprotocol.MonoidQueryIdentifier{identifier},
 		})
 	}
