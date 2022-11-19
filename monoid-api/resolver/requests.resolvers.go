@@ -293,7 +293,7 @@ func (r *workspaceResolver) Requests(ctx context.Context, obj *model.Workspace, 
 	q := r.Conf.DB.Where("workspace_id = ?", obj.ID)
 
 	if err := q.Session(&gorm.Session{}).Offset(offsetD).Limit(limit).Order(
-		"created_at desc",
+		"created_at desc, id desc",
 	).Find(&requests).Error; err != nil {
 		return nil, handleError(err, "Error getting requests")
 	}

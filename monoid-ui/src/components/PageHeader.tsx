@@ -40,7 +40,7 @@ export default function PageHeader(props: PageHeaderProps) {
         {header}
         {subtitle
           && (
-            <Text size="md" em="light" className="mt-2">
+            <Text as="div" size="md" em="light" className="mt-2">
               {subtitle}
             </Text>
           )}

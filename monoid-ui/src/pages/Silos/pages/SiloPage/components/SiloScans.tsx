@@ -171,7 +171,7 @@ function JobList(props: {
         }
       </ul>
       <Pagination
-        className="mt-5"
+        className="mt-5 sm:-mb-6 -mb-5"
         limit={limit}
         offset={offset}
         onOffsetChange={(o) => fetchMore({
@@ -270,8 +270,8 @@ export default function SiloScans() {
   return (
     <div className="space-y-4">
       <ScanSettingsCard />
-      <Card innerClassName="py-0 pt-5 pb-0 sm:pb-0">
-        <CardHeader className="sm:pb-0 pb-0">
+      <Card>
+        <CardHeader>
           Scan History
         </CardHeader>
         <Input className="mt-4" placeholder="Job ID" value={query} onChange={(e) => setQuery(e.target.value)} />

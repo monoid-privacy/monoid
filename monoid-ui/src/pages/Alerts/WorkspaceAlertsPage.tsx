@@ -66,7 +66,7 @@ function AlertListCardBody(props: { query: string }) {
         }
       </ul>
       <Pagination
-        className="mt-5"
+        className="mt-5 sm:-mb-6 -mb-5"
         limit={10}
         offset={offset}
         onOffsetChange={(o) => {
@@ -99,7 +99,7 @@ export default function WorkspaceAlertsPage() {
   return (
     <>
       <PageHeader title="Alerts" />
-      <Card innerClassName="py-0 pt-2 pb-0 sm:pb-0 sm:pt-2">
+      <Card>
         <Input className="mt-4" placeholder="Alert ID" value={query} onChange={(e) => setQuery(e.target.value)} />
         <CardDivider />
         <AlertListCardBody query={query} />

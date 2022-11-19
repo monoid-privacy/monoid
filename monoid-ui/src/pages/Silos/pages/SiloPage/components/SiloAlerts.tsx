@@ -151,7 +151,7 @@ function SiloCardBody(props: { query?: string }) {
         }
       </ul>
       <Pagination
-        className="mt-5"
+        className="mt-5 sm:-mb-6 -mb-5"
         limit={limit}
         offset={offset}
         onOffsetChange={(o) => {
@@ -264,8 +264,8 @@ export default function SiloAlerts() {
   }, [location.search]);
 
   return (
-    <Card innerClassName="py-0 pt-5 pb-0 sm:pb-0">
-      <CardHeader className="flex items-center sm:pb-0 pb-0">
+    <Card>
+      <CardHeader className="flex items-center">
         <div>
           Alerts
         </div>

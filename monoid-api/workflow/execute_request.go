@@ -19,6 +19,8 @@ func (w *Workflow) ExecuteRequestWorkflow(
 	ctx workflow.Context,
 	args ExecuteRequestArgs,
 ) error {
+	logger := workflow.GetLogger(ctx)
+
 	options := workflow.ActivityOptions{
 		StartToCloseTimeout: time.Minute * 2,
 		RetryPolicy: &temporal.RetryPolicy{
@@ -49,9 +51,38 @@ func (w *Workflow) ExecuteRequestWorkflow(
 		return err
 	}
 
-	err = workflow.ExecuteActivity(ctx, ac.ExecuteRequest, args.RequestID).Get(ctx, nil)
+	request := model.Request{}
+	if err := w.Conf.DB.Preload("PrimaryKeyValues").Preload("RequestStatuses").Where(
+		"id = ?",
+		args.RequestID,
+	).First(&request).Error; err != nil {
+		err := workflow.ExecuteActivity(ctx, ac.UpdateJobStatus, activity.JobStatusInput{
+			ID:     args.JobID,
+			Status: model.JobStatusFailed,
+		}).Get(ctx, nil)
 
-	if err != nil {
+		return err
+	}
+
+	futures := make([]workflow.Future, len(request.RequestStatuses))
+	for i, r := range request.RequestStatuses {
+		future := workflow.ExecuteActivity(ctx, ac.ExecuteRequestOnDataSource, r.ID)
+		futures[i] = future
+	}
+
+	jobFailed := false
+
+	for i, f := range futures {
+		if err := f.Get(ctx, nil); err != nil {
+			jobFailed = true
+			logger.Error("error scheduling execute request on data source", map[string]interface{}{
+				"dataSource": request.RequestStatuses[i].DataSourceID,
+				"request":    request.RequestStatuses[i].RequestID,
+			})
+		}
+	}
+
+	if jobFailed {
 		err := workflow.ExecuteActivity(ctx, ac.UpdateJobStatus, activity.JobStatusInput{
 			ID:     args.JobID,
 			Status: model.JobStatusFailed,

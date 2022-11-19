@@ -1,14 +1,15 @@
 import React from 'react';
 import { classNames } from '../utils/utils';
 
-interface TextProps extends Omit<React.HTMLProps<HTMLParagraphElement>, 'size'> {
+interface TextProps extends Omit<React.HTMLProps<HTMLDivElement>, 'size'> {
   size?: 'xs' | 'sm' | 'md' | 'lg',
   em?: 'light' | 'normal' | 'bold'
+  as?: 'p' | 'div'
 }
 
 export default function Text(props: TextProps) {
   const {
-    children, className, size, em, ...rest
+    children, as, className, size, em, ...rest
   } = props;
   let sizeCls = '';
   switch (size) {
@@ -43,14 +44,14 @@ export default function Text(props: TextProps) {
       break;
   }
 
-  return (
-    <p className={classNames(className, sizeCls, emCls)} {...rest}>
-      {children}
-    </p>
-  );
+  return React.createElement(as!, {
+    className: classNames(className, sizeCls, emCls),
+    ...rest,
+  }, children);
 }
 
 Text.defaultProps = {
   size: 'md',
   em: 'normal',
+  as: 'div',
 };

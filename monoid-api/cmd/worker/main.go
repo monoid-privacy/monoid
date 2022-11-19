@@ -46,7 +46,6 @@ func main() {
 	w.RegisterActivity(a.DetectDataSources)
 	w.RegisterActivity(a.FindOrCreateJob)
 	w.RegisterActivity(a.UpdateJobStatus)
-	w.RegisterActivity(a.ExecuteRequest)
 	w.RegisterActivity(a.ExecuteRequestOnDataSource)
 
 	w.RegisterWorkflow(mwf.ValidateDSWorkflow)

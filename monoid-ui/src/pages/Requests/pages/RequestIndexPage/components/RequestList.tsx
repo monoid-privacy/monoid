@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import { useQuery } from '@apollo/client';
+import { gql, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 import updateLocale from 'dayjs/plugin/updateLocale';
@@ -13,7 +13,26 @@ import Table from '../../../../../components/Table';
 import { Request } from '../../../../../lib/models';
 import Badge from '../../../../../components/Badge';
 import Pagination from '../../../../../components/Pagination';
-import { GET_REQUESTS } from '../../../../../graphql/requests_queries';
+// import { GET_REQUESTS } from '../../../../../graphql/requests_queries';
+
+export const GET_REQUESTS = gql`
+query GetRequests22($id: ID!, $limit: Int!, $offset: Int) {
+  workspace(id: $id) {
+    id
+    requests(limit: $limit, offset: $offset) {
+      requests {
+        id
+        type
+        createdAt
+        requestStatuses {
+          id
+        }
+      }
+      numRequests
+    }
+  }
+}
+`;
 
 dayjs.extend(updateLocale);
 dayjs.extend(duration);
