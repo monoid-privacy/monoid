@@ -4,6 +4,7 @@ import {
   BeakerIcon, BellAlertIcon, CloudIcon, CogIcon, DocumentIcon, MagnifyingGlassIcon,
   InboxIcon,
   IdentificationIcon,
+  CircleStackIcon,
 } from '@heroicons/react/24/outline';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { faSlack, faGithub } from '@fortawesome/free-brands-svg-icons';
@@ -36,6 +37,15 @@ export default function AppContainer(props: {
         },
         current: location.pathname.startsWith(`/workspaces/${id}/dashboard`),
         key: 'dashboard',
+      },
+      {
+        title: 'Data Map',
+        icon: CircleStackIcon,
+        onClick: () => {
+          navigate(`/workspaces/${id}/data_map`);
+        },
+        current: location.pathname.startsWith(`/workspaces/${id}/data_map`),
+        key: 'data_map',
       },
       {
         title: 'User Data Requests',
@@ -114,7 +124,10 @@ export default function AppContainer(props: {
         title: 'Community',
         icon: faComponent(faSlack),
         onClick: () => {
-          window.location.href = 'mailto:vignesh@brist.ai?subject=Feature Request';
+          window.open(
+            'https://github.com/monoid-privacy/monoid/issues',
+            '_blank',
+          );
         },
         current: false,
         key: 'community',
@@ -123,7 +136,10 @@ export default function AppContainer(props: {
         title: 'Issues/Feature Requests',
         icon: faComponent(faGithub),
         onClick: () => {
-          window.location.href = 'mailto:vignesh@brist.ai';
+          window.open(
+            'https://github.com/monoid-privacy/monoid/issues',
+            '_blank',
+          );
         },
         current: false,
         key: 'issues',

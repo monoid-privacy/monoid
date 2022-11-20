@@ -10,18 +10,14 @@ import (
 	"strings"
 
 	"github.com/brist-ai/monoid/generated"
+	"github.com/brist-ai/monoid/loader"
 	"github.com/brist-ai/monoid/model"
 	"gorm.io/gorm"
 )
 
 // SiloDefinition is the resolver for the siloDefinition field.
 func (r *dataDiscoveryResolver) SiloDefinition(ctx context.Context, obj *model.DataDiscovery) (*model.SiloDefinition, error) {
-	def := model.SiloDefinition{}
-	if err := r.Conf.DB.Where("id = ?", obj.SiloDefinitionID).First(&def).Error; err != nil {
-		return nil, handleError(err, "Error getting silo definition")
-	}
-
-	return &def, nil
+	return loader.GetSiloDefinition(ctx, obj.SiloDefinitionID)
 }
 
 // Data is the resolver for the data field.

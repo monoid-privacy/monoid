@@ -15,6 +15,7 @@ import SettingsPage from './Settings/SettingsPage';
 import SiloRoutes from './Silos/SiloRoutes';
 import RequestRoutes from './Requests/RequestRoutes';
 import IdentifierRoutes from './Identifiers/IdentifierRoutes';
+import DataMapPage from './DataMap/DataMapPage';
 
 export default function MonoidRouter() {
   return (
@@ -28,6 +29,7 @@ export default function MonoidRouter() {
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="alerts" element={<WorkspaceAlertsPage />} />
             <Route path="scans" element={<WorkspaceScansPage />} />
+            <Route path="data_map" element={<DataMapPage />} />
             <Route path="silos/*" element={<SiloRoutes />} />
             <Route path="requests/*" element={<RequestRoutes />} />
             <Route path="identifiers/*" element={<IdentifierRoutes />} />

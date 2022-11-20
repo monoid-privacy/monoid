@@ -90,3 +90,14 @@ type Purpose struct {
 	WorkspaceID string
 	Workspace   Workspace `gorm:"constraint:OnDelete:CASCADE;"`
 }
+
+type DataMapRow struct {
+	SiloDefinitionID string
+	SiloDefinition   SiloDefinition
+
+	PropertyID string
+	Property   Property
+
+	DataSourceID string
+	DataSource   DataSource
+}

@@ -59,9 +59,12 @@ export default function Sidebar(props: {
               </nav>
             ))}
           </div>
-          <div className="flex flex-shrink-0 border-t border-gray-200 p-4">
-            {footer}
-          </div>
+          {footer
+            && (
+              <div className="flex flex-shrink-0 border-t border-gray-200 p-4">
+                {footer}
+              </div>
+            )}
         </div>
       </div>
     </>

@@ -19,12 +19,7 @@ import (
 
 // SiloDefinition is the resolver for the siloDefinition field.
 func (r *dataSourceResolver) SiloDefinition(ctx context.Context, obj *model.DataSource) (*model.SiloDefinition, error) {
-	definition := model.SiloDefinition{}
-	if err := r.Conf.DB.Where("id = ?", obj.SiloDefinitionID).First(&definition).Error; err != nil {
-		return nil, err
-	}
-
-	return &definition, nil
+	return loader.GetSiloDefinition(ctx, obj.SiloDefinitionID)
 }
 
 // Properties is the resolver for the properties field.
@@ -348,7 +343,7 @@ func (r *mutationResolver) DetectSiloSources(ctx context.Context, workspaceID st
 
 // Categories is the resolver for the categories field.
 func (r *propertyResolver) Categories(ctx context.Context, obj *model.Property) ([]*model.Category, error) {
-	return loader.GetCategories(ctx, obj.ID)
+	return loader.GetPropertyCategories(ctx, obj.ID)
 }
 
 // DataSource is the resolver for the dataSource field.
@@ -413,6 +408,77 @@ func (r *queryResolver) Subject(ctx context.Context, id string) (*model.Subject,
 // Property is the resolver for the property field.
 func (r *queryResolver) Property(ctx context.Context, id string) (*model.Property, error) {
 	return findObjectByID[model.Property](id, r.Conf.DB, "Error finding property.")
+}
+
+// DataMap is the resolver for the dataMap field.
+func (r *workspaceResolver) DataMap(ctx context.Context, obj *model.Workspace, query *model.DataMapQuery, limit int, offset *int) (*model.DataMapResult, error) {
+	dataMap := []*model.DataMapRow{}
+	off := 0
+	if offset != nil {
+		off = *offset
+	}
+
+	q := r.Conf.DB.Select(
+		"silo_definitions.id as silo_definition_id",
+		"data_sources.id as data_source_id",
+		"properties.id as property_id",
+		"silo_definitions.name",
+		"data_sources.name",
+		"properties.name",
+	).Table("silo_definitions").Joins(
+		"LEFT JOIN data_sources ON data_sources.silo_definition_id = silo_definitions.id",
+	).Joins(
+		"LEFT JOIN properties ON properties.data_source_id = data_sources.id",
+	).Joins(
+		"LEFT JOIN property_categories ON property_categories.property_id = properties.id",
+	).Where("silo_definitions.workspace_id = ?", obj.ID)
+
+	if query != nil {
+		if query.Categories != nil {
+			countQ := r.Conf.DB.Table("property_categories").Where(
+				"property_categories.property_id = properties.id",
+			)
+
+			if query.Categories.AnyCategory != nil && *query.Categories.AnyCategory {
+				q = q.Where("(?) > 0", countQ.Session(&gorm.Session{}).Select("COUNT(*)"))
+			}
+
+			if query.Categories.NoCategory != nil && *query.Categories.NoCategory {
+				q = q.Where("(?) = 0", countQ.Session(&gorm.Session{}).Select("COUNT(*)"))
+			}
+
+			if len(query.Categories.CategoryIDs) > 0 {
+				q = q.Where("(?) > 0", countQ.Session(&gorm.Session{}).Where(
+					"property_categories.category_id IN ?",
+					query.Categories.CategoryIDs,
+				).Select("COUNT(*)"))
+			}
+		}
+
+		if len(query.SiloDefinitions) != 0 {
+			q = q.Where("silo_definitions.id IN ?", query.SiloDefinitions)
+		}
+	}
+
+	if err := q.Session(&gorm.Session{}).Preload(
+		"SiloDefinition",
+	).Preload("DataSource").Preload(
+		"Property",
+	).Limit(limit).Offset(off).Order(
+		"silo_definitions.name DESC, data_sources.name DESC, properties.name DESC",
+	).Find(&dataMap).Error; err != nil {
+		return nil, handleError(err, "Error getting data map")
+	}
+
+	cnt := int64(0)
+	if err := q.Session(&gorm.Session{}).Count(&cnt).Error; err != nil {
+		return nil, handleError(err, "Error getting number of data map rows")
+	}
+
+	return &model.DataMapResult{
+		DataMapRows: dataMap,
+		NumRows:     int(cnt),
+	}, nil
 }
 
 // DataSource returns generated.DataSourceResolver implementation.

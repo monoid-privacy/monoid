@@ -79,6 +79,17 @@ type ComplexityRoot struct {
 		Type             func(childComplexity int) int
 	}
 
+	DataMapResult struct {
+		DataMapRows func(childComplexity int) int
+		NumRows     func(childComplexity int) int
+	}
+
+	DataMapRow struct {
+		DataSource     func(childComplexity int) int
+		Property       func(childComplexity int) int
+		SiloDefinition func(childComplexity int) int
+	}
+
 	DataSource struct {
 		Description     func(childComplexity int) int
 		Group           func(childComplexity int) int
@@ -284,6 +295,7 @@ type ComplexityRoot struct {
 
 	Workspace struct {
 		Categories         func(childComplexity int) int
+		DataMap            func(childComplexity int, query *model.DataMapQuery, limit int, offset *int) int
 		Discoveries        func(childComplexity int, statuses []*model.DiscoveryStatus, query *string, limit int, offset *int) int
 		ID                 func(childComplexity int) int
 		Jobs               func(childComplexity int, jobType string, status []*model.JobStatus, query *string, limit int, offset int) int
@@ -416,6 +428,7 @@ type SiloDefinitionResolver interface {
 type WorkspaceResolver interface {
 	Settings(ctx context.Context, obj *model.Workspace) (map[string]interface{}, error)
 
+	DataMap(ctx context.Context, obj *model.Workspace, query *model.DataMapQuery, limit int, offset *int) (*model.DataMapResult, error)
 	Discoveries(ctx context.Context, obj *model.Workspace, statuses []*model.DiscoveryStatus, query *string, limit int, offset *int) (*model.DataDiscoveriesListResult, error)
 	Jobs(ctx context.Context, obj *model.Workspace, jobType string, status []*model.JobStatus, query *string, limit int, offset int) (*model.JobsResult, error)
 	Requests(ctx context.Context, obj *model.Workspace, offset *int, limit int) (*model.RequestsResult, error)
@@ -515,6 +528,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DataDiscovery.Type(childComplexity), true
+
+	case "DataMapResult.dataMapRows":
+		if e.complexity.DataMapResult.DataMapRows == nil {
+			break
+		}
+
+		return e.complexity.DataMapResult.DataMapRows(childComplexity), true
+
+	case "DataMapResult.numRows":
+		if e.complexity.DataMapResult.NumRows == nil {
+			break
+		}
+
+		return e.complexity.DataMapResult.NumRows(childComplexity), true
+
+	case "DataMapRow.dataSource":
+		if e.complexity.DataMapRow.DataSource == nil {
+			break
+		}
+
+		return e.complexity.DataMapRow.DataSource(childComplexity), true
+
+	case "DataMapRow.property":
+		if e.complexity.DataMapRow.Property == nil {
+			break
+		}
+
+		return e.complexity.DataMapRow.Property(childComplexity), true
+
+	case "DataMapRow.siloDefinition":
+		if e.complexity.DataMapRow.SiloDefinition == nil {
+			break
+		}
+
+		return e.complexity.DataMapRow.SiloDefinition(childComplexity), true
 
 	case "DataSource.description":
 		if e.complexity.DataSource.Description == nil {
@@ -1696,6 +1744,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Workspace.Categories(childComplexity), true
 
+	case "Workspace.dataMap":
+		if e.complexity.Workspace.DataMap == nil {
+			break
+		}
+
+		args, err := ec.field_Workspace_dataMap_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Workspace.DataMap(childComplexity, args["query"].(*model.DataMapQuery), args["limit"].(int), args["offset"].(*int)), true
+
 	case "Workspace.discoveries":
 		if e.complexity.Workspace.Discoveries == nil {
 			break
@@ -1808,6 +1868,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputCategoryQuery,
 		ec.unmarshalInputCreateCategoryInput,
 		ec.unmarshalInputCreateDataSourceInput,
 		ec.unmarshalInputCreatePropertyInput,
@@ -1817,6 +1878,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateSubjectInput,
 		ec.unmarshalInputCreateUserPrimaryKeyInput,
 		ec.unmarshalInputCreateWorkspaceInput,
+		ec.unmarshalInputDataMapQuery,
 		ec.unmarshalInputHandleAllDiscoveriesInput,
 		ec.unmarshalInputHandleDiscoveryInput,
 		ec.unmarshalInputKVPair,
@@ -1976,6 +2038,12 @@ type Purpose {
     name: String!
 }
 
+type DataMapRow {
+    siloDefinition: SiloDefinition!
+    property: Property!
+    dataSource: DataSource!
+}
+
 input CreateSiloSpecificationInput {
     name: String!
     workspaceID: ID!
@@ -2042,6 +2110,22 @@ input UpdateSubjectInput {
     name: String
 }
 
+input CategoryQuery {
+    anyCategory: Boolean
+    noCategory: Boolean
+    categoryIDs: [ID!]
+}
+
+input DataMapQuery {
+    categories: CategoryQuery
+    siloDefinitions: [ID!]
+}
+
+type DataMapResult {
+    dataMapRows: [DataMapRow!]
+    numRows: Int!
+}
+
 extend type Query {
     dataSource(id: ID!): DataSource
     siloSpecification(id: ID!): SiloSpecification
@@ -2053,6 +2137,10 @@ extend type Query {
     category(id: ID!): Category
     subject(id: ID!): Subject
     property(id: ID!): Property
+}
+
+extend type Workspace {
+    dataMap(query: DataMapQuery, limit: Int!, offset: Int): DataMapResult!
 }
 
 extend type Mutation {
@@ -3230,6 +3318,39 @@ func (ec *executionContext) field_SiloDefinition_discoveries_args(ctx context.Co
 	return args, nil
 }
 
+func (ec *executionContext) field_Workspace_dataMap_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.DataMapQuery
+	if tmp, ok := rawArgs["query"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("query"))
+		arg0, err = ec.unmarshalODataMapQuery2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataMapQuery(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["query"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg1
+	var arg2 *int
+	if tmp, ok := rawArgs["offset"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+		arg2, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["offset"] = arg2
+	return args, nil
+}
+
 func (ec *executionContext) field_Workspace_discoveries_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -3912,6 +4033,281 @@ func (ec *executionContext) fieldContext_DataDiscovery_createdAt(ctx context.Con
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DataMapResult_dataMapRows(ctx context.Context, field graphql.CollectedField, obj *model.DataMapResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DataMapResult_dataMapRows(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DataMapRows, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.DataMapRow)
+	fc.Result = res
+	return ec.marshalODataMapRow2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataMapRowᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DataMapResult_dataMapRows(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DataMapResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "siloDefinition":
+				return ec.fieldContext_DataMapRow_siloDefinition(ctx, field)
+			case "property":
+				return ec.fieldContext_DataMapRow_property(ctx, field)
+			case "dataSource":
+				return ec.fieldContext_DataMapRow_dataSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DataMapRow", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DataMapResult_numRows(ctx context.Context, field graphql.CollectedField, obj *model.DataMapResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DataMapResult_numRows(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NumRows, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DataMapResult_numRows(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DataMapResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DataMapRow_siloDefinition(ctx context.Context, field graphql.CollectedField, obj *model.DataMapRow) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DataMapRow_siloDefinition(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SiloDefinition, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.SiloDefinition)
+	fc.Result = res
+	return ec.marshalNSiloDefinition2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloDefinition(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DataMapRow_siloDefinition(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DataMapRow",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SiloDefinition_id(ctx, field)
+			case "name":
+				return ec.fieldContext_SiloDefinition_name(ctx, field)
+			case "description":
+				return ec.fieldContext_SiloDefinition_description(ctx, field)
+			case "siloSpecification":
+				return ec.fieldContext_SiloDefinition_siloSpecification(ctx, field)
+			case "dataSources":
+				return ec.fieldContext_SiloDefinition_dataSources(ctx, field)
+			case "subjects":
+				return ec.fieldContext_SiloDefinition_subjects(ctx, field)
+			case "siloConfig":
+				return ec.fieldContext_SiloDefinition_siloConfig(ctx, field)
+			case "scanConfig":
+				return ec.fieldContext_SiloDefinition_scanConfig(ctx, field)
+			case "discoveries":
+				return ec.fieldContext_SiloDefinition_discoveries(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SiloDefinition", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DataMapRow_property(ctx context.Context, field graphql.CollectedField, obj *model.DataMapRow) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DataMapRow_property(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Property, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.Property)
+	fc.Result = res
+	return ec.marshalNProperty2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐProperty(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DataMapRow_property(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DataMapRow",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Property_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Property_name(ctx, field)
+			case "categories":
+				return ec.fieldContext_Property_categories(ctx, field)
+			case "dataSource":
+				return ec.fieldContext_Property_dataSource(ctx, field)
+			case "purposes":
+				return ec.fieldContext_Property_purposes(ctx, field)
+			case "userPrimaryKey":
+				return ec.fieldContext_Property_userPrimaryKey(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Property", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DataMapRow_dataSource(ctx context.Context, field graphql.CollectedField, obj *model.DataMapRow) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DataMapRow_dataSource(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DataSource, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DataMapRow_dataSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DataMapRow",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_DataSource_id(ctx, field)
+			case "name":
+				return ec.fieldContext_DataSource_name(ctx, field)
+			case "group":
+				return ec.fieldContext_DataSource_group(ctx, field)
+			case "siloDefinition":
+				return ec.fieldContext_DataSource_siloDefinition(ctx, field)
+			case "properties":
+				return ec.fieldContext_DataSource_properties(ctx, field)
+			case "description":
+				return ec.fieldContext_DataSource_description(ctx, field)
+			case "requestStatuses":
+				return ec.fieldContext_DataSource_requestStatuses(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DataSource", field.Name)
 		},
 	}
 	return fc, nil
@@ -4968,6 +5364,8 @@ func (ec *executionContext) fieldContext_Mutation_createWorkspace(ctx context.Co
 				return ec.fieldContext_Workspace_purposes(ctx, field)
 			case "categories":
 				return ec.fieldContext_Workspace_categories(ctx, field)
+			case "dataMap":
+				return ec.fieldContext_Workspace_dataMap(ctx, field)
 			case "discoveries":
 				return ec.fieldContext_Workspace_discoveries(ctx, field)
 			case "jobs":
@@ -5048,6 +5446,8 @@ func (ec *executionContext) fieldContext_Mutation_updateWorkspaceSettings(ctx co
 				return ec.fieldContext_Workspace_purposes(ctx, field)
 			case "categories":
 				return ec.fieldContext_Workspace_categories(ctx, field)
+			case "dataMap":
+				return ec.fieldContext_Workspace_dataMap(ctx, field)
 			case "discoveries":
 				return ec.fieldContext_Workspace_discoveries(ctx, field)
 			case "jobs":
@@ -8290,6 +8690,8 @@ func (ec *executionContext) fieldContext_Query_workspaces(ctx context.Context, f
 				return ec.fieldContext_Workspace_purposes(ctx, field)
 			case "categories":
 				return ec.fieldContext_Workspace_categories(ctx, field)
+			case "dataMap":
+				return ec.fieldContext_Workspace_dataMap(ctx, field)
 			case "discoveries":
 				return ec.fieldContext_Workspace_discoveries(ctx, field)
 			case "jobs":
@@ -8359,6 +8761,8 @@ func (ec *executionContext) fieldContext_Query_workspace(ctx context.Context, fi
 				return ec.fieldContext_Workspace_purposes(ctx, field)
 			case "categories":
 				return ec.fieldContext_Workspace_categories(ctx, field)
+			case "dataMap":
+				return ec.fieldContext_Workspace_dataMap(ctx, field)
 			case "discoveries":
 				return ec.fieldContext_Workspace_discoveries(ctx, field)
 			case "jobs":
@@ -11456,6 +11860,67 @@ func (ec *executionContext) fieldContext_Workspace_categories(ctx context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Workspace_dataMap(ctx context.Context, field graphql.CollectedField, obj *model.Workspace) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Workspace_dataMap(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Workspace().DataMap(rctx, obj, fc.Args["query"].(*model.DataMapQuery), fc.Args["limit"].(int), fc.Args["offset"].(*int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.DataMapResult)
+	fc.Result = res
+	return ec.marshalNDataMapResult2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataMapResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Workspace_dataMap(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Workspace",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "dataMapRows":
+				return ec.fieldContext_DataMapResult_dataMapRows(ctx, field)
+			case "numRows":
+				return ec.fieldContext_DataMapResult_numRows(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DataMapResult", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Workspace_dataMap_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Workspace_discoveries(ctx context.Context, field graphql.CollectedField, obj *model.Workspace) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Workspace_discoveries(ctx, field)
 	if err != nil {
@@ -13598,6 +14063,50 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputCategoryQuery(ctx context.Context, obj interface{}) (model.CategoryQuery, error) {
+	var it model.CategoryQuery
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"anyCategory", "noCategory", "categoryIDs"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "anyCategory":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("anyCategory"))
+			it.AnyCategory, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "noCategory":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("noCategory"))
+			it.NoCategory, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "categoryIDs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryIDs"))
+			it.CategoryIDs, err = ec.unmarshalOID2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCreateCategoryInput(ctx context.Context, obj interface{}) (model.CreateCategoryInput, error) {
 	var it model.CreateCategoryInput
 	asMap := map[string]interface{}{}
@@ -13993,6 +14502,42 @@ func (ec *executionContext) unmarshalInputCreateWorkspaceInput(ctx context.Conte
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("settings"))
 			it.Settings, err = ec.unmarshalOKVPair2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐKVPair(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputDataMapQuery(ctx context.Context, obj interface{}) (model.DataMapQuery, error) {
+	var it model.DataMapQuery
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"categories", "siloDefinitions"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "categories":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categories"))
+			it.Categories, err = ec.unmarshalOCategoryQuery2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCategoryQuery(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "siloDefinitions":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("siloDefinitions"))
+			it.SiloDefinitions, err = ec.unmarshalOID2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -14793,6 +15338,80 @@ func (ec *executionContext) _DataDiscovery(ctx context.Context, sel ast.Selectio
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var dataMapResultImplementors = []string{"DataMapResult"}
+
+func (ec *executionContext) _DataMapResult(ctx context.Context, sel ast.SelectionSet, obj *model.DataMapResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, dataMapResultImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DataMapResult")
+		case "dataMapRows":
+
+			out.Values[i] = ec._DataMapResult_dataMapRows(ctx, field, obj)
+
+		case "numRows":
+
+			out.Values[i] = ec._DataMapResult_numRows(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var dataMapRowImplementors = []string{"DataMapRow"}
+
+func (ec *executionContext) _DataMapRow(ctx context.Context, sel ast.SelectionSet, obj *model.DataMapRow) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, dataMapRowImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DataMapRow")
+		case "siloDefinition":
+
+			out.Values[i] = ec._DataMapRow_siloDefinition(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "property":
+
+			out.Values[i] = ec._DataMapRow_property(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "dataSource":
+
+			out.Values[i] = ec._DataMapRow_dataSource(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -16745,6 +17364,26 @@ func (ec *executionContext) _Workspace(ctx context.Context, sel ast.SelectionSet
 
 			out.Values[i] = ec._Workspace_categories(ctx, field, obj)
 
+		case "dataMap":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Workspace_dataMap(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "discoveries":
 			field := field
 
@@ -17248,6 +17887,30 @@ func (ec *executionContext) marshalNDataDiscoveryData2githubᚗcomᚋbristᚑai�
 	return ec._DataDiscoveryData(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNDataMapResult2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataMapResult(ctx context.Context, sel ast.SelectionSet, v model.DataMapResult) graphql.Marshaler {
+	return ec._DataMapResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNDataMapResult2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataMapResult(ctx context.Context, sel ast.SelectionSet, v *model.DataMapResult) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DataMapResult(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNDataMapRow2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataMapRow(ctx context.Context, sel ast.SelectionSet, v *model.DataMapRow) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DataMapRow(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNDataSource2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSource(ctx context.Context, sel ast.SelectionSet, v model.DataSource) graphql.Marshaler {
 	return ec._DataSource(ctx, sel, &v)
 }
@@ -17389,6 +18052,10 @@ func (ec *executionContext) marshalNPrimaryKeyValue2ᚖgithubᚗcomᚋbristᚑai
 		return graphql.Null
 	}
 	return ec._PrimaryKeyValue(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNProperty2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐProperty(ctx context.Context, sel ast.SelectionSet, v model.Property) graphql.Marshaler {
+	return ec._Property(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNProperty2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐProperty(ctx context.Context, sel ast.SelectionSet, v *model.Property) graphql.Marshaler {
@@ -17984,6 +18651,14 @@ func (ec *executionContext) marshalOCategory2ᚖgithubᚗcomᚋbristᚑaiᚋmono
 	return ec._Category(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalOCategoryQuery2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCategoryQuery(ctx context.Context, v interface{}) (*model.CategoryQuery, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputCategoryQuery(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalOCreateCategoryInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCreateCategoryInput(ctx context.Context, v interface{}) (*model.CreateCategoryInput, error) {
 	if v == nil {
 		return nil, nil
@@ -18086,6 +18761,61 @@ func (ec *executionContext) marshalODataDiscovery2ᚖgithubᚗcomᚋbristᚑai�
 		return graphql.Null
 	}
 	return ec._DataDiscovery(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalODataMapQuery2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataMapQuery(ctx context.Context, v interface{}) (*model.DataMapQuery, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputDataMapQuery(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalODataMapRow2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataMapRowᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DataMapRow) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNDataMapRow2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataMapRow(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalODataSource2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSourceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DataSource) graphql.Marshaler {

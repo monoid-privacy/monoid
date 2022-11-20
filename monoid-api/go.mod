@@ -43,7 +43,6 @@ require (
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/moby/term v0.0.0-20220808134915-39b0c02b01ae // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
-	github.com/myesui/uuid v1.0.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.2 // indirect
 	github.com/opentracing/opentracing-go v1.1.0 // indirect
@@ -56,6 +55,7 @@ require (
 	github.com/stretchr/testify v1.8.1 // indirect
 	go.temporal.io/api v1.11.1-0.20220907050538-6de5285cf463 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
+	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect
 	golang.org/x/net v0.0.0-20220906165146-f3363e06e74c // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
@@ -63,7 +63,6 @@ require (
 	google.golang.org/genproto v0.0.0-20220902135211-223410557253 // indirect
 	google.golang.org/grpc v1.49.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
-	gopkg.in/stretchr/testify.v1 v1.2.2 // indirect
 	gorm.io/driver/mysql v1.3.2 // indirect
 	gotest.tools/v3 v3.4.0 // indirect
 )
@@ -71,14 +70,12 @@ require (
 require (
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
-	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/mitchellh/mapstructure v1.3.1
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/segmentio/backo-go v1.0.1 // indirect
-	github.com/twinj/uuid v1.0.0
 	github.com/urfave/cli/v2 v2.8.1 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
@@ -92,8 +89,6 @@ require (
 	github.com/deckarep/golang-set v1.8.0
 	github.com/graph-gophers/dataloader v5.0.0+incompatible
 	github.com/robfig/cron/v3 v3.0.1
-	github.com/vektah/gqlparser v1.3.1
-	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
 	gorm.io/datatypes v1.0.7
 	gorm.io/gorm v1.24.1-0.20221019064659-5dd2bb482755
 )

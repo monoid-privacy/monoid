@@ -142,7 +142,7 @@ function PropertyBody(props: {
         )
       }
       <div className="mt-2">
-        <Text size="xs" em="light" className="flex items-center mt-1">
+        <Text as="div" size="xs" em="light" className="flex items-center mt-1">
           {
             !dataSource ? 'Data Source has been removed.'
               : (

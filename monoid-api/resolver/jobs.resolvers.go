@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/brist-ai/monoid/generated"
+	"github.com/brist-ai/monoid/loader"
 	"github.com/brist-ai/monoid/model"
 	"gorm.io/gorm"
 )
@@ -18,12 +19,7 @@ func (r *jobResolver) SiloDefinition(ctx context.Context, obj *model.Job) (*mode
 		return nil, nil
 	}
 
-	siloDef := model.SiloDefinition{}
-	if err := r.Conf.DB.Where("id = ?", obj.ResourceID).First(&siloDef).Error; err != nil {
-		return nil, handleError(err, "Error finding silo definition")
-	}
-
-	return &siloDef, nil
+	return loader.GetSiloDefinition(ctx, obj.ResourceID)
 }
 
 // Jobs is the resolver for the jobs field.

@@ -43,6 +43,12 @@ type Purpose {
     name: String!
 }
 
+type DataMapRow {
+    siloDefinition: SiloDefinition!
+    property: Property!
+    dataSource: DataSource!
+}
+
 input CreateSiloSpecificationInput {
     name: String!
     workspaceID: ID!
@@ -109,6 +115,22 @@ input UpdateSubjectInput {
     name: String
 }
 
+input CategoryQuery {
+    anyCategory: Boolean
+    noCategory: Boolean
+    categoryIDs: [ID!]
+}
+
+input DataMapQuery {
+    categories: CategoryQuery
+    siloDefinitions: [ID!]
+}
+
+type DataMapResult {
+    dataMapRows: [DataMapRow!]
+    numRows: Int!
+}
+
 extend type Query {
     dataSource(id: ID!): DataSource
     siloSpecification(id: ID!): SiloSpecification
@@ -120,6 +142,10 @@ extend type Query {
     category(id: ID!): Category
     subject(id: ID!): Subject
     property(id: ID!): Property
+}
+
+extend type Workspace {
+    dataMap(query: DataMapQuery, limit: Int!, offset: Int): DataMapResult!
 }
 
 extend type Mutation {

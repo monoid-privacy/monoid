@@ -8,6 +8,12 @@ import (
 	"strconv"
 )
 
+type CategoryQuery struct {
+	AnyCategory *bool    `json:"anyCategory"`
+	NoCategory  *bool    `json:"noCategory"`
+	CategoryIDs []string `json:"categoryIDs"`
+}
+
 type CreateCategoryInput struct {
 	Name        string `json:"name"`
 	WorkspaceID string `json:"workspaceID"`
@@ -66,6 +72,16 @@ type CreateWorkspaceInput struct {
 type DataDiscoveriesListResult struct {
 	Discoveries    []*DataDiscovery `json:"discoveries"`
 	NumDiscoveries int              `json:"numDiscoveries"`
+}
+
+type DataMapQuery struct {
+	Categories      *CategoryQuery `json:"categories"`
+	SiloDefinitions []string       `json:"siloDefinitions"`
+}
+
+type DataMapResult struct {
+	DataMapRows []*DataMapRow `json:"dataMapRows"`
+	NumRows     int           `json:"numRows"`
 }
 
 type HandleAllDiscoveriesInput struct {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { classNames } from '../utils/utils';
 
-export type BadgeColor = 'blue' | 'green' | 'yellow' | 'red';
+export type BadgeColor = 'blue' | 'green' | 'yellow' | 'red' | 'white';
 
 interface BadgeProps extends Omit<React.HTMLProps<HTMLSpanElement>, 'size'> {
   color?: BadgeColor
@@ -26,6 +26,10 @@ export default function Badge(props: BadgeProps) {
     case 'yellow':
       colorClasses = 'bg-yellow-100 text-yellow-800';
       actionClasses = 'hover:bg-yellow-500';
+      break;
+    case 'white':
+      colorClasses = 'bg-white text-gray-700 border border-gray-300';
+      actionClasses = 'hover:bg-gray-50';
       break;
     case 'red':
       colorClasses = 'bg-red-100 text-red-800';
