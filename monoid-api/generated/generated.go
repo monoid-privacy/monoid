@@ -127,20 +127,16 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateCategory           func(childComplexity int, input *model.CreateCategoryInput) int
 		CreateDataSource         func(childComplexity int, input *model.CreateDataSourceInput) int
 		CreateProperty           func(childComplexity int, input *model.CreatePropertyInput) int
-		CreatePurpose            func(childComplexity int, input *model.CreatePurposeInput) int
 		CreateSiloDefinition     func(childComplexity int, input *model.CreateSiloDefinitionInput) int
 		CreateSiloSpecification  func(childComplexity int, input *model.CreateSiloSpecificationInput) int
 		CreateSubject            func(childComplexity int, input *model.CreateSubjectInput) int
 		CreateUserDataRequest    func(childComplexity int, input *model.UserDataRequestInput) int
 		CreateUserPrimaryKey     func(childComplexity int, input model.CreateUserPrimaryKeyInput) int
 		CreateWorkspace          func(childComplexity int, input model.CreateWorkspaceInput) int
-		DeleteCategory           func(childComplexity int, id string) int
 		DeleteDataSource         func(childComplexity int, id string) int
 		DeleteProperty           func(childComplexity int, id string) int
-		DeletePurpose            func(childComplexity int, id string) int
 		DeleteSiloDefinition     func(childComplexity int, id string) int
 		DeleteSiloSpecification  func(childComplexity int, id string) int
 		DeleteSubject            func(childComplexity int, id string) int
@@ -151,10 +147,8 @@ type ComplexityRoot struct {
 		HandleAllOpenDiscoveries func(childComplexity int, input *model.HandleAllDiscoveriesInput) int
 		HandleDiscovery          func(childComplexity int, input *model.HandleDiscoveryInput) int
 		LinkPropertyToPrimaryKey func(childComplexity int, propertyID string, userPrimaryKeyID *string) int
-		UpdateCategory           func(childComplexity int, input *model.UpdateCategoryInput) int
 		UpdateDataSource         func(childComplexity int, input *model.UpdateDataSourceInput) int
 		UpdateProperty           func(childComplexity int, input *model.UpdatePropertyInput) int
-		UpdatePurpose            func(childComplexity int, input *model.UpdatePurposeInput) int
 		UpdateSiloDefinition     func(childComplexity int, input *model.UpdateSiloDefinitionInput) int
 		UpdateSiloScanConfig     func(childComplexity int, input model.SiloScanConfigInput) int
 		UpdateSiloSpecification  func(childComplexity int, input *model.UpdateSiloSpecificationInput) int
@@ -195,7 +189,6 @@ type ComplexityRoot struct {
 		DataSource     func(childComplexity int) int
 		ID             func(childComplexity int) int
 		Name           func(childComplexity int) int
-		Purposes       func(childComplexity int) int
 		UserPrimaryKey func(childComplexity int) int
 	}
 
@@ -204,19 +197,12 @@ type ComplexityRoot struct {
 		Property func(childComplexity int) int
 	}
 
-	Purpose struct {
-		ID   func(childComplexity int) int
-		Name func(childComplexity int) int
-	}
-
 	Query struct {
 		Category           func(childComplexity int, id string) int
 		DataSource         func(childComplexity int, id string) int
 		Jobs               func(childComplexity int, resourceID string, jobType string, query *string, status []*model.JobStatus, limit int, offset int) int
 		PrimaryKeyValue    func(childComplexity int, id string) int
 		Property           func(childComplexity int, id string) int
-		Purpose            func(childComplexity int, id string) int
-		Purposes           func(childComplexity int) int
 		Request            func(childComplexity int, id string) int
 		RequestStatus      func(childComplexity int, id string) int
 		SiloSpecification  func(childComplexity int, id string) int
@@ -299,7 +285,6 @@ type ComplexityRoot struct {
 		ID                 func(childComplexity int) int
 		Jobs               func(childComplexity int, jobType string, status []*model.JobStatus, query *string, limit int, offset int) int
 		Name               func(childComplexity int) int
-		Purposes           func(childComplexity int) int
 		Requests           func(childComplexity int, offset *int, limit int) int
 		Settings           func(childComplexity int) int
 		SiloDefinition     func(childComplexity int, id string) int
@@ -334,20 +319,14 @@ type MutationResolver interface {
 	CreateDataSource(ctx context.Context, input *model.CreateDataSourceInput) (*model.DataSource, error)
 	CreateSiloSpecification(ctx context.Context, input *model.CreateSiloSpecificationInput) (*model.SiloSpecification, error)
 	CreateProperty(ctx context.Context, input *model.CreatePropertyInput) (*model.Property, error)
-	CreatePurpose(ctx context.Context, input *model.CreatePurposeInput) (*model.Purpose, error)
-	CreateCategory(ctx context.Context, input *model.CreateCategoryInput) (*model.Category, error)
 	CreateSubject(ctx context.Context, input *model.CreateSubjectInput) (*model.Subject, error)
 	UpdateDataSource(ctx context.Context, input *model.UpdateDataSourceInput) (*model.DataSource, error)
 	UpdateSiloSpecification(ctx context.Context, input *model.UpdateSiloSpecificationInput) (*model.SiloSpecification, error)
 	UpdateProperty(ctx context.Context, input *model.UpdatePropertyInput) (*model.Property, error)
-	UpdatePurpose(ctx context.Context, input *model.UpdatePurposeInput) (*model.Purpose, error)
-	UpdateCategory(ctx context.Context, input *model.UpdateCategoryInput) (*model.Category, error)
 	UpdateSubject(ctx context.Context, input *model.UpdateSubjectInput) (*model.Subject, error)
 	DeleteDataSource(ctx context.Context, id string) (*string, error)
 	DeleteSiloSpecification(ctx context.Context, id string) (*string, error)
 	DeleteProperty(ctx context.Context, id string) (*string, error)
-	DeletePurpose(ctx context.Context, id string) (*string, error)
-	DeleteCategory(ctx context.Context, id string) (*string, error)
 	DeleteSubject(ctx context.Context, id string) (*string, error)
 	DetectSiloSources(ctx context.Context, workspaceID string, id string) (*model.Job, error)
 	HandleDiscovery(ctx context.Context, input *model.HandleDiscoveryInput) (*model.DataDiscovery, error)
@@ -377,7 +356,6 @@ type PrimaryKeyValueResolver interface {
 type PropertyResolver interface {
 	Categories(ctx context.Context, obj *model.Property) ([]*model.Category, error)
 	DataSource(ctx context.Context, obj *model.Property) (*model.DataSource, error)
-
 	UserPrimaryKey(ctx context.Context, obj *model.Property) (*model.UserPrimaryKey, error)
 }
 type PropertyMissingDiscoveryResolver interface {
@@ -389,9 +367,7 @@ type QueryResolver interface {
 	DataSource(ctx context.Context, id string) (*model.DataSource, error)
 	SiloSpecification(ctx context.Context, id string) (*model.SiloSpecification, error)
 	SiloSpecifications(ctx context.Context) ([]*model.SiloSpecification, error)
-	Purposes(ctx context.Context) ([]*model.Purpose, error)
 	Subjects(ctx context.Context) ([]*model.Subject, error)
-	Purpose(ctx context.Context, id string) (*model.Purpose, error)
 	Category(ctx context.Context, id string) (*model.Category, error)
 	Subject(ctx context.Context, id string) (*model.Subject, error)
 	Property(ctx context.Context, id string) (*model.Property, error)
@@ -710,18 +686,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.MonoidRecordResponse.SchemaName(childComplexity), true
 
-	case "Mutation.createCategory":
-		if e.complexity.Mutation.CreateCategory == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_createCategory_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.CreateCategory(childComplexity, args["input"].(*model.CreateCategoryInput)), true
-
 	case "Mutation.createDataSource":
 		if e.complexity.Mutation.CreateDataSource == nil {
 			break
@@ -745,18 +709,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateProperty(childComplexity, args["input"].(*model.CreatePropertyInput)), true
-
-	case "Mutation.createPurpose":
-		if e.complexity.Mutation.CreatePurpose == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_createPurpose_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.CreatePurpose(childComplexity, args["input"].(*model.CreatePurposeInput)), true
 
 	case "Mutation.createSiloDefinition":
 		if e.complexity.Mutation.CreateSiloDefinition == nil {
@@ -830,18 +782,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateWorkspace(childComplexity, args["input"].(model.CreateWorkspaceInput)), true
 
-	case "Mutation.deleteCategory":
-		if e.complexity.Mutation.DeleteCategory == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_deleteCategory_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.DeleteCategory(childComplexity, args["id"].(string)), true
-
 	case "Mutation.deleteDataSource":
 		if e.complexity.Mutation.DeleteDataSource == nil {
 			break
@@ -865,18 +805,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteProperty(childComplexity, args["id"].(string)), true
-
-	case "Mutation.deletePurpose":
-		if e.complexity.Mutation.DeletePurpose == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_deletePurpose_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.DeletePurpose(childComplexity, args["id"].(string)), true
 
 	case "Mutation.deleteSiloDefinition":
 		if e.complexity.Mutation.DeleteSiloDefinition == nil {
@@ -998,18 +926,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.LinkPropertyToPrimaryKey(childComplexity, args["propertyId"].(string), args["userPrimaryKeyId"].(*string)), true
 
-	case "Mutation.updateCategory":
-		if e.complexity.Mutation.UpdateCategory == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_updateCategory_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.UpdateCategory(childComplexity, args["input"].(*model.UpdateCategoryInput)), true
-
 	case "Mutation.updateDataSource":
 		if e.complexity.Mutation.UpdateDataSource == nil {
 			break
@@ -1033,18 +949,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.UpdateProperty(childComplexity, args["input"].(*model.UpdatePropertyInput)), true
-
-	case "Mutation.updatePurpose":
-		if e.complexity.Mutation.UpdatePurpose == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_updatePurpose_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.UpdatePurpose(childComplexity, args["input"].(*model.UpdatePurposeInput)), true
 
 	case "Mutation.updateSiloDefinition":
 		if e.complexity.Mutation.UpdateSiloDefinition == nil {
@@ -1251,13 +1155,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Property.Name(childComplexity), true
 
-	case "Property.purposes":
-		if e.complexity.Property.Purposes == nil {
-			break
-		}
-
-		return e.complexity.Property.Purposes(childComplexity), true
-
 	case "Property.userPrimaryKey":
 		if e.complexity.Property.UserPrimaryKey == nil {
 			break
@@ -1278,20 +1175,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PropertyMissingDiscovery.Property(childComplexity), true
-
-	case "Purpose.id":
-		if e.complexity.Purpose.ID == nil {
-			break
-		}
-
-		return e.complexity.Purpose.ID(childComplexity), true
-
-	case "Purpose.name":
-		if e.complexity.Purpose.Name == nil {
-			break
-		}
-
-		return e.complexity.Purpose.Name(childComplexity), true
 
 	case "Query.category":
 		if e.complexity.Query.Category == nil {
@@ -1352,25 +1235,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Property(childComplexity, args["id"].(string)), true
-
-	case "Query.purpose":
-		if e.complexity.Query.Purpose == nil {
-			break
-		}
-
-		args, err := ec.field_Query_purpose_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.Purpose(childComplexity, args["id"].(string)), true
-
-	case "Query.purposes":
-		if e.complexity.Query.Purposes == nil {
-			break
-		}
-
-		return e.complexity.Query.Purposes(childComplexity), true
 
 	case "Query.request":
 		if e.complexity.Query.Request == nil {
@@ -1786,13 +1650,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Workspace.Name(childComplexity), true
 
-	case "Workspace.purposes":
-		if e.complexity.Workspace.Purposes == nil {
-			break
-		}
-
-		return e.complexity.Workspace.Purposes(childComplexity), true
-
 	case "Workspace.requests":
 		if e.complexity.Workspace.Requests == nil {
 			break
@@ -1864,7 +1721,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateCategoryInput,
 		ec.unmarshalInputCreateDataSourceInput,
 		ec.unmarshalInputCreatePropertyInput,
-		ec.unmarshalInputCreatePurposeInput,
 		ec.unmarshalInputCreateSiloDefinitionInput,
 		ec.unmarshalInputCreateSiloSpecificationInput,
 		ec.unmarshalInputCreateSubjectInput,
@@ -1878,7 +1734,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUpdateCategoryInput,
 		ec.unmarshalInputUpdateDataSourceInput,
 		ec.unmarshalInputUpdatePropertyInput,
-		ec.unmarshalInputUpdatePurposeInput,
 		ec.unmarshalInputUpdateSiloDefinitionInput,
 		ec.unmarshalInputUpdateSiloSpecificationInput,
 		ec.unmarshalInputUpdateSubjectInput,
@@ -1956,7 +1811,6 @@ type Workspace {
   siloSpecifications: [SiloSpecification!]
   settings: Map!
   subjects: [Subject!]
-  purposes: [Purpose!]
   categories: [Category!]
 }
 
@@ -2004,7 +1858,6 @@ type Property {
     name: String!
     categories: [Category!]
     dataSource: DataSource!
-    purposes: [Purpose!]
 }
 
 type SiloSpecification {
@@ -2021,11 +1874,6 @@ type Subject {
 }
 
 type Category {
-    id: ID!
-    name: String!
-}
-
-type Purpose {
     id: ID!
     name: String!
 }
@@ -2075,11 +1923,6 @@ input UpdatePropertyInput {
     purposeIDs: [ID!]
 }
 
-input CreatePurposeInput {
-    name: String!
-    workspaceID: ID!
-}
-
 input CreateCategoryInput {
     name: String!
     workspaceID: ID!
@@ -2088,10 +1931,6 @@ input CreateCategoryInput {
 input CreateSubjectInput {
     name: String!
     workspaceID: ID!
-}
-
-input UpdatePurposeInput {
-    name: String
 }
 
 input UpdateCategoryInput {
@@ -2122,9 +1961,7 @@ extend type Query {
     dataSource(id: ID!): DataSource
     siloSpecification(id: ID!): SiloSpecification
     siloSpecifications: [SiloSpecification!]
-    purposes: [Purpose!]
     subjects: [Subject!]
-    purpose(id: ID!): Purpose
     category(id: ID!): Category
     subject(id: ID!): Subject
     property(id: ID!): Property
@@ -2138,24 +1975,17 @@ extend type Mutation {
     createDataSource(input: CreateDataSourceInput): DataSource
     createSiloSpecification(input: CreateSiloSpecificationInput): SiloSpecification
     createProperty(input: CreatePropertyInput): Property
-    createPurpose(input: CreatePurposeInput): Purpose
-    createCategory(input: CreateCategoryInput): Category
     createSubject(input: CreateSubjectInput): Subject
 
     updateDataSource(input: UpdateDataSourceInput): DataSource
     updateSiloSpecification(input: UpdateSiloSpecificationInput): SiloSpecification
 
     updateProperty(input: UpdatePropertyInput): Property
-
-    updatePurpose(input: UpdatePurposeInput): Purpose
-    updateCategory(input: UpdateCategoryInput): Category
     updateSubject(input: UpdateSubjectInput): Subject
 
     deleteDataSource(id: ID!): ID
     deleteSiloSpecification(id: ID!): ID
     deleteProperty(id: ID!): ID
-    deletePurpose(id: ID!): ID
-    deleteCategory(id: ID!): ID
     deleteSubject(id: ID!): ID
 
     detectSiloSources(workspaceId: ID!, id: ID!): Job!
@@ -2490,21 +2320,6 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
-func (ec *executionContext) field_Mutation_createCategory_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 *model.CreateCategoryInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOCreateCategoryInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCreateCategoryInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_createDataSource_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -2527,21 +2342,6 @@ func (ec *executionContext) field_Mutation_createProperty_args(ctx context.Conte
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalOCreatePropertyInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCreatePropertyInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_createPurpose_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 *model.CreatePurposeInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOCreatePurposeInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCreatePurposeInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2640,21 +2440,6 @@ func (ec *executionContext) field_Mutation_createWorkspace_args(ctx context.Cont
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_deleteCategory_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_deleteDataSource_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -2671,21 +2456,6 @@ func (ec *executionContext) field_Mutation_deleteDataSource_args(ctx context.Con
 }
 
 func (ec *executionContext) field_Mutation_deleteProperty_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_deletePurpose_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -2877,21 +2647,6 @@ func (ec *executionContext) field_Mutation_linkPropertyToPrimaryKey_args(ctx con
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_updateCategory_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 *model.UpdateCategoryInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOUpdateCategoryInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUpdateCategoryInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_updateDataSource_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -2914,21 +2669,6 @@ func (ec *executionContext) field_Mutation_updateProperty_args(ctx context.Conte
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalOUpdatePropertyInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUpdatePropertyInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_updatePurpose_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 *model.UpdatePurposeInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOUpdatePurposeInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUpdatePurposeInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3148,21 +2888,6 @@ func (ec *executionContext) field_Query_primaryKeyValue_args(ctx context.Context
 }
 
 func (ec *executionContext) field_Query_property_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Query_purpose_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -4233,8 +3958,6 @@ func (ec *executionContext) fieldContext_DataMapRow_property(ctx context.Context
 				return ec.fieldContext_Property_categories(ctx, field)
 			case "dataSource":
 				return ec.fieldContext_Property_dataSource(ctx, field)
-			case "purposes":
-				return ec.fieldContext_Property_purposes(ctx, field)
 			case "userPrimaryKey":
 				return ec.fieldContext_Property_userPrimaryKey(ctx, field)
 			}
@@ -4541,8 +4264,6 @@ func (ec *executionContext) fieldContext_DataSource_properties(ctx context.Conte
 				return ec.fieldContext_Property_categories(ctx, field)
 			case "dataSource":
 				return ec.fieldContext_Property_dataSource(ctx, field)
-			case "purposes":
-				return ec.fieldContext_Property_purposes(ctx, field)
 			case "userPrimaryKey":
 				return ec.fieldContext_Property_userPrimaryKey(ctx, field)
 			}
@@ -5351,8 +5072,6 @@ func (ec *executionContext) fieldContext_Mutation_createWorkspace(ctx context.Co
 				return ec.fieldContext_Workspace_settings(ctx, field)
 			case "subjects":
 				return ec.fieldContext_Workspace_subjects(ctx, field)
-			case "purposes":
-				return ec.fieldContext_Workspace_purposes(ctx, field)
 			case "categories":
 				return ec.fieldContext_Workspace_categories(ctx, field)
 			case "dataMap":
@@ -5433,8 +5152,6 @@ func (ec *executionContext) fieldContext_Mutation_updateWorkspaceSettings(ctx co
 				return ec.fieldContext_Workspace_settings(ctx, field)
 			case "subjects":
 				return ec.fieldContext_Workspace_subjects(ctx, field)
-			case "purposes":
-				return ec.fieldContext_Workspace_purposes(ctx, field)
 			case "categories":
 				return ec.fieldContext_Workspace_categories(ctx, field)
 			case "dataMap":
@@ -5697,8 +5414,6 @@ func (ec *executionContext) fieldContext_Mutation_createProperty(ctx context.Con
 				return ec.fieldContext_Property_categories(ctx, field)
 			case "dataSource":
 				return ec.fieldContext_Property_dataSource(ctx, field)
-			case "purposes":
-				return ec.fieldContext_Property_purposes(ctx, field)
 			case "userPrimaryKey":
 				return ec.fieldContext_Property_userPrimaryKey(ctx, field)
 			}
@@ -5713,122 +5428,6 @@ func (ec *executionContext) fieldContext_Mutation_createProperty(ctx context.Con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_createProperty_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_createPurpose(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createPurpose(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreatePurpose(rctx, fc.Args["input"].(*model.CreatePurposeInput))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.Purpose)
-	fc.Result = res
-	return ec.marshalOPurpose2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPurpose(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_createPurpose(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Purpose_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Purpose_name(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Purpose", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createPurpose_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_createCategory(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createCategory(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateCategory(rctx, fc.Args["input"].(*model.CreateCategoryInput))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.Category)
-	fc.Result = res
-	return ec.marshalOCategory2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCategory(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_createCategory(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Category_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Category_name(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Category", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createCategory_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -6069,8 +5668,6 @@ func (ec *executionContext) fieldContext_Mutation_updateProperty(ctx context.Con
 				return ec.fieldContext_Property_categories(ctx, field)
 			case "dataSource":
 				return ec.fieldContext_Property_dataSource(ctx, field)
-			case "purposes":
-				return ec.fieldContext_Property_purposes(ctx, field)
 			case "userPrimaryKey":
 				return ec.fieldContext_Property_userPrimaryKey(ctx, field)
 			}
@@ -6085,122 +5682,6 @@ func (ec *executionContext) fieldContext_Mutation_updateProperty(ctx context.Con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_updateProperty_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_updatePurpose(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_updatePurpose(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdatePurpose(rctx, fc.Args["input"].(*model.UpdatePurposeInput))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.Purpose)
-	fc.Result = res
-	return ec.marshalOPurpose2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPurpose(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_updatePurpose(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Purpose_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Purpose_name(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Purpose", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updatePurpose_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_updateCategory(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_updateCategory(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateCategory(rctx, fc.Args["input"].(*model.UpdateCategoryInput))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.Category)
-	fc.Result = res
-	return ec.marshalOCategory2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCategory(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_updateCategory(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Category_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Category_name(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Category", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateCategory_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -6415,110 +5896,6 @@ func (ec *executionContext) fieldContext_Mutation_deleteProperty(ctx context.Con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_deleteProperty_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_deletePurpose(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_deletePurpose(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeletePurpose(rctx, fc.Args["id"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_deletePurpose(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_deletePurpose_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_deleteCategory(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_deleteCategory(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteCategory(rctx, fc.Args["id"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_deleteCategory(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_deleteCategory_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -7140,8 +6517,6 @@ func (ec *executionContext) fieldContext_Mutation_linkPropertyToPrimaryKey(ctx c
 				return ec.fieldContext_Property_categories(ctx, field)
 			case "dataSource":
 				return ec.fieldContext_Property_dataSource(ctx, field)
-			case "purposes":
-				return ec.fieldContext_Property_purposes(ctx, field)
 			case "userPrimaryKey":
 				return ec.fieldContext_Property_userPrimaryKey(ctx, field)
 			}
@@ -7609,8 +6984,6 @@ func (ec *executionContext) fieldContext_NewCategoryDiscovery_property(ctx conte
 				return ec.fieldContext_Property_categories(ctx, field)
 			case "dataSource":
 				return ec.fieldContext_Property_dataSource(ctx, field)
-			case "purposes":
-				return ec.fieldContext_Property_purposes(ctx, field)
 			case "userPrimaryKey":
 				return ec.fieldContext_Property_userPrimaryKey(ctx, field)
 			}
@@ -8344,53 +7717,6 @@ func (ec *executionContext) fieldContext_Property_dataSource(ctx context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _Property_purposes(ctx context.Context, field graphql.CollectedField, obj *model.Property) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Property_purposes(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Purposes, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.([]*model.Purpose)
-	fc.Result = res
-	return ec.marshalOPurpose2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPurposeᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Property_purposes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Property",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Purpose_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Purpose_name(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Purpose", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Property_userPrimaryKey(ctx context.Context, field graphql.CollectedField, obj *model.Property) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Property_userPrimaryKey(ctx, field)
 	if err != nil {
@@ -8532,100 +7858,10 @@ func (ec *executionContext) fieldContext_PropertyMissingDiscovery_property(ctx c
 				return ec.fieldContext_Property_categories(ctx, field)
 			case "dataSource":
 				return ec.fieldContext_Property_dataSource(ctx, field)
-			case "purposes":
-				return ec.fieldContext_Property_purposes(ctx, field)
 			case "userPrimaryKey":
 				return ec.fieldContext_Property_userPrimaryKey(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Property", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Purpose_id(ctx context.Context, field graphql.CollectedField, obj *model.Purpose) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Purpose_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Purpose_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Purpose",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Purpose_name(ctx context.Context, field graphql.CollectedField, obj *model.Purpose) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Purpose_name(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Purpose_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Purpose",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -8677,8 +7913,6 @@ func (ec *executionContext) fieldContext_Query_workspaces(ctx context.Context, f
 				return ec.fieldContext_Workspace_settings(ctx, field)
 			case "subjects":
 				return ec.fieldContext_Workspace_subjects(ctx, field)
-			case "purposes":
-				return ec.fieldContext_Workspace_purposes(ctx, field)
 			case "categories":
 				return ec.fieldContext_Workspace_categories(ctx, field)
 			case "dataMap":
@@ -8748,8 +7982,6 @@ func (ec *executionContext) fieldContext_Query_workspace(ctx context.Context, fi
 				return ec.fieldContext_Workspace_settings(ctx, field)
 			case "subjects":
 				return ec.fieldContext_Workspace_subjects(ctx, field)
-			case "purposes":
-				return ec.fieldContext_Workspace_purposes(ctx, field)
 			case "categories":
 				return ec.fieldContext_Workspace_categories(ctx, field)
 			case "dataMap":
@@ -8969,53 +8201,6 @@ func (ec *executionContext) fieldContext_Query_siloSpecifications(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_purposes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_purposes(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Purposes(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.([]*model.Purpose)
-	fc.Result = res
-	return ec.marshalOPurpose2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPurposeᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_purposes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Purpose_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Purpose_name(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Purpose", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Query_subjects(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_subjects(ctx, field)
 	if err != nil {
@@ -9059,64 +8244,6 @@ func (ec *executionContext) fieldContext_Query_subjects(ctx context.Context, fie
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Subject", field.Name)
 		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_purpose(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_purpose(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Purpose(rctx, fc.Args["id"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.Purpose)
-	fc.Result = res
-	return ec.marshalOPurpose2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPurpose(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_purpose(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Purpose_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Purpose_name(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Purpose", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_purpose_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
 	}
 	return fc, nil
 }
@@ -9281,8 +8408,6 @@ func (ec *executionContext) fieldContext_Query_property(ctx context.Context, fie
 				return ec.fieldContext_Property_categories(ctx, field)
 			case "dataSource":
 				return ec.fieldContext_Property_dataSource(ctx, field)
-			case "purposes":
-				return ec.fieldContext_Property_purposes(ctx, field)
 			case "userPrimaryKey":
 				return ec.fieldContext_Property_userPrimaryKey(ctx, field)
 			}
@@ -11470,8 +10595,6 @@ func (ec *executionContext) fieldContext_UserPrimaryKey_properties(ctx context.C
 				return ec.fieldContext_Property_categories(ctx, field)
 			case "dataSource":
 				return ec.fieldContext_Property_dataSource(ctx, field)
-			case "purposes":
-				return ec.fieldContext_Property_purposes(ctx, field)
 			case "userPrimaryKey":
 				return ec.fieldContext_Property_userPrimaryKey(ctx, field)
 			}
@@ -11705,53 +10828,6 @@ func (ec *executionContext) fieldContext_Workspace_subjects(ctx context.Context,
 				return ec.fieldContext_Subject_name(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Subject", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Workspace_purposes(ctx context.Context, field graphql.CollectedField, obj *model.Workspace) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Workspace_purposes(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Purposes, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.([]model.Purpose)
-	fc.Result = res
-	return ec.marshalOPurpose2ᚕgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPurposeᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Workspace_purposes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Workspace",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Purpose_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Purpose_name(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Purpose", field.Name)
 		},
 	}
 	return fc, nil
@@ -14175,42 +13251,6 @@ func (ec *executionContext) unmarshalInputCreatePropertyInput(ctx context.Contex
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputCreatePurposeInput(ctx context.Context, obj interface{}) (model.CreatePurposeInput, error) {
-	var it model.CreatePurposeInput
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"name", "workspaceID"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "name":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			it.Name, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "workspaceID":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workspaceID"))
-			it.WorkspaceID, err = ec.unmarshalNID2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputCreateSiloDefinitionInput(ctx context.Context, obj interface{}) (model.CreateSiloDefinitionInput, error) {
 	var it model.CreateSiloDefinitionInput
 	asMap := map[string]interface{}{}
@@ -14734,34 +13774,6 @@ func (ec *executionContext) unmarshalInputUpdatePropertyInput(ctx context.Contex
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("purposeIDs"))
 			it.PurposeIDs, err = ec.unmarshalOID2ᚕstringᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputUpdatePurposeInput(ctx context.Context, obj interface{}) (model.UpdatePurposeInput, error) {
-	var it model.UpdatePurposeInput
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"name"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "name":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -15719,18 +14731,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_createProperty(ctx, field)
 			})
 
-		case "createPurpose":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createPurpose(ctx, field)
-			})
-
-		case "createCategory":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createCategory(ctx, field)
-			})
-
 		case "createSubject":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -15755,18 +14755,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_updateProperty(ctx, field)
 			})
 
-		case "updatePurpose":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updatePurpose(ctx, field)
-			})
-
-		case "updateCategory":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateCategory(ctx, field)
-			})
-
 		case "updateSubject":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -15789,18 +14777,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_deleteProperty(ctx, field)
-			})
-
-		case "deletePurpose":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_deletePurpose(ctx, field)
-			})
-
-		case "deleteCategory":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_deleteCategory(ctx, field)
 			})
 
 		case "deleteSubject":
@@ -16195,10 +15171,6 @@ func (ec *executionContext) _Property(ctx context.Context, sel ast.SelectionSet,
 				return innerFunc(ctx)
 
 			})
-		case "purposes":
-
-			out.Values[i] = ec._Property_purposes(ctx, field, obj)
-
 		case "userPrimaryKey":
 			field := field
 
@@ -16261,41 +15233,6 @@ func (ec *executionContext) _PropertyMissingDiscovery(ctx context.Context, sel a
 				return innerFunc(ctx)
 
 			})
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var purposeImplementors = []string{"Purpose"}
-
-func (ec *executionContext) _Purpose(ctx context.Context, sel ast.SelectionSet, obj *model.Purpose) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, purposeImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Purpose")
-		case "id":
-
-			out.Values[i] = ec._Purpose_id(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "name":
-
-			out.Values[i] = ec._Purpose_name(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -16426,26 +15363,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
-		case "purposes":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_purposes(ctx, field)
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return rrm(innerCtx)
-			})
 		case "subjects":
 			field := field
 
@@ -16456,26 +15373,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_subjects(ctx, field)
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return rrm(innerCtx)
-			})
-		case "purpose":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_purpose(ctx, field)
 				return res
 			}
 
@@ -17280,10 +16177,6 @@ func (ec *executionContext) _Workspace(ctx context.Context, sel ast.SelectionSet
 
 			out.Values[i] = ec._Workspace_subjects(ctx, field, obj)
 
-		case "purposes":
-
-			out.Values[i] = ec._Workspace_purposes(ctx, field, obj)
-
 		case "categories":
 			field := field
 
@@ -18005,20 +16898,6 @@ func (ec *executionContext) marshalNProperty2ᚖgithubᚗcomᚋbristᚑaiᚋmono
 	return ec._Property(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPurpose2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPurpose(ctx context.Context, sel ast.SelectionSet, v model.Purpose) graphql.Marshaler {
-	return ec._Purpose(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNPurpose2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPurpose(ctx context.Context, sel ast.SelectionSet, v *model.Purpose) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._Purpose(ctx, sel, v)
-}
-
 func (ec *executionContext) marshalNRequest2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequest(ctx context.Context, sel ast.SelectionSet, v model.Request) graphql.Marshaler {
 	return ec._Request(ctx, sel, &v)
 }
@@ -18549,14 +17428,6 @@ func (ec *executionContext) unmarshalOCategoryQuery2ᚖgithubᚗcomᚋbristᚑai
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOCreateCategoryInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCreateCategoryInput(ctx context.Context, v interface{}) (*model.CreateCategoryInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputCreateCategoryInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
 func (ec *executionContext) unmarshalOCreateDataSourceInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCreateDataSourceInput(ctx context.Context, v interface{}) (*model.CreateDataSourceInput, error) {
 	if v == nil {
 		return nil, nil
@@ -18570,14 +17441,6 @@ func (ec *executionContext) unmarshalOCreatePropertyInput2ᚖgithubᚗcomᚋbris
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputCreatePropertyInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalOCreatePurposeInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCreatePurposeInput(ctx context.Context, v interface{}) (*model.CreatePurposeInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputCreatePurposeInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -19298,107 +18161,6 @@ func (ec *executionContext) marshalOProperty2ᚖgithubᚗcomᚋbristᚑaiᚋmono
 	return ec._Property(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOPurpose2ᚕgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPurposeᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Purpose) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNPurpose2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPurpose(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalOPurpose2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPurposeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Purpose) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNPurpose2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPurpose(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalOPurpose2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPurpose(ctx context.Context, sel ast.SelectionSet, v *model.Purpose) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Purpose(ctx, sel, v)
-}
-
 func (ec *executionContext) marshalOQueryResult2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐQueryResult(ctx context.Context, sel ast.SelectionSet, v *model.QueryResult) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -19813,14 +18575,6 @@ func (ec *executionContext) marshalOTime2timeᚐTime(ctx context.Context, sel as
 	return res
 }
 
-func (ec *executionContext) unmarshalOUpdateCategoryInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUpdateCategoryInput(ctx context.Context, v interface{}) (*model.UpdateCategoryInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputUpdateCategoryInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
 func (ec *executionContext) unmarshalOUpdateDataSourceInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUpdateDataSourceInput(ctx context.Context, v interface{}) (*model.UpdateDataSourceInput, error) {
 	if v == nil {
 		return nil, nil
@@ -19834,14 +18588,6 @@ func (ec *executionContext) unmarshalOUpdatePropertyInput2ᚖgithubᚗcomᚋbris
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputUpdatePropertyInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalOUpdatePurposeInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUpdatePurposeInput(ctx context.Context, v interface{}) (*model.UpdatePurposeInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputUpdatePurposeInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 

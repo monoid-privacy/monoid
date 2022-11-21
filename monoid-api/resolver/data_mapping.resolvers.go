@@ -110,16 +110,6 @@ func (r *mutationResolver) CreateProperty(ctx context.Context, input *model.Crea
 	return &property, nil
 }
 
-// CreatePurpose is the resolver for the createPurpose field.
-func (r *mutationResolver) CreatePurpose(ctx context.Context, input *model.CreatePurposeInput) (*model.Purpose, error) {
-	panic(fmt.Errorf("not implemented: CreatePurpose - createPurpose"))
-}
-
-// CreateCategory is the resolver for the createCategory field.
-func (r *mutationResolver) CreateCategory(ctx context.Context, input *model.CreateCategoryInput) (*model.Category, error) {
-	panic(fmt.Errorf("not implemented: CreateCategory - createCategory"))
-}
-
 // CreateSubject is the resolver for the createSubject field.
 func (r *mutationResolver) CreateSubject(ctx context.Context, input *model.CreateSubjectInput) (*model.Subject, error) {
 	panic(fmt.Errorf("not implemented: CreateSubject - createSubject"))
@@ -210,16 +200,6 @@ func (r *mutationResolver) UpdateProperty(ctx context.Context, input *model.Upda
 	return &property, nil
 }
 
-// UpdatePurpose is the resolver for the updatePurpose field.
-func (r *mutationResolver) UpdatePurpose(ctx context.Context, input *model.UpdatePurposeInput) (*model.Purpose, error) {
-	panic(fmt.Errorf("not implemented: UpdatePurpose - updatePurpose"))
-}
-
-// UpdateCategory is the resolver for the updateCategory field.
-func (r *mutationResolver) UpdateCategory(ctx context.Context, input *model.UpdateCategoryInput) (*model.Category, error) {
-	panic(fmt.Errorf("not implemented: UpdateCategory - updateCategory"))
-}
-
 // UpdateSubject is the resolver for the updateSubject field.
 func (r *mutationResolver) UpdateSubject(ctx context.Context, input *model.UpdateSubjectInput) (*model.Subject, error) {
 	panic(fmt.Errorf("not implemented: UpdateSubject - updateSubject"))
@@ -262,16 +242,6 @@ func (r *mutationResolver) DeleteSiloSpecification(ctx context.Context, id strin
 // DeleteProperty is the resolver for the deleteProperty field.
 func (r *mutationResolver) DeleteProperty(ctx context.Context, id string) (*string, error) {
 	return DeleteObjectByID[model.Property](id, r.Conf.DB, "Error deleting property.")
-}
-
-// DeletePurpose is the resolver for the deletePurpose field.
-func (r *mutationResolver) DeletePurpose(ctx context.Context, id string) (*string, error) {
-	return DeleteObjectByID[model.Purpose](id, r.Conf.DB, "Error deleting purpose.")
-}
-
-// DeleteCategory is the resolver for the deleteCategory field.
-func (r *mutationResolver) DeleteCategory(ctx context.Context, id string) (*string, error) {
-	return DeleteObjectByID[model.Category](id, r.Conf.DB, "Error deleting category.")
 }
 
 // DeleteSubject is the resolver for the deleteSubject field.
@@ -375,19 +345,9 @@ func (r *queryResolver) SiloSpecifications(ctx context.Context) ([]*model.SiloSp
 	return findAllObjects[model.SiloSpecification](r.Conf.DB, "Error finding silo specifications.")
 }
 
-// Purposes is the resolver for the purposes field.
-func (r *queryResolver) Purposes(ctx context.Context) ([]*model.Purpose, error) {
-	return findAllObjects[model.Purpose](r.Conf.DB, "Error finding purposes.")
-}
-
 // Subjects is the resolver for the subjects field.
 func (r *queryResolver) Subjects(ctx context.Context) ([]*model.Subject, error) {
 	return findAllObjects[model.Subject](r.Conf.DB, "Error finding silo subjects.")
-}
-
-// Purpose is the resolver for the purpose field.
-func (r *queryResolver) Purpose(ctx context.Context, id string) (*model.Purpose, error) {
-	return findObjectByID[model.Purpose](id, r.Conf.DB, "Error finding purpose.")
 }
 
 // Category is the resolver for the category field.

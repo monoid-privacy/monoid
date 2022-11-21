@@ -17,7 +17,6 @@ type Property {
     name: String!
     categories: [Category!]
     dataSource: DataSource!
-    purposes: [Purpose!]
 }
 
 type SiloSpecification {
@@ -34,11 +33,6 @@ type Subject {
 }
 
 type Category {
-    id: ID!
-    name: String!
-}
-
-type Purpose {
     id: ID!
     name: String!
 }
@@ -88,11 +82,6 @@ input UpdatePropertyInput {
     purposeIDs: [ID!]
 }
 
-input CreatePurposeInput {
-    name: String!
-    workspaceID: ID!
-}
-
 input CreateCategoryInput {
     name: String!
     workspaceID: ID!
@@ -101,10 +90,6 @@ input CreateCategoryInput {
 input CreateSubjectInput {
     name: String!
     workspaceID: ID!
-}
-
-input UpdatePurposeInput {
-    name: String
 }
 
 input UpdateCategoryInput {
@@ -135,9 +120,7 @@ extend type Query {
     dataSource(id: ID!): DataSource
     siloSpecification(id: ID!): SiloSpecification
     siloSpecifications: [SiloSpecification!]
-    purposes: [Purpose!]
     subjects: [Subject!]
-    purpose(id: ID!): Purpose
     category(id: ID!): Category
     subject(id: ID!): Subject
     property(id: ID!): Property
@@ -151,24 +134,17 @@ extend type Mutation {
     createDataSource(input: CreateDataSourceInput): DataSource
     createSiloSpecification(input: CreateSiloSpecificationInput): SiloSpecification
     createProperty(input: CreatePropertyInput): Property
-    createPurpose(input: CreatePurposeInput): Purpose
-    createCategory(input: CreateCategoryInput): Category
     createSubject(input: CreateSubjectInput): Subject
 
     updateDataSource(input: UpdateDataSourceInput): DataSource
     updateSiloSpecification(input: UpdateSiloSpecificationInput): SiloSpecification
 
     updateProperty(input: UpdatePropertyInput): Property
-
-    updatePurpose(input: UpdatePurposeInput): Purpose
-    updateCategory(input: UpdateCategoryInput): Category
     updateSubject(input: UpdateSubjectInput): Subject
 
     deleteDataSource(id: ID!): ID
     deleteSiloSpecification(id: ID!): ID
     deleteProperty(id: ID!): ID
-    deletePurpose(id: ID!): ID
-    deleteCategory(id: ID!): ID
     deleteSubject(id: ID!): ID
 
     detectSiloSources(workspaceId: ID!, id: ID!): Job!

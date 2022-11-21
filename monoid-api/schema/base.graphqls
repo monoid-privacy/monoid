@@ -8,7 +8,6 @@ type Workspace {
   siloSpecifications: [SiloSpecification!]
   settings: Map!
   subjects: [Subject!]
-  purposes: [Purpose!]
   categories: [Category!]
 }
 

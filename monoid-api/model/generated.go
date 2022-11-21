@@ -31,11 +31,6 @@ type CreatePropertyInput struct {
 	PurposeIDs   []string `json:"purposeIDs"`
 }
 
-type CreatePurposeInput struct {
-	Name        string `json:"name"`
-	WorkspaceID string `json:"workspaceID"`
-}
-
 type CreateSiloDefinitionInput struct {
 	Description         *string  `json:"description"`
 	SiloSpecificationID string   `json:"siloSpecificationID"`
@@ -136,10 +131,6 @@ type UpdatePropertyInput struct {
 	ID          string   `json:"id"`
 	CategoryIDs []string `json:"categoryIDs"`
 	PurposeIDs  []string `json:"purposeIDs"`
-}
-
-type UpdatePurposeInput struct {
-	Name *string `json:"name"`
 }
 
 type UpdateSiloDefinitionInput struct {
