@@ -19,9 +19,12 @@ services:
       retries: 10
   web:
     container_name: monoid-web
-    image: monoidco/monoid-web:${VERSION}
+    build:
+      dockerfile: Dockerfile
+      context: ./monoid-ui
     networks:
       - monoid-network
+    image: monoidco/monoid-web
   temporal:
     container_name: monoid-temporal
     depends_on:
@@ -53,6 +56,9 @@ services:
       retries: 30
   api:
     container_name: monoid-api
+    build:
+      dockerfile: cmd/server/Dockerfile
+      context: ./monoid-api
     environment:
       - WEB_URL=${WEB_URL}
       - DB_USER=${DATABASE_USER}
@@ -72,9 +78,12 @@ services:
         condition: service_healthy
     networks:
       - monoid-network
-    image: monoidco/monoid-api:${VERSION}
+    image: monoidco/monoid-api
   loader:
     container_name: monoid-loader
+    build:
+      dockerfile: cmd/tools/loader/Dockerfile
+      context: ./monoid-api
     command: /monoid-config
     environment:
       - DB_USER=${DATABASE_USER}
@@ -91,9 +100,12 @@ services:
         condition: service_healthy
     networks:
       - monoid-network
-    image: monoidco/monoid-loader:${VERSION}
+    image: monoidco/monoid-loader
   worker:
     container_name: monoid-worker
+    build:
+      dockerfile: cmd/worker/Dockerfile
+      context: ./monoid-api
     environment:
       - WEB_URL=${WEB_URL}
       - DB_USER=${DATABASE_USER}
@@ -115,17 +127,20 @@ services:
       - monoid-network
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    image: monoidco/monoid-worker:${VERSION}
+    image: monoidco/monoid-worker
   proxy:
     depends_on:
       - web
       - api
     container_name: monoid-proxy
+    build:
+      dockerfile: Dockerfile
+      context: ./monoid-proxy
     networks:
       - monoid-network
     ports:
       - 8080:80
-    image: monoidco/monoid-proxy:${VERSION}
+    image: monoidco/monoid-proxy
 networks:
   monoid-network:
     driver: bridge

@@ -1,0 +1,27 @@
+version: "3.7"
+services:
+  web:
+    build:
+      dockerfile: Dockerfile
+      context: ./monoid-ui
+    image: monoidco/monoid-web:${VERSION}
+  api:
+    build:
+      dockerfile: cmd/server/Dockerfile
+      context: ./monoid-api
+    image: monoidco/monoid-api:${VERSION}
+  loader:
+    build:
+      dockerfile: cmd/tools/loader/Dockerfile
+      context: ./monoid-api
+    image: monoidco/monoid-loader:${VERSION}
+  worker:
+    build:
+      dockerfile: cmd/worker/Dockerfile
+      context: ./monoid-api
+    image: monoidco/monoid-worker:${VERSION}
+  proxy:
+    build:
+      dockerfile: Dockerfile
+      context: ./monoid-proxy
+    image: monoidco/monoid-proxy:${VERSION}
