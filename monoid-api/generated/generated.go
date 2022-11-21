@@ -210,7 +210,6 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Categories         func(childComplexity int) int
 		Category           func(childComplexity int, id string) int
 		DataSource         func(childComplexity int, id string) int
 		Jobs               func(childComplexity int, resourceID string, jobType string, query *string, status []*model.JobStatus, limit int, offset int) int
@@ -391,7 +390,6 @@ type QueryResolver interface {
 	SiloSpecification(ctx context.Context, id string) (*model.SiloSpecification, error)
 	SiloSpecifications(ctx context.Context) ([]*model.SiloSpecification, error)
 	Purposes(ctx context.Context) ([]*model.Purpose, error)
-	Categories(ctx context.Context) ([]*model.Category, error)
 	Subjects(ctx context.Context) ([]*model.Subject, error)
 	Purpose(ctx context.Context, id string) (*model.Purpose, error)
 	Category(ctx context.Context, id string) (*model.Category, error)
@@ -428,6 +426,7 @@ type SiloDefinitionResolver interface {
 type WorkspaceResolver interface {
 	Settings(ctx context.Context, obj *model.Workspace) (map[string]interface{}, error)
 
+	Categories(ctx context.Context, obj *model.Workspace) ([]*model.Category, error)
 	DataMap(ctx context.Context, obj *model.Workspace, query *model.DataMapQuery, limit int, offset *int) (*model.DataMapResult, error)
 	Discoveries(ctx context.Context, obj *model.Workspace, statuses []*model.DiscoveryStatus, query *string, limit int, offset *int) (*model.DataDiscoveriesListResult, error)
 	Jobs(ctx context.Context, obj *model.Workspace, jobType string, status []*model.JobStatus, query *string, limit int, offset int) (*model.JobsResult, error)
@@ -1294,13 +1293,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Purpose.Name(childComplexity), true
 
-	case "Query.categories":
-		if e.complexity.Query.Categories == nil {
-			break
-		}
-
-		return e.complexity.Query.Categories(childComplexity), true
-
 	case "Query.category":
 		if e.complexity.Query.Category == nil {
 			break
@@ -2131,7 +2123,6 @@ extend type Query {
     siloSpecification(id: ID!): SiloSpecification
     siloSpecifications: [SiloSpecification!]
     purposes: [Purpose!]
-    categories: [Category!]
     subjects: [Subject!]
     purpose(id: ID!): Purpose
     category(id: ID!): Category
@@ -9025,53 +9016,6 @@ func (ec *executionContext) fieldContext_Query_purposes(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_categories(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_categories(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Categories(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.([]*model.Category)
-	fc.Result = res
-	return ec.marshalOCategory2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCategoryᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_categories(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Category_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Category_name(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Category", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Query_subjects(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_subjects(ctx, field)
 	if err != nil {
@@ -11827,7 +11771,7 @@ func (ec *executionContext) _Workspace_categories(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Categories, nil
+		return ec.resolvers.Workspace().Categories(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11836,17 +11780,17 @@ func (ec *executionContext) _Workspace_categories(ctx context.Context, field gra
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]model.Category)
+	res := resTmp.([]*model.Category)
 	fc.Result = res
-	return ec.marshalOCategory2ᚕgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCategoryᚄ(ctx, field.Selections, res)
+	return ec.marshalOCategory2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCategoryᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Workspace_categories(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Workspace",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -16502,26 +16446,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
-		case "categories":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_categories(ctx, field)
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return rrm(innerCtx)
-			})
 		case "subjects":
 			field := field
 
@@ -17361,9 +17285,22 @@ func (ec *executionContext) _Workspace(ctx context.Context, sel ast.SelectionSet
 			out.Values[i] = ec._Workspace_purposes(ctx, field, obj)
 
 		case "categories":
+			field := field
 
-			out.Values[i] = ec._Workspace_categories(ctx, field, obj)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Workspace_categories(ctx, field, obj)
+				return res
+			}
 
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "dataMap":
 			field := field
 
@@ -18548,53 +18485,6 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	}
 	res := graphql.MarshalBoolean(*v)
 	return res
-}
-
-func (ec *executionContext) marshalOCategory2ᚕgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCategoryᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Category) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNCategory2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCategory(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
 }
 
 func (ec *executionContext) marshalOCategory2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCategoryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Category) graphql.Marshaler {

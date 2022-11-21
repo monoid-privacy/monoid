@@ -1,6 +1,7 @@
 import { gql, useQuery } from '@apollo/client';
-import React, { useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { PlusIcon } from '@heroicons/react/24/outline';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
 import AlertRegion from '../../components/AlertRegion';
 import Badge from '../../components/Badge';
 import FilterRegion, { FilterValue } from '../../components/FilterRegion';
@@ -13,6 +14,7 @@ import { Category, SiloDefinition } from '../../lib/models';
 const DATA_MAP_QUERY = gql`
   query DataMapQuery($workspaceId: ID!, $limit: Int!, $offset: Int, $query: DataMapQuery) {
     workspace(id: $workspaceId) {
+      id
       dataMap(limit: $limit, offset: $offset, query: $query) {
         dataMapRows {
           siloDefinition {
@@ -41,6 +43,7 @@ const DATA_MAP_QUERY = gql`
 const FILTER_OPTIONS_QUERY = gql`
   query FilterOptionsQuery($workspaceId: ID!) {
     workspace(id: $workspaceId) {
+      id
       siloDefinitions {
         id
         name
@@ -49,10 +52,10 @@ const FILTER_OPTIONS_QUERY = gql`
           logoUrl
         }
       }
-    }
-    categories {
-      id
-      name
+      categories {
+        id
+        name
+      }
     }
   }
 `;
@@ -236,7 +239,12 @@ function DataMapFilterRegion(props: {
   value: FilterValue[],
 }) {
   const { id } = useParams<{ id: string }>();
-  const { data, loading, error } = useQuery(FILTER_OPTIONS_QUERY, {
+  const { data, loading, error } = useQuery<{
+    workspace: {
+      categories: Category[],
+      siloDefinitions: SiloDefinition[]
+    }
+  }>(FILTER_OPTIONS_QUERY, {
     variables: {
       workspaceId: id!,
     },
@@ -252,11 +260,11 @@ function DataMapFilterRegion(props: {
   }
 
   const categoryFormat = (v: FilterValue) => (
-    <CategoryTag categories={data.categories} value={v} />
+    <CategoryTag categories={data?.workspace.categories || []} value={v} />
   );
 
   const siloDefFormat = (v: FilterValue) => (
-    <SiloDefTag siloDefs={data.workspace.siloDefinitions} value={v} />
+    <SiloDefTag siloDefs={data?.workspace.siloDefinitions || []} value={v} />
   );
 
   return (
@@ -272,28 +280,85 @@ function DataMapFilterRegion(props: {
             key: 'none',
             content: 'No Data Category',
           },
-          ...data.categories.map((c: Category) => ({
-            key: c.id,
+          ...(data?.workspace.categories.map((c: Category) => ({
+            key: c.id!,
             content: <Badge>{c.name}</Badge>,
-          })),
+          })) || []),
         ],
         formatTag: categoryFormat,
       }, {
         name: 'Data Silos',
-        options: data.workspace.siloDefinitions.map((d: SiloDefinition) => ({
-          key: d.id,
+        options: data?.workspace.siloDefinitions.map((d: SiloDefinition) => ({
+          key: d.id!,
           content: d.name,
-        })),
+        })) || [],
         formatTag: siloDefFormat,
       }]}
       onChange={onChange}
       value={value}
-    />
+    >
+      <div className="flex items-center space-x-1">
+        <div>
+          Filters
+        </div>
+        <PlusIcon className="h-5 w-5" />
+      </div>
+    </FilterRegion>
   );
 }
 
 export default function DataMapPage() {
-  const [filters, setFilters] = useState<FilterValue[]>([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const setFilters = (val: FilterValue[]) => {
+    const params = new URLSearchParams();
+
+    const filterMap = Object.fromEntries(
+      val.map((f) => [f.name, f.value]),
+    );
+
+    Object.keys(filterMap).forEach((k) => {
+      filterMap[k].forEach((v) => {
+        params.append(k, v);
+      });
+    });
+
+    setSearchParams(params);
+  };
+
+  const filters = useMemo(() => {
+    const parsedFilters: FilterValue[] = [];
+    const category = searchParams.getAll('Category');
+    const dataSilo = searchParams.getAll('Data Silos');
+
+    if (category.length !== 0) {
+      parsedFilters.push({
+        name: 'Category',
+        value: category,
+      });
+    }
+
+    if (dataSilo.length !== 0) {
+      parsedFilters.push({
+        name: 'Data Silos',
+        value: dataSilo,
+      });
+    }
+
+    return parsedFilters;
+  }, [searchParams]);
+
+  useEffect(() => {
+    const category = searchParams.has('Category');
+    const dataSilo = searchParams.has('Data Silos');
+
+    if (!category && !dataSilo) {
+      setFilters([{
+        name: 'Category',
+        value: ['any'],
+      }]);
+    }
+  }, []);
 
   return (
     <>

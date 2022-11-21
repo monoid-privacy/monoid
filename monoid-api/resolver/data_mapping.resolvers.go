@@ -380,11 +380,6 @@ func (r *queryResolver) Purposes(ctx context.Context) ([]*model.Purpose, error) 
 	return findAllObjects[model.Purpose](r.Conf.DB, "Error finding purposes.")
 }
 
-// Categories is the resolver for the categories field.
-func (r *queryResolver) Categories(ctx context.Context) ([]*model.Category, error) {
-	return findAllObjects[model.Category](r.Conf.DB, "Error finding categories.")
-}
-
 // Subjects is the resolver for the subjects field.
 func (r *queryResolver) Subjects(ctx context.Context) ([]*model.Subject, error) {
 	return findAllObjects[model.Subject](r.Conf.DB, "Error finding silo subjects.")

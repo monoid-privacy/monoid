@@ -191,6 +191,18 @@ func (r *workspaceResolver) Settings(ctx context.Context, obj *model.Workspace) 
 	return res, nil
 }
 
+// Categories is the resolver for the categories field.
+func (r *workspaceResolver) Categories(ctx context.Context, obj *model.Workspace) ([]*model.Category, error) {
+	res := []*model.Category{}
+	if err := r.Conf.DB.Where("workspace_id = ?", obj.ID).Or(
+		"workspace_id IS NULL",
+	).Find(&res).Error; err != nil {
+		return nil, handleError(err, "Could not find categories.")
+	}
+
+	return res, nil
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 

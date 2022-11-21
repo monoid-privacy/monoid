@@ -3,7 +3,7 @@
 
 import { Popover, Transition } from '@headlessui/react';
 import {
-  CheckIcon, ChevronRightIcon, PlusIcon, XMarkIcon,
+  CheckIcon, ChevronRightIcon, XMarkIcon,
 } from '@heroicons/react/24/outline';
 import React, {
   Fragment, ReactNode, useMemo, useState,
@@ -49,8 +49,11 @@ export default function FilterRegion(props: {
   filterOptions: FilterSpec[],
   value: FilterValue[],
   onChange: (v: FilterValue[]) => void
+  children: React.ReactNode
 }) {
-  const { value, filterOptions, onChange } = props;
+  const {
+    value, filterOptions, onChange, children,
+  } = props;
   const [newValue, setNewValue] = useState<FilterValue | undefined>();
 
   const filterOptionsMap = useMemo(() => (
@@ -87,7 +90,7 @@ export default function FilterRegion(props: {
       <Popover as="div" className="relative inline-block text-left">
         <div>
           <Popover.Button className="inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none">
-            <PlusIcon className="h-5 w-5" aria-hidden="true" />
+            {children}
           </Popover.Button>
         </div>
 

@@ -136,7 +136,6 @@ extend type Query {
     siloSpecification(id: ID!): SiloSpecification
     siloSpecifications: [SiloSpecification!]
     purposes: [Purpose!]
-    categories: [Category!]
     subjects: [Subject!]
     purpose(id: ID!): Purpose
     category(id: ID!): Category

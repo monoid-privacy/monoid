@@ -64,10 +64,12 @@ models:
   Workspace:
     fields:
       settings:
-        resolver: true # force a resolver to be generated
+        resolver: true
       siloDefinitions:
         resolver: true
       requests:
+        resolver: true
+      categories:
         resolver: true
   SiloDefinition:
     fields:
