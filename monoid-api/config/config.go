@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/brist-ai/monoid/analytics/ingestor"
+	"github.com/brist-ai/monoid/filestore"
 	"go.temporal.io/sdk/client"
 	"gorm.io/gorm"
 )
@@ -13,6 +14,7 @@ type BaseConfig struct {
 	TokenSecret       string
 	ApiURL            string
 	WebURL            string
+	FileStore         filestore.FileStore
 	TemporalClient    client.Client
 	AnalyticsIngestor ingestor.Ingestor
 }

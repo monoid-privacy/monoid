@@ -4,6 +4,7 @@ package resolver
 // will be copied through when generating and any unknown code will be moved to the end.
 
 import (
+	"bufio"
 	"context"
 	"strings"
 
@@ -20,6 +21,26 @@ func (r *jobResolver) SiloDefinition(ctx context.Context, obj *model.Job) (*mode
 	}
 
 	return loader.GetSiloDefinition(ctx, obj.ResourceID)
+}
+
+// Logs is the resolver for the logs field.
+func (r *jobResolver) Logs(ctx context.Context, obj *model.Job) ([]string, error) {
+	if obj.LogObject == "" {
+		return []string{}, nil
+	}
+
+	reader, err := r.Conf.FileStore.NewReader(ctx, obj.LogObject, true)
+	if err != nil {
+		return nil, handleError(err, "Error getting jobs")
+	}
+
+	logLines := []string{}
+	sc := bufio.NewScanner(reader)
+	for sc.Scan() {
+		logLines = append(logLines, sc.Text())
+	}
+
+	return logLines, nil
 }
 
 // Jobs is the resolver for the jobs field.
@@ -80,6 +101,19 @@ func (r *workspaceResolver) Jobs(ctx context.Context, obj *model.Workspace, jobT
 		Jobs:    jobs,
 		NumJobs: int(numJobs),
 	}, nil
+}
+
+// Job is the resolver for the job field.
+func (r *workspaceResolver) Job(ctx context.Context, obj *model.Workspace, id string) (*model.Job, error) {
+	job := model.Job{}
+	if err := r.Conf.DB.Where(
+		"workspace_id = ?",
+		obj.ID,
+	).Where("id = ?", id).First(&job).Error; err != nil {
+		return nil, handleError(err, "Error getting job")
+	}
+
+	return &job, nil
 }
 
 // Job returns generated.JobResolver implementation.

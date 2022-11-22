@@ -133,6 +133,17 @@
         "status"
       ]
     },
+    "MonoidLogMessage": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "message"
+      ]
+    },
     "MonoidMessage": {
       "type": "object",
       "properties": {
@@ -142,7 +153,8 @@
             "SCHEMA",
             "RECORD",
             "SPEC",
-            "VALIDATE"
+            "VALIDATE",
+            "LOG"
           ]
         },
         "record": {
@@ -156,6 +168,9 @@
         },
         "validate_msg": {
           "$ref": "#/definitions/MonoidValidateMessage"
+        },
+        "log": {
+          "$ref": "#/definitions/MonoidLogMessage"
         }
       },
       "required": [

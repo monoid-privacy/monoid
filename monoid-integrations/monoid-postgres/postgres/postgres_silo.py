@@ -25,7 +25,7 @@ class PostgresSilo(AbstractSilo):
                 )
 
                 for record in cur.fetchall():
-                    if record[0] not in conf["exclude_dbs"]:
+                    if record[0] not in conf.get("exclude_dbs", []):
                         res.append(record[0])
 
             return res

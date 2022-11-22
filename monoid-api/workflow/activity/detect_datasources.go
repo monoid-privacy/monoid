@@ -369,7 +369,8 @@ func scanProtocol(
 
 // DetectDSArgs are the arguments passed into a the activity.
 type DetectDSArgs struct {
-	SiloID string
+	SiloID        string
+	LogObjectName string
 }
 
 // DetectDataSources scans for the data sources for a data silo, and returns the number of
@@ -390,12 +391,37 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) (in
 		dataSilo.SiloSpecification.DockerImage,
 		dataSilo.SiloSpecification.DockerTag,
 	)
+
 	if err != nil {
 		logger.Error("Error creating docker client: %v", err)
 		return 0, err
 	}
 
 	defer mp.Teardown(ctx)
+
+	logChan, err := mp.AttachLogs(ctx)
+	if err != nil {
+		logger.Error("Error attaching logs: %v", err)
+		return 0, err
+	}
+
+	go func() {
+		wr, _, err := a.Conf.FileStore.NewWriter(ctx, args.LogObjectName, true)
+		if err != nil {
+			logger.Error("Error opening log writer: %v", err)
+		}
+
+		for logMsg := range logChan {
+			logger.Debug("Hello", args.LogObjectName)
+			if _, err := wr.Write([]byte(logMsg.Message + "\n")); err != nil {
+				logger.Error("Error writing", err)
+			}
+		}
+
+		logger.Debug("Close")
+
+		wr.Close()
+	}()
 
 	if err := mp.InitConn(ctx); err != nil {
 		logger.Error("Error creating docker connection: %v", err)

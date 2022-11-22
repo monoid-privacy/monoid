@@ -34,6 +34,18 @@ func (a *Activity) ValidateDataSiloDef(ctx context.Context, args ValidateDSArgs)
 
 	defer mp.Teardown(ctx)
 
+	logChan, err := mp.AttachLogs(ctx)
+	if err != nil {
+		logger.Error("Error attaching logs: %v", err)
+		return nil, err
+	}
+
+	go func() {
+		for logMsg := range logChan {
+			logger.Info("Msg", logMsg.Message)
+		}
+	}()
+
 	if err := mp.InitConn(ctx); err != nil {
 		logger.Error("Error creating docker connection: %v", err)
 		return nil, err

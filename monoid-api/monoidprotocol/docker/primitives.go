@@ -252,7 +252,7 @@ func (dp *DockerMonoidProtocol) runCmdLiveLogs(
 		return nil, err
 	}
 
-	stream, closer, err := dp.containerLogsStream(ctx, true, false)
+	stream, closer, err := dp.containerLogsStream(ctx, true, true)
 	if err != nil {
 		return nil, err
 	}

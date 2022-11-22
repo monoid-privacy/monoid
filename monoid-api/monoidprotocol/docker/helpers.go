@@ -69,7 +69,13 @@ func readMessages(stream chan []byte, closer io.Closer) chan monoidprotocol.Mono
 		for s := range stream {
 			msg := monoidprotocol.MonoidMessage{}
 			if err := json.Unmarshal(s, &msg); err != nil {
-				log.Err(err).Msgf("Error unmarshalling message: %s", string(s))
+				messageChan <- monoidprotocol.MonoidMessage{
+					Type: monoidprotocol.MonoidMessageTypeLOG,
+					Log: &monoidprotocol.MonoidLogMessage{
+						Message: string(s),
+					},
+				}
+
 				continue
 			}
 
@@ -77,6 +83,30 @@ func readMessages(stream chan []byte, closer io.Closer) chan monoidprotocol.Mono
 		}
 
 		closer.Close()
+		close(messageChan)
+	}()
+
+	return messageChan
+}
+
+func collectLogs(
+	stream chan monoidprotocol.MonoidMessage,
+	logChan chan monoidprotocol.MonoidLogMessage,
+) chan monoidprotocol.MonoidMessage {
+	messageChan := make(chan monoidprotocol.MonoidMessage)
+
+	go func() {
+		for s := range stream {
+			if s.Type == monoidprotocol.MonoidMessageTypeLOG && s.Log != nil {
+				if logChan != nil {
+					logChan <- *s.Log
+				}
+				continue
+			}
+
+			messageChan <- s
+		}
+
 		close(messageChan)
 	}()
 
@@ -98,5 +128,4 @@ func readRecords(stream chan monoidprotocol.MonoidMessage) chan monoidprotocol.M
 	}()
 
 	return recordChan
-
 }

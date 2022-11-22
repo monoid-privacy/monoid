@@ -5,6 +5,7 @@ import (
 
 	"github.com/brist-ai/monoid/model"
 	"github.com/google/uuid"
+	"go.temporal.io/sdk/activity"
 )
 
 type JobInput struct {
@@ -16,6 +17,8 @@ type JobInput struct {
 }
 
 func (a *Activity) FindOrCreateJob(ctx context.Context, jobIn JobInput) (model.Job, error) {
+	logger := activity.GetLogger(ctx)
+
 	jobID := jobIn.ID
 	if jobID == "" {
 		jobID = uuid.NewString()
@@ -33,6 +36,17 @@ func (a *Activity) FindOrCreateJob(ctx context.Context, jobIn JobInput) (model.J
 		if err := a.Conf.DB.Create(&job).Error; err != nil {
 			return model.Job{}, err
 		}
+	}
+
+	wr, path, err := a.Conf.FileStore.NewWriter(ctx, uuid.NewString(), false)
+	if err != nil {
+		logger.Error("Error creating file store")
+	}
+
+	wr.Close()
+
+	if err := a.Conf.DB.Model(&job).Update("log_object", path).Error; err != nil {
+		logger.Error("Error setting log object", err)
 	}
 
 	return job, nil

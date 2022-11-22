@@ -13,6 +13,7 @@ type Job struct {
 	Workspace   Workspace `json:"workspace"`
 	JobType     string    `json:"jobType"`
 	ResourceID  string    `json:"resourceId"`
+	LogObject   string    `json:"logObject"`
 	Status      JobStatus `json:"status"`
 
 	CreatedAt time.Time `json:"createdAt"`

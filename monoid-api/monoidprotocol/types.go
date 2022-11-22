@@ -34,5 +34,7 @@ type MonoidProtocol interface {
 		config map[string]interface{},
 	) (*MonoidSchemasMessage, error)
 
+	AttachLogs(ctx context.Context) (chan MonoidLogMessage, error)
+
 	Teardown(ctx context.Context) error
 }

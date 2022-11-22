@@ -62,6 +62,7 @@ services:
       - DB_NAME=${DATABASE_NAME}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - SEGMENT_KEY=${SEGMENT_KEY}
+      - FILESTORE_PATH=${FILESTORE_PATH}
       - TEMPORAL=monoid-temporal:7233
     depends_on:
       db:
@@ -73,6 +74,8 @@ services:
     networks:
       - monoid-network
     image: monoidco/monoid-api:${VERSION}
+    volumes:
+      - filestore:${FILESTORE_PATH}
   loader:
     container_name: monoid-loader
     command: /monoid-config
@@ -103,6 +106,7 @@ services:
       - DB_NAME=${DATABASE_NAME}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - SEGMENT_KEY=${SEGMENT_KEY}
+      - FILESTORE_PATH=${FILESTORE_PATH}
       - TEMPORAL=monoid-temporal:7233
     depends_on:
       db:
@@ -115,6 +119,7 @@ services:
       - monoid-network
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - filestore:${FILESTORE_PATH}
     image: monoidco/monoid-worker:${VERSION}
   proxy:
     depends_on:
@@ -132,4 +137,6 @@ networks:
     name: monoid-network
 volumes:
   db:
-    name: db
+    name: monoid-db
+  filestore:
+    name: monoid-filestore 

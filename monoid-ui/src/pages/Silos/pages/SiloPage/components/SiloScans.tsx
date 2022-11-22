@@ -166,7 +166,7 @@ function JobList(props: {
       <ul className="divide-y divide-gray-200">
         {
           data?.jobs.jobs.map((j) => (
-            <JobRow key={j.id} job={j} />
+            <JobRow key={j.id} job={j} openable />
           ))
         }
       </ul>

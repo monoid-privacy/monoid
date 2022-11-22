@@ -136,11 +136,23 @@ func (a *Activity) ExecuteRequestOnDataSource(
 
 	defer protocol.Teardown(ctx)
 
+	logChan, err := protocol.AttachLogs(ctx)
+	if err != nil {
+		return failRequest(requestStatusId, err, a.Conf.DB)
+	}
+
+	go func() {
+		for l := range logChan {
+			logger.Debug(l.Message)
+		}
+	}()
+
 	if err := json.Unmarshal([]byte(siloDefinition.Config), &conf); err != nil {
 		return failRequest(requestStatusId, err, a.Conf.DB)
 	}
 
 	sch, err := protocol.Schema(context.Background(), conf)
+
 	if err != nil {
 		return failRequest(requestStatusId, err, a.Conf.DB)
 	}

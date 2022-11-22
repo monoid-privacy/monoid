@@ -60,7 +60,8 @@ func (w *Workflow) DetectDSWorkflow(
 
 	// Run the detection activity
 	err = workflow.ExecuteActivity(ctx, ac.DetectDataSources, activity.DetectDSArgs{
-		SiloID: args.SiloDefID,
+		SiloID:        args.SiloDefID,
+		LogObjectName: job.LogObject,
 	}).Get(ctx, &numDiscoveries)
 
 	if err != nil {

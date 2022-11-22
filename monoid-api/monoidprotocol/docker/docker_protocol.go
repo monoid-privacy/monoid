@@ -7,6 +7,7 @@ import (
 	"github.com/brist-ai/monoid/monoidprotocol"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
+	"github.com/rs/zerolog/log"
 )
 
 type DockerMonoidProtocol struct {
@@ -14,6 +15,7 @@ type DockerMonoidProtocol struct {
 	imageName   string
 	containerID *string
 	volume      *string
+	logChan     chan monoidprotocol.MonoidLogMessage
 	closeClient bool
 }
 
@@ -24,6 +26,7 @@ func NewDockerMPWithClient(dockerImage string, dockerTag string, cli *client.Cli
 		client:      cli,
 		imageName:   imageName,
 		volume:      nil,
+		logChan:     nil,
 		closeClient: closeClient,
 	}
 }
@@ -75,8 +78,11 @@ func (dp *DockerMonoidProtocol) Spec(ctx context.Context) (*monoidprotocol.Monoi
 	return msg.Spec, nil
 }
 
-func (dp *DockerMonoidProtocol) Validate(ctx context.Context, config map[string]interface{}) (*monoidprotocol.MonoidValidateMessage, error) {
-	msg, err := dp.runCmdStaticLog(
+func (dp *DockerMonoidProtocol) Validate(
+	ctx context.Context,
+	config map[string]interface{},
+) (*monoidprotocol.MonoidValidateMessage, error) {
+	msgChan, err := dp.runCmdLiveLogs(
 		ctx,
 		"validate",
 		map[string]interface{}{
@@ -88,11 +94,23 @@ func (dp *DockerMonoidProtocol) Validate(ctx context.Context, config map[string]
 		return nil, err
 	}
 
-	if msg.Type != monoidprotocol.MonoidMessageTypeVALIDATE || msg.ValidateMsg == nil {
-		return nil, fmt.Errorf("incorrect message type: %v", msg.Type)
+	msgChan = collectLogs(msgChan, dp.logChan)
+	var res *monoidprotocol.MonoidValidateMessage
+
+	for s := range msgChan {
+		if s.Type != monoidprotocol.MonoidMessageTypeVALIDATE || s.ValidateMsg == nil {
+			log.Debug().Msgf("Message type is not validate: %s", string(s.Type))
+			continue
+		}
+
+		res = s.ValidateMsg
 	}
 
-	return msg.ValidateMsg, nil
+	if res == nil {
+		return nil, fmt.Errorf("no validate message sent")
+	}
+
+	return res, nil
 }
 
 func (dp *DockerMonoidProtocol) Query(
@@ -113,6 +131,7 @@ func (dp *DockerMonoidProtocol) Query(
 		return nil, err
 	}
 
+	msgChan = collectLogs(msgChan, dp.logChan)
 	recordChan := readRecords(msgChan)
 
 	return recordChan, nil
@@ -136,6 +155,7 @@ func (dp *DockerMonoidProtocol) Sample(
 		return nil, err
 	}
 
+	msgChan = collectLogs(msgChan, dp.logChan)
 	recordChan := readRecords(msgChan)
 
 	return recordChan, nil
@@ -159,6 +179,7 @@ func (dp *DockerMonoidProtocol) Delete(
 		return nil, err
 	}
 
+	msgChan = collectLogs(msgChan, dp.logChan)
 	recordChan := readRecords(msgChan)
 
 	return recordChan, nil
@@ -168,7 +189,7 @@ func (dp *DockerMonoidProtocol) Schema(
 	ctx context.Context,
 	config map[string]interface{},
 ) (*monoidprotocol.MonoidSchemasMessage, error) {
-	msg, err := dp.runCmdStaticLog(
+	msgChan, err := dp.runCmdLiveLogs(
 		ctx,
 		"schema",
 		map[string]interface{}{
@@ -180,11 +201,28 @@ func (dp *DockerMonoidProtocol) Schema(
 		return nil, err
 	}
 
-	if msg.Type != monoidprotocol.MonoidMessageTypeSCHEMA || msg.SchemaMsg == nil {
-		return nil, fmt.Errorf("incorrect message type: %v", msg.Type)
+	msgChan = collectLogs(msgChan, dp.logChan)
+	var res *monoidprotocol.MonoidSchemasMessage
+
+	for msg := range msgChan {
+		if msg.Type != monoidprotocol.MonoidMessageTypeSCHEMA || msg.SchemaMsg == nil {
+			log.Debug().Msgf("incorrect message type: %v", msg.Type)
+			continue
+		}
+
+		res = msg.SchemaMsg
 	}
 
-	return msg.SchemaMsg, nil
+	if res == nil {
+		return nil, fmt.Errorf("no schemas message sent")
+	}
+
+	return res, nil
+}
+
+func (dp *DockerMonoidProtocol) AttachLogs(ctx context.Context) (chan monoidprotocol.MonoidLogMessage, error) {
+	dp.logChan = make(chan monoidprotocol.MonoidLogMessage)
+	return dp.logChan, nil
 }
 
 func (dp *DockerMonoidProtocol) Teardown(ctx context.Context) error {
@@ -198,6 +236,10 @@ func (dp *DockerMonoidProtocol) Teardown(ctx context.Context) error {
 
 	if err := dp.client.Close(); err != nil {
 		return err
+	}
+
+	if dp.logChan != nil {
+		close(dp.logChan)
 	}
 
 	return nil

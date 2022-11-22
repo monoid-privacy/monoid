@@ -10,6 +10,7 @@ import (
 
 	"github.com/brist-ai/monoid/analytics/ingestor"
 	"github.com/brist-ai/monoid/config"
+	"github.com/brist-ai/monoid/filestore/localstore"
 	"github.com/brist-ai/monoid/model"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
@@ -124,11 +125,13 @@ func GetBaseConfig(runMigrations bool, models []interface{}) config.BaseConfig {
 		reg.ID = "temp_" + uuid.NewString()
 	}
 
+	fileStore := localstore.NewLocalFileStore(os.Getenv("FILESTORE_PATH"))
 	conf := config.BaseConfig{
 		DB:          db,
 		TokenSecret: os.Getenv("TOKEN_SECRET"),
 		ApiURL:      os.Getenv("API_URL"),
 		WebURL:      os.Getenv("WEB_URL"),
+		FileStore:   fileStore,
 		AnalyticsIngestor: ingestor.NewSegmentIngestor(
 			os.Getenv("SEGMENT_KEY"),
 			&reg.ID,
