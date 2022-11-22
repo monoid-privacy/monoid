@@ -2,7 +2,7 @@ version: "3.7"
 services:
   db:
     image: postgres:14.6-alpine3.16
-    container_name: monoid-db
+    container_name: monoid-dev-db
     restart: unless-stopped
     environment:
       - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
@@ -18,15 +18,18 @@ services:
       timeout: 5s
       retries: 10
   web:
-    container_name: monoid-web
+    container_name: monoid-dev-web
     build:
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
       context: ./monoid-ui
+    ports:
+      - 3000:3000
+    volumes:
+      - ./monoid-ui:/app
     networks:
       - monoid-network
-    image: monoidco/monoid-web
   temporal:
-    container_name: monoid-temporal
+    container_name: monoid-dev-temporal
     depends_on:
       - db
     environment:
@@ -34,7 +37,7 @@ services:
       - DB_PORT=5432
       - POSTGRES_USER=${DATABASE_USER}
       - POSTGRES_PWD=${DATABASE_PASSWORD}
-      - POSTGRES_SEEDS=monoid-db
+      - POSTGRES_SEEDS=monoid-dev-db
       - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
     image: temporalio/auto-setup:1.18.4
     networks:
@@ -47,7 +50,7 @@ services:
           "CMD",
           "tctl",
           "--address",
-          "monoid-temporal:7233",
+          "monoid-dev-temporal:7233",
           "workflow",
           "list"
         ]
@@ -55,20 +58,25 @@ services:
       timeout: 5s
       retries: 30
   api:
-    container_name: monoid-api
     build:
-      dockerfile: cmd/server/Dockerfile
+      dockerfile: Dockerfile.dev
       context: ./monoid-api
+    command: -c cmd/server/.air.toml
+    working_dir: /app
+    container_name: monoid-dev-api
+    volumes:
+      - ./monoid-api:/app
+      - filestore:${FILESTORE_PATH}
     environment:
       - WEB_URL=${WEB_URL}
       - DB_USER=${DATABASE_USER}
       - DB_PASS=${DATABASE_PASSWORD}
-      - DB_TCP_HOST=monoid-db
+      - DB_TCP_HOST=monoid-dev-db
       - DB_PORT=5432
       - DB_NAME=${DATABASE_NAME}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - SEGMENT_KEY=${SEGMENT_KEY}
-      - TEMPORAL=monoid-temporal:7233
+      - TEMPORAL=monoid-dev-temporal:7233
     depends_on:
       db:
         condition: service_healthy
@@ -76,11 +84,12 @@ services:
         condition: service_completed_successfully
       temporal:
         condition: service_healthy
+    ports:
+      - 8080:8080
     networks:
       - monoid-network
-    image: monoidco/monoid-api
   loader:
-    container_name: monoid-loader
+    container_name: monoid-dev-loader
     build:
       dockerfile: cmd/tools/loader/Dockerfile
       context: ./monoid-api
@@ -88,7 +97,7 @@ services:
     environment:
       - DB_USER=${DATABASE_USER}
       - DB_PASS=${DATABASE_PASSWORD}
-      - DB_TCP_HOST=monoid-db
+      - DB_TCP_HOST=monoid-dev-db
       - DB_PORT=5432
       - DB_NAME=${DATABASE_NAME}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
@@ -100,22 +109,25 @@ services:
         condition: service_healthy
     networks:
       - monoid-network
-    image: monoidco/monoid-loader
   worker:
-    container_name: monoid-worker
     build:
-      dockerfile: cmd/worker/Dockerfile
+      dockerfile: Dockerfile.dev
       context: ./monoid-api
+    command: -c cmd/worker/.air.toml
+    container_name: monoid-dev-worker
+    working_dir: /app
     environment:
       - WEB_URL=${WEB_URL}
       - DB_USER=${DATABASE_USER}
       - DB_PASS=${DATABASE_PASSWORD}
-      - DB_TCP_HOST=monoid-db
+      - DB_TCP_HOST=monoid-dev-db
       - DB_PORT=5432
       - DB_NAME=${DATABASE_NAME}
+      - DOCKER_HOST=unix:///var/run/docker.sock
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - SEGMENT_KEY=${SEGMENT_KEY}
-      - TEMPORAL=monoid-temporal:7233
+      - FILESTORE_PATH=${FILESTORE_PATH}
+      - TEMPORAL=monoid-dev-temporal:7233
     depends_on:
       db:
         condition: service_healthy
@@ -127,24 +139,14 @@ services:
       - monoid-network
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    image: monoidco/monoid-worker
-  proxy:
-    depends_on:
-      - web
-      - api
-    container_name: monoid-proxy
-    build:
-      dockerfile: Dockerfile
-      context: ./monoid-proxy
-    networks:
-      - monoid-network
-    ports:
-      - 8080:80
-    image: monoidco/monoid-proxy
+      - filestore:${FILESTORE_PATH}
+      - ./monoid-api:/app
 networks:
   monoid-network:
     driver: bridge
-    name: monoid-network
+    name: monoid-dev-network
 volumes:
   db:
-    name: db
+    name: monoid-dev-db
+  filestore:
+    name: monoid-dev-filestore
