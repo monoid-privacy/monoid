@@ -96,6 +96,7 @@ function TentativePropertyBadge(props: { property: Property }) {
           content: (
             <CheckIcon className="w-3" />
           ),
+          key: 'approve',
         },
         {
           onClick: () => {
@@ -118,6 +119,7 @@ function TentativePropertyBadge(props: { property: Property }) {
           content: (
             <XMarkIcon className="w-3" />
           ),
+          key: 'reject',
         },
       ]}
     >

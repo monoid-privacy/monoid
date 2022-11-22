@@ -7,7 +7,8 @@ interface BadgeProps extends Omit<React.HTMLProps<HTMLSpanElement>, 'size'> {
   color?: BadgeColor
   size?: 'sm' | 'md'
   actions?: {
-    onClick: () => void
+    key: string,
+    onClick: () => void,
     content: React.ReactNode,
   }[]
 }
@@ -73,6 +74,7 @@ export default function Badge(props: BadgeProps) {
       {actions?.map((a) => (
         <button
           type="button"
+          key={a.key}
           className={classNames('cursor-pointer h-auto self-stretch px-1', actionClasses)}
           onClick={a.onClick}
         >

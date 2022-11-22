@@ -73,6 +73,7 @@ export default function FilterRegion(props: {
                   onChange(value.filter((_, finx) => finx !== inx));
                 },
                 content: <XMarkIcon className="w-3" />,
+                key: 'del',
               },
             ]}
           >

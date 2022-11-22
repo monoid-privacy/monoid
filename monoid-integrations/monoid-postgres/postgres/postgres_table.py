@@ -6,7 +6,7 @@ from monoid_pydev.models import MonoidRecord, MonoidQueryIdentifier, MonoidSchem
 from typing import Any, Dict, Iterable, Mapping, Optional
 from pypika import Table, Query, Field
 
-from postgres.helpers import get_connection
+from postgres.helpers import get_connection, logger
 
 
 def type_to_jsonschema(pg_type: str) -> Optional[str]:
@@ -49,12 +49,23 @@ def serializable_val(val: Any) -> Any:
 
 
 class PostgresTableDataStore(DataStore):
-    def __init__(self, table: str, db_name: str, schema: str, conf: Mapping[str, any]):
+    def __init__(
+        self,
+        table: str,
+        db_name: str,
+        schema: str,
+        conf: Mapping[str, any],
+        conn: Optional[psycopg.Connection] = None
+    ):
         self.conf = conf
         self.table = table
         self.db_name = db_name
         self.schema = schema
-        self._conn = None
+        self._conn = conn
+        self._close_conn = True
+
+        if conn is not None:
+            self._close_conn = False
 
     def _get_connection(self):
         if self._conn is not None:
@@ -100,6 +111,9 @@ class PostgresTableDataStore(DataStore):
     def query_records(self, query_identifier: MonoidQueryIdentifier) -> Iterable[MonoidRecord]:
         query_cols = [f for f in query_identifier.json_schema["properties"]]
 
+        logger.info(
+            f"Querying records from table {self.group()}.{self.name()}")
+
         with self._get_connection().cursor() as cur:
             tbl = Table(self.table, schema=self.schema)
             q = Query.from_(tbl).select(
@@ -121,6 +135,9 @@ class PostgresTableDataStore(DataStore):
     def sample_records(self, schema: MonoidSchema) -> Iterable[MonoidRecord]:
         query_cols = [f for f in schema.json_schema["properties"]]
 
+        logger.info(
+            f"Sampling records from table {self.group()}.{self.name()}")
+
         with self._get_connection().cursor() as cur:
             tbl = Table(self.table, schema=self.schema)
             q = Query.from_(tbl).select(*query_cols).limit(5)
@@ -138,6 +155,10 @@ class PostgresTableDataStore(DataStore):
 
     def delete_records(self, query_identifier: MonoidQueryIdentifier) -> Iterable[MonoidRecord]:
         res = [q for q in self.query_records(query_identifier)]
+
+        logger.info(
+            f"Deleting records from table {self.group()}.{self.name()}")
+
         with self._get_connection().cursor() as cur:
             tbl = Table(self.table, schema=self.schema)
             q = Query.from_(tbl).delete().where(
@@ -148,5 +169,5 @@ class PostgresTableDataStore(DataStore):
         return res
 
     def teardown(self):
-        if self._conn is not None:
+        if self._conn is not None and self._close_conn:
             self._conn.close()

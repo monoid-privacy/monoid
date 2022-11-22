@@ -1,5 +1,8 @@
 from typing import Any, Mapping, Optional
 import psycopg
+from monoid_pydev.logger import get_logger
+
+logger = get_logger("postgres")
 
 
 def get_connection(conf: Mapping[str, Any], db_name: Optional[str] = None) -> psycopg.Connection:

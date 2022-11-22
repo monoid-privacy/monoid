@@ -3,7 +3,7 @@ from monoid_pydev.silos import AbstractSilo
 from monoid_pydev.silos.data_store import DataStore
 from monoid_pydev.models import MonoidValidateMessage, Status
 import psycopg
-from postgres.helpers import get_connection
+from postgres.helpers import get_connection, logger
 
 from postgres.postgres_table import PostgresTableDataStore
 
@@ -11,9 +11,12 @@ from postgres.postgres_table import PostgresTableDataStore
 class PostgresSilo(AbstractSilo):
     def __init__(self):
         self._data_stores: Optional[PostgresTableDataStore] = None
+        self._conns: List[psycopg.Connection] = []
 
     def _get_databases(self, conf: Mapping[str, Any]) -> List[str]:
         res = []
+
+        logger.info("Getting databases")
 
         with get_connection(conf) as conn:
             with conn.cursor() as cur:
@@ -28,28 +31,34 @@ class PostgresSilo(AbstractSilo):
                     if record[0] not in conf.get("exclude_dbs", []):
                         res.append(record[0])
 
+            logger.info(f"Found {len(res)} databases")
             return res
 
-    def _get_database_table_stores(self, db_name: str, conf: psycopg.Connection) -> List[PostgresTableDataStore]:
+    def _get_database_table_stores(self, db_name: str, conf: Mapping[str, Any]) -> List[PostgresTableDataStore]:
         data_stores = []
 
-        with get_connection(conf, db_name) as conn:
-            with conn.cursor() as cur:
-                cur.execute(
-                    """
-                    SELECT table_name
-                        FROM information_schema.tables
-                        WHERE table_schema = 'public';
-                    """
-                )
+        logger.info(f"Connecting to {db_name}")
 
-                for record in cur.fetchall():
-                    data_stores.append(PostgresTableDataStore(
-                        table=record[0],
-                        db_name=db_name,
-                        schema='public',
-                        conf=conf
-                    ))
+        conn = get_connection(conf, db_name)
+        self._conns.append(conn)
+
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT table_name
+                    FROM information_schema.tables
+                    WHERE table_schema = 'public';
+                """
+            )
+
+            for record in cur.fetchall():
+                data_stores.append(PostgresTableDataStore(
+                    table=record[0],
+                    db_name=db_name,
+                    schema='public',
+                    conf=conf,
+                    conn=conn
+                ))
 
         return data_stores
 
@@ -81,3 +90,9 @@ class PostgresSilo(AbstractSilo):
 
         for d in self._data_stores:
             d.teardown()
+
+        for c in self._conns:
+            c.close()
+
+        self._conns = []
+        self._data_stores = None
