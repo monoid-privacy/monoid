@@ -5,7 +5,7 @@ import {
 } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  CheckCircleIcon, CircleStackIcon, MinusCircleIcon, PlusCircleIcon, XCircleIcon,
+  CheckCircleIcon, CircleStackIcon, FolderIcon, MinusCircleIcon, PlusCircleIcon, XCircleIcon,
 } from '@heroicons/react/24/outline';
 import {
   CheckIcon, XMarkIcon,
@@ -24,6 +24,8 @@ import ScanButtonRegion from './ScanButton';
 import EmptyState from '../../../../../components/Empty';
 import Button from '../../../../../components/Button';
 import IdentifierSelect from './IdentifierSelect';
+import Text from '../../../../../components/Text';
+import { MonoidA } from '../../../../../components/MonoidLink';
 
 const SILO_DATA_SOURCES = gql`
   query SiloDataSources($id: ID!, $workspaceId: ID!) {
@@ -34,6 +36,7 @@ const SILO_DATA_SOURCES = gql`
         dataSources {
           id
           name
+          group
           properties {
             id
             name
@@ -207,6 +210,18 @@ export default function SiloDataSources() {
                   header: 'Tracked Properties',
                   key: 'properties',
                 },
+                {
+                  header: (
+                    <div className="flex-flex-col">
+                      <div>Purpose of Processing</div>
+                      <Text em="light">
+                        Requires
+                        <MonoidA href="https://monoid.co" className="ml-1 underline" target="_blank">a license</MonoidA>
+                      </Text>
+                    </div>
+                  ),
+                  key: 'purposes',
+                },
               ]}
               tableRows={data?.workspace.siloDefinition.dataSources.map((ds: DataSource) => ({
                 key: ds.id!,
@@ -215,7 +230,13 @@ export default function SiloDataSources() {
                     key: 'name',
                     content: (
                       <div className="flex flex-col items-start">
-                        <div>{ds.name}</div>
+                        <div>
+                          <div>{ds.name}</div>
+                          <Text size="xs" em="light" className="flex items-center">
+                            <FolderIcon className="w-3 h-3 mr-1" />
+                            {ds.group}
+                          </Text>
+                        </div>
                         <div className="space-x-2">
                           {
                             ds.tentative
@@ -281,11 +302,15 @@ export default function SiloDataSources() {
                       </div>
                     ),
                   },
+                  {
+                    key: 'purposes',
+                    content: null,
+                  },
                 ],
 
                 nestedComponent: (
                   <tr>
-                    <td colSpan={3} className="p-0">
+                    <td colSpan={4} className="p-0">
                       <div>
                         <Table
                           tableCols={[{

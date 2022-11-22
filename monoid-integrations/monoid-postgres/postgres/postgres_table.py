@@ -3,8 +3,10 @@ from unicodedata import name
 from monoid_pydev.silos.data_store import DataStore
 import psycopg
 from monoid_pydev.models import MonoidRecord, MonoidQueryIdentifier, MonoidSchema
-from typing import Any, Dict, Iterable, Optional
+from typing import Any, Dict, Iterable, Mapping, Optional
 from pypika import Table, Query, Field
+
+from postgres.helpers import get_connection
 
 
 def type_to_jsonschema(pg_type: str) -> Optional[str]:
@@ -47,11 +49,19 @@ def serializable_val(val: Any) -> Any:
 
 
 class PostgresTableDataStore(DataStore):
-    def __init__(self, table: str, db_name: str, schema: str, conn: psycopg.Connection):
-        self.conn = conn
+    def __init__(self, table: str, db_name: str, schema: str, conf: Mapping[str, any]):
+        self.conf = conf
         self.table = table
         self.db_name = db_name
         self.schema = schema
+        self._conn = None
+
+    def _get_connection(self):
+        if self._conn is not None:
+            return self._conn
+
+        self._conn = get_connection(self.conf, self.db_name)
+        return self._conn
 
     def name(self):
         return self.table
@@ -68,7 +78,7 @@ class PostgresTableDataStore(DataStore):
             }
         }
 
-        with self.conn.cursor() as cur:
+        with self._get_connection().cursor() as cur:
             cur.execute(
                 f"""
                 SELECT column_name, udt_name
@@ -90,7 +100,7 @@ class PostgresTableDataStore(DataStore):
     def query_records(self, query_identifier: MonoidQueryIdentifier) -> Iterable[MonoidRecord]:
         query_cols = [f for f in query_identifier.json_schema["properties"]]
 
-        with self.conn.cursor() as cur:
+        with self._get_connection().cursor() as cur:
             tbl = Table(self.table, schema=self.schema)
             q = Query.from_(tbl).select(
                 *query_cols).where(
@@ -111,7 +121,7 @@ class PostgresTableDataStore(DataStore):
     def sample_records(self, schema: MonoidSchema) -> Iterable[MonoidRecord]:
         query_cols = [f for f in schema.json_schema["properties"]]
 
-        with self.conn.cursor() as cur:
+        with self._get_connection().cursor() as cur:
             tbl = Table(self.table, schema=self.schema)
             q = Query.from_(tbl).select(*query_cols).limit(5)
             cur.execute(str(q))
@@ -128,7 +138,7 @@ class PostgresTableDataStore(DataStore):
 
     def delete_records(self, query_identifier: MonoidQueryIdentifier) -> Iterable[MonoidRecord]:
         res = [q for q in self.query_records(query_identifier)]
-        with self.conn.cursor() as cur:
+        with self._get_connection().cursor() as cur:
             tbl = Table(self.table, schema=self.schema)
             q = Query.from_(tbl).delete().where(
                 Field(query_identifier.identifier) ==
@@ -136,3 +146,7 @@ class PostgresTableDataStore(DataStore):
             cur.execute(str(q))
 
         return res
+
+    def teardown(self):
+        if self._conn is not None:
+            self._conn.close()

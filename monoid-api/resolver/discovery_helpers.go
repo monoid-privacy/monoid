@@ -59,6 +59,7 @@ func applyDiscoveries(
 				continue
 			}
 
+			res = append(res, discovery)
 			continue
 		}
 

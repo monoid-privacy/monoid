@@ -329,6 +329,8 @@ func (r *siloDefinitionResolver) DataSources(ctx context.Context, obj *model.Sil
 	sources := []*model.DataSource{}
 	if err := r.Conf.DB.Where(
 		"silo_definition_id = ?", obj.ID,
+	).Order(clause.OrderByColumn{Column: clause.Column{Name: "group"}}).Order(
+		clause.OrderByColumn{Column: clause.Column{Name: "name"}},
 	).Find(&sources).Error; err != nil {
 		return nil, handleError(err, "Error finding data sources")
 	}

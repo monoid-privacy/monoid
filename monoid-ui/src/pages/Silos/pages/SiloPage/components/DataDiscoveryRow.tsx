@@ -260,7 +260,7 @@ function DiscoveryItem(props: {
         />
       );
     } else {
-      body = 'Data Source not found';
+      body = <Text size="sm" className="mt-2">Data Source not found</Text>;
     }
   } else if (discovery.type === 'PROPERTY_FOUND') {
     title = 'New Property Found';

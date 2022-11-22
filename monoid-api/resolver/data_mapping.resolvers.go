@@ -24,13 +24,7 @@ func (r *dataSourceResolver) SiloDefinition(ctx context.Context, obj *model.Data
 
 // Properties is the resolver for the properties field.
 func (r *dataSourceResolver) Properties(ctx context.Context, obj *model.DataSource) ([]*model.Property, error) {
-	properties := []*model.Property{}
-
-	if err := r.Conf.DB.Where("data_source_id = ?", obj.ID).Order("created_at desc, name asc").Find(&properties).Error; err != nil {
-		return nil, handleError(err, "Error finding properties.")
-	}
-
-	return properties, nil
+	return loader.GetDataSourceProperties(ctx, obj.ID)
 }
 
 // CreateDataSource is the resolver for the createDataSource field.

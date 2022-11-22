@@ -12,6 +12,7 @@
       "port": {
         "type": "number",
         "title": "Port",
+        "default": 5432,
         "order": 1,
         "description": "The port of the database"
       },

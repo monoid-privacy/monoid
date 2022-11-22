@@ -2,7 +2,7 @@ import React, { HTMLProps } from 'react';
 import { Link, LinkProps } from 'react-router-dom';
 import { classNames } from '../utils/utils';
 
-export function BristLink(props: LinkProps) {
+export function MonoidLink(props: LinkProps) {
   const { className, children } = props;
 
   return (
@@ -21,7 +21,7 @@ export function BristLink(props: LinkProps) {
   );
 }
 
-export function BristA(props: HTMLProps<HTMLAnchorElement>) {
+export function MonoidA(props: HTMLProps<HTMLAnchorElement>) {
   const { className, children } = props;
 
   return (
