@@ -1,0 +1,9 @@
+{
+  "label": "Project Overview",
+  "position": 7,
+  "link": {
+    "type": "generated-index",
+    "description": "Details about the Monoid Open Source project, including our
+    mission and roadmap."
+  }
+}

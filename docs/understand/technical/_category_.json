@@ -1,0 +1,8 @@
+{
+  "label": "Technical Guide",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "An in-depth technical look at how Monoid works."
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "label": "Build a Connector",
+  "position": 7,
+  "link": {
+    "type": "generated-index",
+    "description": "A guide to building a new Monoid connector, for
+    private or public use."
+  }
+}

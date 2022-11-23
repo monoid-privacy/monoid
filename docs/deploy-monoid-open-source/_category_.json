@@ -1,0 +1,8 @@
+{
+  "label": "Deploy Monoid Open Source",
+  "position": 5,
+  "link": {
+    "type": "generated-index",
+    "description": "A guide to deploying Monoid Open Source."
+  }
+}

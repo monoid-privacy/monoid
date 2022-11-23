@@ -1,0 +1,8 @@
+{
+  "label": "Connector Catalog",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "A catalog of pre-built open-source Monoid connectors."
+  }
+}
