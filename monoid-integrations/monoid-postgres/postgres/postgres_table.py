@@ -1,8 +1,8 @@
 import base64
 from unicodedata import name
-from monoid_pydev.silos.data_store import DataStore
+from monoid_pydev.silos.db_data_store import DBDataStore
 import psycopg
-from monoid_pydev.models import MonoidRecord, MonoidQueryIdentifier, MonoidSchema
+from monoid_pydev.models import MonoidRecord, MonoidQueryIdentifier, MonoidSchema, MonoidPersistenceConfig
 from typing import Any, Dict, Iterable, Mapping, Optional
 from pypika import Table, Query, Field
 
@@ -48,7 +48,7 @@ def serializable_val(val: Any) -> Any:
     return val
 
 
-class PostgresTableDataStore(DataStore):
+class PostgresTableDataStore(DBDataStore):
     def __init__(
         self,
         table: str,
@@ -108,7 +108,11 @@ class PostgresTableDataStore(DataStore):
 
         return schema
 
-    def query_records(self, query_identifier: MonoidQueryIdentifier) -> Iterable[MonoidRecord]:
+    def query_records(
+        self,
+        persistence_conf: MonoidPersistenceConfig,
+        query_identifier: MonoidQueryIdentifier
+    ) -> Iterable[MonoidRecord]:
         query_cols = [f for f in query_identifier.json_schema["properties"]]
 
         logger.info(
@@ -132,7 +136,11 @@ class PostgresTableDataStore(DataStore):
                     }
                 )
 
-    def sample_records(self, schema: MonoidSchema) -> Iterable[MonoidRecord]:
+    def scan_records(
+        self,
+        persistence_conf: MonoidPersistenceConfig,
+        schema: MonoidSchema
+    ) -> Iterable[MonoidRecord]:
         query_cols = [f for f in schema.json_schema["properties"]]
 
         logger.info(
@@ -153,7 +161,11 @@ class PostgresTableDataStore(DataStore):
                     }
                 )
 
-    def delete_records(self, query_identifier: MonoidQueryIdentifier) -> Iterable[MonoidRecord]:
+    def delete_records(
+        self,
+        query_identifier: MonoidQueryIdentifier,
+        persistence_conf: MonoidPersistenceConfig
+    ) -> Iterable[MonoidRecord]:
         res = [q for q in self.query_records(query_identifier)]
 
         logger.info(

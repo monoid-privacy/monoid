@@ -3,6 +3,8 @@ from typing import Dict, Any, Iterable, Optional
 from monoid_pydev.models import MonoidRecord, MonoidSchema, MonoidQueryIdentifier
 from abc import ABC, abstractmethod
 
+from monoid_pydev.models.models import MonoidPersistenceConfig, MonoidRequestHandle, MonoidRequestResult, MonoidRequestStatus
+
 
 class DataStore(ABC):
     def to_brist_schema(self):
@@ -31,28 +33,51 @@ class DataStore(ABC):
         """
 
     @abstractmethod
-    def query_records(
+    def run_query_request(
         self,
-        query_identifier: MonoidQueryIdentifier
-    ) -> Iterable[MonoidRecord]:
+        persistence_conf: MonoidPersistenceConfig,
+        query: MonoidQueryIdentifier,
+    ) -> MonoidRequestResult:
         """
-        To be implemented by subclasses.
+        Starts a query request
         """
 
     @abstractmethod
-    def sample_records(
+    def run_delete_request(
         self,
-        schema: MonoidSchema
+        persistence_conf: MonoidPersistenceConfig,
+        query: MonoidQueryIdentifier,
+    ) -> MonoidRequestResult:
+        """
+        Starts a delete request
+        """
+
+    @abstractmethod
+    def request_status(
+        self,
+        persistence_conf: MonoidPersistenceConfig,
+        handle: MonoidRequestHandle
+    ) -> MonoidRequestStatus:
+        """
+        Gets the status of a request
+        """
+
+    @abstractmethod
+    def request_results(
+        self,
+        persistence_conf: MonoidPersistenceConfig,
+        handle: MonoidRequestHandle
+    ) -> Iterable[MonoidRecord]:
+        """
+        Gets the result of a request
+        """
+
+    @abstractmethod
+    def scan_records(
+        self,
+        persistence_conf: MonoidPersistenceConfig,
+        schema: MonoidSchema,
     ):
         """
         To be implemented by subclasses.
-        """
-
-    @abstractmethod
-    def delete_records(
-        self,
-        query_identifier: MonoidQueryIdentifier
-    ) -> Iterable[MonoidRecord]:
-        """
-        To be implemented by subclasses
         """

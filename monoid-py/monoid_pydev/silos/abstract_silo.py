@@ -1,19 +1,30 @@
 from abc import ABC, abstractmethod
 import json
 from re import S
-from typing import Any, Iterable, Mapping, List
+from typing import Any, Iterable, Mapping, List, Optional
+from monoid_pydev.models.models import MonoidRequestResult, MonoidRequestStatus, MonoidRequestsMessage
 
 from monoid_pydev.silos.data_store import DataStore
-from monoid_pydev.models import MonoidQuery, MonoidRecord, MonoidSchema, MonoidSiloSpec, MonoidSchemasMessage, MonoidValidateMessage
+from monoid_pydev.models import (
+    MonoidQuery, MonoidRecord, MonoidSchema,
+    MonoidSiloSpec, MonoidSchemasMessage, MonoidValidateMessage,
+    MonoidPersistenceConfig, MonoidRequestHandle
+)
 import monoid_pydev.utils as utils
 
 
 class AbstractSilo(ABC):
     @abstractmethod
-    def data_stores(self, conf: Mapping[str, Any]) -> List[DataStore]:
+    def data_stores(
+        self,
+        conf: Mapping[str, Any],
+    ) -> List[DataStore]:
         """
         Gets the data stores that make up this silo.
         """
+
+    def _data_stores_map(self, conf: Mapping[str, Any]):
+        return {(d.group(), d.name()): d for d in self.data_stores(conf=conf)}
 
     def schemas(self, conf: Mapping[str, Any]) -> MonoidSchemasMessage:
         """
@@ -38,40 +49,87 @@ class AbstractSilo(ABC):
     def query(
         self,
         conf: Mapping[str, Any],
+        persistence_conf: MonoidPersistenceConfig,
         query: MonoidQuery,
-    ) -> Iterable[MonoidRecord]:
+    ) -> Iterable[MonoidRequestResult]:
         """
         Queries records from a data silo based on a specific query.
         """
-        data_stores = {(d.group(), d.name())
-                        : d for d in self.data_stores(conf=conf)}
+        data_stores = self._data_stores_map(conf)
 
-        for query_rule in query.identifiers:
+        for query_rule in query.identifiers or []:
             data_store = data_stores[(
                 query_rule.schema_group, query_rule.schema_name)]
 
-            yield from data_store.query_records(query_rule)
+            yield data_store.run_query_request(
+                persistence_conf,
+                query_rule
+            )
 
     def delete(
         self,
         conf: Mapping[str, Any],
+        persistence_conf: MonoidPersistenceConfig,
         query: MonoidQuery
-    ) -> Iterable[MonoidRecord]:
+    ) -> Iterable[MonoidRequestResult]:
         """
-        Deletes records from the data silo based on a given query.
+        Starts a monoid request that deletes records from the data silo
+        based on a given query.
         """
-        data_stores = {(d.group(), d.name())
-                        : d for d in self.data_stores(conf=conf)}
+
+        data_stores = self._data_stores_map(conf)
 
         for query_rule in query.identifiers:
             data_store = data_stores[(
                 query_rule.schema_group, query_rule.schema_name)]
 
-            yield from data_store.delete_records(query_rule)
+            yield from data_store.run_delete_request(
+                persistence_conf,
+                query_rule
+            )
 
-    def sample(
+    def request_results(
         self,
         conf: Mapping[str, Any],
+        persistence_conf: MonoidPersistenceConfig,
+        requests: MonoidRequestsMessage,
+    ) -> Iterable[MonoidRecord]:
+        data_stores = self._data_stores_map(conf)
+
+        for handle in requests.handles:
+            data_store = data_stores[(
+                handle.schema_group, handle.schema_name)]
+
+            yield from data_store.request_results(
+                persistence_conf,
+                handle
+            )
+
+    def request_status(
+        self,
+        conf: Mapping[str, Any],
+        persistence_conf: MonoidPersistenceConfig,
+        requests: MonoidRequestsMessage,
+    ) -> Iterable[MonoidRequestStatus]:
+        """
+        Gets the status of a request.
+        """
+
+        data_stores = self._data_stores_map(conf)
+
+        for handle in requests.handles:
+            data_store = data_stores[(
+                handle.schema_group, handle.schema_name)]
+
+            yield data_store.request_status(
+                persistence_conf,
+                handle,
+            )
+
+    def scan(
+        self,
+        conf: Mapping[str, Any],
+        persistence_conf: MonoidPersistenceConfig,
         schemas: MonoidSchemasMessage,
     ) -> Iterable[MonoidRecord]:
         """
@@ -80,14 +138,16 @@ class AbstractSilo(ABC):
         """
 
         data_stores = {
-            (d.group(), d.name()): d for d in self.data_stores(conf=conf)}
+            (d.group(), d.name()): d for d in self.data_stores(
+                conf=conf,
+            )}
 
         for schema in schemas.schemas:
             data_store = data_stores[(
                 schema.group, schema.name
             )]
 
-            yield from data_store.sample_records(schema)
+            yield from data_store.scan_records(persistence_conf, schema)
 
     @abstractmethod
     def validate(
@@ -107,6 +167,15 @@ class AbstractSilo(ABC):
         """
         with open(conf_file, "r") as f:
             return json.loads(f.read())
+
+    def parse_requests(
+        self,
+        requests_file: str
+    ) -> MonoidRequestsMessage:
+        """
+        Parse a MonoidRequestsMessage file
+        """
+        return MonoidRequestsMessage.parse_file(requests_file)
 
     def parse_schema(
         self,

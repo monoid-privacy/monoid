@@ -1,9 +1,10 @@
 import logging
+from typing import Optional
 
 from monoid_pydev.models.models import MonoidLogMessage, MonoidMessage
 
 
-def get_logger(name: str = None):
+def get_logger(name: Optional[str] = None):
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
 

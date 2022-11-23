@@ -45,7 +45,8 @@ The `validate` command indicates whether a configuration is valid or not.
 
 **Input:**
 1. `config` -- a JSON object that conforms to the JSON Schema spec provided by the `spec` function.
-The configuration
+The configuration should include any API keys/passwords and other data required to connect to the
+silo.
 
 
 **Output:**
@@ -61,7 +62,7 @@ The `query` command is used to pull data from the silo for a data right-to-know 
 on the type of silo, the types of results can vary.
 
 **Input:**
-1. `Config` -- The silo config
+1. `Config` -- The silo config.
 2. `MonoidQuery` -- Information about the query is provided here. This variable an array of
 `MonoidQueryIdentifier`s, each of which includes information about the data source to query,
 the field to query by, and the schema of the output. Some of this information may be irrelevant for
@@ -120,7 +121,7 @@ delete(Config, PersistenceConfig, MonoidQuery) -> MonoidStream
 The `delete` command is used to run a right-to-delete request.
 
 **Input:**
-1. `Config` -- The silo config
+1. `Config` -- The silo config.
 2. `PersistenceConfig` -- Information about a file store that can be used to persist data that can
 be used to store data for further processing. For example, a connector that parses unstructured data
 and stores pointers to where data that may potentially need to be deleted exists.

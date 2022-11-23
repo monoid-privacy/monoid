@@ -19,7 +19,10 @@
             "$ref": "#/definitions/MonoidQueryIdentifier"
           }
         }
-      }
+      },
+      "required": [
+        "identifiers"
+      ]
     },
     "MonoidQueryIdentifier": {
       "type": "object",
@@ -57,10 +60,17 @@
     "MonoidRecord": {
       "type": "object",
       "required": [
-        "schema_name",
-        "data"
+        "type",
+        "schema_name"
       ],
       "properties": {
+        "record_type": {
+          "type": "string",
+          "enum": [
+            "RECORD",
+            "FILE"
+          ]
+        },
         "schema_name": {
           "type": "string"
         },
@@ -69,6 +79,9 @@
         },
         "data": {
           "type": "object"
+        },
+        "file": {
+          "type": "string"
         }
       }
     },
@@ -99,7 +112,10 @@
         "spec": {
           "type": "object"
         }
-      }
+      },
+      "required": [
+        "spec"
+      ]
     },
     "MonoidSchemasMessage": {
       "type": "object",
@@ -144,6 +160,104 @@
         "message"
       ]
     },
+    "MonoidPersistenceConfig": {
+      "type": "object",
+      "required": [
+        "directory"
+      ],
+      "properties": {
+        "directory": {
+          "type": "string"
+        }
+      }
+    },
+    "MonoidRequestResult": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/MonoidRequestStatus"
+        },
+        "handle": {
+          "$ref": "#/definitions/MonoidRequestHandle"
+        }
+      },
+      "required": [
+        "status",
+        "handle"
+      ]
+    },
+    "MonoidRequestStatus": {
+      "type": "object",
+      "properties": {
+        "schema_group": {
+          "type": "string"
+        },
+        "schema_name": {
+          "type": "string"
+        },
+        "request_status": {
+          "type": "string",
+          "enum": [
+            "PROGRESS",
+            "COMPLETE",
+            "FAILED"
+          ]
+        },
+        "data_type": {
+          "type": "string",
+          "enum": [
+            "RECORDS",
+            "FILE",
+            "NONE"
+          ]
+        }
+      },
+      "required": [
+        "request_status",
+        "schema_name",
+        "schema_group"
+      ]
+    },
+    "MonoidRequestHandle": {
+      "type": "object",
+      "properties": {
+        "schema_group": {
+          "type": "string"
+        },
+        "schema_name": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object"
+        },
+        "request_type": {
+          "type": "string",
+          "enum": [
+            "QUERY",
+            "DELETE"
+          ]
+        }
+      },
+      "required": [
+        "schema_name",
+        "schema_group",
+        "request_type"
+      ]
+    },
+    "MonoidRequestsMessage": {
+      "type": "object",
+      "properties": {
+        "handles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MonoidRequestHandle"
+          }
+        }
+      },
+      "required": [
+        "handles"
+      ]
+    },
     "MonoidMessage": {
       "type": "object",
       "properties": {
@@ -153,6 +267,8 @@
             "SCHEMA",
             "RECORD",
             "SPEC",
+            "REQUEST_RESULT",
+            "REQUEST_STATUS",
             "VALIDATE",
             "LOG"
           ]
@@ -171,6 +287,12 @@
         },
         "log": {
           "$ref": "#/definitions/MonoidLogMessage"
+        },
+        "request": {
+          "$ref": "#/definitions/MonoidRequestResult"
+        },
+        "request_status": {
+          "$ref": "#/definitions/MonoidRequestStatus"
         }
       },
       "required": [
