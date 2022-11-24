@@ -26,7 +26,7 @@ func (a *Activity) ValidateDataSiloDef(ctx context.Context, args ValidateDSArgs)
 		return nil, err
 	}
 
-	mp, err := docker.NewDockerMP(spec.DockerImage, spec.DockerTag)
+	mp, err := docker.NewDockerMP(spec.DockerImage, spec.DockerTag, "")
 	if err != nil {
 		logger.Error("Error creating docker client: %v", err)
 		return nil, err

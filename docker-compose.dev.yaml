@@ -1,3 +1,5 @@
+# Do not use this configuration in prod, this is only for development
+# use.
 version: "3.7"
 services:
   db:
@@ -17,6 +19,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    ports:
+      - 5434:5432 
   web:
     container_name: monoid-dev-web
     build:
@@ -140,6 +144,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - filestore:${FILESTORE_PATH}
+      - /tmp/monoid:/tmp/monoid
       - ./monoid-api:/app
 networks:
   monoid-network:

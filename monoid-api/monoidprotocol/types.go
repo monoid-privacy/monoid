@@ -15,9 +15,9 @@ type MonoidProtocol interface {
 		ctx context.Context,
 		config map[string]interface{},
 		query MonoidQuery,
-	) (chan MonoidRecord, error)
+	) (chan MonoidRequestResult, error)
 
-	Sample(
+	Scan(
 		ctx context.Context,
 		config map[string]interface{},
 		schemas MonoidSchemasMessage,
@@ -27,7 +27,19 @@ type MonoidProtocol interface {
 		ctx context.Context,
 		config map[string]interface{},
 		query MonoidQuery,
+	) (chan MonoidRequestResult, error)
+
+	RequestResults(
+		ctx context.Context,
+		config map[string]interface{},
+		requests MonoidRequestsMessage,
 	) (chan MonoidRecord, error)
+
+	RequestStatus(
+		ctx context.Context,
+		config map[string]interface{},
+		requests MonoidRequestsMessage,
+	) (chan MonoidRequestStatus, error)
 
 	Schema(
 		ctx context.Context,

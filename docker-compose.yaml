@@ -120,6 +120,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - filestore:${FILESTORE_PATH}
+      - tempstore:/monoid-tmp
     image: monoidco/monoid-worker:${VERSION}
   proxy:
     depends_on:
@@ -139,4 +140,6 @@ volumes:
   db:
     name: monoid-db
   filestore:
-    name: monoid-filestore 
+    name: monoid-filestore
+  tempstore:
+    name: monoid-tempstore

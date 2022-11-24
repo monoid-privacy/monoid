@@ -142,6 +142,7 @@ func (dp *DockerMonoidProtocol) createContainer(
 	ctx context.Context,
 	cmd []string,
 	volumes []string,
+	fileMounts map[string]string,
 ) (string, error) {
 	if dp.containerID != nil {
 		if err := dp.teardownContainer(ctx); err != nil {
@@ -156,15 +157,23 @@ func (dp *DockerMonoidProtocol) createContainer(
 
 	var hostConfig *container.HostConfig = nil
 
-	if len(volumes) != 0 {
-		mounts := make([]mount.Mount, len(volumes))
-		for i, v := range volumes {
-			mounts[i] = mount.Mount{
+	if len(volumes) != 0 || len(fileMounts) != 0 {
+		mounts := make([]mount.Mount, 0, len(volumes)+len(fileMounts))
+		for _, v := range volumes {
+			mounts = append(mounts, mount.Mount{
 				Source:   v,
 				Target:   "/" + v,
 				Type:     "volume",
 				ReadOnly: false,
-			}
+			})
+		}
+
+		for k, v := range fileMounts {
+			mounts = append(mounts, mount.Mount{
+				Source: v,
+				Target: "/" + k,
+				Type:   mount.TypeBind,
+			})
 		}
 
 		hostConfig = &container.HostConfig{
@@ -191,6 +200,7 @@ func (dp *DockerMonoidProtocol) constructContainer(
 	ctx context.Context,
 	cmd string,
 	jsonFileArgs map[string]interface{},
+	persistenceArgs map[string]string,
 ) error {
 	volumes := []string{}
 	if len(jsonFileArgs) != 0 {
@@ -204,9 +214,25 @@ func (dp *DockerMonoidProtocol) constructContainer(
 	}
 
 	cmdArr := []string{cmd}
+
+	jsonArgsCp := map[string]interface{}{}
+	for k, v := range jsonFileArgs {
+		jsonArgsCp[k] = v
+	}
+
+	//Test
+	fileMounts := map[string]string{}
+	for k, v := range persistenceArgs {
+		filePath := "/monoid_persist/" + randSeq(8)
+		fileMounts[filePath] = v
+		jsonArgsCp[k] = monoidprotocol.MonoidPersistenceConfig{
+			Directory: filePath,
+		}
+	}
+
 	files := map[string]interface{}{}
 
-	for k, v := range jsonFileArgs {
+	for k, v := range jsonArgsCp {
 		fileName := randSeq(10)
 		fullPath := "/" + *dp.volume + "/" + fileName + ".json"
 
@@ -214,7 +240,7 @@ func (dp *DockerMonoidProtocol) constructContainer(
 		files[fullPath] = v
 	}
 
-	_, err := dp.createContainer(ctx, cmdArr, volumes)
+	_, err := dp.createContainer(ctx, cmdArr, volumes, fileMounts)
 
 	if err != nil {
 		return err
@@ -234,11 +260,13 @@ func (dp *DockerMonoidProtocol) runCmdLiveLogs(
 	ctx context.Context,
 	cmd string,
 	jsonFileArgs map[string]interface{},
+	persistenceArgs map[string]string,
 ) (chan monoidprotocol.MonoidMessage, error) {
 	if err := dp.constructContainer(
 		ctx,
 		cmd,
 		jsonFileArgs,
+		persistenceArgs,
 	); err != nil {
 		return nil, err
 	}
@@ -270,11 +298,13 @@ func (dp *DockerMonoidProtocol) runCmdStaticLog(
 	ctx context.Context,
 	cmd string,
 	jsonFileArgs map[string]interface{},
+	persistenceArgs map[string]string,
 ) (*monoidprotocol.MonoidMessage, error) {
 	if err := dp.constructContainer(
 		ctx,
 		cmd,
 		jsonFileArgs,
+		persistenceArgs,
 	); err != nil {
 		return nil, err
 	}

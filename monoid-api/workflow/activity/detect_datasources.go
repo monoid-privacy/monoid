@@ -3,6 +3,8 @@ package activity
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 
 	"github.com/brist-ai/monoid/jsonschema"
 	"github.com/brist-ai/monoid/model"
@@ -328,7 +330,7 @@ func scanProtocol(
 		matchers[newDataSourceMatcher(s.Name, s.Group)] = sc
 	}
 
-	recordChan, err := mp.Sample(
+	recordChan, err := mp.Scan(
 		ctx,
 		config,
 		monoidprotocol.MonoidSchemasMessage{Schemas: schemas},
@@ -387,9 +389,19 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) (in
 
 	logger.Info("Getting schemas")
 
+	// Create a temporary directory that can be used by the docker container
+	dir, err := ioutil.TempDir("/tmp/monoid", "monoid")
+	if err != nil {
+		return 0, err
+	}
+
+	// defer os.RemoveAll(dir)
+
+	fmt.Println("hi")
 	mp, err := docker.NewDockerMP(
 		dataSilo.SiloSpecification.DockerImage,
 		dataSilo.SiloSpecification.DockerTag,
+		dir,
 	)
 
 	if err != nil {
@@ -412,7 +424,6 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) (in
 		}
 
 		for logMsg := range logChan {
-			logger.Debug("Hello", args.LogObjectName)
 			if _, err := wr.Write([]byte(logMsg.Message + "\n")); err != nil {
 				logger.Error("Error writing", err)
 			}

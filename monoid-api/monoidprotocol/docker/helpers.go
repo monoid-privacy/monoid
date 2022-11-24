@@ -129,3 +129,37 @@ func readRecords(stream chan monoidprotocol.MonoidMessage) chan monoidprotocol.M
 
 	return recordChan
 }
+
+func readResults(stream chan monoidprotocol.MonoidMessage) chan monoidprotocol.MonoidRequestResult {
+	ch := make(chan monoidprotocol.MonoidRequestResult)
+	go func() {
+		for s := range stream {
+			if s.Type != monoidprotocol.MonoidMessageTypeREQUESTRESULT || s.Request == nil {
+				log.Debug().Msgf("Message type is not record: %s", string(s.Type))
+			}
+
+			ch <- *s.Request
+		}
+
+		close(ch)
+	}()
+
+	return ch
+}
+
+func readRequestStatus(stream chan monoidprotocol.MonoidMessage) chan monoidprotocol.MonoidRequestStatus {
+	ch := make(chan monoidprotocol.MonoidRequestStatus)
+	go func() {
+		for s := range stream {
+			if s.Type != monoidprotocol.MonoidMessageTypeREQUESTSTATUS || s.RequestStatus == nil {
+				log.Debug().Msgf("Message type is not record: %s", string(s.Type))
+			}
+
+			ch <- *s.RequestStatus
+		}
+
+		close(ch)
+	}()
+
+	return ch
+}

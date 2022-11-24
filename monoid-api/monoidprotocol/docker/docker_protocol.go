@@ -17,29 +17,37 @@ type DockerMonoidProtocol struct {
 	volume      *string
 	logChan     chan monoidprotocol.MonoidLogMessage
 	closeClient bool
+	persistDir  string
 }
 
-func NewDockerMPWithClient(dockerImage string, dockerTag string, cli *client.Client, closeClient bool) monoidprotocol.MonoidProtocol {
+func NewDockerMPWithClient(
+	dockerImage string,
+	dockerTag string,
+	persistDir string,
+	cli *client.Client,
+	closeClient bool,
+) monoidprotocol.MonoidProtocol {
 	imageName := dockerImage + ":" + dockerTag
 
 	return &DockerMonoidProtocol{
 		client:      cli,
 		imageName:   imageName,
 		volume:      nil,
+		persistDir:  persistDir,
 		logChan:     nil,
 		closeClient: closeClient,
 	}
 }
 
 // NewDockerMP creates an docker-based interface for the monoid protocol.
-func NewDockerMP(dockerImage string, dockerTag string) (monoidprotocol.MonoidProtocol, error) {
+func NewDockerMP(dockerImage string, dockerTag string, persistDir string) (monoidprotocol.MonoidProtocol, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return NewDockerMPWithClient(dockerImage, dockerTag, cli, true), nil
+	return NewDockerMPWithClient(dockerImage, dockerTag, persistDir, cli, true), nil
 }
 
 func (dp *DockerMonoidProtocol) InitConn(ctx context.Context) error {
@@ -65,6 +73,7 @@ func (dp *DockerMonoidProtocol) Spec(ctx context.Context) (*monoidprotocol.Monoi
 		ctx,
 		"spec",
 		map[string]interface{}{},
+		map[string]string{},
 	)
 
 	if err != nil {
@@ -88,6 +97,7 @@ func (dp *DockerMonoidProtocol) Validate(
 		map[string]interface{}{
 			"-c": config,
 		},
+		map[string]string{},
 	)
 
 	if err != nil {
@@ -117,13 +127,16 @@ func (dp *DockerMonoidProtocol) Query(
 	ctx context.Context,
 	config map[string]interface{},
 	query monoidprotocol.MonoidQuery,
-) (chan monoidprotocol.MonoidRecord, error) {
+) (chan monoidprotocol.MonoidRequestResult, error) {
 	msgChan, err := dp.runCmdLiveLogs(
 		ctx,
 		"query",
 		map[string]interface{}{
 			"-c": config,
 			"-q": query,
+		},
+		map[string]string{
+			"-p": dp.persistDir,
 		},
 	)
 
@@ -132,22 +145,25 @@ func (dp *DockerMonoidProtocol) Query(
 	}
 
 	msgChan = collectLogs(msgChan, dp.logChan)
-	recordChan := readRecords(msgChan)
+	ch := readResults(msgChan)
 
-	return recordChan, nil
+	return ch, nil
 }
 
-func (dp *DockerMonoidProtocol) Sample(
+func (dp *DockerMonoidProtocol) Scan(
 	ctx context.Context,
 	config map[string]interface{},
 	schemas monoidprotocol.MonoidSchemasMessage,
 ) (chan monoidprotocol.MonoidRecord, error) {
 	msgChan, err := dp.runCmdLiveLogs(
 		ctx,
-		"sample",
+		"scan",
 		map[string]interface{}{
 			"-c": config,
 			"-s": schemas,
+		},
+		map[string]string{
+			"-p": dp.persistDir,
 		},
 	)
 
@@ -165,13 +181,16 @@ func (dp *DockerMonoidProtocol) Delete(
 	ctx context.Context,
 	config map[string]interface{},
 	query monoidprotocol.MonoidQuery,
-) (chan monoidprotocol.MonoidRecord, error) {
+) (chan monoidprotocol.MonoidRequestResult, error) {
 	msgChan, err := dp.runCmdLiveLogs(
 		ctx,
-		"sample",
+		"delete",
 		map[string]interface{}{
 			"-c": config,
 			"-q": query,
+		},
+		map[string]string{
+			"-p": dp.persistDir,
 		},
 	)
 
@@ -180,9 +199,9 @@ func (dp *DockerMonoidProtocol) Delete(
 	}
 
 	msgChan = collectLogs(msgChan, dp.logChan)
-	recordChan := readRecords(msgChan)
+	ch := readResults(msgChan)
 
-	return recordChan, nil
+	return ch, nil
 }
 
 func (dp *DockerMonoidProtocol) Schema(
@@ -195,6 +214,7 @@ func (dp *DockerMonoidProtocol) Schema(
 		map[string]interface{}{
 			"-c": config,
 		},
+		map[string]string{},
 	)
 
 	if err != nil {
@@ -218,6 +238,60 @@ func (dp *DockerMonoidProtocol) Schema(
 	}
 
 	return res, nil
+}
+
+func (dp *DockerMonoidProtocol) RequestResults(
+	ctx context.Context,
+	config map[string]interface{},
+	requests monoidprotocol.MonoidRequestsMessage,
+) (chan monoidprotocol.MonoidRecord, error) {
+	msgChan, err := dp.runCmdLiveLogs(
+		ctx,
+		"request-results",
+		map[string]interface{}{
+			"-c": config,
+			"-r": requests,
+		},
+		map[string]string{
+			"-p": dp.persistDir,
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	msgChan = collectLogs(msgChan, dp.logChan)
+	ch := readRecords(msgChan)
+
+	return ch, nil
+}
+
+func (dp *DockerMonoidProtocol) RequestStatus(
+	ctx context.Context,
+	config map[string]interface{},
+	requests monoidprotocol.MonoidRequestsMessage,
+) (chan monoidprotocol.MonoidRequestStatus, error) {
+	msgChan, err := dp.runCmdLiveLogs(
+		ctx,
+		"request-status",
+		map[string]interface{}{
+			"-c": config,
+			"-r": requests,
+		},
+		map[string]string{
+			"-p": dp.persistDir,
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	msgChan = collectLogs(msgChan, dp.logChan)
+	ch := readRequestStatus(msgChan)
+
+	return ch, nil
 }
 
 func (dp *DockerMonoidProtocol) AttachLogs(ctx context.Context) (chan monoidprotocol.MonoidLogMessage, error) {

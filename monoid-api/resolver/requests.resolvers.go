@@ -10,6 +10,7 @@ import (
 	"github.com/brist-ai/monoid/generated"
 	"github.com/brist-ai/monoid/model"
 	"github.com/brist-ai/monoid/workflow"
+	"github.com/brist-ai/monoid/workflow/requestworkflow"
 	"github.com/google/uuid"
 	"go.temporal.io/sdk/client"
 	"gorm.io/gorm"
@@ -157,11 +158,11 @@ func (r *mutationResolver) ExecuteUserDataRequest(ctx context.Context, requestID
 			TaskQueue: workflow.DockerRunnerQueue,
 		}
 
-		sf := workflow.Workflow{
+		sf := requestworkflow.RequestWorkflow{
 			Conf: r.Conf,
 		}
 
-		_, err := r.Conf.TemporalClient.ExecuteWorkflow(ctx, options, sf.ExecuteRequestWorkflow, workflow.ExecuteRequestArgs{
+		_, err := r.Conf.TemporalClient.ExecuteWorkflow(ctx, options, sf.ExecuteRequestWorkflow, requestworkflow.ExecuteRequestArgs{
 			RequestID:   requestID,
 			WorkspaceID: workspaceID,
 			JobID:       job.ID,

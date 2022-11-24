@@ -18,6 +18,12 @@ type MonoidMessage struct {
 	// Record corresponds to the JSON schema field "record".
 	Record *MonoidRecord `json:"record,omitempty"`
 
+	// Request corresponds to the JSON schema field "request".
+	Request *MonoidRequestResult `json:"request,omitempty"`
+
+	// RequestStatus corresponds to the JSON schema field "request_status".
+	RequestStatus *MonoidRequestStatus `json:"request_status,omitempty"`
+
 	// SchemaMsg corresponds to the JSON schema field "schema_msg".
 	SchemaMsg *MonoidSchemasMessage `json:"schema_msg,omitempty"`
 
@@ -35,7 +41,101 @@ type MonoidMessageType string
 
 const MonoidMessageTypeLOG MonoidMessageType = "LOG"
 const MonoidMessageTypeRECORD MonoidMessageType = "RECORD"
+const MonoidMessageTypeREQUESTRESULT MonoidMessageType = "REQUEST_RESULT"
+const MonoidMessageTypeREQUESTSTATUS MonoidMessageType = "REQUEST_STATUS"
 const MonoidMessageTypeSCHEMA MonoidMessageType = "SCHEMA"
+const MonoidMessageTypeSPEC MonoidMessageType = "SPEC"
+const MonoidMessageTypeVALIDATE MonoidMessageType = "VALIDATE"
+
+type MonoidPersistenceConfig struct {
+	// Directory corresponds to the JSON schema field "directory".
+	Directory string `json:"directory"`
+}
+
+type MonoidProtocolJson struct {
+	// MonoidMessage corresponds to the JSON schema field "MonoidMessage".
+	MonoidMessage *MonoidMessage `json:"MonoidMessage,omitempty"`
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (j *MonoidPersistenceConfig) UnmarshalJSON(b []byte) error {
+	var raw map[string]interface{}
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return err
+	}
+	if v, ok := raw["directory"]; !ok || v == nil {
+		return fmt.Errorf("field directory: required")
+	}
+	type Plain MonoidPersistenceConfig
+	var plain Plain
+	if err := json.Unmarshal(b, &plain); err != nil {
+		return err
+	}
+	*j = MonoidPersistenceConfig(plain)
+	return nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (j *MonoidRequestHandleRequestType) UnmarshalJSON(b []byte) error {
+	var v string
+	if err := json.Unmarshal(b, &v); err != nil {
+		return err
+	}
+	var ok bool
+	for _, expected := range enumValues_MonoidRequestHandleRequestType {
+		if reflect.DeepEqual(v, expected) {
+			ok = true
+			break
+		}
+	}
+	if !ok {
+		return fmt.Errorf("invalid value (expected one of %#v): %#v", enumValues_MonoidRequestHandleRequestType, v)
+	}
+	*j = MonoidRequestHandleRequestType(v)
+	return nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (j *MonoidMessage) UnmarshalJSON(b []byte) error {
+	var raw map[string]interface{}
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return err
+	}
+	if v, ok := raw["type"]; !ok || v == nil {
+		return fmt.Errorf("field type: required")
+	}
+	type Plain MonoidMessage
+	var plain Plain
+	if err := json.Unmarshal(b, &plain); err != nil {
+		return err
+	}
+	*j = MonoidMessage(plain)
+	return nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (j *MonoidRequestStatus) UnmarshalJSON(b []byte) error {
+	var raw map[string]interface{}
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return err
+	}
+	if v, ok := raw["request_status"]; !ok || v == nil {
+		return fmt.Errorf("field request_status: required")
+	}
+	if v, ok := raw["schema_group"]; !ok || v == nil {
+		return fmt.Errorf("field schema_group: required")
+	}
+	if v, ok := raw["schema_name"]; !ok || v == nil {
+		return fmt.Errorf("field schema_name: required")
+	}
+	type Plain MonoidRequestStatus
+	var plain Plain
+	if err := json.Unmarshal(b, &plain); err != nil {
+		return err
+	}
+	*j = MonoidRequestStatus(plain)
+	return nil
+}
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (j *MonoidValidateMessage) UnmarshalJSON(b []byte) error {
@@ -56,23 +156,26 @@ func (j *MonoidValidateMessage) UnmarshalJSON(b []byte) error {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-func (j *MonoidSchema) UnmarshalJSON(b []byte) error {
+func (j *MonoidRequestHandle) UnmarshalJSON(b []byte) error {
 	var raw map[string]interface{}
 	if err := json.Unmarshal(b, &raw); err != nil {
 		return err
 	}
-	if v, ok := raw["json_schema"]; !ok || v == nil {
-		return fmt.Errorf("field json_schema: required")
+	if v, ok := raw["request_type"]; !ok || v == nil {
+		return fmt.Errorf("field request_type: required")
 	}
-	if v, ok := raw["name"]; !ok || v == nil {
-		return fmt.Errorf("field name: required")
+	if v, ok := raw["schema_group"]; !ok || v == nil {
+		return fmt.Errorf("field schema_group: required")
 	}
-	type Plain MonoidSchema
+	if v, ok := raw["schema_name"]; !ok || v == nil {
+		return fmt.Errorf("field schema_name: required")
+	}
+	type Plain MonoidRequestHandle
 	var plain Plain
 	if err := json.Unmarshal(b, &plain); err != nil {
 		return err
 	}
-	*j = MonoidSchema(plain)
+	*j = MonoidRequestHandle(plain)
 	return nil
 }
 
@@ -97,31 +200,10 @@ func (j *MonoidValidateMessageStatus) UnmarshalJSON(b []byte) error {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-func (j *MonoidSchemasMessage) UnmarshalJSON(b []byte) error {
-	var raw map[string]interface{}
-	if err := json.Unmarshal(b, &raw); err != nil {
-		return err
-	}
-	if v, ok := raw["schemas"]; !ok || v == nil {
-		return fmt.Errorf("field schemas: required")
-	}
-	type Plain MonoidSchemasMessage
-	var plain Plain
-	if err := json.Unmarshal(b, &plain); err != nil {
-		return err
-	}
-	*j = MonoidSchemasMessage(plain)
-	return nil
-}
-
-// UnmarshalJSON implements json.Unmarshaler.
 func (j *MonoidRecord) UnmarshalJSON(b []byte) error {
 	var raw map[string]interface{}
 	if err := json.Unmarshal(b, &raw); err != nil {
 		return err
-	}
-	if v, ok := raw["data"]; !ok || v == nil {
-		return fmt.Errorf("field data: required")
 	}
 	if v, ok := raw["schema_name"]; !ok || v == nil {
 		return fmt.Errorf("field schema_name: required")
@@ -136,20 +218,40 @@ func (j *MonoidRecord) UnmarshalJSON(b []byte) error {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-func (j *MonoidMessage) UnmarshalJSON(b []byte) error {
+func (j *MonoidRequestStatusDataType) UnmarshalJSON(b []byte) error {
+	var v string
+	if err := json.Unmarshal(b, &v); err != nil {
+		return err
+	}
+	var ok bool
+	for _, expected := range enumValues_MonoidRequestStatusDataType {
+		if reflect.DeepEqual(v, expected) {
+			ok = true
+			break
+		}
+	}
+	if !ok {
+		return fmt.Errorf("invalid value (expected one of %#v): %#v", enumValues_MonoidRequestStatusDataType, v)
+	}
+	*j = MonoidRequestStatusDataType(v)
+	return nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (j *MonoidSchemasMessage) UnmarshalJSON(b []byte) error {
 	var raw map[string]interface{}
 	if err := json.Unmarshal(b, &raw); err != nil {
 		return err
 	}
-	if v, ok := raw["type"]; !ok || v == nil {
-		return fmt.Errorf("field type: required")
+	if v, ok := raw["schemas"]; !ok || v == nil {
+		return fmt.Errorf("field schemas: required")
 	}
-	type Plain MonoidMessage
+	type Plain MonoidSchemasMessage
 	var plain Plain
 	if err := json.Unmarshal(b, &plain); err != nil {
 		return err
 	}
-	*j = MonoidMessage(plain)
+	*j = MonoidSchemasMessage(plain)
 	return nil
 }
 
@@ -181,20 +283,99 @@ func (j *MonoidQueryIdentifier) UnmarshalJSON(b []byte) error {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-func (j *MonoidLogMessage) UnmarshalJSON(b []byte) error {
+func (j *MonoidRecordRecordType) UnmarshalJSON(b []byte) error {
+	var v string
+	if err := json.Unmarshal(b, &v); err != nil {
+		return err
+	}
+	var ok bool
+	for _, expected := range enumValues_MonoidRecordRecordType {
+		if reflect.DeepEqual(v, expected) {
+			ok = true
+			break
+		}
+	}
+	if !ok {
+		return fmt.Errorf("invalid value (expected one of %#v): %#v", enumValues_MonoidRecordRecordType, v)
+	}
+	*j = MonoidRecordRecordType(v)
+	return nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (j *MonoidRequestResult) UnmarshalJSON(b []byte) error {
 	var raw map[string]interface{}
 	if err := json.Unmarshal(b, &raw); err != nil {
 		return err
 	}
-	if v, ok := raw["message"]; !ok || v == nil {
-		return fmt.Errorf("field message: required")
+	if v, ok := raw["handle"]; !ok || v == nil {
+		return fmt.Errorf("field handle: required")
 	}
-	type Plain MonoidLogMessage
+	if v, ok := raw["status"]; !ok || v == nil {
+		return fmt.Errorf("field status: required")
+	}
+	type Plain MonoidRequestResult
 	var plain Plain
 	if err := json.Unmarshal(b, &plain); err != nil {
 		return err
 	}
-	*j = MonoidLogMessage(plain)
+	*j = MonoidRequestResult(plain)
+	return nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (j *MonoidQuery) UnmarshalJSON(b []byte) error {
+	var raw map[string]interface{}
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return err
+	}
+	if v, ok := raw["identifiers"]; !ok || v == nil {
+		return fmt.Errorf("field identifiers: required")
+	}
+	type Plain MonoidQuery
+	var plain Plain
+	if err := json.Unmarshal(b, &plain); err != nil {
+		return err
+	}
+	*j = MonoidQuery(plain)
+	return nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (j *MonoidRequestStatusRequestStatus) UnmarshalJSON(b []byte) error {
+	var v string
+	if err := json.Unmarshal(b, &v); err != nil {
+		return err
+	}
+	var ok bool
+	for _, expected := range enumValues_MonoidRequestStatusRequestStatus {
+		if reflect.DeepEqual(v, expected) {
+			ok = true
+			break
+		}
+	}
+	if !ok {
+		return fmt.Errorf("invalid value (expected one of %#v): %#v", enumValues_MonoidRequestStatusRequestStatus, v)
+	}
+	*j = MonoidRequestStatusRequestStatus(v)
+	return nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (j *MonoidRequestsMessage) UnmarshalJSON(b []byte) error {
+	var raw map[string]interface{}
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return err
+	}
+	if v, ok := raw["handles"]; !ok || v == nil {
+		return fmt.Errorf("field handles: required")
+	}
+	type Plain MonoidRequestsMessage
+	var plain Plain
+	if err := json.Unmarshal(b, &plain); err != nil {
+		return err
+	}
+	*j = MonoidRequestsMessage(plain)
 	return nil
 }
 
@@ -218,17 +399,45 @@ func (j *MonoidMessageType) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-const MonoidMessageTypeSPEC MonoidMessageType = "SPEC"
-const MonoidMessageTypeVALIDATE MonoidMessageType = "VALIDATE"
+// UnmarshalJSON implements json.Unmarshaler.
+func (j *MonoidLogMessage) UnmarshalJSON(b []byte) error {
+	var raw map[string]interface{}
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return err
+	}
+	if v, ok := raw["message"]; !ok || v == nil {
+		return fmt.Errorf("field message: required")
+	}
+	type Plain MonoidLogMessage
+	var plain Plain
+	if err := json.Unmarshal(b, &plain); err != nil {
+		return err
+	}
+	*j = MonoidLogMessage(plain)
+	return nil
+}
 
-type MonoidProtocolJson struct {
-	// MonoidMessage corresponds to the JSON schema field "MonoidMessage".
-	MonoidMessage *MonoidMessage `json:"MonoidMessage,omitempty"`
+// UnmarshalJSON implements json.Unmarshaler.
+func (j *MonoidSiloSpec) UnmarshalJSON(b []byte) error {
+	var raw map[string]interface{}
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return err
+	}
+	if v, ok := raw["spec"]; !ok || v == nil {
+		return fmt.Errorf("field spec: required")
+	}
+	type Plain MonoidSiloSpec
+	var plain Plain
+	if err := json.Unmarshal(b, &plain); err != nil {
+		return err
+	}
+	*j = MonoidSiloSpec(plain)
+	return nil
 }
 
 type MonoidQuery struct {
 	// Identifiers corresponds to the JSON schema field "identifiers".
-	Identifiers []MonoidQueryIdentifier `json:"identifiers,omitempty"`
+	Identifiers []MonoidQueryIdentifier `json:"identifiers"`
 }
 
 type MonoidQueryIdentifier struct {
@@ -250,9 +459,36 @@ type MonoidQueryIdentifier struct {
 
 type MonoidQueryIdentifierJsonSchema map[string]interface{}
 
+// UnmarshalJSON implements json.Unmarshaler.
+func (j *MonoidSchema) UnmarshalJSON(b []byte) error {
+	var raw map[string]interface{}
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return err
+	}
+	if v, ok := raw["json_schema"]; !ok || v == nil {
+		return fmt.Errorf("field json_schema: required")
+	}
+	if v, ok := raw["name"]; !ok || v == nil {
+		return fmt.Errorf("field name: required")
+	}
+	type Plain MonoidSchema
+	var plain Plain
+	if err := json.Unmarshal(b, &plain); err != nil {
+		return err
+	}
+	*j = MonoidSchema(plain)
+	return nil
+}
+
 type MonoidRecord struct {
 	// Data corresponds to the JSON schema field "data".
-	Data MonoidRecordData `json:"data"`
+	Data MonoidRecordData `json:"data,omitempty"`
+
+	// File corresponds to the JSON schema field "file".
+	File *string `json:"file,omitempty"`
+
+	// RecordType corresponds to the JSON schema field "record_type".
+	RecordType *MonoidRecordRecordType `json:"record_type,omitempty"`
 
 	// SchemaGroup corresponds to the JSON schema field "schema_group".
 	SchemaGroup *string `json:"schema_group,omitempty"`
@@ -262,6 +498,71 @@ type MonoidRecord struct {
 }
 
 type MonoidRecordData map[string]interface{}
+
+type MonoidRecordRecordType string
+
+const MonoidRecordRecordTypeFILE MonoidRecordRecordType = "FILE"
+const MonoidRecordRecordTypeRECORD MonoidRecordRecordType = "RECORD"
+
+type MonoidRequestHandle struct {
+	// Data corresponds to the JSON schema field "data".
+	Data MonoidRequestHandleData `json:"data,omitempty"`
+
+	// RequestType corresponds to the JSON schema field "request_type".
+	RequestType MonoidRequestHandleRequestType `json:"request_type"`
+
+	// SchemaGroup corresponds to the JSON schema field "schema_group".
+	SchemaGroup string `json:"schema_group"`
+
+	// SchemaName corresponds to the JSON schema field "schema_name".
+	SchemaName string `json:"schema_name"`
+}
+
+type MonoidRequestHandleData map[string]interface{}
+
+type MonoidRequestHandleRequestType string
+
+const MonoidRequestHandleRequestTypeDELETE MonoidRequestHandleRequestType = "DELETE"
+const MonoidRequestHandleRequestTypeQUERY MonoidRequestHandleRequestType = "QUERY"
+
+type MonoidRequestResult struct {
+	// Handle corresponds to the JSON schema field "handle".
+	Handle MonoidRequestHandle `json:"handle"`
+
+	// Status corresponds to the JSON schema field "status".
+	Status MonoidRequestStatus `json:"status"`
+}
+
+type MonoidRequestStatus struct {
+	// DataType corresponds to the JSON schema field "data_type".
+	DataType *MonoidRequestStatusDataType `json:"data_type,omitempty"`
+
+	// RequestStatus corresponds to the JSON schema field "request_status".
+	RequestStatus MonoidRequestStatusRequestStatus `json:"request_status"`
+
+	// SchemaGroup corresponds to the JSON schema field "schema_group".
+	SchemaGroup string `json:"schema_group"`
+
+	// SchemaName corresponds to the JSON schema field "schema_name".
+	SchemaName string `json:"schema_name"`
+}
+
+type MonoidRequestStatusDataType string
+
+const MonoidRequestStatusDataTypeFILE MonoidRequestStatusDataType = "FILE"
+const MonoidRequestStatusDataTypeNONE MonoidRequestStatusDataType = "NONE"
+const MonoidRequestStatusDataTypeRECORDS MonoidRequestStatusDataType = "RECORDS"
+
+type MonoidRequestStatusRequestStatus string
+
+const MonoidRequestStatusRequestStatusCOMPLETE MonoidRequestStatusRequestStatus = "COMPLETE"
+const MonoidRequestStatusRequestStatusFAILED MonoidRequestStatusRequestStatus = "FAILED"
+const MonoidRequestStatusRequestStatusPROGRESS MonoidRequestStatusRequestStatus = "PROGRESS"
+
+type MonoidRequestsMessage struct {
+	// Handles corresponds to the JSON schema field "handles".
+	Handles []MonoidRequestHandle `json:"handles"`
+}
 
 type MonoidSchema struct {
 	// Group corresponds to the JSON schema field "group".
@@ -286,7 +587,7 @@ type MonoidSiloSpec struct {
 	Name *string `json:"name,omitempty"`
 
 	// Spec corresponds to the JSON schema field "spec".
-	Spec MonoidSiloSpecSpec `json:"spec,omitempty"`
+	Spec MonoidSiloSpecSpec `json:"spec"`
 }
 
 type MonoidSiloSpecSpec map[string]interface{}
@@ -308,8 +609,28 @@ var enumValues_MonoidMessageType = []interface{}{
 	"SCHEMA",
 	"RECORD",
 	"SPEC",
+	"REQUEST_RESULT",
+	"REQUEST_STATUS",
 	"VALIDATE",
 	"LOG",
+}
+var enumValues_MonoidRecordRecordType = []interface{}{
+	"RECORD",
+	"FILE",
+}
+var enumValues_MonoidRequestHandleRequestType = []interface{}{
+	"QUERY",
+	"DELETE",
+}
+var enumValues_MonoidRequestStatusDataType = []interface{}{
+	"RECORDS",
+	"FILE",
+	"NONE",
+}
+var enumValues_MonoidRequestStatusRequestStatus = []interface{}{
+	"PROGRESS",
+	"COMPLETE",
+	"FAILED",
 }
 var enumValues_MonoidValidateMessageStatus = []interface{}{
 	"SUCCESS",

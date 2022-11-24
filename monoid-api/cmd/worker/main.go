@@ -7,6 +7,8 @@ import (
 	"github.com/brist-ai/monoid/cmd"
 	"github.com/brist-ai/monoid/workflow"
 	"github.com/brist-ai/monoid/workflow/activity"
+	"github.com/brist-ai/monoid/workflow/activity/requestactivity"
+	"github.com/brist-ai/monoid/workflow/requestworkflow"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
 )
@@ -37,8 +39,15 @@ func main() {
 	a := activity.Activity{
 		Conf: &conf,
 	}
+	ra := requestactivity.RequestActivity{
+		Activity: a,
+	}
 
 	mwf := workflow.Workflow{
+		Conf: &conf,
+	}
+
+	rmwf := requestworkflow.RequestWorkflow{
 		Conf: &conf,
 	}
 
@@ -46,11 +55,18 @@ func main() {
 	w.RegisterActivity(a.DetectDataSources)
 	w.RegisterActivity(a.FindOrCreateJob)
 	w.RegisterActivity(a.UpdateJobStatus)
-	w.RegisterActivity(a.ExecuteRequestOnDataSource)
+
+	// Request-related activities
+	w.RegisterActivity(ra.UpdateRequestStatusActivity)
+	w.RegisterActivity(ra.FindDBRequestStatuses)
+	w.RegisterActivity(ra.ProcessRequestResults)
+	w.RegisterActivity(ra.RequestStatusActivity)
+	w.RegisterActivity(ra.StartDataSourceRequestActivity)
 
 	w.RegisterWorkflow(mwf.ValidateDSWorkflow)
 	w.RegisterWorkflow(mwf.DetectDSWorkflow)
-	w.RegisterWorkflow(mwf.ExecuteRequestWorkflow)
+	w.RegisterWorkflow(rmwf.ExecuteRequestWorkflow)
+	w.RegisterWorkflow(rmwf.ExecuteDataSourceRequestWorkflow)
 
 	// Start listening to the Task Queue
 	err = w.Run(worker.InterruptCh())

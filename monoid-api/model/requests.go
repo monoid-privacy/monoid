@@ -2,13 +2,21 @@ package model
 
 import "time"
 
+type ResultType string
+
+const (
+	ResultTypeRecordsJSON = ResultType("RECORDS_JSON")
+	ResultTypeFile        = ResultType("FILE")
+)
+
 type RequestStatus struct {
-	ID           string
-	RequestID    string
-	Request      Request `gorm:"constraint:OnDelete:CASCADE;"`
-	DataSourceID string
-	DataSource   DataSource `gorm:"constraint:OnDelete:CASCADE;"`
-	Status       RequestStatusType
+	ID            string
+	RequestID     string
+	Request       Request `gorm:"constraint:OnDelete:CASCADE;"`
+	DataSourceID  string
+	DataSource    DataSource `gorm:"constraint:OnDelete:CASCADE;"`
+	Status        RequestStatusType
+	RequestHandle SecretString
 }
 
 type UserPrimaryKey struct {
@@ -45,5 +53,6 @@ type QueryResult struct {
 	ID              string
 	RequestStatusID string
 	RequestStatus   RequestStatus
+	ResultType      ResultType
 	Records         *SecretString
 }
