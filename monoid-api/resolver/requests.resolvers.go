@@ -5,9 +5,10 @@ package resolver
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
 	"github.com/brist-ai/monoid/generated"
+	"github.com/brist-ai/monoid/loader"
 	"github.com/brist-ai/monoid/model"
 	"github.com/brist-ai/monoid/workflow"
 	"github.com/brist-ai/monoid/workflow/requestworkflow"
@@ -266,21 +267,21 @@ func (r *requestStatusResolver) Request(ctx context.Context, obj *model.RequestS
 
 // DataSource is the resolver for the dataSource field.
 func (r *requestStatusResolver) DataSource(ctx context.Context, obj *model.RequestStatus) (*model.DataSource, error) {
-	return findObjectByID[model.DataSource](obj.DataSourceID, r.Conf.DB, "Error finding data source.")
+	return loader.GetDataSource(ctx, obj.DataSourceID)
 }
 
 // QueryResult is the resolver for the queryResult field.
 func (r *requestStatusResolver) QueryResult(ctx context.Context, obj *model.RequestStatus) (*model.QueryResult, error) {
-	result := model.QueryResult{}
-	if err := r.Conf.DB.Where("request_status_id = ?", obj.ID).First(&result).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-
-		return nil, handleError(err, "Error accessing query.")
+	q, err := loader.GetQueryResult(ctx, obj.ID)
+	if err != nil {
+		return nil, err
 	}
 
-	return &result, nil
+	if obj.ID == "03b34965-1802-4566-9331-3be37e773ffb" {
+		fmt.Println(q)
+	}
+
+	return q, nil
 }
 
 // Requests is the resolver for the requests field.

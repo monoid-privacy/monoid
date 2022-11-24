@@ -19,6 +19,8 @@ type Loaders struct {
 	PropertyCategoriesLoader   *dataloader.Loader
 	SiloDefinitionLoader       *dataloader.Loader
 	DataSourcePropertiesLoader *dataloader.Loader
+	DataSourceLoader           *dataloader.Loader
+	QueryResultLoader          *dataloader.Loader
 }
 
 // NewLoaders instantiates data loaders for the middleware
@@ -27,11 +29,15 @@ func NewLoaders(conf *config.BaseConfig) *Loaders {
 	propertyCategoryReader := &PropertyCategoryReader{conf: conf}
 	siloDefinitionReader := &SiloDefinitionReader{conf: conf}
 	dataSourcePropsReader := &DataSourcePropertyReader{conf: conf}
+	dataSourceReader := &DataSourcesReader{conf: conf}
+	qrReader := &QueryResultReader{conf: conf}
 
 	loaders := &Loaders{
 		PropertyCategoriesLoader:   dataloader.NewBatchedLoader(propertyCategoryReader.GetPropertyCategories),
 		SiloDefinitionLoader:       dataloader.NewBatchedLoader(siloDefinitionReader.GetSiloDefinition),
 		DataSourcePropertiesLoader: dataloader.NewBatchedLoader(dataSourcePropsReader.GetDataSourceProperty),
+		DataSourceLoader:           dataloader.NewBatchedLoader(dataSourceReader.GetDataSources),
+		QueryResultLoader:          dataloader.NewBatchedLoader(qrReader.GetQueryResult),
 	}
 	return loaders
 }

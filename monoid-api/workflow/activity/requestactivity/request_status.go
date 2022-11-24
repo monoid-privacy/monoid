@@ -85,9 +85,13 @@ func (a *RequestActivity) RequestStatusActivity(
 		Handles: []monoidprotocol.MonoidRequestHandle{handle},
 	})
 
+	if err != nil {
+		return RequestStatusResult{}, err
+	}
+
 	var status *monoidprotocol.MonoidRequestStatus
 	for stat := range statCh {
-		stat = stat
+		stat := stat
 		status = &stat
 	}
 
@@ -95,5 +99,5 @@ func (a *RequestActivity) RequestStatusActivity(
 		return RequestStatusResult{}, fmt.Errorf("no status was provided")
 	}
 
-	return RequestStatusResult{RequestStatus: *status}, nil
+	return RequestStatusResult{RequestStatus: status}, nil
 }

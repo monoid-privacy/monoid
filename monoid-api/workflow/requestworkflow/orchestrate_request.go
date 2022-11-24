@@ -38,7 +38,7 @@ func (w *RequestWorkflow) ExecuteRequestWorkflow(
 	options := workflow.ActivityOptions{
 		StartToCloseTimeout: time.Minute * 2,
 		RetryPolicy: &temporal.RetryPolicy{
-			MaximumAttempts: 5,
+			MaximumAttempts: 2,
 		},
 	}
 
@@ -67,7 +67,7 @@ func (w *RequestWorkflow) ExecuteRequestWorkflow(
 			logger.Error("error scheduling execute request on data source", map[string]interface{}{
 				"dataSource": statuses[i].DataSourceID,
 				"request":    statuses[i].RequestID,
-			})
+			}, err)
 		}
 	}
 

@@ -1,6 +1,9 @@
 package model
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type ResultType string
 
@@ -50,9 +53,20 @@ type PrimaryKeyValue struct {
 }
 
 type QueryResult struct {
-	ID              string
+	ID         string
+	ResultType ResultType
+	Records    *SecretString
+
 	RequestStatusID string
 	RequestStatus   RequestStatus
-	ResultType      ResultType
-	Records         *SecretString
+}
+
+func (q *QueryResult) KeyField(field string) (string, error) {
+	if field == "id" {
+		return q.ID, nil
+	} else if field == "request_status_id" {
+		return q.RequestStatusID, nil
+	}
+
+	return "", fmt.Errorf("unknown field")
 }

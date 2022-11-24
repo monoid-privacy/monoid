@@ -102,7 +102,7 @@ func (a *RequestActivity) ProcessRequestResults(
 				logger.Warn("This invocation should only return one file path")
 			}
 
-			record = record
+			record := record
 			file = &record
 		}
 
@@ -121,8 +121,11 @@ func (a *RequestActivity) ProcessRequestResults(
 		records := []*monoidprotocol.MonoidRecordData{}
 
 		for record := range recordCh {
+			logger.Debug("Read from channel")
 			records = append(records, &record.Data)
 		}
+
+		logger.Debug("Done from channel")
 
 		res = records
 	}

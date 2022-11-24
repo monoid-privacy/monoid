@@ -11,11 +11,12 @@ type UpdateRequestStatusArgs struct {
 	Status          model.RequestStatusType
 }
 
+// UpdateRequestStatusActivity updates the request status in the DB
 func (a *RequestActivity) UpdateRequestStatusActivity(
 	ctx context.Context,
 	args UpdateRequestStatusArgs,
 ) error {
-	return a.Conf.DB.Model(&model.RequestStatus{}).Where(
+	return a.Conf.DB.Debug().Model(&model.RequestStatus{}).Where(
 		"id = ?",
 		args.RequestStatusID,
 	).Update(

@@ -46,7 +46,7 @@ type RequestStatusResult struct {
 
 	// RequestStatus is non-empty if FullyComplete is false. It is
 	// an encrypted JSON blob of the request status
-	RequestStatus monoidprotocol.MonoidRequestStatus `json:"requestStatus"`
+	RequestStatus *monoidprotocol.MonoidRequestStatus `json:"requestStatus"`
 }
 
 // StartRequestArgs contains the arguments to the StartRequestOnDataSource activity
@@ -206,5 +206,5 @@ func (a *RequestActivity) StartDataSourceRequestActivity(
 		return RequestStatusResult{}, err
 	}
 
-	return RequestStatusResult{RequestStatus: result.Status}, nil
+	return RequestStatusResult{RequestStatus: &result.Status}, nil
 }

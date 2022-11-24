@@ -6,6 +6,7 @@ import (
 	"github.com/brist-ai/monoid/model"
 	"github.com/brist-ai/monoid/monoidprotocol"
 	"github.com/brist-ai/monoid/workflow/activity/requestactivity"
+	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -19,6 +20,15 @@ func (w *RequestWorkflow) ExecuteDataSourceRequestWorkflow(
 	ctx workflow.Context,
 	args DataSourceRequestArgs,
 ) (err error) {
+	options := workflow.ActivityOptions{
+		StartToCloseTimeout: time.Minute * 2,
+		RetryPolicy: &temporal.RetryPolicy{
+			MaximumAttempts: 5,
+		},
+	}
+
+	ctx = workflow.WithActivityOptions(ctx, options)
+
 	cleanupCtx, _ := workflow.NewDisconnectedContext(ctx)
 	ac := requestactivity.RequestActivity{}
 
@@ -32,11 +42,9 @@ func (w *RequestWorkflow) ExecuteDataSourceRequestWorkflow(
 		if terr := workflow.ExecuteActivity(cleanupCtx, ac.UpdateRequestStatusActivity, requestactivity.UpdateRequestStatusArgs{
 			RequestStatusID: args.RequestStatusID,
 			Status:          newRequestStatus,
-		}); terr != nil {
+		}).Get(cleanupCtx, nil); terr != nil {
 			return
 		}
-
-		return
 	}()
 
 	reqStatus := requestactivity.RequestStatusResult{}
@@ -67,7 +75,7 @@ func (w *RequestWorkflow) ExecuteDataSourceRequestWorkflow(
 	}
 
 	if err := workflow.ExecuteActivity(ctx, ac.ProcessRequestResults, requestactivity.ProcessRequestArgs{
-		ProtocolRequestStatus: reqStatus.RequestStatus,
+		ProtocolRequestStatus: *reqStatus.RequestStatus,
 		RequestStatusID:       args.RequestStatusID,
 	}).Get(ctx, nil); err != nil {
 		return err

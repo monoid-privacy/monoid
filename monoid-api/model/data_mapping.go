@@ -1,6 +1,9 @@
 package model
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // SiloSpecification is the information about all silos that have
 // integrations with monoid
@@ -54,6 +57,14 @@ type DataSource struct {
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
+}
+
+func (ds *DataSource) KeyField(field string) (string, error) {
+	if field == "id" {
+		return ds.ID, nil
+	}
+
+	return "", fmt.Errorf("unknown field")
 }
 
 type Property struct {

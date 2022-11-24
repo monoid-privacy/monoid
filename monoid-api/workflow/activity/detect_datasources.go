@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 
 	"github.com/brist-ai/monoid/jsonschema"
 	"github.com/brist-ai/monoid/model"
@@ -395,7 +396,7 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) (in
 		return 0, err
 	}
 
-	// defer os.RemoveAll(dir)
+	defer os.RemoveAll(dir)
 
 	fmt.Println("hi")
 	mp, err := docker.NewDockerMP(

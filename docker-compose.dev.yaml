@@ -32,6 +32,18 @@ services:
       - ./monoid-ui:/app
     networks:
       - monoid-network
+  temporal-ui:
+    container_name: temporal-dev-ui
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_ADDRESS=monoid-dev-temporal:7233
+      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
+    image: temporalio/ui:${TEMPORAL_UI_VERSION}
+    networks:
+      - monoid-network
+    ports:
+      - 8082:8080
   temporal:
     container_name: monoid-dev-temporal
     depends_on:

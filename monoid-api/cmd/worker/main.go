@@ -35,7 +35,10 @@ func main() {
 
 	defer c.Close()
 
-	w := worker.New(c, workflow.DockerRunnerQueue, worker.Options{})
+	w := worker.New(c, workflow.DockerRunnerQueue, worker.Options{
+		MaxConcurrentActivityExecutionSize:     5,
+		MaxConcurrentWorkflowTaskExecutionSize: 5,
+	})
 	a := activity.Activity{
 		Conf: &conf,
 	}
