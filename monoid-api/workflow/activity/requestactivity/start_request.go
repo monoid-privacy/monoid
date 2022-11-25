@@ -221,6 +221,10 @@ L:
 		})
 	}
 
+	if err != nil {
+		return RequestStatusResult{}, err
+	}
+
 	handleUpdates := map[string]monoidprotocol.MonoidRequestHandle{}
 
 	for res := range reqChan {

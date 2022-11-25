@@ -10,59 +10,78 @@ import (
 	"github.com/brist-ai/monoid/model"
 	"github.com/brist-ai/monoid/monoidprotocol"
 	"github.com/brist-ai/monoid/monoidprotocol/docker"
+	monoidactivity "github.com/brist-ai/monoid/workflow/activity"
 	"go.temporal.io/sdk/activity"
 )
 
 // RequestStatusArgs contains the arguments to the RequestStatus activity
 type DataSourceRequestStatusArgs struct {
-	RequestStatusID string `json:"requestStatusId"`
+	RequestStatusIDs []string `json:"requestStatusId"`
 }
 
-// RequestStatus calls the request-status function on the data associated with the
-// given request.
-func (a *RequestActivity) RequestStatusActivity(
+func (a *RequestActivity) processSiloDefStatuses(
 	ctx context.Context,
-	args DataSourceRequestStatusArgs,
-) (RequestStatusItem, error) {
+	statuses []model.RequestStatus,
+) ([]RequestStatusItem, error) {
 	logger := activity.GetLogger(ctx)
 
-	requestStatusId := args.RequestStatusID
+	resultMap := map[string]RequestStatusItem{}
+	dataSourceMap := map[monoidactivity.DataSourceMatcher]string{}
 
-	requestStatus := model.RequestStatus{}
-
-	if err := a.Conf.DB.Model(model.RequestStatus{}).
-		Preload("DataSource").
-		Preload("DataSource.SiloDefinition").
-		Preload("DataSource.SiloDefinition.SiloSpecification").
-		Where("id = ?", requestStatusId).First(&requestStatus).Error; err != nil {
-		return RequestStatusItem{}, err
+	if len(statuses) == 0 {
+		return []RequestStatusItem{}, nil
 	}
 
-	if requestStatus.Status == model.RequestStatusTypeExecuted {
-		return RequestStatusItem{FullyComplete: true}, nil
-	}
+	siloDef := statuses[0].DataSource.SiloDefinition
+	handles := make([]monoidprotocol.MonoidRequestHandle, 0, len(statuses))
 
-	siloDef := requestStatus.DataSource.SiloDefinition
-	siloSpec := siloDef.SiloSpecification
+	for _, rs := range statuses {
+		if rs.DataSource.SiloDefinitionID != siloDef.ID {
+			return nil, fmt.Errorf(
+				"this function must be called with request statuses of the same silo def",
+			)
+		}
+
+		if rs.Status == model.RequestStatusTypeExecuted {
+			resultMap[rs.ID] = RequestStatusItem{FullyComplete: true}
+			continue
+		}
+
+		handle := monoidprotocol.MonoidRequestHandle{}
+		if err := json.Unmarshal([]byte(rs.RequestHandle), &handle); err != nil {
+			resultMap[rs.ID] = RequestStatusItem{Error: err}
+			continue
+		}
+
+		dataSourceMap[monoidactivity.NewDataSourceMatcher(
+			rs.DataSource.Name, rs.DataSource.Group,
+		)] = rs.ID
+
+		handles = append(handles, handle)
+	}
 
 	// Create a temporary directory that can be used by the docker container
 	dir, err := ioutil.TempDir("/tmp/monoid", "monoid")
 	if err != nil {
-		return RequestStatusItem{}, err
+		return nil, err
 	}
 
 	defer os.RemoveAll(dir)
 
-	protocol, err := docker.NewDockerMP(siloSpec.DockerImage, siloSpec.DockerTag, dir)
+	protocol, err := docker.NewDockerMP(
+		siloDef.SiloSpecification.DockerImage,
+		siloDef.SiloSpecification.DockerTag,
+		dir,
+	)
 	if err != nil {
-		return RequestStatusItem{}, err
+		return nil, err
 	}
 
 	defer protocol.Teardown(ctx)
 
 	logChan, err := protocol.AttachLogs(ctx)
 	if err != nil {
-		return RequestStatusItem{}, err
+		return nil, err
 	}
 
 	go func() {
@@ -73,31 +92,91 @@ func (a *RequestActivity) RequestStatusActivity(
 
 	conf := map[string]interface{}{}
 	if err := json.Unmarshal([]byte(siloDef.Config), &conf); err != nil {
-		return RequestStatusItem{}, err
+		return nil, err
 	}
-
-	handle := monoidprotocol.MonoidRequestHandle{}
-	if err := json.Unmarshal([]byte(requestStatus.RequestHandle), &handle); err != nil {
-		return RequestStatusItem{}, err
-	}
-
 	statCh, err := protocol.RequestStatus(ctx, conf, monoidprotocol.MonoidRequestsMessage{
-		Handles: []monoidprotocol.MonoidRequestHandle{handle},
+		Handles: handles,
 	})
 
 	if err != nil {
-		return RequestStatusItem{}, err
+		return nil, err
 	}
 
-	var status *monoidprotocol.MonoidRequestStatus
 	for stat := range statCh {
 		stat := stat
-		status = &stat
+		requestID, ok := dataSourceMap[monoidactivity.NewDataSourceMatcher(stat.SchemaName, &stat.SchemaGroup)]
+		if !ok {
+			logger.Error("Did not find schema", stat.SchemaName, stat.SchemaGroup)
+		}
+
+		resultMap[requestID] = RequestStatusItem{
+			RequestStatus: &stat,
+		}
 	}
 
-	if status == nil {
-		return RequestStatusItem{}, fmt.Errorf("no status was provided")
+	results := make([]RequestStatusItem, len(statuses))
+	for i, s := range statuses {
+		res, ok := resultMap[s.ID]
+		if !ok {
+			res = RequestStatusItem{
+				Error: fmt.Errorf("could not find status for %s", s.ID),
+			}
+		}
+
+		res.RequestStatusID = s.ID
+		res.SchemaGroup = s.DataSource.Group
+		res.SchemaName = s.DataSource.Name
+
+		results[i] = res
 	}
 
-	return RequestStatusItem{RequestStatus: status}, nil
+	return results, nil
+}
+
+// RequestStatusActivity calls the request-status function on the data associated with the
+// given request.
+func (a *RequestActivity) RequestStatusActivity(
+	ctx context.Context,
+	args DataSourceRequestStatusArgs,
+) (RequestStatusResult, error) {
+	requestStatus := []model.RequestStatus{}
+
+	if err := a.Conf.DB.Model(model.RequestStatus{}).
+		Preload("DataSource").
+		Preload("DataSource.SiloDefinition").
+		Preload("DataSource.SiloDefinition.SiloSpecification").
+		Where("id = ?", args.RequestStatusIDs).First(&requestStatus).Error; err != nil {
+		return RequestStatusResult{}, err
+	}
+
+	siloMap := map[string][]model.RequestStatus{}
+	for _, rs := range requestStatus {
+		siloDefID := rs.DataSource.SiloDefinitionID
+		if _, ok := siloMap[siloDefID]; !ok {
+			siloMap[siloDefID] = []model.RequestStatus{}
+		}
+
+		siloMap[siloDefID] = append(siloMap[siloDefID], rs)
+	}
+
+	results := []RequestStatusItem{}
+	for _, statuses := range siloMap {
+		res, err := a.processSiloDefStatuses(ctx, statuses)
+		if err != nil {
+			for _, s := range statuses {
+				results = append(results, RequestStatusItem{
+					SchemaGroup:     s.DataSource.Group,
+					SchemaName:      s.DataSource.Name,
+					RequestStatusID: s.ID,
+					Error:           fmt.Errorf("error processing silo"),
+				})
+			}
+
+			continue
+		}
+
+		results = append(results, res...)
+	}
+
+	return RequestStatusResult{ResultItems: results}, nil
 }

@@ -21,7 +21,7 @@ func main() {
 	router := mux.NewRouter()
 
 	analyticsHandler := analytics.AnalyticsHandler{
-		Ingestor: ingestor.NewSegmentIngestor(os.Getenv("SEGMENT_WRITE_KEY")),
+		Ingestor: ingestor.NewSegmentIngestor(os.Getenv("SEGMENT_WRITE_KEY"), nil),
 	}
 
 	defer analyticsHandler.Ingestor.Close()
