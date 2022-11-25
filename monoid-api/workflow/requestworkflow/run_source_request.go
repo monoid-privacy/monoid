@@ -11,12 +11,13 @@ import (
 )
 
 type DataSourceRequestArgs struct {
-	RequestStatusID string `json:"requestStatusId"`
+	SiloDefinitionID string `json:"siloDefinitionId"`
+	RequestID        string `json:"requestId"`
 }
 
 const pollTime = 1 * time.Hour
 
-func (w *RequestWorkflow) ExecuteDataSourceRequestWorkflow(
+func (w *RequestWorkflow) ExecuteSiloRequestWorkflow(
 	ctx workflow.Context,
 	args DataSourceRequestArgs,
 ) (err error) {
@@ -29,56 +30,89 @@ func (w *RequestWorkflow) ExecuteDataSourceRequestWorkflow(
 
 	ctx = workflow.WithActivityOptions(ctx, options)
 
-	cleanupCtx, _ := workflow.NewDisconnectedContext(ctx)
+	// cleanupCtx, _ := workflow.NewDisconnectedContext(ctx)
 	ac := requestactivity.RequestActivity{}
 
-	defer func() {
-		newRequestStatus := model.RequestStatusTypeExecuted
+	// defer func() {
+	// 	newRequestStatus := model.RequestStatusTypeExecuted
 
-		if err != nil {
-			newRequestStatus = model.RequestStatusTypeFailed
-		}
+	// 	if err != nil {
+	// 		newRequestStatus = model.RequestStatusTypeFailed
+	// 	}
 
-		if terr := workflow.ExecuteActivity(cleanupCtx, ac.UpdateRequestStatusActivity, requestactivity.UpdateRequestStatusArgs{
-			RequestStatusID: args.RequestStatusID,
-			Status:          newRequestStatus,
-		}).Get(cleanupCtx, nil); terr != nil {
-			return
-		}
-	}()
+	// 	if terr := workflow.ExecuteActivity(cleanupCtx, ac.UpdateRequestStatusActivity, requestactivity.UpdateRequestStatusArgs{
+	// 		RequestStatusID: args.RequestStatusID,
+	// 		Status:          newRequestStatus,
+	// 	}).Get(cleanupCtx, nil); terr != nil {
+	// 		return
+	// 	}
+	// }()
 
 	reqStatus := requestactivity.RequestStatusResult{}
 
 	if err := workflow.ExecuteActivity(ctx, ac.StartDataSourceRequestActivity, requestactivity.StartRequestArgs{
-		RequestStatusID: args.RequestStatusID,
+		SiloDefinitionID: args.SiloDefinitionID,
+		RequestID:        args.RequestID,
 	}).Get(ctx, &reqStatus); err != nil {
 		return err
 	}
 
-	if reqStatus.FullyComplete {
-		return nil
-	}
+	for _, res := range reqStatus.ResultItems {
+		// TODO: Change these activities to be batch processed
+		if res.Error != nil {
+			if terr := workflow.ExecuteActivity(ctx, ac.UpdateRequestStatusActivity, requestactivity.UpdateRequestStatusArgs{
+				RequestStatusID: res.RequestStatusID,
+				Status:          model.RequestStatusTypeFailed,
+			}).Get(ctx, nil); terr != nil {
+				return
+			}
 
-	for reqStatus.RequestStatus.RequestStatus ==
-		monoidprotocol.MonoidRequestStatusRequestStatusPROGRESS {
-		if err := workflow.ExecuteActivity(ctx, ac.RequestStatusActivity, requestactivity.StartRequestArgs{
-			RequestStatusID: args.RequestStatusID,
-		}).Get(ctx, &reqStatus); err != nil {
+			continue
+		}
+
+		if res.FullyComplete {
+			if terr := workflow.ExecuteActivity(ctx, ac.UpdateRequestStatusActivity, requestactivity.UpdateRequestStatusArgs{
+				RequestStatusID: res.RequestStatusID,
+				Status:          model.RequestStatusTypeExecuted,
+			}).Get(ctx, nil); terr != nil {
+				return
+			}
+
+			continue
+		}
+
+		res2 := requestactivity.RequestStatusItem{
+			FullyComplete: res.FullyComplete, RequestStatus: res.RequestStatus,
+		}
+
+		for res2.RequestStatus.RequestStatus ==
+			monoidprotocol.MonoidRequestStatusRequestStatusPROGRESS {
+			if err := workflow.ExecuteActivity(ctx, ac.RequestStatusActivity, requestactivity.DataSourceRequestStatusArgs{
+				RequestStatusID: res.RequestStatusID,
+			}).Get(ctx, &res2); err != nil {
+				return err
+			}
+
+			if res2.FullyComplete {
+				if terr := workflow.ExecuteActivity(ctx, ac.UpdateRequestStatusActivity, requestactivity.UpdateRequestStatusArgs{
+					RequestStatusID: res.RequestStatusID,
+					Status:          model.RequestStatusTypeExecuted,
+				}).Get(ctx, nil); terr != nil {
+					return
+				}
+
+				continue
+			}
+
+			workflow.Sleep(ctx, pollTime)
+		}
+
+		if err := workflow.ExecuteActivity(ctx, ac.ProcessRequestResults, requestactivity.ProcessRequestArgs{
+			ProtocolRequestStatus: *res2.RequestStatus,
+			RequestStatusID:       res.RequestStatusID,
+		}).Get(ctx, nil); err != nil {
 			return err
 		}
-
-		if reqStatus.FullyComplete {
-			return nil
-		}
-
-		workflow.Sleep(ctx, pollTime)
-	}
-
-	if err := workflow.ExecuteActivity(ctx, ac.ProcessRequestResults, requestactivity.ProcessRequestArgs{
-		ProtocolRequestStatus: *reqStatus.RequestStatus,
-		RequestStatusID:       args.RequestStatusID,
-	}).Get(ctx, nil); err != nil {
-		return err
 	}
 
 	return nil

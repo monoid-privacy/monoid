@@ -43,7 +43,7 @@ func main() {
 		Conf: &conf,
 	}
 	ra := requestactivity.RequestActivity{
-		Activity: a,
+		Conf: &conf,
 	}
 
 	mwf := workflow.Workflow{
@@ -61,7 +61,7 @@ func main() {
 
 	// Request-related activities
 	w.RegisterActivity(ra.UpdateRequestStatusActivity)
-	w.RegisterActivity(ra.FindDBRequestStatuses)
+	w.RegisterActivity(ra.FindDBSilos)
 	w.RegisterActivity(ra.ProcessRequestResults)
 	w.RegisterActivity(ra.RequestStatusActivity)
 	w.RegisterActivity(ra.StartDataSourceRequestActivity)
@@ -69,7 +69,7 @@ func main() {
 	w.RegisterWorkflow(mwf.ValidateDSWorkflow)
 	w.RegisterWorkflow(mwf.DetectDSWorkflow)
 	w.RegisterWorkflow(rmwf.ExecuteRequestWorkflow)
-	w.RegisterWorkflow(rmwf.ExecuteDataSourceRequestWorkflow)
+	w.RegisterWorkflow(rmwf.ExecuteSiloRequestWorkflow)
 
 	// Start listening to the Task Queue
 	err = w.Run(worker.InterruptCh())

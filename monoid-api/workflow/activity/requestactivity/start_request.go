@@ -8,6 +8,8 @@ import (
 	"os"
 
 	"github.com/brist-ai/monoid/model"
+	monoidactivity "github.com/brist-ai/monoid/workflow/activity"
+
 	"github.com/brist-ai/monoid/monoidprotocol"
 	"github.com/brist-ai/monoid/monoidprotocol/docker"
 	"go.temporal.io/sdk/activity"
@@ -36,9 +38,7 @@ func findSchema(
 	return monoidprotocol.MonoidSchema{}, fmt.Errorf("error finding schema")
 }
 
-// RequestStatusResult is the result of any activities dealing with request status
-// (start and request status activities)
-type RequestStatusResult struct {
+type RequestStatusItem struct {
 	// FullyComplete is true if request execution didn't need to occur
 	// (the request was already completed, or there is no primary key
 	// to use to run a request)
@@ -47,11 +47,23 @@ type RequestStatusResult struct {
 	// RequestStatus is non-empty if FullyComplete is false. It is
 	// an encrypted JSON blob of the request status
 	RequestStatus *monoidprotocol.MonoidRequestStatus `json:"requestStatus"`
+
+	SchemaGroup     *string
+	SchemaName      string
+	RequestStatusID string
+	Error           error
+}
+
+// RequestStatusResult is the result of any activities dealing with request status
+// (start and request status activities)
+type RequestStatusResult struct {
+	ResultItems []RequestStatusItem `json:"resultItems"`
 }
 
 // StartRequestArgs contains the arguments to the StartRequestOnDataSource activity
 type StartRequestArgs struct {
-	RequestStatusID string `json:"requestStatusId"`
+	SiloDefinitionID string `json:"siloDefinitionId"`
+	RequestID        string `json:"requestId"`
 }
 
 // StartRequestOnDataSource starts the request and returns the status
@@ -64,34 +76,30 @@ func (a *RequestActivity) StartDataSourceRequestActivity(
 	var conf map[string]interface{}
 	logger := activity.GetLogger(ctx)
 
-	requestStatusId := args.RequestStatusID
+	siloDef := model.SiloDefinition{}
+	request := model.Request{}
 
-	requestStatus := model.RequestStatus{}
-
-	if err := a.Conf.DB.Model(model.RequestStatus{}).
-		Preload("DataSource").
-		Preload("DataSource.SiloDefinition").
-		Preload("DataSource.SiloDefinition.SiloSpecification").
-		Preload("DataSource.Properties").
-		Preload("Request").
-		Preload("Request.PrimaryKeyValues").
-		Where("id = ?", requestStatusId).First(&requestStatus).Error; err != nil {
+	if err := a.Conf.DB.Where(
+		"id = ?",
+		args.SiloDefinitionID,
+	).Preload("DataSources").Preload("DataSources.Properties").Preload("SiloSpecification").Preload(
+		"DataSources.RequestStatuses",
+		"request_id = ?",
+		args.RequestID,
+	).First(&siloDef).Error; err != nil {
 		return RequestStatusResult{}, err
 	}
 
-	if requestStatus.Status == model.RequestStatusTypeExecuted {
-		return RequestStatusResult{FullyComplete: true}, nil
+	if err := a.Conf.DB.Where(
+		"id = ?",
+		args.RequestID,
+	).Preload("PrimaryKeyValues").First(&request).Error; err != nil {
+		return RequestStatusResult{}, err
 	}
-
-	request := requestStatus.Request
-	primaryKeyValues := request.PrimaryKeyValues
-	dataSource := requestStatus.DataSource
-	siloDefinition := dataSource.SiloDefinition
-	siloSpecification := siloDefinition.SiloSpecification
 
 	primaryKeyMap := make(map[string]*model.PrimaryKeyValue)
 
-	for _, primaryKeyValue := range primaryKeyValues {
+	for _, primaryKeyValue := range request.PrimaryKeyValues {
 		primaryKeyValue := primaryKeyValue
 		primaryKeyMap[primaryKeyValue.UserPrimaryKeyID] = &primaryKeyValue
 	}
@@ -105,8 +113,8 @@ func (a *RequestActivity) StartDataSourceRequestActivity(
 	defer os.RemoveAll(dir)
 
 	protocol, err := docker.NewDockerMP(
-		siloSpecification.DockerImage,
-		siloSpecification.DockerTag,
+		siloDef.SiloSpecification.DockerImage,
+		siloDef.SiloSpecification.DockerTag,
 		dir,
 	)
 	if err != nil {
@@ -126,7 +134,7 @@ func (a *RequestActivity) StartDataSourceRequestActivity(
 		}
 	}()
 
-	if err := json.Unmarshal([]byte(siloDefinition.Config), &conf); err != nil {
+	if err := json.Unmarshal([]byte(siloDef.Config), &conf); err != nil {
 		return RequestStatusResult{}, err
 	}
 
@@ -136,41 +144,68 @@ func (a *RequestActivity) StartDataSourceRequestActivity(
 		return RequestStatusResult{}, err
 	}
 
-	schema, err := findSchema(&dataSource, sch)
-	if err != nil {
-		return RequestStatusResult{}, err
-	}
+	identifiers := []monoidprotocol.MonoidQueryIdentifier{}
+	errorIDs := map[string]error{}
+	results := map[string]*RequestStatusItem{}
+	dsMap := map[monoidactivity.DataSourceMatcher]*model.DataSource{}
+	dsRequestIDMap := map[string]*model.DataSource{}
 
-	// Get the primary key from the current
-	pkProperties := []*model.Property{}
-
-	for _, prop := range dataSource.Properties {
-		if prop.UserPrimaryKeyID != nil {
-			pkProperties = append(pkProperties, prop)
-		}
-	}
-
-	if len(pkProperties) == 0 {
-		// No user primary key in this data source
-		return RequestStatusResult{FullyComplete: true}, nil
-	}
-
-	// Get the list of identifiers to use with the action
-	identifiers := make([]monoidprotocol.MonoidQueryIdentifier, 0, len(pkProperties))
-	for _, p := range pkProperties {
-		pkVal, ok := primaryKeyMap[*p.UserPrimaryKeyID]
-		if !ok {
-			return RequestStatusResult{}, fmt.Errorf("data source's primary key type not defined")
+L:
+	for _, ds := range siloDef.DataSources {
+		if len(ds.RequestStatuses) == 0 {
+			continue
 		}
 
-		identifiers = append(identifiers, monoidprotocol.MonoidQueryIdentifier{
-			SchemaName:      dataSource.Name,
-			SchemaGroup:     dataSource.Group,
-			JsonSchema:      monoidprotocol.MonoidQueryIdentifierJsonSchema(schema.JsonSchema),
-			Identifier:      p.Name,
-			IdentifierQuery: pkVal.Value,
-		})
+		requestStatus := ds.RequestStatuses[0]
+		dsRequestIDMap[requestStatus.ID] = ds
+
+		if requestStatus.Status == model.RequestStatusTypeExecuted {
+			results[requestStatus.ID] = &RequestStatusItem{FullyComplete: true}
+			continue
+		}
+
+		schema, err := findSchema(ds, sch)
+		if err != nil {
+			logger.Error("Error finding schema", ds.Name, ds.Group)
+			errorIDs[requestStatus.ID] = err
+			continue
+		}
+
+		// Get the primary key from the current
+		pkProperties := []*model.Property{}
+
+		for _, prop := range ds.Properties {
+			if prop.UserPrimaryKeyID != nil {
+				pkProperties = append(pkProperties, prop)
+			}
+		}
+
+		if len(pkProperties) == 0 {
+			results[requestStatus.ID] = &RequestStatusItem{FullyComplete: true}
+			continue
+		}
+
+		// Get the list of identifiers to use with the action
+		for _, p := range pkProperties {
+			pkVal, ok := primaryKeyMap[*p.UserPrimaryKeyID]
+			if !ok {
+				errorIDs[requestStatus.ID] = fmt.Errorf("data source's primary key type not defined")
+				continue L
+			}
+
+			identifiers = append(identifiers, monoidprotocol.MonoidQueryIdentifier{
+				SchemaName:      ds.Name,
+				SchemaGroup:     ds.Group,
+				JsonSchema:      monoidprotocol.MonoidQueryIdentifierJsonSchema(schema.JsonSchema),
+				Identifier:      p.Name,
+				IdentifierQuery: pkVal.Value,
+			})
+		}
+
+		dsMap[monoidactivity.NewDataSourceMatcher(ds.Name, ds.Group)] = ds
 	}
+
+	logger.Info("Identifiers", identifiers)
 
 	var reqChan chan monoidprotocol.MonoidRequestResult
 
@@ -186,25 +221,62 @@ func (a *RequestActivity) StartDataSourceRequestActivity(
 		})
 	}
 
-	var result *monoidprotocol.MonoidRequestResult
+	handleUpdates := map[string]monoidprotocol.MonoidRequestHandle{}
+
 	for res := range reqChan {
-		result = &res
+		ds, ok := dsMap[monoidactivity.NewDataSourceMatcher(
+			res.Handle.SchemaName,
+			&res.Handle.SchemaGroup,
+		)]
+
+		if !ok {
+			logger.Error("Could not find data source", res.Handle.SchemaName, res.Handle.SchemaGroup)
+			continue
+		}
+
+		results[ds.RequestStatuses[0].ID] = &RequestStatusItem{
+			RequestStatus: &res.Status,
+		}
+
+		handleUpdates[ds.RequestStatuses[0].ID] = res.Handle
 	}
 
-	if result == nil {
-		return RequestStatusResult{}, fmt.Errorf("error reading request from protocol")
+	for reqStatID, reqHandle := range handleUpdates {
+		handleJSON, err := json.Marshal(reqHandle)
+		if err != nil {
+			errorIDs[reqStatID] = err
+		}
+
+		if err := a.Conf.DB.Model(&model.RequestStatus{ID: reqStatID}).Update(
+			"request_handle", model.SecretString(handleJSON),
+		).Error; err != nil {
+			errorIDs[reqStatID] = err
+		}
 	}
 
-	handleJSON, err := json.Marshal(result.Handle)
-	if err != nil {
-		return RequestStatusResult{}, err
+	resultArr := make([]RequestStatusItem, 0, len(siloDef.DataSources))
+	for k, v := range results {
+		if _, ok := errorIDs[k]; ok {
+			continue
+		}
+
+		ds, ok := dsRequestIDMap[k]
+		if !ok {
+			continue
+		}
+
+		v.SchemaGroup = ds.Group
+		v.SchemaName = ds.Name
+		v.RequestStatusID = k
+		resultArr = append(resultArr, *v)
 	}
 
-	if err := a.Conf.DB.Model(&requestStatus).Update(
-		"request_handle", model.SecretString(handleJSON),
-	).Error; err != nil {
-		return RequestStatusResult{}, err
+	for k, v := range errorIDs {
+		resultArr = append(resultArr, RequestStatusItem{
+			RequestStatusID: k,
+			Error:           v,
+		})
 	}
 
-	return RequestStatusResult{RequestStatus: &result.Status}, nil
+	return RequestStatusResult{ResultItems: resultArr}, nil
 }

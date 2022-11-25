@@ -20,23 +20,6 @@ import (
 	"gorm.io/gorm"
 )
 
-type dataSourceMatcher struct {
-	Group string
-	Name  string
-}
-
-func newDataSourceMatcher(name string, group *string) dataSourceMatcher {
-	gr := ""
-	if group != nil {
-		gr = *group
-	}
-
-	return dataSourceMatcher{
-		Name:  name,
-		Group: gr,
-	}
-}
-
 func dedupCategories(
 	propertyID string,
 	prevCategories []*model.Category,
@@ -81,7 +64,7 @@ func dedupCategories(
 func getPropertyDiscoveries(
 	prevProperties []*model.Property,
 	newProperties map[string]*jsonschema.Schema,
-	categoryMatches map[dataSourceMatcher]map[string][]scanner.RuleMatch,
+	categoryMatches map[DataSourceMatcher]map[string][]scanner.RuleMatch,
 	dataSource *model.DataSource,
 ) []*model.DataDiscovery {
 	propMap := map[string]*model.Property{}
@@ -101,7 +84,7 @@ func getPropertyDiscoveries(
 			// Create the discoveries for the updated categories for new properties.
 			cats := getCategories(
 				categoryMatches,
-				newDataSourceMatcher(dataSource.Name, dataSource.Group),
+				NewDataSourceMatcher(dataSource.Name, dataSource.Group),
 				p,
 			)
 
@@ -114,7 +97,7 @@ func getPropertyDiscoveries(
 		// Process the new property.
 		cats := getCategories(
 			categoryMatches,
-			newDataSourceMatcher(dataSource.Name, dataSource.Group),
+			NewDataSourceMatcher(dataSource.Name, dataSource.Group),
 			p,
 		)
 
@@ -285,8 +268,8 @@ func processDiscoveries(
 // result of scanProtocol and the data source and
 // property names.
 func getCategories(
-	matches map[dataSourceMatcher]map[string][]scanner.RuleMatch,
-	source dataSourceMatcher,
+	matches map[DataSourceMatcher]map[string][]scanner.RuleMatch,
+	source DataSourceMatcher,
 	propertyName string,
 ) []model.NewCategoryDiscovery {
 	catMatcher, ok := matches[source]
@@ -311,16 +294,16 @@ func getCategories(
 }
 
 // scanProtocol runs the PII scan using the monoid protocol,
-// and returns a 2D map, the first dimension of which is a dataSourceMatcher
+// and returns a 2D map, the first dimension of which is a DataSourceMatcher
 // key, and the second of which has the property path as a key.
 func scanProtocol(
 	ctx context.Context,
 	mp monoidprotocol.MonoidProtocol,
 	config map[string]interface{},
 	schemas []monoidprotocol.MonoidSchema,
-) (map[dataSourceMatcher]map[string][]scanner.RuleMatch, error) {
+) (map[DataSourceMatcher]map[string][]scanner.RuleMatch, error) {
 	logger := activity.GetLogger(ctx)
-	matchers := map[dataSourceMatcher]scanner.Scanner{}
+	matchers := map[DataSourceMatcher]scanner.Scanner{}
 	for _, s := range schemas {
 		sc, err := basicscanner.NewBasicScanner(s)
 
@@ -328,7 +311,7 @@ func scanProtocol(
 			return nil, err
 		}
 
-		matchers[newDataSourceMatcher(s.Name, s.Group)] = sc
+		matchers[NewDataSourceMatcher(s.Name, s.Group)] = sc
 	}
 
 	recordChan, err := mp.Scan(
@@ -342,7 +325,7 @@ func scanProtocol(
 	}
 
 	for record := range recordChan {
-		matcher := matchers[newDataSourceMatcher(
+		matcher := matchers[NewDataSourceMatcher(
 			record.SchemaName,
 			record.SchemaGroup,
 		)]
@@ -352,7 +335,7 @@ func scanProtocol(
 		}
 	}
 
-	res := map[dataSourceMatcher]map[string][]scanner.RuleMatch{}
+	res := map[DataSourceMatcher]map[string][]scanner.RuleMatch{}
 	for k, v := range matchers {
 		if _, ok := res[k]; !ok {
 			res[k] = map[string][]scanner.RuleMatch{}
@@ -469,10 +452,10 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) (in
 	}
 
 	// Detect the new data sources.
-	sourceMap := map[dataSourceMatcher]*model.DataSource{}
+	sourceMap := map[DataSourceMatcher]*model.DataSource{}
 	for _, s := range sources {
 		scp := s
-		sourceMap[newDataSourceMatcher(s.Name, s.Group)] = &scp
+		sourceMap[NewDataSourceMatcher(s.Name, s.Group)] = &scp
 	}
 
 	dataDiscoveries := []*model.DataDiscovery{}
@@ -483,7 +466,7 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) (in
 	logger.Info("Schemas", schemas.Schemas, sourceMap, len(sourceMap), len(sources))
 
 	for _, schema := range schemas.Schemas {
-		sourceMatcher := newDataSourceMatcher(
+		sourceMatcher := NewDataSourceMatcher(
 			schema.Name,
 			schema.Group,
 		)

@@ -14,7 +14,7 @@ import (
 )
 
 // RequestStatusArgs contains the arguments to the RequestStatus activity
-type RequestStatusArgs struct {
+type DataSourceRequestStatusArgs struct {
 	RequestStatusID string `json:"requestStatusId"`
 }
 
@@ -22,8 +22,8 @@ type RequestStatusArgs struct {
 // given request.
 func (a *RequestActivity) RequestStatusActivity(
 	ctx context.Context,
-	args RequestStatusArgs,
-) (RequestStatusResult, error) {
+	args DataSourceRequestStatusArgs,
+) (RequestStatusItem, error) {
 	logger := activity.GetLogger(ctx)
 
 	requestStatusId := args.RequestStatusID
@@ -35,11 +35,11 @@ func (a *RequestActivity) RequestStatusActivity(
 		Preload("DataSource.SiloDefinition").
 		Preload("DataSource.SiloDefinition.SiloSpecification").
 		Where("id = ?", requestStatusId).First(&requestStatus).Error; err != nil {
-		return RequestStatusResult{}, err
+		return RequestStatusItem{}, err
 	}
 
 	if requestStatus.Status == model.RequestStatusTypeExecuted {
-		return RequestStatusResult{FullyComplete: true}, nil
+		return RequestStatusItem{FullyComplete: true}, nil
 	}
 
 	siloDef := requestStatus.DataSource.SiloDefinition
@@ -48,21 +48,21 @@ func (a *RequestActivity) RequestStatusActivity(
 	// Create a temporary directory that can be used by the docker container
 	dir, err := ioutil.TempDir("/tmp/monoid", "monoid")
 	if err != nil {
-		return RequestStatusResult{}, err
+		return RequestStatusItem{}, err
 	}
 
 	defer os.RemoveAll(dir)
 
 	protocol, err := docker.NewDockerMP(siloSpec.DockerImage, siloSpec.DockerTag, dir)
 	if err != nil {
-		return RequestStatusResult{}, err
+		return RequestStatusItem{}, err
 	}
 
 	defer protocol.Teardown(ctx)
 
 	logChan, err := protocol.AttachLogs(ctx)
 	if err != nil {
-		return RequestStatusResult{}, err
+		return RequestStatusItem{}, err
 	}
 
 	go func() {
@@ -73,12 +73,12 @@ func (a *RequestActivity) RequestStatusActivity(
 
 	conf := map[string]interface{}{}
 	if err := json.Unmarshal([]byte(siloDef.Config), &conf); err != nil {
-		return RequestStatusResult{}, err
+		return RequestStatusItem{}, err
 	}
 
 	handle := monoidprotocol.MonoidRequestHandle{}
 	if err := json.Unmarshal([]byte(requestStatus.RequestHandle), &handle); err != nil {
-		return RequestStatusResult{}, err
+		return RequestStatusItem{}, err
 	}
 
 	statCh, err := protocol.RequestStatus(ctx, conf, monoidprotocol.MonoidRequestsMessage{
@@ -86,7 +86,7 @@ func (a *RequestActivity) RequestStatusActivity(
 	})
 
 	if err != nil {
-		return RequestStatusResult{}, err
+		return RequestStatusItem{}, err
 	}
 
 	var status *monoidprotocol.MonoidRequestStatus
@@ -96,8 +96,8 @@ func (a *RequestActivity) RequestStatusActivity(
 	}
 
 	if status == nil {
-		return RequestStatusResult{}, fmt.Errorf("no status was provided")
+		return RequestStatusItem{}, fmt.Errorf("no status was provided")
 	}
 
-	return RequestStatusResult{RequestStatus: status}, nil
+	return RequestStatusItem{RequestStatus: status}, nil
 }

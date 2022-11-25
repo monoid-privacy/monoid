@@ -89,6 +89,10 @@ func (a *RequestActivity) ProcessRequestResults(
 		Handles: []monoidprotocol.MonoidRequestHandle{handle},
 	})
 
+	if err != nil {
+		return err
+	}
+
 	var res any
 	var resultType model.ResultType
 

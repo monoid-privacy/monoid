@@ -3,18 +3,18 @@ package requestactivity
 import "github.com/brist-ai/monoid/model"
 
 type FindRequestArgs struct {
-	RequestID string `json:"requestId"`
+	WorkspaceID string `json:"workspaceId"`
 }
 
-func (a *RequestActivity) FindDBRequestStatuses(args FindRequestArgs) ([]model.RequestStatus, error) {
-	statuses := []model.RequestStatus{}
+func (a *RequestActivity) FindDBSilos(args FindRequestArgs) ([]model.SiloDefinition, error) {
+	defs := []model.SiloDefinition{}
 
 	if err := a.Conf.DB.Where(
-		"request_id = ?",
-		args.RequestID,
-	).Find(&statuses).Error; err != nil {
+		"workspace_id = ?",
+		args.WorkspaceID,
+	).Find(&defs).Error; err != nil {
 		return nil, err
 	}
 
-	return statuses, nil
+	return defs, nil
 }

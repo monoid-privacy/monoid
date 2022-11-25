@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/brist-ai/monoid/model"
-	"github.com/brist-ai/monoid/workflow/activity"
 	"github.com/brist-ai/monoid/workflow/activity/requestactivity"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
@@ -14,19 +13,6 @@ type ExecuteRequestArgs struct {
 	RequestID   string
 	JobID       string
 	WorkspaceID string
-}
-
-func failWorkflow(ctx workflow.Context, jobID string, err error) error {
-	ac := activity.Activity{}
-
-	if err := workflow.ExecuteActivity(ctx, ac.UpdateJobStatus, activity.JobStatusInput{
-		ID:     jobID,
-		Status: model.JobStatusFailed,
-	}).Get(ctx, nil); err != nil {
-		return err
-	}
-
-	return err
 }
 
 func (w *RequestWorkflow) ExecuteRequestWorkflow(
@@ -46,29 +32,33 @@ func (w *RequestWorkflow) ExecuteRequestWorkflow(
 
 	reqAc := requestactivity.RequestActivity{}
 
-	statuses := []model.RequestStatus{}
-	if err := workflow.ExecuteActivity(ctx, reqAc.FindDBRequestStatuses, requestactivity.FindRequestArgs{
-		RequestID: args.RequestID,
-	}).Get(ctx, &statuses); err != nil {
-		return failWorkflow(ctx, args.JobID, err)
+	silos := []model.SiloDefinition{}
+	if err := workflow.ExecuteActivity(ctx, reqAc.FindDBSilos, requestactivity.FindRequestArgs{
+		WorkspaceID: args.WorkspaceID,
+	}).Get(ctx, &silos); err != nil {
+		return err
 	}
 
 	ctx = workflow.WithChildOptions(ctx, workflow.ChildWorkflowOptions{})
-	futures := make([]workflow.ChildWorkflowFuture, len(statuses))
+	sel := workflow.NewSelector(ctx)
 
-	for i, r := range statuses {
-		futures[i] = workflow.ExecuteChildWorkflow(ctx, w.ExecuteDataSourceRequestWorkflow, DataSourceRequestArgs{
-			RequestStatusID: r.ID,
+	for i, silo := range silos {
+		i := i
+
+		sel.AddFuture(workflow.ExecuteChildWorkflow(ctx, w.ExecuteSiloRequestWorkflow, DataSourceRequestArgs{
+			RequestID:        args.RequestID,
+			SiloDefinitionID: silo.ID,
+		}), func(f workflow.Future) {
+			if err := f.Get(ctx, nil); err != nil {
+				logger.Error("error scheduling execute request", map[string]interface{}{
+					"silo": silos[i],
+				}, err)
+			}
 		})
 	}
 
-	for i, f := range futures {
-		if err := f.Get(ctx, nil); err != nil {
-			logger.Error("error scheduling execute request on data source", map[string]interface{}{
-				"dataSource": statuses[i].DataSourceID,
-				"request":    statuses[i].RequestID,
-			}, err)
-		}
+	for range silos {
+		sel.Select(ctx)
 	}
 
 	return nil

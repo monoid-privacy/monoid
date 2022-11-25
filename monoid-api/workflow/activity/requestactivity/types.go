@@ -1,7 +1,9 @@
 package requestactivity
 
-import "github.com/brist-ai/monoid/workflow/activity"
+import (
+	"github.com/brist-ai/monoid/config"
+)
 
 type RequestActivity struct {
-	activity.Activity
+	Conf *config.BaseConfig
 }
