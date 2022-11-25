@@ -1,11 +1,12 @@
 import React from 'react';
+import { FormatOptionLabelMeta } from 'react-select';
 import AsyncSelect from 'react-select/async';
 import { StyledSelectInput } from './TextMultiInput';
 
 interface BaseComboboxProps<T> extends Omit<Omit<Omit<React.HTMLProps<HTMLDivElement>, 'id'>, 'value'>, 'onChange'> {
-  filter: (query: string) => T[],
+  filter: (query: string) => Promise<T[]>,
   id: (v: T) => string,
-  displayNode: (v: T) => React.ReactNode,
+  displayNode: (v: T, meta: FormatOptionLabelMeta<T>) => React.ReactNode,
   menuPortalTarget?: HTMLElement | null
 }
 
@@ -30,14 +31,24 @@ export default function Combobox<T>(props: ComboboxProps<T>) {
         components={{
           Input: StyledSelectInput,
         }}
-        loadOptions={(v, cb) => cb(filter(v))}
+        loadOptions={filter}
         value={value}
-        formatOptionLabel={(v) => displayNode(v)}
+        formatOptionLabel={(v, meta) => displayNode(v, meta)}
         getOptionValue={(v) => id(v)}
         onChange={(v) => onChange(v)}
         className={className}
         menuPortalTarget={menuPortalTarget}
         isMulti
+        defaultOptions
+        styles={{
+          option: (base, state) => ({
+            ...base,
+            backgroundColor: state.isFocused ? 'rgb(243 244 246)' : undefined,
+            '&:active': {
+              backgroundColor: 'rgb(243 244 246)',
+            },
+          }),
+        }}
       />
     );
   }
@@ -47,12 +58,22 @@ export default function Combobox<T>(props: ComboboxProps<T>) {
       components={{
         Input: StyledSelectInput,
       }}
-      loadOptions={(v, cb) => cb(filter(v))}
+      loadOptions={filter}
       value={value}
-      formatOptionLabel={(v) => displayNode(v)}
+      formatOptionLabel={(v, meta) => displayNode(v, meta)}
       getOptionValue={(v) => id(v)}
       onChange={(v) => onChange(v)}
       menuPortalTarget={menuPortalTarget}
+      styles={{
+        option: (base, state) => ({
+          ...base,
+          backgroundColor: state.isFocused ? 'rgb(243 244 246)' : undefined,
+          '&:active': {
+            backgroundColor: 'rgb(243 244 246)',
+          },
+        }),
+      }}
+      defaultOptions
     />
   );
 }

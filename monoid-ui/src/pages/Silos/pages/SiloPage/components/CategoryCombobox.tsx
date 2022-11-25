@@ -1,10 +1,13 @@
-import { gql, useMutation, useQuery } from '@apollo/client';
+import {
+  gql, useLazyQuery, useMutation,
+} from '@apollo/client';
 import React, { useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
+import { FormatOptionLabelMeta } from 'react-select';
 import AlertRegion from '../../../../../components/AlertRegion';
 import MultiCombobox from '../../../../../components/MultiCombobox';
 import { Category } from '../../../../../lib/models';
-import Text from '../../../../../components/Text';
+import Badge from '../../../../../components/Badge';
 
 const SILO_DATA_SOURCES = gql`
   query SiloDataSources($workspaceId: ID!) {
@@ -38,7 +41,9 @@ export default function CategoryCombobox(props: {
   const { id } = useParams<{ id: string }>();
   const { value, propertyId } = props;
   const [updateCat] = useMutation(UPDATE_CATEGORIES);
-  const { data, loading, error } = useQuery<{
+  const [loadData, {
+    data, loading, called, error,
+  }] = useLazyQuery<{
     workspace: { categories: Category[] }
   }>(SILO_DATA_SOURCES, {
     variables: {
@@ -46,31 +51,32 @@ export default function CategoryCombobox(props: {
     },
   });
 
-  const categoryOption = (category: Category) => (
-    <Text size="sm">
-      {category.name}
-    </Text>
+  const categoryOption = (category: Category, { context }: FormatOptionLabelMeta<Category>) => (
+    context === 'menu'
+      ? (
+        <Badge>
+          {category.name}
+        </Badge>
+      )
+      : category.name
   );
 
-  const filter = useCallback((v: string) => {
-    if (loading) {
-      return [];
-    }
-
-    return data?.workspace.categories.filter(
+  const filter = useCallback(async (v: string) => {
+    const { data: resData } = await loadData();
+    return resData?.workspace.categories.filter(
       (c) => c.name?.toLowerCase().includes(v.toLowerCase()),
     ) || [];
-  }, [loading, data]);
+  }, [loadData]);
 
   const categoryMap = useMemo(() => {
-    if (loading) {
+    if (loading || !called) {
       return {};
     }
 
     return Object.fromEntries(
       data?.workspace.categories.map((v) => [v.id!, v.name!]) || [],
     );
-  }, [loading, data]);
+  }, [loading, data, called]);
 
   if (error) {
     return (
