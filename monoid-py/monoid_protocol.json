@@ -214,8 +214,7 @@
       },
       "required": [
         "request_status",
-        "schema_name",
-        "schema_group"
+        "schema_name"
       ]
     },
     "MonoidRequestHandle": {
@@ -240,7 +239,6 @@
       },
       "required": [
         "schema_name",
-        "schema_group",
         "request_type"
       ]
     },

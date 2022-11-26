@@ -122,9 +122,6 @@ func (j *MonoidRequestStatus) UnmarshalJSON(b []byte) error {
 	if v, ok := raw["request_status"]; !ok || v == nil {
 		return fmt.Errorf("field request_status: required")
 	}
-	if v, ok := raw["schema_group"]; !ok || v == nil {
-		return fmt.Errorf("field schema_group: required")
-	}
 	if v, ok := raw["schema_name"]; !ok || v == nil {
 		return fmt.Errorf("field schema_name: required")
 	}
@@ -163,9 +160,6 @@ func (j *MonoidRequestHandle) UnmarshalJSON(b []byte) error {
 	}
 	if v, ok := raw["request_type"]; !ok || v == nil {
 		return fmt.Errorf("field request_type: required")
-	}
-	if v, ok := raw["schema_group"]; !ok || v == nil {
-		return fmt.Errorf("field schema_group: required")
 	}
 	if v, ok := raw["schema_name"]; !ok || v == nil {
 		return fmt.Errorf("field schema_name: required")
@@ -512,7 +506,7 @@ type MonoidRequestHandle struct {
 	RequestType MonoidRequestHandleRequestType `json:"request_type"`
 
 	// SchemaGroup corresponds to the JSON schema field "schema_group".
-	SchemaGroup string `json:"schema_group"`
+	SchemaGroup *string `json:"schema_group,omitempty"`
 
 	// SchemaName corresponds to the JSON schema field "schema_name".
 	SchemaName string `json:"schema_name"`
@@ -541,7 +535,7 @@ type MonoidRequestStatus struct {
 	RequestStatus MonoidRequestStatusRequestStatus `json:"request_status"`
 
 	// SchemaGroup corresponds to the JSON schema field "schema_group".
-	SchemaGroup string `json:"schema_group"`
+	SchemaGroup *string `json:"schema_group,omitempty"`
 
 	// SchemaName corresponds to the JSON schema field "schema_name".
 	SchemaName string `json:"schema_name"`

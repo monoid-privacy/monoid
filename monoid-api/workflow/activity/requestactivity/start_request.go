@@ -130,6 +130,10 @@ func (a *RequestActivity) StartDataSourceRequestActivity(
 
 	defer protocol.Teardown(ctx)
 
+	if err := protocol.InitConn(ctx); err != nil {
+		return RequestStatusResult{}, err
+	}
+
 	logChan, err := protocol.AttachLogs(ctx)
 	if err != nil {
 		return RequestStatusResult{}, err
@@ -171,6 +175,7 @@ L:
 			continue
 		}
 
+		// Verify that the schema exists in the associated data source
 		schema, err := findSchema(ds, sch)
 		if err != nil {
 			logger.Error("Error finding schema", ds.Name, ds.Group)
@@ -237,7 +242,7 @@ L:
 	for res := range reqChan {
 		ds, ok := dsMap[monoidactivity.NewDataSourceMatcher(
 			res.Handle.SchemaName,
-			&res.Handle.SchemaGroup,
+			res.Handle.SchemaGroup,
 		)]
 
 		if !ok {

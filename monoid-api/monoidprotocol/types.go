@@ -1,5 +1,7 @@
 package monoidprotocol
 
+//go:generate mockgen -source=./types.go -destination=../mocks/mock_protocols.go -package=mocks MonoidProtocolFactory,MonoidProtocol
+//go:generate gojsonschema -p github.com/monoid/monoidprotocol --schema-output=monoid_protocol.json=./protocol.go ../../monoid-py/monoid_protocol.json
 import (
 	"context"
 )
