@@ -16,7 +16,7 @@ import (
 	"go.temporal.io/sdk/testsuite"
 )
 
-type SiloRequestUnitTestSuite struct {
+type siloRequestUnitTestSuite struct {
 	suite.Suite
 	testsuite.WorkflowTestSuite
 
@@ -25,7 +25,7 @@ type SiloRequestUnitTestSuite struct {
 	env *testsuite.TestWorkflowEnvironment
 }
 
-func (s *SiloRequestUnitTestSuite) SetupTest() {
+func (s *siloRequestUnitTestSuite) SetupTest() {
 	s.ra = &requestactivity.RequestActivity{
 		Conf: &config.BaseConfig{},
 	}
@@ -35,7 +35,7 @@ func (s *SiloRequestUnitTestSuite) SetupTest() {
 	}
 }
 
-func (s *SiloRequestUnitTestSuite) tabularSetup() {
+func (s *siloRequestUnitTestSuite) tabularSetup() {
 	s.env = s.NewTestWorkflowEnvironment()
 
 	s.env.RegisterActivity(s.ra.StartDataSourceRequestActivity)
@@ -45,13 +45,13 @@ func (s *SiloRequestUnitTestSuite) tabularSetup() {
 	s.env.RegisterWorkflow(s.rw.ExecuteSiloRequestWorkflow)
 }
 
-func (s *SiloRequestUnitTestSuite) tabularAfter() {
+func (s *siloRequestUnitTestSuite) tabularAfter() {
 	s.env.AssertExpectations(s.T())
 }
 
 // TestSimpleSiloRequest verifies that a request that returns immediately
 // works correctly.
-func (s *SiloRequestUnitTestSuite) TestSimpleSiloRequest() {
+func (s *siloRequestUnitTestSuite) TestSimpleSiloRequest() {
 	type simpleTestArgs struct {
 		status        monoidprotocol.MonoidRequestStatusRequestStatus
 		result        model.RequestStatusType
@@ -152,7 +152,7 @@ func (s *SiloRequestUnitTestSuite) TestSimpleSiloRequest() {
 
 // TestDelayedSiloRequest verifies that a job that takes time to become complete
 // runs appropriately.
-func (s *SiloRequestUnitTestSuite) TestDelayedSiloRequest() {
+func (s *siloRequestUnitTestSuite) TestDelayedSiloRequest() {
 	s.tabularSetup()
 	defer s.tabularAfter()
 
@@ -216,5 +216,5 @@ func (s *SiloRequestUnitTestSuite) TestDelayedSiloRequest() {
 }
 
 func TestSiloRequestSuite(t *testing.T) {
-	suite.Run(t, &SiloRequestUnitTestSuite{})
+	suite.Run(t, &siloRequestUnitTestSuite{})
 }

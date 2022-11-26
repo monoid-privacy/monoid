@@ -13,7 +13,7 @@ import (
 	"go.temporal.io/sdk/testsuite"
 )
 
-type OrchestrateUnitTestSuite struct {
+type orchestrateUnitTestSuite struct {
 	suite.Suite
 	testsuite.WorkflowTestSuite
 
@@ -22,7 +22,7 @@ type OrchestrateUnitTestSuite struct {
 	env *testsuite.TestWorkflowEnvironment
 }
 
-func (s *OrchestrateUnitTestSuite) SetupTest() {
+func (s *orchestrateUnitTestSuite) SetupTest() {
 	s.ra = &requestactivity.RequestActivity{
 		Conf: &config.BaseConfig{},
 	}
@@ -32,7 +32,7 @@ func (s *OrchestrateUnitTestSuite) SetupTest() {
 	}
 }
 
-func (s *OrchestrateUnitTestSuite) tabularSetup() {
+func (s *orchestrateUnitTestSuite) tabularSetup() {
 	s.env = s.NewTestWorkflowEnvironment()
 
 	s.env.RegisterActivity(s.ra.FindDBSilos)
@@ -40,11 +40,11 @@ func (s *OrchestrateUnitTestSuite) tabularSetup() {
 	s.env.RegisterWorkflow(s.rw.ExecuteSiloRequestWorkflow)
 }
 
-func (s *OrchestrateUnitTestSuite) tabularAfter() {
+func (s *orchestrateUnitTestSuite) tabularAfter() {
 	s.env.AssertExpectations(s.T())
 }
 
-func (s *OrchestrateUnitTestSuite) TestSimpleOrchestrate() {
+func (s *orchestrateUnitTestSuite) TestSimpleOrchestrate() {
 	for _, numRequests := range []int{1, 10, 500} {
 		s.Run(fmt.Sprintf("Simple %d", numRequests), func() {
 			s.tabularSetup()
@@ -91,5 +91,5 @@ func (s *OrchestrateUnitTestSuite) TestSimpleOrchestrate() {
 }
 
 func TestOrchestrateSuite(t *testing.T) {
-	suite.Run(t, &OrchestrateUnitTestSuite{})
+	suite.Run(t, &orchestrateUnitTestSuite{})
 }
