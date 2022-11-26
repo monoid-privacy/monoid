@@ -5,7 +5,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/brist-ai/monoid/generated"
 	"github.com/brist-ai/monoid/loader"
@@ -275,10 +274,6 @@ func (r *requestStatusResolver) QueryResult(ctx context.Context, obj *model.Requ
 	q, err := loader.GetQueryResult(ctx, obj.ID)
 	if err != nil {
 		return nil, err
-	}
-
-	if obj.ID == "03b34965-1802-4566-9331-3be37e773ffb" {
-		fmt.Println(q)
 	}
 
 	return q, nil

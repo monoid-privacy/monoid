@@ -10,7 +10,7 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-type DataSourceRequestArgs struct {
+type SiloRequestArgs struct {
 	SiloDefinitionID string `json:"siloDefinitionId"`
 	RequestID        string `json:"requestId"`
 }
@@ -33,7 +33,7 @@ func updateRequest(ctx workflow.Context, requestStatusID string, status model.Re
 
 func (w *RequestWorkflow) ExecuteSiloRequestWorkflow(
 	ctx workflow.Context,
-	args DataSourceRequestArgs,
+	args SiloRequestArgs,
 ) (err error) {
 	logger := workflow.GetLogger(ctx)
 	options := workflow.ActivityOptions{
@@ -60,8 +60,9 @@ func (w *RequestWorkflow) ExecuteSiloRequestWorkflow(
 	for len(processing) > 0 {
 		newProcessing := make([]requestactivity.RequestStatusItem, 0, len(processing))
 
-		for _, res := range reqStatus.ResultItems {
+		for _, res := range processing {
 			if res.Error != nil {
+
 				if terr := updateRequest(ctx, res.RequestStatusID, model.RequestStatusTypeFailed); terr != nil {
 					logger.Error("Error updating request", terr)
 				}
@@ -89,6 +90,8 @@ func (w *RequestWorkflow) ExecuteSiloRequestWorkflow(
 						logger.Error("Error updating request", terr)
 						continue
 					}
+
+					continue
 				}
 
 				if terr := updateRequest(ctx, res.RequestStatusID, model.RequestStatusTypeExecuted); terr != nil {
@@ -105,7 +108,11 @@ func (w *RequestWorkflow) ExecuteSiloRequestWorkflow(
 			}
 		}
 
-		// Sleep before getting the new statuses, so we aren't hitting apis to frequently.
+		if len(newProcessing) == 0 {
+			break
+		}
+
+		// Sleep before getting the new statuses, so we aren't hitting apis too frequently.
 		workflow.Sleep(ctx, pollTime)
 
 		// Run another request to get the status, and process again.
@@ -116,7 +123,7 @@ func (w *RequestWorkflow) ExecuteSiloRequestWorkflow(
 
 		res := requestactivity.RequestStatusResult{}
 
-		if err := workflow.ExecuteActivity(ctx, ac.RequestStatusActivity, requestactivity.DataSourceRequestStatusArgs{
+		if err := workflow.ExecuteActivity(ctx, ac.RequestStatusActivity, requestactivity.RequestStatusArgs{
 			RequestStatusIDs: statusIDs,
 		}).Get(ctx, &res); err != nil {
 			return err

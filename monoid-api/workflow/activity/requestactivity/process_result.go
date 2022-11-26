@@ -9,7 +9,6 @@ import (
 
 	"github.com/brist-ai/monoid/model"
 	"github.com/brist-ai/monoid/monoidprotocol"
-	"github.com/brist-ai/monoid/monoidprotocol/docker"
 	"github.com/google/uuid"
 	"go.temporal.io/sdk/activity"
 )
@@ -67,7 +66,9 @@ func (a *RequestActivity) ProcessRequestResults(
 	defer os.RemoveAll(dir)
 
 	// Start the docker protocol
-	protocol, err := docker.NewDockerMP(siloSpec.DockerImage, siloSpec.DockerTag, dir)
+	protocol, err := a.Conf.ProtocolFactory.NewMonoidProtocol(
+		siloSpec.DockerImage, siloSpec.DockerTag, dir,
+	)
 	if err != nil {
 		return err
 	}

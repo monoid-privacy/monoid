@@ -9,13 +9,12 @@ import (
 
 	"github.com/brist-ai/monoid/model"
 	"github.com/brist-ai/monoid/monoidprotocol"
-	"github.com/brist-ai/monoid/monoidprotocol/docker"
 	monoidactivity "github.com/brist-ai/monoid/workflow/activity"
 	"go.temporal.io/sdk/activity"
 )
 
 // RequestStatusArgs contains the arguments to the RequestStatus activity
-type DataSourceRequestStatusArgs struct {
+type RequestStatusArgs struct {
 	RequestStatusIDs []string `json:"requestStatusId"`
 }
 
@@ -49,7 +48,7 @@ func (a *RequestActivity) processSiloDefStatuses(
 
 		handle := monoidprotocol.MonoidRequestHandle{}
 		if err := json.Unmarshal([]byte(rs.RequestHandle), &handle); err != nil {
-			resultMap[rs.ID] = RequestStatusItem{Error: err}
+			resultMap[rs.ID] = RequestStatusItem{Error: &RequestStatusError{Message: err.Error()}}
 			continue
 		}
 
@@ -68,7 +67,7 @@ func (a *RequestActivity) processSiloDefStatuses(
 
 	defer os.RemoveAll(dir)
 
-	protocol, err := docker.NewDockerMP(
+	protocol, err := a.Conf.ProtocolFactory.NewMonoidProtocol(
 		siloDef.SiloSpecification.DockerImage,
 		siloDef.SiloSpecification.DockerTag,
 		dir,
@@ -119,7 +118,7 @@ func (a *RequestActivity) processSiloDefStatuses(
 		res, ok := resultMap[s.ID]
 		if !ok {
 			res = RequestStatusItem{
-				Error: fmt.Errorf("could not find status for %s", s.ID),
+				Error: &RequestStatusError{Message: fmt.Sprintf("could not find status for %s", s.ID)},
 			}
 		}
 
@@ -137,7 +136,7 @@ func (a *RequestActivity) processSiloDefStatuses(
 // given request.
 func (a *RequestActivity) RequestStatusActivity(
 	ctx context.Context,
-	args DataSourceRequestStatusArgs,
+	args RequestStatusArgs,
 ) (RequestStatusResult, error) {
 	requestStatus := []model.RequestStatus{}
 
@@ -168,7 +167,7 @@ func (a *RequestActivity) RequestStatusActivity(
 					SchemaGroup:     s.DataSource.Group,
 					SchemaName:      s.DataSource.Name,
 					RequestStatusID: s.ID,
-					Error:           fmt.Errorf("error processing silo"),
+					Error:           &RequestStatusError{Message: "error processing silo"},
 				})
 			}
 

@@ -6,7 +6,6 @@ import (
 
 	"github.com/brist-ai/monoid/model"
 	"github.com/brist-ai/monoid/monoidprotocol"
-	"github.com/brist-ai/monoid/monoidprotocol/docker"
 	"go.temporal.io/sdk/activity"
 )
 
@@ -26,7 +25,7 @@ func (a *Activity) ValidateDataSiloDef(ctx context.Context, args ValidateDSArgs)
 		return nil, err
 	}
 
-	mp, err := docker.NewDockerMP(spec.DockerImage, spec.DockerTag, "")
+	mp, err := a.Conf.ProtocolFactory.NewMonoidProtocol(spec.DockerImage, spec.DockerTag, "")
 	if err != nil {
 		logger.Error("Error creating docker client: %v", err)
 		return nil, err

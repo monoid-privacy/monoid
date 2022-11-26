@@ -4,6 +4,14 @@ import (
 	"context"
 )
 
+type MonoidProtocolFactory interface {
+	NewMonoidProtocol(
+		image string,
+		tag string,
+		persistDir string,
+	) (MonoidProtocol, error)
+}
+
 type MonoidProtocol interface {
 	InitConn(ctx context.Context) error
 

@@ -11,7 +11,6 @@ import (
 	monoidactivity "github.com/brist-ai/monoid/workflow/activity"
 
 	"github.com/brist-ai/monoid/monoidprotocol"
-	"github.com/brist-ai/monoid/monoidprotocol/docker"
 	"go.temporal.io/sdk/activity"
 )
 
@@ -38,6 +37,14 @@ func findSchema(
 	return monoidprotocol.MonoidSchema{}, fmt.Errorf("error finding schema")
 }
 
+type RequestStatusError struct {
+	Message string `json:"message"`
+}
+
+func (m *RequestStatusError) Error() string {
+	return m.Message
+}
+
 type RequestStatusItem struct {
 	// FullyComplete is true if request execution didn't need to occur
 	// (the request was already completed, or there is no primary key
@@ -51,7 +58,7 @@ type RequestStatusItem struct {
 	SchemaGroup     *string
 	SchemaName      string
 	RequestStatusID string
-	Error           error
+	Error           *RequestStatusError
 }
 
 // RequestStatusResult is the result of any activities dealing with request status
@@ -112,7 +119,7 @@ func (a *RequestActivity) StartDataSourceRequestActivity(
 
 	defer os.RemoveAll(dir)
 
-	protocol, err := docker.NewDockerMP(
+	protocol, err := a.Conf.ProtocolFactory.NewMonoidProtocol(
 		siloDef.SiloSpecification.DockerImage,
 		siloDef.SiloSpecification.DockerTag,
 		dir,
@@ -275,10 +282,10 @@ L:
 		resultArr = append(resultArr, *v)
 	}
 
-	for k, v := range errorIDs {
+	for k, err := range errorIDs {
 		resultArr = append(resultArr, RequestStatusItem{
 			RequestStatusID: k,
-			Error:           v,
+			Error:           &RequestStatusError{Message: err.Error()},
 		})
 	}
 

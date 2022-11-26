@@ -12,6 +12,7 @@ import (
 	"github.com/brist-ai/monoid/config"
 	"github.com/brist-ai/monoid/filestore/localstore"
 	"github.com/brist-ai/monoid/model"
+	"github.com/brist-ai/monoid/monoidprotocol/docker"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog/log"
@@ -127,11 +128,12 @@ func GetBaseConfig(runMigrations bool, models []interface{}) config.BaseConfig {
 
 	fileStore := localstore.NewLocalFileStore(os.Getenv("FILESTORE_PATH"))
 	conf := config.BaseConfig{
-		DB:          db,
-		TokenSecret: os.Getenv("TOKEN_SECRET"),
-		ApiURL:      os.Getenv("API_URL"),
-		WebURL:      os.Getenv("WEB_URL"),
-		FileStore:   fileStore,
+		DB:              db,
+		TokenSecret:     os.Getenv("TOKEN_SECRET"),
+		ApiURL:          os.Getenv("API_URL"),
+		WebURL:          os.Getenv("WEB_URL"),
+		FileStore:       fileStore,
+		ProtocolFactory: &docker.DockerProtocolFactory{},
 		AnalyticsIngestor: ingestor.NewSegmentIngestor(
 			os.Getenv("SEGMENT_KEY"),
 			&reg.ID,

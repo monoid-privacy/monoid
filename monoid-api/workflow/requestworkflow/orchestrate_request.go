@@ -45,7 +45,7 @@ func (w *RequestWorkflow) ExecuteRequestWorkflow(
 	for i, silo := range silos {
 		i := i
 
-		sel.AddFuture(workflow.ExecuteChildWorkflow(ctx, w.ExecuteSiloRequestWorkflow, DataSourceRequestArgs{
+		sel.AddFuture(workflow.ExecuteChildWorkflow(ctx, w.ExecuteSiloRequestWorkflow, SiloRequestArgs{
 			RequestID:        args.RequestID,
 			SiloDefinitionID: silo.ID,
 		}), func(f workflow.Future) {

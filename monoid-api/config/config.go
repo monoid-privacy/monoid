@@ -5,6 +5,7 @@ import (
 
 	"github.com/brist-ai/monoid/analytics/ingestor"
 	"github.com/brist-ai/monoid/filestore"
+	"github.com/brist-ai/monoid/monoidprotocol"
 	"go.temporal.io/sdk/client"
 	"gorm.io/gorm"
 )
@@ -14,6 +15,7 @@ type BaseConfig struct {
 	TokenSecret       string
 	ApiURL            string
 	WebURL            string
+	ProtocolFactory   monoidprotocol.MonoidProtocolFactory
 	FileStore         filestore.FileStore
 	TemporalClient    client.Client
 	AnalyticsIngestor ingestor.Ingestor

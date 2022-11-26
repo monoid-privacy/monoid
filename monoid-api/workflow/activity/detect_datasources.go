@@ -3,14 +3,12 @@ package activity
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 
 	"github.com/brist-ai/monoid/jsonschema"
 	"github.com/brist-ai/monoid/model"
 	"github.com/brist-ai/monoid/monoidprotocol"
-	"github.com/brist-ai/monoid/monoidprotocol/docker"
 	"github.com/brist-ai/monoid/scanner"
 	"github.com/brist-ai/monoid/scanner/basicscanner"
 
@@ -381,8 +379,7 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) (in
 
 	defer os.RemoveAll(dir)
 
-	fmt.Println("hi")
-	mp, err := docker.NewDockerMP(
+	mp, err := a.Conf.ProtocolFactory.NewMonoidProtocol(
 		dataSilo.SiloSpecification.DockerImage,
 		dataSilo.SiloSpecification.DockerTag,
 		dir,
