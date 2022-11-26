@@ -15,12 +15,31 @@
         "order": 1,
         "description": "The token for the Mixpanel project"
       },
+      "project_id": {
+        "type": "string",
+        "title": "Project ID",
+        "order": 2,
+        "description": "The ID of the Mixpanel project"
+      },
+      "service_account_username": {
+        "type": "string",
+        "title": "Service Account Username",
+        "order": 3,
+        "description": "The username for the Mixpanel service account"
+      },
+      "service_account_password": {
+        "type": "string",
+        "secret": true,
+        "title": "Service Account Password",
+        "order": 4,
+        "description": "The password for the Mixpanel service account"
+      },
       "oauth_secret": {
         "type": "string",
         "secret": true,
         "title": "Password",
-        "description": "The Mixpanel GDPR OAuth secret",
-        "order": 2
+        "order": 5,
+        "description": "The Mixpanel GDPR OAuth secret"
       }
     },
     "required": [
