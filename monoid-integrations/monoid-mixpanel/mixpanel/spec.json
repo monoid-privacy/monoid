@@ -1,0 +1,32 @@
+{
+  "spec": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+      "project_name": {
+        "type": "string",
+        "title": "Project Name",
+        "order": 0,
+        "description": "The name of the Mixpanel project"
+      },
+      "project_token": {
+        "type": "string",
+        "title": "Project Token",
+        "order": 1,
+        "description": "The token for the Mixpanel project"
+      },
+      "oauth_secret": {
+        "type": "string",
+        "secret": true,
+        "title": "Password",
+        "description": "The Mixpanel GDPR OAuth secret",
+        "order": 2
+      }
+    },
+    "required": [
+        "project_name", 
+        "project_token", 
+        "oauth_secret"
+    ]
+  }
+}
