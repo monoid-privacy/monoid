@@ -250,8 +250,10 @@ L:
 			continue
 		}
 
+		stat := res.Status
+
 		results[ds.RequestStatuses[0].ID] = &RequestStatusItem{
-			RequestStatus: &res.Status,
+			RequestStatus: &stat,
 		}
 
 		handleUpdates[ds.RequestStatuses[0].ID] = res.Handle
