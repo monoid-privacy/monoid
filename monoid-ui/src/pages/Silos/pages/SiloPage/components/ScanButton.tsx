@@ -9,6 +9,15 @@ import Button from '../../../../../components/Button';
 import Spinner from '../../../../../components/Spinner';
 import { Job } from '../../../../../lib/models';
 
+const CANCEL_JOB = gql`
+  mutation CancelJob($id: ID!, $workspaceId: ID!) {
+    cancelJob(id: $id, workspaceId: $workspaceId) {
+      id
+      status
+    }
+  }
+`;
+
 const RUN_SOURCE_SCAN = gql`
   mutation RunSourceScan($id: ID!, $workspaceId: ID!) {
     detectSiloSources(id: $id, workspaceId: $workspaceId) {
@@ -91,6 +100,7 @@ function ScanButtonRegion(props: {
     data,
     previousData,
     loading,
+    refetch,
     error,
   } = useQuery<{ jobs: { jobs: Job[] } }>(RUNNING_DETECT_SILO_JOBS, {
     variables: {
@@ -99,6 +109,8 @@ function ScanButtonRegion(props: {
     pollInterval: 5000,
     fetchPolicy: 'network-only',
   });
+
+  const [cancelJob, cancelJobRes] = useMutation(CANCEL_JOB);
 
   useEffect(() => {
     if (!onScanStatusChange || !previousData) {
@@ -133,11 +145,19 @@ function ScanButtonRegion(props: {
   }
 
   return (
-    <Button disabled>
-      <div className="flex items-center">
-        <div className="mr-1"> Scan In Progress </div>
-        <Spinner size="sm" color="white" />
-      </div>
+    <Button
+      onClick={() => {
+        cancelJob({
+          variables: {
+            id: data!.jobs.jobs[0].id!,
+            workspaceId,
+          },
+        }).then(() => refetch());
+      }}
+      variant="danger"
+      disabled={cancelJobRes.loading}
+    >
+      {cancelJobRes.loading ? <Spinner /> : 'Cancel Scan'}
     </Button>
   );
 }

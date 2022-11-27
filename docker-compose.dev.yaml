@@ -73,6 +73,8 @@ services:
       interval: 1s
       timeout: 5s
       retries: 30
+    ports:
+      - 7233:7233
   api:
     build:
       dockerfile: Dockerfile.dev

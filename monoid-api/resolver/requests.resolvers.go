@@ -12,6 +12,7 @@ import (
 	"github.com/brist-ai/monoid/workflow"
 	"github.com/brist-ai/monoid/workflow/requestworkflow"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 	"go.temporal.io/sdk/client"
 	"gorm.io/gorm"
 )
@@ -162,7 +163,7 @@ func (r *mutationResolver) ExecuteUserDataRequest(ctx context.Context, requestID
 			Conf: r.Conf,
 		}
 
-		_, err := r.Conf.TemporalClient.ExecuteWorkflow(ctx, options, sf.ExecuteRequestWorkflow, requestworkflow.ExecuteRequestArgs{
+		wf, err := r.Conf.TemporalClient.ExecuteWorkflow(ctx, options, sf.ExecuteRequestWorkflow, requestworkflow.ExecuteRequestArgs{
 			RequestID:   requestID,
 			WorkspaceID: workspaceID,
 			JobID:       job.ID,
@@ -170,6 +171,10 @@ func (r *mutationResolver) ExecuteUserDataRequest(ctx context.Context, requestID
 
 		if err != nil {
 			return err
+		}
+
+		if err := tx.Model(&job).Update("temporal_workflow_id", wf.GetID()).Error; err != nil {
+			log.Err(err).Msg("Error uploading workflow ID")
 		}
 
 		return nil

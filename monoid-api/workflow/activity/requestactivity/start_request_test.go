@@ -122,17 +122,6 @@ func str(s string) *string {
 	return &s
 }
 
-type seedRes struct {
-	config  map[string]interface{}
-	request model.Request
-	silo    model.SiloDefinition
-}
-
-type seedParams struct {
-	numSources int
-	group      *string
-}
-
 func (s *startRequestTestSuite) teardownDB() {
 	models := []interface{}{
 		model.PrimaryKeyValue{},
@@ -153,6 +142,18 @@ func (s *startRequestTestSuite) teardownDB() {
 
 		return nil
 	})
+}
+
+type seedRes struct {
+	config  map[string]interface{}
+	request model.Request
+	silo    model.SiloDefinition
+}
+
+type seedParams struct {
+	numSources int
+	group      *string
+	missingPK  bool
 }
 
 func (s *startRequestTestSuite) seedDB(params seedParams) (seedRes, error) {
@@ -194,6 +195,11 @@ func (s *startRequestTestSuite) seedDB(params seedParams) (seedRes, error) {
 	statuses := make([]model.RequestStatus, params.numSources)
 
 	for i := 0; i < params.numSources; i++ {
+		pk := &pk.ID
+		if params.missingPK {
+			pk = nil
+		}
+
 		sources[i] = &model.DataSource{
 			ID:    uuid.NewString(),
 			Name:  uuid.NewString(),
@@ -201,7 +207,10 @@ func (s *startRequestTestSuite) seedDB(params seedParams) (seedRes, error) {
 			Properties: []*model.Property{{
 				Name:             "0",
 				ID:               uuid.NewString(),
-				UserPrimaryKeyID: &pk.ID,
+				UserPrimaryKeyID: pk,
+			}, {
+				Name: "1",
+				ID:   uuid.NewString(),
 			}},
 		}
 
@@ -271,6 +280,7 @@ func (s *startRequestTestSuite) TestStartRequest() {
 		group         *string
 		numSources    int
 		missingSchema bool
+		missingPK     bool
 	}
 
 	for _, cfg := range []testConfig{
@@ -278,11 +288,13 @@ func (s *startRequestTestSuite) TestStartRequest() {
 		{name: "group", group: str("group"), numSources: 1},
 		{name: "multi_source", numSources: 5},
 		{name: "missing_schema", numSources: 2, missingSchema: true},
+		{name: "missing_pk", numSources: 2, missingPK: true},
 	} {
 		s.Run(cfg.name, func() {
 			seedData, err := s.seedDB(seedParams{
 				numSources: cfg.numSources,
 				group:      cfg.group,
+				missingPK:  cfg.missingPK,
 			})
 			if !s.NoError(err) {
 				return
@@ -305,6 +317,9 @@ func (s *startRequestTestSuite) TestStartRequest() {
 				"type":    "object",
 				"properties": map[string]interface{}{
 					"0": map[string]interface{}{
+						"type": "string",
+					},
+					"1": map[string]interface{}{
 						"type": "string",
 					},
 				},
@@ -356,33 +371,36 @@ func (s *startRequestTestSuite) TestStartRequest() {
 					Status: status,
 				}
 			}
-			results := make(chan monoidprotocol.MonoidRequestResult)
 
-			go func() {
-				for _, r := range resultsArr {
-					results <- r
+			if !cfg.missingPK {
+				results := make(chan monoidprotocol.MonoidRequestResult)
+
+				go func() {
+					for _, r := range resultsArr {
+						results <- r
+					}
+
+					close(results)
+				}()
+
+				identifiers := make([]monoidprotocol.MonoidQueryIdentifier, len(dataSources))
+				for i, r := range dataSources {
+					identifiers[i] = monoidprotocol.MonoidQueryIdentifier{
+						Identifier:      "0",
+						IdentifierQuery: "test_val",
+						JsonSchema:      monoidprotocol.MonoidQueryIdentifierJsonSchema(schema),
+						SchemaName:      r.Name,
+						SchemaGroup:     r.Group,
+					}
 				}
 
-				close(results)
-			}()
-
-			identifiers := make([]monoidprotocol.MonoidQueryIdentifier, len(dataSources))
-			for i, r := range dataSources {
-				identifiers[i] = monoidprotocol.MonoidQueryIdentifier{
-					Identifier:      "0",
-					IdentifierQuery: "test_val",
-					JsonSchema:      monoidprotocol.MonoidQueryIdentifierJsonSchema(schema),
-					SchemaName:      r.Name,
-					SchemaGroup:     r.Group,
-				}
+				protocol.EXPECT().Query(
+					gomock.Any(), gomock.Eq(seedData.config), gomock.Eq(
+						monoidprotocol.MonoidQuery{
+							Identifiers: identifiers,
+						},
+					)).Return(results, nil)
 			}
-
-			protocol.EXPECT().Query(
-				gomock.Any(), gomock.Eq(seedData.config), gomock.Eq(
-					monoidprotocol.MonoidQuery{
-						Identifiers: identifiers,
-					},
-				)).Return(results, nil)
 
 			protocol.EXPECT().Teardown(gomock.Any()).Return(nil)
 
@@ -414,6 +432,17 @@ func (s *startRequestTestSuite) TestStartRequest() {
 					statusItems[i] = RequestStatusItem{
 						RequestStatusID: rs.ID,
 						Error:           &RequestStatusError{Message: "error finding schema"},
+					}
+
+					continue
+				}
+
+				if cfg.missingPK {
+					statusItems[i] = RequestStatusItem{
+						RequestStatusID: rs.ID,
+						SchemaName:      seedData.silo.DataSources[i].Name,
+						SchemaGroup:     seedData.silo.DataSources[i].Group,
+						FullyComplete:   true,
 					}
 
 					continue

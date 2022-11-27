@@ -6,6 +6,7 @@ package resolver
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/brist-ai/monoid/generated"
@@ -41,6 +42,33 @@ func (r *jobResolver) Logs(ctx context.Context, obj *model.Job) ([]string, error
 	}
 
 	return logLines, nil
+}
+
+// CancelJob is the resolver for the cancelJob field.
+func (r *mutationResolver) CancelJob(ctx context.Context, id string, workspaceID string) (*model.Job, error) {
+	job := model.Job{}
+	if err := r.Conf.DB.Where(
+		"id = ?", id,
+	).Where("workspace_id = ?", workspaceID).First(&job).Error; err != nil {
+		return nil, handleError(err, "Error cancelling job")
+	}
+
+	if job.TemporalWorkflowID == "" {
+		return nil, handleError(
+			fmt.Errorf("workflow id is nil"),
+			"Job is still initializing, try again in a few seconds.",
+		)
+	}
+
+	if err := r.Conf.TemporalClient.CancelWorkflow(ctx, job.TemporalWorkflowID, ""); err != nil {
+		return nil, handleError(err, "Error cancelling job")
+	}
+
+	if err := r.Conf.DB.Model(&job).Update("status", model.JobStatusFailed).Error; err != nil {
+		return nil, handleError(err, "Error updating state")
+	}
+
+	return &job, nil
 }
 
 // Jobs is the resolver for the jobs field.

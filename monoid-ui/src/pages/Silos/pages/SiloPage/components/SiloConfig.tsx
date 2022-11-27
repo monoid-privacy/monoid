@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useContext, useRef } from 'react';
 import { gql, useMutation, useQuery } from '@apollo/client';
 import { useParams } from 'react-router-dom';
+import { CheckCircleIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import AlertRegion from '../../../../../components/AlertRegion';
 import Spinner from '../../../../../components/Spinner';
 import { SiloDefinition } from '../../../../../lib/models';
 import SiloForm from '../../NewSiloPage/components/SiloForm';
 import Card, { CardDivider, CardHeader } from '../../../../../components/Card';
+import ToastContext from '../../../../../contexts/ToastContext';
 
 const GET_SILO_CONFIG = gql`
   query GetSiloConfig($id: ID!, $workspaceId: ID!) {
@@ -35,6 +37,7 @@ const UPDATE_SILO = gql`
 
 export default function SiloConfig() {
   const { siloId, id } = useParams<{ siloId: string, id: string }>();
+  const controller = useRef(new AbortController());
   const { data, loading, error } = useQuery<{
     workspace: {
       siloDefinition: SiloDefinition
@@ -45,8 +48,15 @@ export default function SiloConfig() {
       workspaceId: id,
     },
   });
+  const toastCtx = useContext(ToastContext);
 
-  const [updateSilo, updateSiloRes] = useMutation(UPDATE_SILO);
+  const [updateSilo, updateSiloRes] = useMutation(UPDATE_SILO, {
+    context: {
+      fetchOptions: {
+        signal: controller.current.signal,
+      },
+    },
+  });
 
   if (loading) {
     return <Spinner />;
@@ -68,6 +78,17 @@ export default function SiloConfig() {
       <CardDivider />
       <SiloForm
         defaultSilo={data?.workspace.siloDefinition}
+        onCancel={() => {
+          controller.current.abort();
+          updateSiloRes.reset();
+          toastCtx.showToast({
+            title: 'Cancelled',
+            message: 'Successfully cancelled update.',
+            icon: ExclamationCircleIcon,
+            variant: 'success',
+          });
+          controller.current = new AbortController();
+        }}
         onSubmit={(val) => {
           updateSilo({
             variables: {
@@ -78,7 +99,14 @@ export default function SiloConfig() {
                 siloData: JSON.stringify(val.siloData),
               },
             },
-          });
+          }).then(() => {
+            toastCtx.showToast({
+              title: 'Updated',
+              message: 'Successfully updated config.',
+              icon: CheckCircleIcon,
+              variant: 'success',
+            });
+          }).catch(() => { });
         }}
         loading={updateSiloRes.loading}
         error={updateSiloRes.error}

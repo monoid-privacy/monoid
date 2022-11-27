@@ -15,7 +15,6 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/volume"
-	"github.com/docker/docker/pkg/stdcopy"
 )
 
 // createVolume creates a docker volume and returns the name of the volume
@@ -117,13 +116,7 @@ func (dp *DockerMonoidProtocol) containerLogsStream(
 		return nil, nil, err
 	}
 
-	pipeReader, pipeWriter := io.Pipe()
-	go func() {
-		stdcopy.StdCopy(pipeWriter, pipeWriter, res)
-		pipeWriter.Close()
-	}()
-
-	sc := bufio.NewScanner(pipeReader)
+	sc := bufio.NewScanner(res)
 	logChan := make(chan []byte)
 
 	go func() {
@@ -153,6 +146,7 @@ func (dp *DockerMonoidProtocol) createContainer(
 	cfg := container.Config{
 		Image: dp.imageName,
 		Cmd:   cmd,
+		Tty:   true,
 	}
 
 	var hostConfig *container.HostConfig = nil

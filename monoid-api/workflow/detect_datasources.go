@@ -18,21 +18,49 @@ type DetectDSArgs struct {
 func (w *Workflow) DetectDSWorkflow(
 	ctx workflow.Context,
 	args DetectDSArgs,
-) error {
+) (err error) {
 	options := workflow.ActivityOptions{
 		StartToCloseTimeout: time.Minute * 2,
 		RetryPolicy: &temporal.RetryPolicy{
 			MaximumAttempts: 5,
 		},
+		HeartbeatTimeout: 2 * time.Second,
 	}
 
-	ctx = workflow.WithActivityOptions(ctx, options)
+	cleanupOptions := workflow.ActivityOptions{
+		StartToCloseTimeout: time.Minute * 1,
+		RetryPolicy: &temporal.RetryPolicy{
+			MaximumAttempts: 2,
+		},
+	}
 
+	cleanupCtx, _ := workflow.NewDisconnectedContext(
+		workflow.WithActivityOptions(ctx, cleanupOptions),
+	)
+
+	ctx = workflow.WithActivityOptions(ctx, options)
 	ac := activity.Activity{}
+
+	defer func() {
+		status := model.JobStatusCompleted
+
+		if err != nil {
+			status = model.JobStatusFailed
+		}
+
+		terr := workflow.ExecuteActivity(cleanupCtx, ac.UpdateJobStatus, activity.JobStatusInput{
+			ID:     args.JobID,
+			Status: status,
+		}).Get(ctx, nil)
+
+		if terr != nil && err == nil {
+			err = terr
+		}
+	}()
 
 	// Get or create (if this is scheduled) the job
 	job := model.Job{}
-	err := workflow.ExecuteActivity(ctx, ac.FindOrCreateJob, activity.JobInput{
+	err = workflow.ExecuteActivity(ctx, ac.FindOrCreateJob, activity.JobInput{
 		ID:          args.JobID,
 		WorkspaceID: args.WorkspaceID,
 		JobType:     model.JobTypeDiscoverSources,
@@ -40,19 +68,7 @@ func (w *Workflow) DetectDSWorkflow(
 		Status:      model.JobStatusRunning,
 	}).Get(ctx, &job)
 
-	w.Conf.AnalyticsIngestor.Track("job", nil, map[string]interface{}{
-		"jobId":   job.ID,
-		"jobType": "detectDataSources",
-		"siloId":  args.SiloDefID,
-		"action":  "started",
-	})
-
 	if err != nil {
-		err := workflow.ExecuteActivity(ctx, ac.UpdateJobStatus, activity.JobStatusInput{
-			ID:     args.JobID,
-			Status: model.JobStatusFailed,
-		}).Get(ctx, nil)
-
 		return err
 	}
 
@@ -65,33 +81,8 @@ func (w *Workflow) DetectDSWorkflow(
 	}).Get(ctx, &numDiscoveries)
 
 	if err != nil {
-		w.Conf.AnalyticsIngestor.Track("job", nil, map[string]interface{}{
-			"jobId":   job.ID,
-			"jobType": "detectDataSources",
-			"siloId":  args.SiloDefID,
-			"action":  "failed",
-		})
-
-		err := workflow.ExecuteActivity(ctx, ac.UpdateJobStatus, activity.JobStatusInput{
-			ID:     args.JobID,
-			Status: model.JobStatusFailed,
-		}).Get(ctx, nil)
-
 		return err
 	}
 
-	w.Conf.AnalyticsIngestor.Track("job", nil, map[string]interface{}{
-		"jobId":          job.ID,
-		"jobType":        "detectDataSources",
-		"siloId":         args.SiloDefID,
-		"action":         "completed",
-		"numDiscoveries": numDiscoveries,
-	})
-
-	err = workflow.ExecuteActivity(ctx, ac.UpdateJobStatus, activity.JobStatusInput{
-		ID:     job.ID,
-		Status: model.JobStatusCompleted,
-	}).Get(ctx, nil)
-
-	return err
+	return nil
 }

@@ -103,7 +103,7 @@ func (a *RequestActivity) processSiloDefStatuses(
 
 	for stat := range statCh {
 		stat := stat
-		requestID, ok := dataSourceMap[monoidactivity.NewDataSourceMatcher(stat.SchemaName, &stat.SchemaGroup)]
+		requestID, ok := dataSourceMap[monoidactivity.NewDataSourceMatcher(stat.SchemaName, stat.SchemaGroup)]
 		if !ok {
 			logger.Error("Did not find schema", stat.SchemaName, stat.SchemaGroup)
 		}

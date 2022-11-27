@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"time"
 
 	"github.com/brist-ai/monoid/jsonschema"
 	"github.com/brist-ai/monoid/model"
@@ -361,6 +362,20 @@ type DetectDSArgs struct {
 // discoveries that were made.
 func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) (int, error) {
 	logger := activity.GetLogger(ctx)
+	go func() {
+		ticker := time.NewTicker(1 * time.Second)
+
+	L:
+		for {
+			select {
+			case <-ticker.C:
+				activity.RecordHeartbeat(ctx)
+			case <-ctx.Done():
+				logger.Info("Activity cancelled")
+				break L
+			}
+		}
+	}()
 
 	dataSilo := model.SiloDefinition{}
 	if err := a.Conf.DB.Preload(
@@ -404,14 +419,29 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) (in
 			logger.Error("Error opening log writer: %v", err)
 		}
 
-		for logMsg := range logChan {
-			if _, err := wr.Write([]byte(logMsg.Message + "\n")); err != nil {
-				logger.Error("Error writing", err)
+	L:
+		for {
+			select {
+			case logMsg, ok := <-logChan:
+				if !ok {
+					break L
+				}
+
+				if _, err := wr.Write([]byte(logMsg.Message + "\n")); err != nil {
+					logger.Error("Error writing", err)
+				}
+			case <-ctx.Done():
+				logger.Info("Task Cancelled")
+
+				if _, err := wr.Write([]byte("Task cancelled\n")); err != nil {
+					logger.Error("Error writing", err)
+				}
+
+				break L
 			}
 		}
 
 		logger.Debug("Close")
-
 		wr.Close()
 	}()
 

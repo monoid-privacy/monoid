@@ -219,56 +219,58 @@ L:
 
 	logger.Info("Identifiers", identifiers)
 
-	var reqChan chan monoidprotocol.MonoidRequestResult
+	if len(identifiers) > 0 {
+		var reqChan chan monoidprotocol.MonoidRequestResult
 
-	// run the delete or query
-	switch request.Type {
-	case model.UserDataRequestTypeDelete:
-		reqChan, err = protocol.Delete(ctx, conf, monoidprotocol.MonoidQuery{
-			Identifiers: identifiers,
-		})
-	case model.UserDataRequestTypeQuery:
-		reqChan, err = protocol.Query(ctx, conf, monoidprotocol.MonoidQuery{
-			Identifiers: identifiers,
-		})
-	}
-
-	if err != nil {
-		return RequestStatusResult{}, err
-	}
-
-	handleUpdates := map[string]monoidprotocol.MonoidRequestHandle{}
-
-	for res := range reqChan {
-		ds, ok := dsMap[monoidactivity.NewDataSourceMatcher(
-			res.Handle.SchemaName,
-			res.Handle.SchemaGroup,
-		)]
-
-		if !ok {
-			logger.Error("Could not find data source", res.Handle.SchemaName, res.Handle.SchemaGroup)
-			continue
+		// run the delete or query
+		switch request.Type {
+		case model.UserDataRequestTypeDelete:
+			reqChan, err = protocol.Delete(ctx, conf, monoidprotocol.MonoidQuery{
+				Identifiers: identifiers,
+			})
+		case model.UserDataRequestTypeQuery:
+			reqChan, err = protocol.Query(ctx, conf, monoidprotocol.MonoidQuery{
+				Identifiers: identifiers,
+			})
 		}
 
-		stat := res.Status
-
-		results[ds.RequestStatuses[0].ID] = &RequestStatusItem{
-			RequestStatus: &stat,
-		}
-
-		handleUpdates[ds.RequestStatuses[0].ID] = res.Handle
-	}
-
-	for reqStatID, reqHandle := range handleUpdates {
-		handleJSON, err := json.Marshal(reqHandle)
 		if err != nil {
-			errorIDs[reqStatID] = err
+			return RequestStatusResult{}, err
 		}
 
-		if err := a.Conf.DB.Model(&model.RequestStatus{ID: reqStatID}).Update(
-			"request_handle", model.SecretString(handleJSON),
-		).Error; err != nil {
-			errorIDs[reqStatID] = err
+		handleUpdates := map[string]monoidprotocol.MonoidRequestHandle{}
+
+		for res := range reqChan {
+			ds, ok := dsMap[monoidactivity.NewDataSourceMatcher(
+				res.Handle.SchemaName,
+				res.Handle.SchemaGroup,
+			)]
+
+			if !ok {
+				logger.Error("Could not find data source", res.Handle.SchemaName, res.Handle.SchemaGroup)
+				continue
+			}
+
+			stat := res.Status
+
+			results[ds.RequestStatuses[0].ID] = &RequestStatusItem{
+				RequestStatus: &stat,
+			}
+
+			handleUpdates[ds.RequestStatuses[0].ID] = res.Handle
+		}
+
+		for reqStatID, reqHandle := range handleUpdates {
+			handleJSON, err := json.Marshal(reqHandle)
+			if err != nil {
+				errorIDs[reqStatID] = err
+			}
+
+			if err := a.Conf.DB.Model(&model.RequestStatus{ID: reqStatID}).Update(
+				"request_handle", model.SecretString(handleJSON),
+			).Error; err != nil {
+				errorIDs[reqStatID] = err
+			}
 		}
 	}
 

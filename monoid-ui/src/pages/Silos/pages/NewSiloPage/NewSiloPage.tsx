@@ -24,6 +24,7 @@ export default function NewSiloPage() {
       <PageHeader title="New Silo" />
       <Card className="mt-5">
         <SiloForm
+          onCancel={() => { }}
           onSubmit={(silo) => {
             createSilo({
               variables: {

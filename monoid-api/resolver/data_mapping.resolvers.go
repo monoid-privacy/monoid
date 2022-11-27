@@ -12,6 +12,7 @@ import (
 	"github.com/brist-ai/monoid/model"
 	"github.com/brist-ai/monoid/workflow"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.temporal.io/sdk/client"
 	"gorm.io/gorm"
@@ -282,7 +283,7 @@ func (r *mutationResolver) DetectSiloSources(ctx context.Context, workspaceID st
 			Conf: r.Conf,
 		}
 
-		_, err := r.Conf.TemporalClient.ExecuteWorkflow(
+		wf, err := r.Conf.TemporalClient.ExecuteWorkflow(
 			context.Background(),
 			options,
 			sf.DetectDSWorkflow,
@@ -295,6 +296,10 @@ func (r *mutationResolver) DetectSiloSources(ctx context.Context, workspaceID st
 
 		if err != nil {
 			return err
+		}
+
+		if err := tx.Model(&job).Update("temporal_workflow_id", wf.GetID()).Error; err != nil {
+			log.Err(err).Msg("Error uploading workflow ID")
 		}
 
 		return nil

@@ -6,6 +6,7 @@ import Spinner from '../../../../../components/Spinner';
 import { SiloDefinition, SiloSpec } from '../../../../../lib/models';
 import SiloFields from './SiloFields';
 import SourcesCombobox from './SourcesCombobox';
+import Text from '../../../../../components/Text';
 
 interface SiloFormData {
   name: string,
@@ -15,18 +16,20 @@ interface SiloFormData {
 
 export default function SiloForm(props: {
   onSubmit: (silo: SiloFormData) => void,
+  onCancel: () => void,
   defaultSilo?: SiloDefinition,
   loading?: boolean,
   error?: Error,
 }) {
   const {
-    onSubmit, loading, defaultSilo, error,
+    onSubmit, onCancel, loading, defaultSilo, error,
   } = props;
   const [silo, setSilo] = useState<SiloFormData>({
     name: '',
     siloSpec: undefined,
     siloData: {},
   });
+
   useEffect(() => {
     if (!defaultSilo) {
       return;
@@ -98,14 +101,25 @@ export default function SiloForm(props: {
         )
       }
 
-      <div>
+      <div className="flex flex-col space-y-3 items-start">
+        {loading && (
+          <div className="flex items-center space-x-1">
+            <Spinner />
+            <Text em="light" size="sm">Validating (this may take a minute)...</Text>
+          </div>
+        )}
         <Button
           className="justify-center"
+          variant={loading ? 'danger' : 'primary'}
           onClick={() => {
-            onSubmit(silo);
+            if (loading) {
+              onCancel();
+            } else {
+              onSubmit(silo);
+            }
           }}
         >
-          {loading ? <Spinner /> : 'Submit'}
+          {loading ? 'Cancel' : 'Submit'}
         </Button>
       </div>
     </div>

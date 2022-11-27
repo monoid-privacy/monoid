@@ -47,6 +47,8 @@ func NewDockerMP(dockerImage string, dockerTag string, persistDir string) (monoi
 		return nil, err
 	}
 
+	cli.NegotiateAPIVersion(context.Background())
+
 	return NewDockerMPWithClient(dockerImage, dockerTag, persistDir, cli, true), nil
 }
 

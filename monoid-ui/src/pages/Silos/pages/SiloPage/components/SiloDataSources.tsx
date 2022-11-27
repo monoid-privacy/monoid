@@ -5,7 +5,8 @@ import {
 } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  CheckCircleIcon, CircleStackIcon, FolderIcon, MinusCircleIcon, PlusCircleIcon, XCircleIcon,
+  CircleStackIcon, ExclamationCircleIcon, FolderIcon, MinusCircleIcon,
+  PlusCircleIcon, XCircleIcon,
 } from '@heroicons/react/24/outline';
 import {
   CheckIcon, XMarkIcon,
@@ -188,8 +189,8 @@ export default function SiloDataSources() {
                 toastCtx.showToast({
                   variant: 'success',
                   title: 'Scan Complete',
-                  message: 'Data silo has finished scanning sources.',
-                  icon: CheckCircleIcon,
+                  message: 'Data silo scan has finished.',
+                  icon: ExclamationCircleIcon,
                 });
               }
             }}
