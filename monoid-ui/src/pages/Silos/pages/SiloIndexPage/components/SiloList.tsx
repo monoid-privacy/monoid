@@ -6,6 +6,7 @@ import AlertRegion from '../../../../../components/AlertRegion';
 import Spinner from '../../../../../components/Spinner';
 import Table from '../../../../../components/Table';
 import { SiloDefinition } from '../../../../../lib/models';
+import SVGText from '../../../../../components/SVGText';
 
 const GET_SILOS = gql`
   query GetSilos($id: ID!) {
@@ -15,8 +16,9 @@ const GET_SILOS = gql`
         id
         name
         siloSpecification {
+          id
           name
-          logoUrl
+          logo
         }
       }
     }
@@ -75,14 +77,13 @@ export default function SiloList() {
           {
             key: 'silo_type',
             content: (
-              <div className="flex">
-                {sd.siloSpecification!.logoUrl
+              <div className="flex space-x-2">
+                {sd.siloSpecification!.logo
                   && (
-                    <img
-                      src={sd.siloSpecification!.logoUrl}
-                      alt={
-                        `${sd.siloSpecification!.name} Logo`
-                      }
+                    <SVGText
+                      className="w-5 h-5"
+                      imageText={sd.siloSpecification!.logo}
+                      alt={`${sd.siloSpecification!.name} Logo`}
                     />
                   )}
                 <div>{sd.siloSpecification!.name}</div>

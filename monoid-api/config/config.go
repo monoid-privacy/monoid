@@ -19,6 +19,7 @@ type BaseConfig struct {
 	FileStore         filestore.FileStore
 	TemporalClient    client.Client
 	AnalyticsIngestor ingestor.Ingestor
+	ResourcePath      string
 }
 
 func (c BaseConfig) PreFlightHandler(next http.Handler) http.Handler {

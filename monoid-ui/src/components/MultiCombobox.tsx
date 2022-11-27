@@ -17,7 +17,7 @@ type ComboboxProps<T> = ({
 } | {
   value: T | undefined,
   onChange: (v?: T | null) => void,
-  isMulti: false | undefined
+  isMulti: false
 }) & BaseComboboxProps<T>;
 
 export default function Combobox<T>(props: ComboboxProps<T>) {
@@ -44,6 +44,7 @@ export default function Combobox<T>(props: ComboboxProps<T>) {
           option: (base, state) => ({
             ...base,
             backgroundColor: state.isFocused ? 'rgb(243 244 246)' : undefined,
+            color: state.isFocused ? 'rgb(255 255 255)' : undefined,
             '&:active': {
               backgroundColor: 'rgb(243 244 246)',
             },
@@ -68,6 +69,7 @@ export default function Combobox<T>(props: ComboboxProps<T>) {
         option: (base, state) => ({
           ...base,
           backgroundColor: state.isFocused ? 'rgb(243 244 246)' : undefined,
+          color: state.isFocused ? 'rgb(0 0 0)' : undefined,
           '&:active': {
             backgroundColor: 'rgb(243 244 246)',
           },

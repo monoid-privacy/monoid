@@ -8,6 +8,7 @@ import FilterRegion, { FilterValue } from '../../components/FilterRegion';
 import PageHeader from '../../components/PageHeader';
 import Pagination from '../../components/Pagination';
 import Spinner from '../../components/Spinner';
+import SVGText from '../../components/SVGText';
 import Table from '../../components/Table';
 import { Category, SiloDefinition } from '../../lib/models';
 
@@ -20,6 +21,11 @@ const DATA_MAP_QUERY = gql`
           siloDefinition {
             id
             name
+            siloSpecification {
+              id
+              name
+              logo
+            }
           }
           property {
             id
@@ -137,7 +143,22 @@ function DataMapList(props: { filters: FilterValue[] }) {
         data.workspace.dataMap.dataMapRows.map((r: any) => ({
           key: r.dataSource.id + r.property.id,
           columns: [{
-            content: r.siloDefinition.name,
+            content: (
+              <div className="flex space-x-2 items-center">
+                {r.siloDefinition.siloSpecification?.logo
+                  && (
+                    <SVGText
+                      className="w-4 h-4"
+                      imageText={r.siloDefinition.siloSpecification.logo}
+                      alt={`${r.siloDefinition.siloSpecification.name} Logo`}
+                    />
+                  )}
+                <div>
+                  {r.siloDefinition.name}
+                </div>
+              </div>
+
+            ),
             key: 'silo',
           }, {
             content: r.dataSource.name,
@@ -212,11 +233,12 @@ function CategoryTag(props: {
   );
 }
 
-function SiloDefTag(props: {
+export function SiloDefTag(props: {
   siloDefs: SiloDefinition[],
   value: FilterValue,
 }) {
   const { value, siloDefs } = props;
+  console.log('Defs', siloDefs);
 
   const siloDefMap = useMemo(() => (
     Object.fromEntries(siloDefs.map((sd) => [sd.id, sd]))
@@ -227,7 +249,7 @@ function SiloDefTag(props: {
       <div>is in</div>
       <div className="flex items-center space-x-1">
         {value.value.map((val) => (
-          <Badge key={val} color="white">{siloDefMap[val].name}</Badge>
+          <Badge key={val} color="white">{siloDefMap[val]?.name || ''}</Badge>
         ))}
       </div>
     </div>

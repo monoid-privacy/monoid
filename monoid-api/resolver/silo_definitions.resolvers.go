@@ -13,6 +13,7 @@ import (
 
 	"github.com/brist-ai/monoid/generated"
 	"github.com/brist-ai/monoid/jsonschema"
+	"github.com/brist-ai/monoid/loader"
 	"github.com/brist-ai/monoid/model"
 	"github.com/brist-ai/monoid/workflow"
 	"github.com/google/uuid"
@@ -313,15 +314,7 @@ func (r *mutationResolver) UpdateSiloScanConfig(ctx context.Context, input model
 
 // SiloSpecification is the resolver for the siloSpecification field.
 func (r *siloDefinitionResolver) SiloSpecification(ctx context.Context, obj *model.SiloDefinition) (*model.SiloSpecification, error) {
-	spec := model.SiloSpecification{}
-	if err := r.Conf.DB.Where(
-		"id = ?",
-		obj.SiloSpecificationID,
-	).First(&spec).Error; err != nil {
-		return nil, handleError(err, "Error finding specifications")
-	}
-
-	return &spec, nil
+	return loader.GetSiloSpecification(ctx, obj.SiloSpecificationID)
 }
 
 // DataSources is the resolver for the dataSources field.

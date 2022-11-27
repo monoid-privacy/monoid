@@ -105,6 +105,15 @@ type MonoidRecordResponse struct {
 	SchemaName  string  `json:"SchemaName"`
 }
 
+type RequestStatusListResult struct {
+	RequestStatusRows []*RequestStatus `json:"requestStatusRows"`
+	NumStatuses       int              `json:"numStatuses"`
+}
+
+type RequestStatusQuery struct {
+	SiloDefinitions []string `json:"siloDefinitions"`
+}
+
 type RequestsResult struct {
 	Requests    []*Request `json:"requests"`
 	NumRequests int        `json:"numRequests"`

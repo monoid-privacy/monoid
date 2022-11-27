@@ -46,10 +46,19 @@ type PrimaryKeyValue {
     value: String!
 }
 
+input RequestStatusQuery {
+    siloDefinitions: [ID!]
+}
+
+type RequestStatusListResult {
+    requestStatusRows: [RequestStatus!]
+    numStatuses: Int!
+}
+
 type Request {
     id: ID!
     primaryKeyValues: [PrimaryKeyValue!]
-    requestStatuses: [RequestStatus!]
+    requestStatuses(query: RequestStatusQuery, offset: Int, limit: Int!): RequestStatusListResult!
     type: UserDataRequestType!
     createdAt: Time
 }

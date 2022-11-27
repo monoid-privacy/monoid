@@ -49,6 +49,10 @@ func (s *siloRequestUnitTestSuite) tabularAfter() {
 	s.env.AssertExpectations(s.T())
 }
 
+func str(s string) *string {
+	return &s
+}
+
 // TestSimpleSiloRequest verifies that a request that returns immediately
 // works correctly.
 func (s *siloRequestUnitTestSuite) TestSimpleSiloRequest() {
@@ -102,7 +106,7 @@ func (s *siloRequestUnitTestSuite) TestSimpleSiloRequest() {
 			status := &monoidprotocol.MonoidRequestStatus{
 				DataType:      &dt,
 				RequestStatus: arg.status,
-				SchemaGroup:   "test_group",
+				SchemaGroup:   str("test_group"),
 				SchemaName:    "test_name",
 			}
 
@@ -132,10 +136,20 @@ func (s *siloRequestUnitTestSuite) TestSimpleSiloRequest() {
 					times = 5
 				}
 
+				res := requestactivity.ProcessRequestResult{
+					ResultItems: []requestactivity.ProcessRequestItem{{
+						RequestStatusID: results.ResultItems[0].RequestStatusID,
+					}},
+				}
+
+				if arg.processErr != nil {
+					res = requestactivity.ProcessRequestResult{}
+				}
+
 				s.env.OnActivity(s.ra.ProcessRequestResults, mock.Anything, requestactivity.ProcessRequestArgs{
-					ProtocolRequestStatus: *results.ResultItems[0].RequestStatus,
-					RequestStatusID:       results.ResultItems[0].RequestStatusID,
-				}).Return(arg.processErr).Times(times)
+					ProtocolRequestStatus: []monoidprotocol.MonoidRequestStatus{*results.ResultItems[0].RequestStatus},
+					RequestStatusIDs:      []string{results.ResultItems[0].RequestStatusID},
+				}).Return(res, arg.processErr).Times(times)
 			}
 
 			s.env.OnActivity(s.ra.UpdateRequestStatusActivity, mock.Anything, requestactivity.UpdateRequestStatusArgs{
@@ -168,7 +182,7 @@ func (s *siloRequestUnitTestSuite) TestDelayedSiloRequest() {
 			RequestStatus: &monoidprotocol.MonoidRequestStatus{
 				DataType:      &dt,
 				RequestStatus: monoidprotocol.MonoidRequestStatusRequestStatusPROGRESS,
-				SchemaGroup:   "test_group",
+				SchemaGroup:   str("test_group"),
 				SchemaName:    "test_name",
 			},
 			RequestStatusID: uuid.NewString(),
@@ -201,9 +215,13 @@ func (s *siloRequestUnitTestSuite) TestDelayedSiloRequest() {
 	completeStatus.RequestStatus = monoidprotocol.MonoidRequestStatusRequestStatusCOMPLETE
 
 	s.env.OnActivity(s.ra.ProcessRequestResults, mock.Anything, requestactivity.ProcessRequestArgs{
-		ProtocolRequestStatus: completeStatus,
-		RequestStatusID:       results.ResultItems[0].RequestStatusID,
-	}).Return(nil).Once()
+		ProtocolRequestStatus: []monoidprotocol.MonoidRequestStatus{completeStatus},
+		RequestStatusIDs:      []string{results.ResultItems[0].RequestStatusID},
+	}).Return(requestactivity.ProcessRequestResult{
+		ResultItems: []requestactivity.ProcessRequestItem{{
+			RequestStatusID: results.ResultItems[0].RequestStatusID,
+		}},
+	}, nil).Once()
 
 	s.env.OnActivity(s.ra.UpdateRequestStatusActivity, mock.Anything, requestactivity.UpdateRequestStatusArgs{
 		RequestStatusID: results.ResultItems[0].RequestStatusID,

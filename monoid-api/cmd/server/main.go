@@ -36,6 +36,7 @@ func main() {
 	defer c.Close()
 
 	conf.TemporalClient = c
+	conf.ResourcePath = os.Getenv("RESOURCE_PATH")
 
 	router := mux.NewRouter()
 

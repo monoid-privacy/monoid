@@ -1,6 +1,7 @@
 export interface SiloSpec {
   id: string
   logoUrl?: string
+  logo?: string
   name: string
   schema: string
 }
@@ -24,7 +25,10 @@ export interface Request {
   id?: string
   createdAt?: string
   primaryKeyValues?: PrimaryKeyValue[]
-  requestStatuses?: RequestStatus[]
+  requestStatuses?: {
+    numStatuses?: number,
+    requestStatusRows?: RequestStatus[]
+  }
   type?: string
 }
 

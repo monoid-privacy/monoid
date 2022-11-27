@@ -23,6 +23,7 @@ type SiloSpecification {
     id: ID!
     name: String!
     logoUrl: String
+    logo: String
     dockerImage: String!
     schema: String
 }

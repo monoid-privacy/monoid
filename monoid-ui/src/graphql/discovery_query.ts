@@ -105,6 +105,11 @@ export const GET_WORKSPACE_DISCOVERIES = gql`
           siloDefinition {
             id
             name
+            siloSpecification {
+              id
+              name
+              logo
+            }
           }
         }
         numDiscoveries

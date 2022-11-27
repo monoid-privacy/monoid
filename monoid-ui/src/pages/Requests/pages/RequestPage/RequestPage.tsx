@@ -35,28 +35,11 @@ const RUNNING_EXECUTE_REQUEST_JOBS = gql`
   }
 `;
 
-const GET_REQUEST_DATA = gql`
-  query GetRequestData($id: ID!) {
+const GET_REQUEST_METADATA = gql`
+  query GetRequestMetadata($id: ID!) {
       request(id: $id) {
         id
         type
-        primaryKeyValues {
-          id
-          value
-          userPrimaryKey {
-              id
-              name
-          }
-        }
-        requestStatuses {
-            id
-            status
-            dataSource {
-                id
-                name
-                group
-            }
-        }
       }
   }
 `;
@@ -139,7 +122,7 @@ export default function RequestPage(
   const { requestId, id } = useParams<{ requestId: string, id: string }>();
   const { data, loading, error } = useQuery<{
     request: Request
-  }>(GET_REQUEST_DATA, {
+  }>(GET_REQUEST_METADATA, {
     variables: {
       id: requestId,
     },

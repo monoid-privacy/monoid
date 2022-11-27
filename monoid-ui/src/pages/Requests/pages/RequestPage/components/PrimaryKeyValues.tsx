@@ -20,15 +20,6 @@ query GetRequestData($id: ID!) {
         apiIdentifier
       }
     }
-    requestStatuses {
-      id
-      status
-      dataSource {
-        id
-        name
-        group
-      }
-    }
   }
 }
 `;

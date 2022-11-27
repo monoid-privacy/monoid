@@ -59,6 +59,11 @@ func (w *RequestWorkflow) ExecuteSiloRequestWorkflow(
 	processing := reqStatus.ResultItems
 	for len(processing) > 0 {
 		newProcessing := make([]requestactivity.RequestStatusItem, 0, len(processing))
+		type resultExtractTuple struct {
+			status          monoidprotocol.MonoidRequestStatus
+			requestStatusID string
+		}
+		resultExtractData := []resultExtractTuple{}
 
 		for _, res := range processing {
 			if res.Error != nil {
@@ -80,24 +85,10 @@ func (w *RequestWorkflow) ExecuteSiloRequestWorkflow(
 
 			switch res.RequestStatus.RequestStatus {
 			case monoidprotocol.MonoidRequestStatusRequestStatusCOMPLETE:
-				if err := workflow.ExecuteActivity(ctx, ac.ProcessRequestResults, requestactivity.ProcessRequestArgs{
-					ProtocolRequestStatus: *res.RequestStatus,
-					RequestStatusID:       res.RequestStatusID,
-				}).Get(ctx, nil); err != nil {
-					logger.Error("Error processing results", err)
-
-					if terr := updateRequest(ctx, res.RequestStatusID, model.RequestStatusTypeFailed); terr != nil {
-						logger.Error("Error updating request", terr)
-						continue
-					}
-
-					continue
-				}
-
-				if terr := updateRequest(ctx, res.RequestStatusID, model.RequestStatusTypeExecuted); terr != nil {
-					logger.Error("Error updating request", terr)
-					continue
-				}
+				resultExtractData = append(resultExtractData, resultExtractTuple{
+					status:          *res.RequestStatus,
+					requestStatusID: res.RequestStatusID,
+				})
 			case monoidprotocol.MonoidRequestStatusRequestStatusFAILED:
 				if terr := updateRequest(ctx, res.RequestStatusID, model.RequestStatusTypeFailed); terr != nil {
 					logger.Error("Error updating request", terr)
@@ -105,6 +96,45 @@ func (w *RequestWorkflow) ExecuteSiloRequestWorkflow(
 				}
 			case monoidprotocol.MonoidRequestStatusRequestStatusPROGRESS:
 				newProcessing = append(newProcessing, res)
+			}
+		}
+
+		if len(resultExtractData) > 0 {
+			requestArgs := requestactivity.ProcessRequestArgs{
+				ProtocolRequestStatus: make([]monoidprotocol.MonoidRequestStatus, len(resultExtractData)),
+				RequestStatusIDs:      make([]string, len(resultExtractData)),
+			}
+
+			for i, datum := range resultExtractData {
+				requestArgs.ProtocolRequestStatus[i] = datum.status
+				requestArgs.RequestStatusIDs[i] = datum.requestStatusID
+			}
+
+			res := requestactivity.ProcessRequestResult{}
+
+			logger.Info("Calling process")
+			if err := workflow.ExecuteActivity(ctx, ac.ProcessRequestResults, requestArgs).Get(ctx, &res); err != nil {
+				logger.Error("Error processing results", err)
+
+				for _, datum := range resultExtractData {
+					if terr := updateRequest(ctx, datum.requestStatusID, model.RequestStatusTypeFailed); terr != nil {
+						logger.Error("Error updating request", terr)
+						continue
+					}
+				}
+			} else {
+				for _, r := range res.ResultItems {
+					status := model.RequestStatusTypeExecuted
+
+					if r.Error != nil {
+						status = model.RequestStatusTypeFailed
+					}
+
+					if terr := updateRequest(ctx, r.RequestStatusID, status); terr != nil {
+						logger.Error("Error updating request", terr)
+						continue
+					}
+				}
 			}
 		}
 

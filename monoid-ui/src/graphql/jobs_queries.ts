@@ -20,6 +20,11 @@ export const GET_ALL_SCANS = gql`
           siloDefinition {
             id
             name
+            siloSpecification {
+              id
+              name
+              logo
+            }
           }
         }
         numJobs

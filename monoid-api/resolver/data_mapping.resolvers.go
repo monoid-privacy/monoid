@@ -6,6 +6,8 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/brist-ai/monoid/generated"
 	"github.com/brist-ai/monoid/loader"
@@ -364,6 +366,21 @@ func (r *queryResolver) Property(ctx context.Context, id string) (*model.Propert
 	return findObjectByID[model.Property](id, r.Conf.DB, "Error finding property.")
 }
 
+// Logo is the resolver for the logo field.
+func (r *siloSpecificationResolver) Logo(ctx context.Context, obj *model.SiloSpecification) (*string, error) {
+	if obj.LogoURL == nil {
+		return nil, nil
+	}
+
+	data, err := os.ReadFile(filepath.Join(r.Conf.ResourcePath, "images", *obj.LogoURL))
+	if err != nil {
+		return nil, handleError(err, "Error getting logo.")
+	}
+
+	sdata := string(data)
+	return &sdata, nil
+}
+
 // DataMap is the resolver for the dataMap field.
 func (r *workspaceResolver) DataMap(ctx context.Context, obj *model.Workspace, query *model.DataMapQuery, limit int, offset *int) (*model.DataMapResult, error) {
 	dataMap := []*model.DataMapRow{}
@@ -441,5 +458,11 @@ func (r *Resolver) DataSource() generated.DataSourceResolver { return &dataSourc
 // Property returns generated.PropertyResolver implementation.
 func (r *Resolver) Property() generated.PropertyResolver { return &propertyResolver{r} }
 
+// SiloSpecification returns generated.SiloSpecificationResolver implementation.
+func (r *Resolver) SiloSpecification() generated.SiloSpecificationResolver {
+	return &siloSpecificationResolver{r}
+}
+
 type dataSourceResolver struct{ *Resolver }
 type propertyResolver struct{ *Resolver }
+type siloSpecificationResolver struct{ *Resolver }

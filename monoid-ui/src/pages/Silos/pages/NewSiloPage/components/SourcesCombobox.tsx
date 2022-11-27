@@ -1,7 +1,8 @@
 import { gql, useQuery } from '@apollo/client';
 import React from 'react';
-import Combobox from '../../../../../components/Combobox';
+import Combobox from '../../../../../components/MultiCombobox';
 import Spinner from '../../../../../components/Spinner';
+import SVGText from '../../../../../components/SVGText';
 import { SiloSpec } from '../../../../../lib/models';
 
 const GET_SILO_SPECS = gql`
@@ -9,7 +10,7 @@ const GET_SILO_SPECS = gql`
     siloSpecifications {
       id
       name
-      logoUrl
+      logo
       schema
     }
   }
@@ -29,6 +30,20 @@ export default function SourcesCombobox(props: {
     );
   }
 
+  const displayNode = (ss: SiloSpec) => (
+    <div className="flex items-center space-x-2">
+      {ss.logo
+        && (
+          <SVGText
+            className="w-4 h-4"
+            imageText={ss.logo}
+            alt={`${ss.name} Logo`}
+          />
+        )}
+      <div className="text-sm">{ss.name}</div>
+    </div>
+  );
+
   if (loading) {
     return <Spinner />;
   }
@@ -36,12 +51,13 @@ export default function SourcesCombobox(props: {
   return (
     <Combobox<SiloSpec>
       value={data!.siloSpecifications.find((ss: SiloSpec) => ss.id === value)}
-      onChange={(v) => { setValue(v); }}
-      filter={(q) => data!.siloSpecifications.filter(
+      onChange={(v) => { if (v) { setValue(v); } }}
+      filter={(q) => Promise.resolve(data!.siloSpecifications.filter(
         (ss) => ss.name.toLowerCase().includes(q.toLowerCase()),
-      )}
+      ))}
       id={(ss) => ss.id}
-      displayText={(ss) => ss.name}
+      displayNode={displayNode}
+      isMulti={false}
     />
   );
 }

@@ -2,13 +2,10 @@ package requestactivity
 
 import (
 	"context"
-	"database/sql"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"testing"
 
-	"github.com/brist-ai/monoid/cmd"
 	"github.com/brist-ai/monoid/config"
 	"github.com/brist-ai/monoid/mocks"
 	"github.com/brist-ai/monoid/model"
@@ -18,12 +15,9 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/suite"
 	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/wait"
 	"go.temporal.io/sdk/testsuite"
 	"gorm.io/gorm"
 )
-
-const testEncKey = "Tc7ILcxCi68Xk7646IrNBYmbMzbWNU+s94fnZMJ1zzk="
 
 type startRequestTestSuite struct {
 	suite.Suite
@@ -36,72 +30,13 @@ type startRequestTestSuite struct {
 }
 
 func (s *startRequestTestSuite) SetupSuite() {
-	req := testcontainers.ContainerRequest{
-		Image:        "postgres:latest",
-		ExposedPorts: []string{"5432/tcp"},
-		WaitingFor:   wait.ForListeningPort("5432/tcp"),
-		AutoRemove:   true,
-		Env: map[string]string{
-			"POSTGRES_USER":     "postgres",
-			"POSTGRES_PASSWORD": "postgres",
-			"POSTGRES_DB":       "postgres",
-		},
-	}
-
-	ctx := context.Background()
-
-	postgres, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
-		ContainerRequest: req,
-		Started:          true,
-	})
-
-	s.pgContainer = postgres
-
+	container, db, err := setupDB()
 	if err != nil {
 		panic(err)
 	}
-
-	p, err := postgres.MappedPort(ctx, "5432")
-	if err != nil {
-		panic(err)
-	}
-
-	h, err := postgres.Host(ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	psqlInfo := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		h, p.Port(), "postgres", "postgres", "postgres",
-	)
-
-	rawDB, err := sql.Open("postgres", psqlInfo)
-	if err != nil {
-		panic(err)
-	}
-
-	_, err = rawDB.Exec("CREATE DATABASE monoidtest")
-	if err != nil {
-		rawDB.Close()
-		panic(err)
-	}
-
-	rawDB.Close()
-
-	fmt.Println("Successfully connected!")
-
-	db := cmd.InitDb(cmd.DBInfo{
-		User:     "postgres",
-		Password: "postgres",
-		TCPHost:  h,
-		Port:     p.Port(),
-		Name:     "monoidtest",
-	})
-
-	cmd.MigrateDb(db, cmd.Models)
 
 	s.db = db
+	s.pgContainer = container
 }
 
 func (s *startRequestTestSuite) TeardownSuite() {

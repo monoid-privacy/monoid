@@ -15,6 +15,7 @@ import Spinner from '../../../../../components/Spinner';
 import { Job } from '../../../../../lib/models';
 import { classNames } from '../../../../../utils/utils';
 import AlertRegion from '../../../../../components/AlertRegion';
+import SVGText from '../../../../../components/SVGText';
 
 dayjs.extend(updateLocale);
 dayjs.extend(duration);
@@ -138,6 +139,14 @@ export default function JobRow(props: {
               {
                 showSiloDefinition && (
                   <>
+                    {job.siloDefinition?.siloSpecification?.logo
+                      && (
+                        <SVGText
+                          className="w-4 h-4"
+                          imageText={job.siloDefinition.siloSpecification.logo}
+                          alt={`${job.siloDefinition.siloSpecification.name} Logo`}
+                        />
+                      )}
                     <Text em="bold" className="text-gray-400">
                       {job.siloDefinition?.name}
                     </Text>

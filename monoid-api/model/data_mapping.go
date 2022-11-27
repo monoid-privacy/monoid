@@ -19,6 +19,14 @@ type SiloSpecification struct {
 	SiloDefinitions []SiloDefinition
 }
 
+func (ss *SiloSpecification) KeyField(field string) (string, error) {
+	if field == "id" {
+		return ss.ID, nil
+	}
+
+	return "", fmt.Errorf("unknown field")
+}
+
 // SiloDefinition is an instantiation of a silo
 type SiloDefinition struct {
 	ID                  string

@@ -22,6 +22,7 @@ import Table from '../../../../../components/Table';
 import { dedup } from '../../../../../utils/utils';
 import Button from '../../../../../components/Button';
 import Spinner from '../../../../../components/Spinner';
+import SVGText from '../../../../../components/SVGText';
 
 dayjs.extend(updateLocale);
 dayjs.extend(duration);
@@ -342,6 +343,14 @@ function DiscoveryItem(props: {
               {showSiloDefinition
                 && (
                   <>
+                    {discovery.siloDefinition?.siloSpecification?.logo
+                      && (
+                        <SVGText
+                          className="w-4 h-4"
+                          imageText={discovery.siloDefinition.siloSpecification.logo}
+                          alt={`${discovery.siloDefinition.siloSpecification.name} Logo`}
+                        />
+                      )}
                     <Text em="bold" className="text-gray-400">
                       {discovery.siloDefinition?.name}
                     </Text>

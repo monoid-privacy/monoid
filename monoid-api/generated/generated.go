@@ -52,6 +52,7 @@ type ResolverRoot interface {
 	Request() RequestResolver
 	RequestStatus() RequestStatusResolver
 	SiloDefinition() SiloDefinitionResolver
+	SiloSpecification() SiloSpecificationResolver
 	Workspace() WorkspaceResolver
 }
 
@@ -226,7 +227,7 @@ type ComplexityRoot struct {
 		CreatedAt        func(childComplexity int) int
 		ID               func(childComplexity int) int
 		PrimaryKeyValues func(childComplexity int) int
-		RequestStatuses  func(childComplexity int) int
+		RequestStatuses  func(childComplexity int, query *model.RequestStatusQuery, offset *int, limit int) int
 		Type             func(childComplexity int) int
 	}
 
@@ -236,6 +237,11 @@ type ComplexityRoot struct {
 		QueryResult func(childComplexity int) int
 		Request     func(childComplexity int) int
 		Status      func(childComplexity int) int
+	}
+
+	RequestStatusListResult struct {
+		NumStatuses       func(childComplexity int) int
+		RequestStatusRows func(childComplexity int) int
 	}
 
 	RequestsResult struct {
@@ -262,6 +268,7 @@ type ComplexityRoot struct {
 	SiloSpecification struct {
 		DockerImage func(childComplexity int) int
 		ID          func(childComplexity int) int
+		Logo        func(childComplexity int) int
 		LogoURL     func(childComplexity int) int
 		Name        func(childComplexity int) int
 		Schema      func(childComplexity int) int
@@ -388,7 +395,7 @@ type QueryResultResolver interface {
 }
 type RequestResolver interface {
 	PrimaryKeyValues(ctx context.Context, obj *model.Request) ([]*model.PrimaryKeyValue, error)
-	RequestStatuses(ctx context.Context, obj *model.Request) ([]*model.RequestStatus, error)
+	RequestStatuses(ctx context.Context, obj *model.Request, query *model.RequestStatusQuery, offset *int, limit int) (*model.RequestStatusListResult, error)
 }
 type RequestStatusResolver interface {
 	Request(ctx context.Context, obj *model.RequestStatus) (*model.Request, error)
@@ -403,6 +410,9 @@ type SiloDefinitionResolver interface {
 	SiloConfig(ctx context.Context, obj *model.SiloDefinition) (map[string]interface{}, error)
 	ScanConfig(ctx context.Context, obj *model.SiloDefinition) (*model.SiloScanConfig, error)
 	Discoveries(ctx context.Context, obj *model.SiloDefinition, statuses []*model.DiscoveryStatus, query *string, limit int, offset int) (*model.DataDiscoveriesListResult, error)
+}
+type SiloSpecificationResolver interface {
+	Logo(ctx context.Context, obj *model.SiloSpecification) (*string, error)
 }
 type WorkspaceResolver interface {
 	Settings(ctx context.Context, obj *model.Workspace) (map[string]interface{}, error)
@@ -1401,7 +1411,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Request.RequestStatuses(childComplexity), true
+		args, err := ec.field_Request_requestStatuses_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Request.RequestStatuses(childComplexity, args["query"].(*model.RequestStatusQuery), args["offset"].(*int), args["limit"].(int)), true
 
 	case "Request.type":
 		if e.complexity.Request.Type == nil {
@@ -1444,6 +1459,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.RequestStatus.Status(childComplexity), true
+
+	case "RequestStatusListResult.numStatuses":
+		if e.complexity.RequestStatusListResult.NumStatuses == nil {
+			break
+		}
+
+		return e.complexity.RequestStatusListResult.NumStatuses(childComplexity), true
+
+	case "RequestStatusListResult.requestStatusRows":
+		if e.complexity.RequestStatusListResult.RequestStatusRows == nil {
+			break
+		}
+
+		return e.complexity.RequestStatusListResult.RequestStatusRows(childComplexity), true
 
 	case "RequestsResult.numRequests":
 		if e.complexity.RequestsResult.NumRequests == nil {
@@ -1547,6 +1576,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.SiloSpecification.ID(childComplexity), true
+
+	case "SiloSpecification.logo":
+		if e.complexity.SiloSpecification.Logo == nil {
+			break
+		}
+
+		return e.complexity.SiloSpecification.Logo(childComplexity), true
 
 	case "SiloSpecification.logoUrl":
 		if e.complexity.SiloSpecification.LogoURL == nil {
@@ -1767,6 +1803,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputHandleAllDiscoveriesInput,
 		ec.unmarshalInputHandleDiscoveryInput,
 		ec.unmarshalInputKVPair,
+		ec.unmarshalInputRequestStatusQuery,
 		ec.unmarshalInputSiloScanConfigInput,
 		ec.unmarshalInputUpdateCategoryInput,
 		ec.unmarshalInputUpdateDataSourceInput,
@@ -1901,6 +1938,7 @@ type SiloSpecification {
     id: ID!
     name: String!
     logoUrl: String
+    logo: String
     dockerImage: String!
     schema: String
 }
@@ -2236,10 +2274,19 @@ type PrimaryKeyValue {
     value: String!
 }
 
+input RequestStatusQuery {
+    siloDefinitions: [ID!]
+}
+
+type RequestStatusListResult {
+    requestStatusRows: [RequestStatus!]
+    numStatuses: Int!
+}
+
 type Request {
     id: ID!
     primaryKeyValues: [PrimaryKeyValue!]
-    requestStatuses: [RequestStatus!]
+    requestStatuses(query: RequestStatusQuery, offset: Int, limit: Int!): RequestStatusListResult!
     type: UserDataRequestType!
     createdAt: Time
 }
@@ -3058,6 +3105,39 @@ func (ec *executionContext) field_Query_workspace_args(ctx context.Context, rawA
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Request_requestStatuses_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.RequestStatusQuery
+	if tmp, ok := rawArgs["query"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("query"))
+		arg0, err = ec.unmarshalORequestStatusQuery2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatusQuery(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["query"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["offset"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["offset"] = arg1
+	var arg2 int
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+		arg2, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg2
 	return args, nil
 }
 
@@ -5479,6 +5559,8 @@ func (ec *executionContext) fieldContext_Mutation_createSiloSpecification(ctx co
 				return ec.fieldContext_SiloSpecification_name(ctx, field)
 			case "logoUrl":
 				return ec.fieldContext_SiloSpecification_logoUrl(ctx, field)
+			case "logo":
+				return ec.fieldContext_SiloSpecification_logo(ctx, field)
 			case "dockerImage":
 				return ec.fieldContext_SiloSpecification_dockerImage(ctx, field)
 			case "schema":
@@ -5733,6 +5815,8 @@ func (ec *executionContext) fieldContext_Mutation_updateSiloSpecification(ctx co
 				return ec.fieldContext_SiloSpecification_name(ctx, field)
 			case "logoUrl":
 				return ec.fieldContext_SiloSpecification_logoUrl(ctx, field)
+			case "logo":
+				return ec.fieldContext_SiloSpecification_logo(ctx, field)
 			case "dockerImage":
 				return ec.fieldContext_SiloSpecification_dockerImage(ctx, field)
 			case "schema":
@@ -8335,6 +8419,8 @@ func (ec *executionContext) fieldContext_Query_siloSpecification(ctx context.Con
 				return ec.fieldContext_SiloSpecification_name(ctx, field)
 			case "logoUrl":
 				return ec.fieldContext_SiloSpecification_logoUrl(ctx, field)
+			case "logo":
+				return ec.fieldContext_SiloSpecification_logo(ctx, field)
 			case "dockerImage":
 				return ec.fieldContext_SiloSpecification_dockerImage(ctx, field)
 			case "schema":
@@ -8399,6 +8485,8 @@ func (ec *executionContext) fieldContext_Query_siloSpecifications(ctx context.Co
 				return ec.fieldContext_SiloSpecification_name(ctx, field)
 			case "logoUrl":
 				return ec.fieldContext_SiloSpecification_logoUrl(ctx, field)
+			case "logo":
+				return ec.fieldContext_SiloSpecification_logo(ctx, field)
 			case "dockerImage":
 				return ec.fieldContext_SiloSpecification_dockerImage(ctx, field)
 			case "schema":
@@ -9331,18 +9419,21 @@ func (ec *executionContext) _Request_requestStatuses(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Request().RequestStatuses(rctx, obj)
+		return ec.resolvers.Request().RequestStatuses(rctx, obj, fc.Args["query"].(*model.RequestStatusQuery), fc.Args["offset"].(*int), fc.Args["limit"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.RequestStatus)
+	res := resTmp.(*model.RequestStatusListResult)
 	fc.Result = res
-	return ec.marshalORequestStatus2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatusᚄ(ctx, field.Selections, res)
+	return ec.marshalNRequestStatusListResult2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatusListResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Request_requestStatuses(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -9353,19 +9444,24 @@ func (ec *executionContext) fieldContext_Request_requestStatuses(ctx context.Con
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_RequestStatus_id(ctx, field)
-			case "request":
-				return ec.fieldContext_RequestStatus_request(ctx, field)
-			case "dataSource":
-				return ec.fieldContext_RequestStatus_dataSource(ctx, field)
-			case "status":
-				return ec.fieldContext_RequestStatus_status(ctx, field)
-			case "queryResult":
-				return ec.fieldContext_RequestStatus_queryResult(ctx, field)
+			case "requestStatusRows":
+				return ec.fieldContext_RequestStatusListResult_requestStatusRows(ctx, field)
+			case "numStatuses":
+				return ec.fieldContext_RequestStatusListResult_numStatuses(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type RequestStatus", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type RequestStatusListResult", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Request_requestStatuses_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -9708,6 +9804,103 @@ func (ec *executionContext) fieldContext_RequestStatus_queryResult(ctx context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _RequestStatusListResult_requestStatusRows(ctx context.Context, field graphql.CollectedField, obj *model.RequestStatusListResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RequestStatusListResult_requestStatusRows(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RequestStatusRows, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.RequestStatus)
+	fc.Result = res
+	return ec.marshalORequestStatus2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatusᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RequestStatusListResult_requestStatusRows(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RequestStatusListResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_RequestStatus_id(ctx, field)
+			case "request":
+				return ec.fieldContext_RequestStatus_request(ctx, field)
+			case "dataSource":
+				return ec.fieldContext_RequestStatus_dataSource(ctx, field)
+			case "status":
+				return ec.fieldContext_RequestStatus_status(ctx, field)
+			case "queryResult":
+				return ec.fieldContext_RequestStatus_queryResult(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RequestStatus", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RequestStatusListResult_numStatuses(ctx context.Context, field graphql.CollectedField, obj *model.RequestStatusListResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RequestStatusListResult_numStatuses(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NumStatuses, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RequestStatusListResult_numStatuses(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RequestStatusListResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _RequestsResult_requests(ctx context.Context, field graphql.CollectedField, obj *model.RequestsResult) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_RequestsResult_requests(ctx, field)
 	if err != nil {
@@ -9976,6 +10169,8 @@ func (ec *executionContext) fieldContext_SiloDefinition_siloSpecification(ctx co
 				return ec.fieldContext_SiloSpecification_name(ctx, field)
 			case "logoUrl":
 				return ec.fieldContext_SiloSpecification_logoUrl(ctx, field)
+			case "logo":
+				return ec.fieldContext_SiloSpecification_logo(ctx, field)
 			case "dockerImage":
 				return ec.fieldContext_SiloSpecification_dockerImage(ctx, field)
 			case "schema":
@@ -10404,6 +10599,47 @@ func (ec *executionContext) fieldContext_SiloSpecification_logoUrl(ctx context.C
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SiloSpecification_logo(ctx context.Context, field graphql.CollectedField, obj *model.SiloSpecification) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SiloSpecification_logo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.SiloSpecification().Logo(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SiloSpecification_logo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SiloSpecification",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
 		},
@@ -10940,6 +11176,8 @@ func (ec *executionContext) fieldContext_Workspace_siloSpecifications(ctx contex
 				return ec.fieldContext_SiloSpecification_name(ctx, field)
 			case "logoUrl":
 				return ec.fieldContext_SiloSpecification_logoUrl(ctx, field)
+			case "logo":
+				return ec.fieldContext_SiloSpecification_logo(ctx, field)
 			case "dockerImage":
 				return ec.fieldContext_SiloSpecification_dockerImage(ctx, field)
 			case "schema":
@@ -13921,6 +14159,34 @@ func (ec *executionContext) unmarshalInputKVPair(ctx context.Context, obj interf
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputRequestStatusQuery(ctx context.Context, obj interface{}) (model.RequestStatusQuery, error) {
+	var it model.RequestStatusQuery
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"siloDefinitions"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "siloDefinitions":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("siloDefinitions"))
+			it.SiloDefinitions, err = ec.unmarshalOID2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputSiloScanConfigInput(ctx context.Context, obj interface{}) (model.SiloScanConfigInput, error) {
 	var it model.SiloScanConfigInput
 	asMap := map[string]interface{}{}
@@ -15983,6 +16249,9 @@ func (ec *executionContext) _Request(ctx context.Context, sel ast.SelectionSet, 
 					}
 				}()
 				res = ec._Request_requestStatuses(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 
@@ -16093,6 +16362,38 @@ func (ec *executionContext) _RequestStatus(ctx context.Context, sel ast.Selectio
 				return innerFunc(ctx)
 
 			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var requestStatusListResultImplementors = []string{"RequestStatusListResult"}
+
+func (ec *executionContext) _RequestStatusListResult(ctx context.Context, sel ast.SelectionSet, obj *model.RequestStatusListResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, requestStatusListResultImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("RequestStatusListResult")
+		case "requestStatusRows":
+
+			out.Values[i] = ec._RequestStatusListResult_requestStatusRows(ctx, field, obj)
+
+		case "numStatuses":
+
+			out.Values[i] = ec._RequestStatusListResult_numStatuses(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -16310,25 +16611,42 @@ func (ec *executionContext) _SiloSpecification(ctx context.Context, sel ast.Sele
 			out.Values[i] = ec._SiloSpecification_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "name":
 
 			out.Values[i] = ec._SiloSpecification_name(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "logoUrl":
 
 			out.Values[i] = ec._SiloSpecification_logoUrl(ctx, field, obj)
 
+		case "logo":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._SiloSpecification_logo(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "dockerImage":
 
 			out.Values[i] = ec._SiloSpecification_dockerImage(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "schema":
 
@@ -17249,6 +17567,20 @@ func (ec *executionContext) marshalNRequestStatus2ᚖgithubᚗcomᚋbristᚑai�
 		return graphql.Null
 	}
 	return ec._RequestStatus(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNRequestStatusListResult2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatusListResult(ctx context.Context, sel ast.SelectionSet, v model.RequestStatusListResult) graphql.Marshaler {
+	return ec._RequestStatusListResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNRequestStatusListResult2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatusListResult(ctx context.Context, sel ast.SelectionSet, v *model.RequestStatusListResult) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._RequestStatusListResult(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNRequestStatusType2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatusType(ctx context.Context, v interface{}) (model.RequestStatusType, error) {
@@ -18599,6 +18931,14 @@ func (ec *executionContext) marshalORequestStatus2ᚖgithubᚗcomᚋbristᚑai�
 		return graphql.Null
 	}
 	return ec._RequestStatus(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalORequestStatusQuery2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatusQuery(ctx context.Context, v interface{}) (*model.RequestStatusQuery, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputRequestStatusQuery(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOSiloDefinition2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloDefinitionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SiloDefinition) graphql.Marshaler {

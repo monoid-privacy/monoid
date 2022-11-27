@@ -10,6 +10,7 @@ import SiloAlerts, { SiloAlertsTabHeader } from './components/SiloAlerts';
 import SiloConfig from './components/SiloConfig';
 import SiloDataSources from './components/SiloDataSources';
 import SiloScans from './components/SiloScans';
+import SVGText from '../../../../components/SVGText';
 
 const GET_SILO_TITLE_DATA = gql`
   query GetSiloTitle($id: ID!, $workspaceId: ID!) {
@@ -19,8 +20,9 @@ const GET_SILO_TITLE_DATA = gql`
         id
         name
         siloSpecification {
+          id
           name
-          logoUrl
+          logo
         }
       }
     }
@@ -46,6 +48,8 @@ export default function SiloPage(
     },
   });
 
+  const siloDef = data?.workspace.siloDefinition;
+
   if (loading) {
     return <Spinner />;
   }
@@ -60,12 +64,22 @@ export default function SiloPage(
     );
   }
 
-  const siloDef = data?.workspace.siloDefinition;
-
   return (
     <>
       <PageHeader
-        title={siloDef?.name}
+        title={(
+          <div className="flex items-center space-x-4">
+            {siloDef?.siloSpecification?.logo
+              && (
+                <SVGText
+                  className="w-9 h-9"
+                  imageText={siloDef.siloSpecification.logo}
+                  alt={`${siloDef?.siloSpecification?.name} Logo`}
+                />
+              )}
+            <div>{siloDef?.name}</div>
+          </div>
+        )}
         subtitle={siloDef?.siloSpecification?.name}
       />
       <Tabs

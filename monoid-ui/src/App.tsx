@@ -8,6 +8,7 @@ import jobsQueryCache from './cache/jobs';
 import discoveriesCache from './cache/discoveries';
 import requestsCache from './cache/requests';
 import dataMapCache from './cache/dataMap';
+import requestStatusCache from './cache/requestStatus';
 
 const client = new ApolloClient({
   uri: `${process.env.REACT_APP_API_URL}/query`,
@@ -16,6 +17,11 @@ const client = new ApolloClient({
       Query: {
         fields: {
           jobs: jobsQueryCache(),
+        },
+      },
+      Request: {
+        fields: {
+          requestStatuses: requestStatusCache(),
         },
       },
       SiloDefinition: {

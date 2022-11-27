@@ -260,8 +260,56 @@ func (r *requestResolver) PrimaryKeyValues(ctx context.Context, obj *model.Reque
 }
 
 // RequestStatuses is the resolver for the requestStatuses field.
-func (r *requestResolver) RequestStatuses(ctx context.Context, obj *model.Request) ([]*model.RequestStatus, error) {
-	return findChildObjects[model.RequestStatus](r.Conf.DB, obj.ID, "request_id")
+func (r *requestResolver) RequestStatuses(ctx context.Context, obj *model.Request, query *model.RequestStatusQuery, offset *int, limit int) (*model.RequestStatusListResult, error) {
+	doffset := 0
+	if offset != nil {
+		doffset = *offset
+	}
+
+	q := r.Conf.DB.Debug().Where(
+		"request_id = ?",
+		obj.ID,
+	).Joins(
+		"LEFT JOIN data_sources on data_source_id = data_sources.id",
+	).Joins(
+		"LEFT JOIN silo_definitions on data_sources.silo_definition_id = silo_definitions.id",
+	).Joins(
+		"LEFT JOIN (?) as result_counts ON result_counts.request_status_id = request_statuses.id",
+		r.Conf.DB.Select("request_status_id, COUNT(*) as count").Model(
+			model.QueryResult{},
+		).Group("request_status_id"),
+	)
+
+	if query != nil {
+		if len(query.SiloDefinitions) != 0 {
+			q = q.Where("silo_definitions.id IN ?", query.SiloDefinitions)
+		}
+	}
+
+	statuses := []*model.RequestStatus{}
+	if err := q.Session(&gorm.Session{}).Order(
+		"status desc",
+	).Order(
+		"COALESCE(result_counts.count, 0) desc",
+	).Order(
+		"silo_definitions.name desc",
+	).Order(
+		"data_sources.group desc",
+	).Order(
+		"data_sources.name desc",
+	).Offset(doffset).Limit(limit).Find(&statuses).Error; err != nil {
+		return nil, handleError(err, "Error getting request statuses.")
+	}
+
+	numStatuses := int64(0)
+	if err := q.Session(&gorm.Session{}).Model(&model.RequestStatus{}).Count(&numStatuses).Error; err != nil {
+		return nil, handleError(err, "Error getting request statuses.")
+	}
+
+	return &model.RequestStatusListResult{
+		RequestStatusRows: statuses,
+		NumStatuses:       int(numStatuses),
+	}, nil
 }
 
 // Request is the resolver for the request field.

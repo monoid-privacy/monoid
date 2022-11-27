@@ -85,6 +85,7 @@ services:
     volumes:
       - ./monoid-api:/app
       - filestore:${FILESTORE_PATH}
+      - ./monoid-config/resources:${RESOURCE_PATH}
     environment:
       - WEB_URL=${WEB_URL}
       - DB_USER=${DATABASE_USER}
@@ -93,6 +94,7 @@ services:
       - DB_PORT=5432
       - DB_NAME=${DATABASE_NAME}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - RESOURCE_PATH=${RESOURCE_PATH}
       - SEGMENT_KEY=${SEGMENT_KEY}
       - TEMPORAL=monoid-dev-temporal:7233
     depends_on:
