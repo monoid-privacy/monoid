@@ -1,20 +1,22 @@
+from enum import Enum
 from typing import Any, Mapping, List
 from monoid_pydev.silos import AbstractSilo
 from monoid_pydev.silos.data_store import DataStore
 from monoid_pydev.models import MonoidValidateMessage, Status
 import mysql.connector
 
-from amplitude.amplitude_store import AmplitudeDataStore
+from segment.segment_store import SegmentDataStore
 
-class AmplitudeSilo(AbstractSilo):
+class SegmentStoreType(Enum):
+    USER = 'USER'
+    USER_ACTIVITY = 'USER_ACTIVITY'
+
+class SegmentSilo(AbstractSilo):
     def data_stores(self, conf: Mapping[str, Any]) -> List[DataStore]:
-        # TODO: Return an single object that conforms to data store
-        return [AmplitudeDataStore(
-            secret_key=conf["secret_key"],
-            project_name=conf["project_name"],
-            start_date=conf["start_data"],
-            owner_email=conf["owner_email"]
-        )]
+        return SegmentDataStore(
+            api_key=conf["api_key"],
+            workspace_id=conf["workspace_id"]
+        )
 
 
     def validate(self, conf: Mapping[str, Any]) -> MonoidValidateMessage:

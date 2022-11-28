@@ -1,13 +1,14 @@
 import base64
 from unicodedata import name
-import mysql.connector
 from monoid_pydev.silos.db_data_store import DBDataStore
-from monoid_pydev.models import MonoidRecord, MonoidQueryIdentifier, MonoidSchema
-from typing import Any, Dict, Iterable, Optional
+from monoid_pydev.models import MonoidRecord, MonoidQueryIdentifier, MonoidSchema, MonoidPersistenceConfig
+from typing import Any, Dict, Iterable, Mapping, Optional
 from pypika import Table, Query, Field
+import snowflake.connector
 
+from snowflake_lib.helpers import get_connection, logger
 
-def type_to_jsonschema(mysql_type: str) -> Optional[str]:
+def type_to_jsonschema(snowflake_type: str) -> Optional[str]:
     int_types = [
       "int", 
       "integer", 
@@ -15,12 +16,16 @@ def type_to_jsonschema(mysql_type: str) -> Optional[str]:
       "smallint", 
       "tinyint", 
       "bigint", 
+      "byteint"
     ]
 
     number_types = [
       "decimal", 
+      "number",
       "numeric", 
       "float", 
+      "float4",
+      "float8",
       "double", 
       "real", 
       "double precision",
@@ -31,6 +36,9 @@ def type_to_jsonschema(mysql_type: str) -> Optional[str]:
       "time", 
       "datetime", 
       "timestamp", 
+      "timestamp_ltz",
+      "timestamp_ntz", 
+      "timestamp_tz", 
       "year",
     ]
 
@@ -43,6 +51,7 @@ def type_to_jsonschema(mysql_type: str) -> Optional[str]:
       "longtext",
       "tinyblob",
       "blob",
+      "string",
       "mediumblob",
       "longblob",
       "enum",
@@ -51,14 +60,15 @@ def type_to_jsonschema(mysql_type: str) -> Optional[str]:
       "varbinary",
     ]
 
-    if mysql_type in int_types:
+    comp_type = snowflake_type.lower()
+
+    if comp_type in int_types:
         return "integer"
-    elif mysql_type in number_types:
+    elif comp_type in number_types:
         return "number"
-    elif (mysql_type in string_types) or (mysql_type in time_types):
+    elif (comp_type in string_types) or (comp_type in time_types):
         return "string"
     return None
-
 
 # TODO: Make this more comprehensive
 def serializable_val(val: Any) -> Any:
@@ -68,17 +78,37 @@ def serializable_val(val: Any) -> Any:
     return val
 
 
-class MySQLTableDataStore(DBDataStore):
-    def __init__(self, table: str, db_name: str, conn: mysql.connector.MySQLConnection):
-        self.conn = conn
+class SnowflakeTableDataStore(DBDataStore):
+    def __init__(
+        self,
+        table: str,
+        db_name: str,
+        schema: str,
+        conf: Mapping[str, any],
+        conn: Optional[snowflake.connector.connection.SnowflakeConnection] = None
+    ):
+        self.conf = conf
         self.table = table
         self.db_name = db_name
+        self.schema = schema
+        self._conn = conn
+        self._close_conn = True
+
+        if conn is not None:
+            self._close_conn = False
+
+    def _get_connection(self):
+        if self._conn is not None:
+            return self._conn
+
+        self._conn = get_connection(self.conf, self.db_name)
+        return self._conn
 
     def name(self):
         return self.table
 
     def group(self):
-        return f"{self.db_name}"
+        return f"{self.db_name}/{self.schema}"
 
     def json_schema(self) -> Dict[str, Any]:
         # TODO: Identify indexes?
@@ -89,12 +119,12 @@ class MySQLTableDataStore(DBDataStore):
             }
         }
 
-        with self.conn.cursor() as cur:
+        with self._get_connection().cursor() as cur:
             cur.execute(
                 f"""
-                SELECT column_name, data_type
+                SELECT column_name, udt_name
                     FROM information_schema.columns
-                    WHERE table_schema = '{self.db_name}'
+                    WHERE table_schema = '{self.schema}'
                     AND table_name   = '{self.table}';
                 """
             )
@@ -108,11 +138,18 @@ class MySQLTableDataStore(DBDataStore):
 
         return schema
 
-    def query_records(self, query_identifier: MonoidQueryIdentifier) -> Iterable[MonoidRecord]:
+    def query_records(
+        self,
+        persistence_conf: MonoidPersistenceConfig,
+        query_identifier: MonoidQueryIdentifier
+    ) -> Iterable[MonoidRecord]:
         query_cols = [f for f in query_identifier.json_schema["properties"]]
 
-        with self.conn.cursor() as cur:
-            tbl = Table(self.table)
+        logger.info(
+            f"Querying records from table {self.group()}.{self.name()}")
+
+        with self._get_connection().cursor() as cur:
+            tbl = Table(self.table, schema=self.schema)
             q = Query.from_(tbl).select(
                 *query_cols).where(
                     Field(query_identifier.identifier) ==
@@ -129,11 +166,18 @@ class MySQLTableDataStore(DBDataStore):
                     }
                 )
 
-    def sample_records(self, schema: MonoidSchema) -> Iterable[MonoidRecord]:
+    def scan_records(
+        self,
+        persistence_conf: MonoidPersistenceConfig,
+        schema: MonoidSchema
+    ) -> Iterable[MonoidRecord]:
         query_cols = [f for f in schema.json_schema["properties"]]
 
-        with self.conn.cursor() as cur:
-            tbl = Table(self.table)
+        logger.info(
+            f"Sampling records from table {self.group()}.{self.name()}")
+
+        with self._get_connection().cursor() as cur:
+            tbl = Table(self.table, schema=self.schema)
             q = Query.from_(tbl).select(*query_cols).limit(5)
             cur.execute(str(q))
 
@@ -147,13 +191,25 @@ class MySQLTableDataStore(DBDataStore):
                     }
                 )
 
-    def delete_records(self, query_identifier: MonoidQueryIdentifier) -> Iterable[MonoidRecord]:
-        res = [q for q in self.query_records(query_identifier)]
-        with self.conn.cursor() as cur:
-            tbl = Table(self.table)
+    def delete_records(
+        self,
+        query_identifier: MonoidQueryIdentifier,
+        persistence_conf: MonoidPersistenceConfig
+    ) -> Iterable[MonoidRecord]:
+        res = [q for q in self.query_records(query_identifier, persistence_conf)]
+
+        logger.info(
+            f"Deleting records from table {self.group()}.{self.name()}")
+
+        with self._get_connection().cursor() as cur:
+            tbl = Table(self.table, schema=self.schema)
             q = Query.from_(tbl).delete().where(
                 Field(query_identifier.identifier) ==
                 query_identifier.identifier_query)
             cur.execute(str(q))
 
         return res
+
+    def teardown(self):
+        if self._conn is not None and self._close_conn:
+            self._conn.close()

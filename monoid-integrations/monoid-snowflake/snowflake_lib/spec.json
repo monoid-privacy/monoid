@@ -1,0 +1,76 @@
+{
+  "spec": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+      "database": {
+        "type": "string",
+        "title": "Default Database",
+        "description": "The default database to connect to. Monoid can scan for all databases on your instance, but this is the one the system will connect to initially.",
+        "default": "postgres",
+        "order": 2
+      },
+      "username": {
+        "type": "string",
+        "title": "Username",
+        "description": "The username for the databse.",
+        "order": 3
+      },
+      "password": {
+        "type": "string",
+        "secret": true,
+        "title": "Password",
+        "description": "The password for the database",
+        "order": 4
+      },
+      "warehouse": {
+        "type": "string",
+        "secret": true,
+        "title": "Password",
+        "description": "The warehouse to use for database operations",
+        "order": 5
+      },
+      "scan_all": {
+        "type": "boolean",
+        "title": "Scan All DBs",
+        "description": "If true, Monoid will scan all databases.",
+        "default": true,
+        "order": 6
+      },
+      "schemas": {
+        "title": "Schemas",
+        "description": "A list of schemas to sync with, default public.",
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "minItems": 0,
+        "uniqueItems": true,
+        "default": [
+          "public"
+        ],
+        "order": 7
+      },
+      "exclude_dbs": {
+        "title": "Exclude DBs",
+        "description": "A list of databases to exclude for silo discovery.",
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "minItems": 0,
+        "uniqueItems": true,
+        "default": [],
+        "order": 8
+      }
+    },
+    "required": [
+      "username",
+      "password",
+      "account",
+      "warehouse",
+      "schemas",
+      "database"
+    ]
+  }
+}

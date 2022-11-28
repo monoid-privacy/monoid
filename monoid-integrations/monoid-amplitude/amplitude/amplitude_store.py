@@ -17,8 +17,6 @@ def switch_request_status(request_status: str) -> RequestType:
         return RequestType.FAILED
     return RequestType.PROGRESS
 
-
-
 class AmplitudeDataStore(DataStore):
     def __init__(self, api_key: str, secret_key: str, project_name: str, start_date: str, owner_email: str):
         self._api_key = api_key
@@ -116,8 +114,6 @@ class AmplitudeDataStore(DataStore):
             )
         )
 
-
-
     def run_delete_request(
         self,
         persistence_conf: MonoidPersistenceConfig,
@@ -142,8 +138,7 @@ class AmplitudeDataStore(DataStore):
 
         r = requests.post(url, auth=(self._api_key, self._secret_key), data=payload)
 
-        ## TODO: possible statuses? 
-        if r.json().get("status") in ["Staging", "Submitted", "Done]:
+        if r.json().get("status") in ["Staging", "Submitted", "Done"]:
             pass
         pass
 
@@ -163,7 +158,7 @@ class AmplitudeDataStore(DataStore):
         handle = ""
         if r.get("status") == "ok":
             status = r["results"]["status"]
-            request_status = switch_request_status(handle)
+            request_status = switch_request_status(status)
 
         return MonoidRequestStatus(
             schema_group=self.group(),
@@ -172,18 +167,11 @@ class AmplitudeDataStore(DataStore):
             data_type=DataType.NONE,
         )
 
-
-# class MonoidRequestHandle(BaseModel):
-#     schema_group: str
-#     schema_name: str
-#     data: Optional[Dict[str, Any]] = None
-#     request_type: RequestType
-
     def _query_request_status(
         self, 
         persistence_conf: MonoidPersistenceConfig, 
         handle: MonoidRequestHandle
-    ) -> (MonoidRequestStatus, MonoidRecord): 
+    ) -> (MonoidRequestStatus, Optional[Iterable[MonoidRecord]]): 
         request_id = handle.data.get("handle")
         base_url = f'https://amplitude.com/api/2/dsar/requests'
         r = requests.get(f'{base_url}/{request_id}', auth=(self._api_key, self._secret_key))
@@ -196,26 +184,26 @@ class AmplitudeDataStore(DataStore):
                 data_type=DataType.FILE
             ), None
         if response.get('status') == 'done':
-            # TODO: Should there be a record for each url? 
-            return MonoidRequestStatus(
-                schema_group=self.group(), 
-                schema_name=self.name(),
-                request_status=RequestStatus.COMPLETE,
-                data_type=DataType.FILE
-            ), MonoidRecord(
-                    record_type=RecordType.FILE, 
-                    schema_name=self.name(), 
+            urls = response.get("urls")
+            if urls is not None:
+                # TODO: Should there be a record for each url? 
+                return MonoidRequestStatus(
                     schema_group=self.group(), 
-                    file=",".join(response.get("urls"))
-                )
+                    schema_name=self.name(),
+                    request_status=RequestStatus.COMPLETE,
+                    data_type=DataType.FILE
+                ), [MonoidRecord(
+                        record_type=RecordType.FILE, 
+                        schema_name=self.name(), 
+                        schema_group=self.group(), 
+                        file=url
+                    ) for url in urls]
         return MonoidRequestStatus(
                 schema_group=self.group(), 
                 schema_name=self.name(),
                 request_status=RequestStatus.PENDING,
                 data_type=DataType.FILE
             ), None
-        
-
 
     def request_status(
         self,
@@ -236,8 +224,10 @@ class AmplitudeDataStore(DataStore):
               handle
             )
             return status
+        else: 
+            # TODO: Error handle when the request type is incorrect
+            pass
 
-    @abstractmethod
     def request_results(
         self,
         persistence_conf: MonoidPersistenceConfig,
@@ -246,11 +236,11 @@ class AmplitudeDataStore(DataStore):
         """
         Gets the result of a request
         """
-        # TODO: Better return for deletion
+        # TODO: Is empty array ok for deletion?
         if handle.request_type == RequestType.QUERY: 
-            status, record = self._query_request_status(persistence_conf, handle)
-            if record is not None: 
-                return [record]
+            _, records = self._query_request_status(persistence_conf, handle)
+            if records is not None: 
+                return records
         return []
 
     def scan_records(
@@ -261,5 +251,5 @@ class AmplitudeDataStore(DataStore):
         """
         To be implemented by subclasses.
         """
-        # No-op for Amplitude
+        # TODO: Find a way to implement scanning
         pass
