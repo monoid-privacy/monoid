@@ -31,10 +31,14 @@ func updateRequest(ctx workflow.Context, requestStatusID string, status model.Re
 	return err
 }
 
+type ExecuteSiloRequestResult struct {
+	Status model.FullRequestStatus
+}
+
 func (w *RequestWorkflow) ExecuteSiloRequestWorkflow(
 	ctx workflow.Context,
 	args SiloRequestArgs,
-) (err error) {
+) (requestRes ExecuteSiloRequestResult, err error) {
 	logger := workflow.GetLogger(ctx)
 	options := workflow.ActivityOptions{
 		StartToCloseTimeout: time.Minute * 2,
@@ -48,15 +52,30 @@ func (w *RequestWorkflow) ExecuteSiloRequestWorkflow(
 	ac := requestactivity.RequestActivity{}
 
 	reqStatus := requestactivity.RequestStatusResult{}
+	requestRes = ExecuteSiloRequestResult{Status: model.FullRequestStatusFailed}
 
-	if err := workflow.ExecuteActivity(ctx, ac.StartDataSourceRequestActivity, requestactivity.StartRequestArgs{
+	if err := workflow.ExecuteActivity(ctx, ac.StartSiloRequestActivity, requestactivity.StartRequestArgs{
 		SiloDefinitionID: args.SiloDefinitionID,
 		RequestID:        args.RequestID,
 	}).Get(ctx, &reqStatus); err != nil {
-		return err
+		if err := workflow.ExecuteActivity(
+			ctx,
+			ac.BatchUpdateRequestStatusActivity,
+			requestactivity.BatchUpdateRequestStatusArgs{
+				RequestID:        args.RequestID,
+				SiloDefinitionID: args.SiloDefinitionID,
+				Status:           model.RequestStatusTypeFailed,
+			},
+		).Get(ctx, nil); err != nil {
+			return requestRes, err
+		}
+
+		return requestRes, nil
 	}
 
 	processing := reqStatus.ResultItems
+	hasFailures := false
+
 	for len(processing) > 0 {
 		newProcessing := make([]requestactivity.RequestStatusItem, 0, len(processing))
 		type resultExtractTuple struct {
@@ -66,7 +85,9 @@ func (w *RequestWorkflow) ExecuteSiloRequestWorkflow(
 		resultExtractData := []resultExtractTuple{}
 
 		for _, res := range processing {
+			// If running the start actions for the request resulted in an error, fail the request
 			if res.Error != nil {
+				hasFailures = true
 
 				if terr := updateRequest(ctx, res.RequestStatusID, model.RequestStatusTypeFailed); terr != nil {
 					logger.Error("Error updating request", terr)
@@ -75,7 +96,11 @@ func (w *RequestWorkflow) ExecuteSiloRequestWorkflow(
 				continue
 			}
 
+			// If the request was already completed, without needing any processing, then mark it as
+			// executed.
 			if res.FullyComplete {
+				requestRes.Status = model.FullRequestStatusPartialFailed
+
 				if terr := updateRequest(ctx, res.RequestStatusID, model.RequestStatusTypeExecuted); terr != nil {
 					logger.Error("Error updating request", terr)
 				}
@@ -85,20 +110,25 @@ func (w *RequestWorkflow) ExecuteSiloRequestWorkflow(
 
 			switch res.RequestStatus.RequestStatus {
 			case monoidprotocol.MonoidRequestStatusRequestStatusCOMPLETE:
+				// If the request is complete, and it's not already marked as fully complete, then
+				// add it to the list of data that needs further processing
 				resultExtractData = append(resultExtractData, resultExtractTuple{
 					status:          *res.RequestStatus,
 					requestStatusID: res.RequestStatusID,
 				})
 			case monoidprotocol.MonoidRequestStatusRequestStatusFAILED:
+				hasFailures = true
 				if terr := updateRequest(ctx, res.RequestStatusID, model.RequestStatusTypeFailed); terr != nil {
 					logger.Error("Error updating request", terr)
 					continue
 				}
 			case monoidprotocol.MonoidRequestStatusRequestStatusPROGRESS:
+				// These will be re-visited on the next iteration
 				newProcessing = append(newProcessing, res)
 			}
 		}
 
+		// Extract the data that is complete and needed further processing
 		if len(resultExtractData) > 0 {
 			requestArgs := requestactivity.ProcessRequestArgs{
 				ProtocolRequestStatus: make([]monoidprotocol.MonoidRequestStatus, len(resultExtractData)),
@@ -113,8 +143,12 @@ func (w *RequestWorkflow) ExecuteSiloRequestWorkflow(
 			res := requestactivity.ProcessRequestResult{}
 
 			logger.Info("Calling process")
+			// Call the process activity to get data.
 			if err := workflow.ExecuteActivity(ctx, ac.ProcessRequestResults, requestArgs).Get(ctx, &res); err != nil {
+				// If the activity itself fails, then all the input needs to be marked as failed.
 				logger.Error("Error processing results", err)
+
+				hasFailures = true
 
 				for _, datum := range resultExtractData {
 					if terr := updateRequest(ctx, datum.requestStatusID, model.RequestStatusTypeFailed); terr != nil {
@@ -123,11 +157,15 @@ func (w *RequestWorkflow) ExecuteSiloRequestWorkflow(
 					}
 				}
 			} else {
+				// Update the request statuses in the DB
 				for _, r := range res.ResultItems {
 					status := model.RequestStatusTypeExecuted
 
 					if r.Error != nil {
+						hasFailures = true
 						status = model.RequestStatusTypeFailed
+					} else {
+						requestRes.Status = model.FullRequestStatusPartialFailed
 					}
 
 					if terr := updateRequest(ctx, r.RequestStatusID, status); terr != nil {
@@ -156,11 +194,15 @@ func (w *RequestWorkflow) ExecuteSiloRequestWorkflow(
 		if err := workflow.ExecuteActivity(ctx, ac.RequestStatusActivity, requestactivity.RequestStatusArgs{
 			RequestStatusIDs: statusIDs,
 		}).Get(ctx, &res); err != nil {
-			return err
+			return requestRes, err
 		}
 
 		processing = res.ResultItems
 	}
 
-	return nil
+	if !hasFailures {
+		requestRes.Status = model.FullRequestStatusExecuted
+	}
+
+	return requestRes, nil
 }

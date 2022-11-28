@@ -3,14 +3,13 @@ package loader
 import (
 	"context"
 
-	"github.com/brist-ai/monoid/config"
 	"github.com/brist-ai/monoid/model"
 	"github.com/graph-gophers/dataloader"
 	"github.com/rs/zerolog/log"
 )
 
 // GetPropertyCategories wraps the associated dataloader
-func GetPropertyCategories(ctx context.Context, propertyID string) ([]*model.Category, error) {
+func PropertyCategories(ctx context.Context, propertyID string) ([]*model.Category, error) {
 	loaders := For(ctx)
 	thunk := loaders.PropertyCategoriesLoader.Load(ctx, dataloader.StringKey(propertyID))
 	result, err := thunk()
@@ -20,13 +19,8 @@ func GetPropertyCategories(ctx context.Context, propertyID string) ([]*model.Cat
 	return result.([]*model.Category), nil
 }
 
-// CategoryReader reads categories from a database
-type PropertyCategoryReader struct {
-	conf *config.BaseConfig
-}
-
-// GetCategories gets all the categories for a number of properties
-func (c *PropertyCategoryReader) GetPropertyCategories(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+// propertyCategories gets all the categories for a list of properties
+func (c *Reader) propertiesCategories(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	propertyIDs := make([]string, len(keys))
 	for ix, key := range keys {
 		propertyIDs[ix] = key.String()

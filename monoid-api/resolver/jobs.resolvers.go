@@ -21,7 +21,7 @@ func (r *jobResolver) SiloDefinition(ctx context.Context, obj *model.Job) (*mode
 		return nil, nil
 	}
 
-	return loader.GetSiloDefinition(ctx, obj.ResourceID)
+	return loader.SiloDefinition(ctx, obj.ResourceID)
 }
 
 // Logs is the resolver for the logs field.

@@ -1,6 +1,9 @@
 package model
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 const (
 	JobTypeDiscoverSources = "discover_sources"
@@ -19,4 +22,12 @@ type Job struct {
 
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+func (j *Job) KeyField(field string) (string, error) {
+	if field == "id" {
+		return j.ID, nil
+	}
+
+	return "", fmt.Errorf("unknown field")
 }

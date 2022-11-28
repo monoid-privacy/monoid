@@ -1,3 +1,4 @@
+/* eslint-disable no-nested-ternary */
 import {
   gql, useQuery, useMutation, ApolloError,
 } from '@apollo/client';
@@ -112,27 +113,46 @@ export default function RequestPage(
             id: '1',
             name: 'Created',
             status: 'complete',
-            completedDesc: 'The request was created.',
-            upcomingDesc: '',
+            description: 'The request was created.',
           },
           {
             id: '2',
             name: 'Processing',
-            status: request?.status === 'CREATED' ? 'upcoming' : 'complete',
-            completedDesc: 'You executed the request.',
-            upcomingDesc: 'The request will start processing once you execute the request.',
+            status: request?.status === 'CREATED' ? 'upcoming' : (
+              request?.status === 'IN_PROGRESS' ? 'current' : 'complete'
+            ),
+            description: (
+              request?.status === 'CREATED' ? 'The request will start processing once you execute the request.' : (
+                request?.status === 'IN_PROGRESS' ? 'The request is processing.' : 'You executed the request.'
+              )
+            ),
           },
           {
             id: '3',
-            name: (request?.status === 'FAILED' ? 'Failed' : 'Finished'),
+            name: (
+              request?.status === 'FAILED' ? 'Failed' : (
+                request?.status === 'PARTIAL_FAILED' ? 'Partially Finished' : 'Finished'
+              )
+            ),
             // eslint-disable-next-line no-nested-ternary
-            status: request?.status === 'CREATED' || request?.status === 'IN_PROGRESS' ? 'upcoming' : (
-              request?.status === 'EXECUTED' ? 'complete' : 'failed'
+            status: request?.status === 'CREATED' || request?.status === 'IN_PROGRESS'
+              ? 'upcoming' : (
+                request?.status === 'EXECUTED' ? 'complete' : (
+                  request?.status === 'PARTIAL_FAILED'
+                    ? 'warn'
+                    : 'failed'
+                )
+              ),
+            description: (
+              request?.status === 'CREATED' || request?.status === 'IN_PROGRESS'
+                ? 'Once the request is finished processing, you\'ll be able to download the data.' : (
+                  request?.status === 'EXECUTED' ? 'The request completed successfully.' : (
+                    request?.status === 'PARTIAL_FAILED'
+                      ? 'At least one data source failed to collect data.'
+                      : 'The request failed.'
+                  )
+                )
             ),
-            completedDesc: (request?.status === 'FAILED'
-              ? 'The request failed.' : 'The request completed successfully.'
-            ),
-            upcomingDesc: 'The request will start processing once you execute the request.',
           },
         ]}
       />

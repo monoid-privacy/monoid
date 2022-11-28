@@ -50,7 +50,7 @@ func (s *startRequestTestSuite) SetupTest() {
 		},
 	}
 	s.env = s.NewTestActivityEnvironment()
-	s.env.RegisterActivity(s.ra.StartDataSourceRequestActivity)
+	s.env.RegisterActivity(s.ra.StartSiloRequestActivity)
 }
 
 func str(s string) *string {
@@ -346,7 +346,7 @@ func (s *startRequestTestSuite) TestStartRequest() {
 
 			s.ra.Conf.ProtocolFactory = factory
 
-			val, err := s.env.ExecuteActivity(s.ra.StartDataSourceRequestActivity, StartRequestArgs{
+			val, err := s.env.ExecuteActivity(s.ra.StartSiloRequestActivity, StartRequestArgs{
 				SiloDefinitionID: "test_silo",
 				RequestID:        "test_request",
 			})

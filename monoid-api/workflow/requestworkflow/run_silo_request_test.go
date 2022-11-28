@@ -38,7 +38,7 @@ func (s *siloRequestUnitTestSuite) SetupTest() {
 func (s *siloRequestUnitTestSuite) tabularSetup() {
 	s.env = s.NewTestWorkflowEnvironment()
 
-	s.env.RegisterActivity(s.ra.StartDataSourceRequestActivity)
+	s.env.RegisterActivity(s.ra.StartSiloRequestActivity)
 	s.env.RegisterActivity(s.ra.RequestStatusActivity)
 	s.env.RegisterActivity(s.ra.ProcessRequestResults)
 	s.env.RegisterActivity(s.ra.UpdateRequestStatusActivity)
@@ -57,40 +57,46 @@ func str(s string) *string {
 // works correctly.
 func (s *siloRequestUnitTestSuite) TestSimpleSiloRequest() {
 	type simpleTestArgs struct {
-		status        monoidprotocol.MonoidRequestStatusRequestStatus
-		result        model.RequestStatusType
-		fullyComplete bool
-		err           *requestactivity.RequestStatusError
-		processErr    error
-		name          string
+		status         monoidprotocol.MonoidRequestStatusRequestStatus
+		result         model.RequestStatusType
+		workflowResult model.FullRequestStatus
+		fullyComplete  bool
+		err            *requestactivity.RequestStatusError
+		processErr     error
+		name           string
 	}
 
 	for _, arg := range []simpleTestArgs{
 		{
-			status: monoidprotocol.MonoidRequestStatusRequestStatusCOMPLETE,
-			result: model.RequestStatusTypeExecuted,
-			name:   "complete",
+			status:         monoidprotocol.MonoidRequestStatusRequestStatusCOMPLETE,
+			result:         model.RequestStatusTypeExecuted,
+			workflowResult: model.FullRequestStatusExecuted,
+			name:           "complete",
 		},
 		{
-			status:     monoidprotocol.MonoidRequestStatusRequestStatusCOMPLETE,
-			result:     model.RequestStatusTypeFailed,
-			processErr: fmt.Errorf("processing error"),
-			name:       "process_err",
+			status:         monoidprotocol.MonoidRequestStatusRequestStatusCOMPLETE,
+			result:         model.RequestStatusTypeFailed,
+			workflowResult: model.FullRequestStatusFailed,
+			processErr:     fmt.Errorf("processing error"),
+			name:           "process_err",
 		},
 		{
-			status: monoidprotocol.MonoidRequestStatusRequestStatusFAILED,
-			result: model.RequestStatusTypeFailed,
-			name:   "failed",
+			status:         monoidprotocol.MonoidRequestStatusRequestStatusFAILED,
+			result:         model.RequestStatusTypeFailed,
+			workflowResult: model.FullRequestStatusFailed,
+			name:           "failed",
 		},
 		{
-			result: model.RequestStatusTypeFailed,
-			name:   "activity_error",
-			err:    &requestactivity.RequestStatusError{Message: "activity error"},
+			result:         model.RequestStatusTypeFailed,
+			name:           "activity_error",
+			workflowResult: model.FullRequestStatusFailed,
+			err:            &requestactivity.RequestStatusError{Message: "activity error"},
 		},
 		{
-			result:        model.RequestStatusTypeExecuted,
-			name:          "fully_complete",
-			fullyComplete: true,
+			result:         model.RequestStatusTypeExecuted,
+			workflowResult: model.FullRequestStatusExecuted,
+			name:           "fully_complete",
+			fullyComplete:  true,
 		},
 	} {
 		s.Run(arg.name, func() {
@@ -123,7 +129,7 @@ func (s *siloRequestUnitTestSuite) TestSimpleSiloRequest() {
 				}},
 			}
 
-			s.env.OnActivity(s.ra.StartDataSourceRequestActivity, mock.Anything, requestactivity.StartRequestArgs{
+			s.env.OnActivity(s.ra.StartSiloRequestActivity, mock.Anything, requestactivity.StartRequestArgs{
 				SiloDefinitionID: wfArgs.SiloDefinitionID,
 				RequestID:        wfArgs.RequestID,
 			}).Return(results, nil).Once()
@@ -159,6 +165,16 @@ func (s *siloRequestUnitTestSuite) TestSimpleSiloRequest() {
 
 			s.env.ExecuteWorkflow(s.rw.ExecuteSiloRequestWorkflow, wfArgs)
 			s.True(s.env.IsWorkflowCompleted())
+
+			res := ExecuteSiloRequestResult{}
+			if !s.NoError(s.env.GetWorkflowResult(&res)) {
+				return
+			}
+
+			s.Equal(ExecuteSiloRequestResult{
+				Status: arg.workflowResult,
+			}, res)
+
 			s.NoError(s.env.GetWorkflowError())
 		})
 	}
@@ -189,7 +205,7 @@ func (s *siloRequestUnitTestSuite) TestDelayedSiloRequest() {
 		}},
 	}
 
-	s.env.OnActivity(s.ra.StartDataSourceRequestActivity, mock.Anything, requestactivity.StartRequestArgs{
+	s.env.OnActivity(s.ra.StartSiloRequestActivity, mock.Anything, requestactivity.StartRequestArgs{
 		SiloDefinitionID: wfArgs.SiloDefinitionID,
 		RequestID:        wfArgs.RequestID,
 	}).Return(results, nil).Once()

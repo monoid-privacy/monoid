@@ -1,13 +1,12 @@
 /* eslint-disable no-nested-ternary */
 import React from 'react';
-import { CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { CheckIcon, ExclamationTriangleIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 type Step = {
   id: string,
   name: string,
-  status: 'complete' | 'upcoming' | 'current' | 'failed',
-  completedDesc: string,
-  upcomingDesc: string,
+  status: 'complete' | 'upcoming' | 'current' | 'failed' | 'warn',
+  description: string,
 };
 export default function StepView(props: { steps: Step[] }) {
   const { steps } = props;
@@ -25,7 +24,7 @@ export default function StepView(props: { steps: Step[] }) {
                   </span>
                   <span className="mt-0.5 ml-4 flex min-w-0 flex-col">
                     <span className="text-sm font-medium text-gray-900">{step.name}</span>
-                    <span className="text-xs font-light text-gray-500">{step.completedDesc}</span>
+                    <span className="text-xs font-light text-gray-500">{step.description}</span>
                   </span>
                 </span>
               </div>
@@ -37,7 +36,19 @@ export default function StepView(props: { steps: Step[] }) {
                   </span>
                   <span className="mt-0.5 ml-4 flex min-w-0 flex-col">
                     <span className="text-sm font-medium text-gray-900">{step.name}</span>
-                    <span className="text-xs font-light text-gray-500">{step.completedDesc}</span>
+                    <span className="text-xs font-light text-gray-500">{step.description}</span>
+                  </span>
+                </span>
+              </div>
+            ) : step.status === 'warn' ? (
+              <div className="group flex w-full items-center">
+                <span className="flex items-center px-6 py-4 text-sm font-medium">
+                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-yellow-600 group-hover:bg-yellow-800">
+                    <ExclamationTriangleIcon className="h-6 w-6 text-white" aria-hidden="true" />
+                  </span>
+                  <span className="mt-0.5 ml-4 flex min-w-0 flex-col">
+                    <span className="text-sm font-medium text-gray-900">{step.name}</span>
+                    <span className="text-xs font-light text-gray-500">{step.description}</span>
                   </span>
                 </span>
               </div>
@@ -48,7 +59,7 @@ export default function StepView(props: { steps: Step[] }) {
                 </span>
                 <span className="mt-0.5 ml-4 flex min-w-0 flex-col">
                   <span className="text-sm font-medium text-gray-900">{step.name}</span>
-                  <span className="text-xs font-light text-gray-500">{step.completedDesc}</span>
+                  <span className="text-xs font-light text-gray-500">{step.description}</span>
                 </span>
               </div>
             ) : (
@@ -59,7 +70,7 @@ export default function StepView(props: { steps: Step[] }) {
                   </span>
                   <span className="mt-0.5 ml-4 flex min-w-0 flex-col">
                     <span className="text-sm font-medium text-gray-900">{step.name}</span>
-                    <span className="text-xs font-light text-gray-500">{step.upcomingDesc}</span>
+                    <span className="text-xs font-light text-gray-500">{step.description}</span>
                   </span>
                 </span>
               </div>

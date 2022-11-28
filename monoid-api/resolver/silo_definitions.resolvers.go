@@ -314,7 +314,7 @@ func (r *mutationResolver) UpdateSiloScanConfig(ctx context.Context, input model
 
 // SiloSpecification is the resolver for the siloSpecification field.
 func (r *siloDefinitionResolver) SiloSpecification(ctx context.Context, obj *model.SiloDefinition) (*model.SiloSpecification, error) {
-	return loader.GetSiloSpecification(ctx, obj.SiloSpecificationID)
+	return loader.SiloSpecification(ctx, obj.SiloSpecificationID)
 }
 
 // DataSources is the resolver for the dataSources field.

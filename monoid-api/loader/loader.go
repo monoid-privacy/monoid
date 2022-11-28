@@ -14,6 +14,11 @@ const (
 	loadersKey = ctxKey("dataloaders")
 )
 
+// Reader is the base class for any data loader readers
+type Reader struct {
+	conf *config.BaseConfig
+}
+
 // Loaders wrap your data loaders to inject via middleware
 type Loaders struct {
 	PropertyCategoriesLoader   *dataloader.Loader
@@ -22,25 +27,22 @@ type Loaders struct {
 	DataSourceLoader           *dataloader.Loader
 	QueryResultLoader          *dataloader.Loader
 	SiloSpecificationLoader    *dataloader.Loader
+	JobLoader                  *dataloader.Loader
 }
 
 // NewLoaders instantiates data loaders for the middleware
 func NewLoaders(conf *config.BaseConfig) *Loaders {
 	// define the data loader
-	propertyCategoryReader := &PropertyCategoryReader{conf: conf}
-	siloDefinitionReader := &SiloDefinitionReader{conf: conf}
-	dataSourcePropsReader := &DataSourcePropertyReader{conf: conf}
-	dataSourceReader := &DataSourcesReader{conf: conf}
-	qrReader := &QueryResultReader{conf: conf}
-	ssReader := &SiloSpecificationReader{conf: conf}
+	reader := &Reader{conf: conf}
 
 	loaders := &Loaders{
-		PropertyCategoriesLoader:   dataloader.NewBatchedLoader(propertyCategoryReader.GetPropertyCategories),
-		SiloDefinitionLoader:       dataloader.NewBatchedLoader(siloDefinitionReader.GetSiloDefinition),
-		DataSourcePropertiesLoader: dataloader.NewBatchedLoader(dataSourcePropsReader.GetDataSourceProperty),
-		DataSourceLoader:           dataloader.NewBatchedLoader(dataSourceReader.GetDataSources),
-		QueryResultLoader:          dataloader.NewBatchedLoader(qrReader.GetQueryResult),
-		SiloSpecificationLoader:    dataloader.NewBatchedLoader(ssReader.GetSiloSpecification),
+		PropertyCategoriesLoader:   dataloader.NewBatchedLoader(reader.propertiesCategories),
+		SiloDefinitionLoader:       dataloader.NewBatchedLoader(reader.siloDefinitions),
+		DataSourcePropertiesLoader: dataloader.NewBatchedLoader(reader.dataSourcesProperties),
+		DataSourceLoader:           dataloader.NewBatchedLoader(reader.dataSources),
+		QueryResultLoader:          dataloader.NewBatchedLoader(reader.queryResults),
+		SiloSpecificationLoader:    dataloader.NewBatchedLoader(reader.siloSpecifications),
+		JobLoader:                  dataloader.NewBatchedLoader(reader.jobs),
 	}
 	return loaders
 }

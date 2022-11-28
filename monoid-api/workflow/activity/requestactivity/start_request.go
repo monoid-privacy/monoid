@@ -76,7 +76,7 @@ type StartRequestArgs struct {
 // StartRequestOnDataSource starts the request and returns the status
 // of the request, along with an indicator of if the request was already
 // finished.
-func (a *RequestActivity) StartDataSourceRequestActivity(
+func (a *RequestActivity) StartSiloRequestActivity(
 	ctx context.Context,
 	args StartRequestArgs,
 ) (RequestStatusResult, error) {

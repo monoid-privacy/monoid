@@ -64,7 +64,8 @@ func main() {
 	w.RegisterActivity(ra.FindDBSilos)
 	w.RegisterActivity(ra.ProcessRequestResults)
 	w.RegisterActivity(ra.RequestStatusActivity)
-	w.RegisterActivity(ra.StartDataSourceRequestActivity)
+	w.RegisterActivity(ra.StartSiloRequestActivity)
+	w.RegisterActivity(ra.BatchUpdateRequestStatusActivity)
 
 	w.RegisterWorkflow(mwf.ValidateDSWorkflow)
 	w.RegisterWorkflow(mwf.DetectDSWorkflow)

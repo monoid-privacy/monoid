@@ -398,7 +398,7 @@ type RequestResolver interface {
 	PrimaryKeyValues(ctx context.Context, obj *model.Request) ([]*model.PrimaryKeyValue, error)
 	RequestStatuses(ctx context.Context, obj *model.Request, query *model.RequestStatusQuery, offset *int, limit int) (*model.RequestStatusListResult, error)
 
-	Status(ctx context.Context, obj *model.Request) (model.RequestStatusType, error)
+	Status(ctx context.Context, obj *model.Request) (model.FullRequestStatus, error)
 }
 type RequestStatusResolver interface {
 	Request(ctx context.Context, obj *model.RequestStatus) (*model.Request, error)
@@ -2188,6 +2188,7 @@ enum JobStatus {
     QUEUED
     RUNNING
     COMPLETED
+    PARTIAL_FAILED
     FAILED
 }
 
@@ -2298,8 +2299,16 @@ type Request {
     primaryKeyValues: [PrimaryKeyValue!]
     requestStatuses(query: RequestStatusQuery, offset: Int, limit: Int!): RequestStatusListResult!
     type: UserDataRequestType!
-    status: RequestStatusType!
+    status: FullRequestStatus!
     createdAt: Time
+}
+
+enum FullRequestStatus {
+    CREATED
+    IN_PROGRESS
+    EXECUTED
+    PARTIAL_FAILED
+    FAILED
 }
 
 enum RequestStatusType {
@@ -9550,9 +9559,9 @@ func (ec *executionContext) _Request_status(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.RequestStatusType)
+	res := resTmp.(model.FullRequestStatus)
 	fc.Result = res
-	return ec.marshalNRequestStatusType2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatusType(ctx, field.Selections, res)
+	return ec.marshalNFullRequestStatus2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐFullRequestStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Request_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -9562,7 +9571,7 @@ func (ec *executionContext) fieldContext_Request_status(ctx context.Context, fie
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type RequestStatusType does not have child fields")
+			return nil, errors.New("field of type FullRequestStatus does not have child fields")
 		},
 	}
 	return fc, nil
@@ -17507,6 +17516,16 @@ func (ec *executionContext) unmarshalNDiscoveryType2githubᚗcomᚋbristᚑaiᚋ
 }
 
 func (ec *executionContext) marshalNDiscoveryType2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryType(ctx context.Context, sel ast.SelectionSet, v model.DiscoveryType) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNFullRequestStatus2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐFullRequestStatus(ctx context.Context, v interface{}) (model.FullRequestStatus, error) {
+	var res model.FullRequestStatus
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNFullRequestStatus2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐFullRequestStatus(ctx context.Context, sel ast.SelectionSet, v model.FullRequestStatus) graphql.Marshaler {
 	return v
 }
 

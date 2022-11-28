@@ -4,6 +4,7 @@ enum JobStatus {
     QUEUED
     RUNNING
     COMPLETED
+    PARTIAL_FAILED
     FAILED
 }
 

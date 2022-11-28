@@ -22,12 +22,12 @@ import (
 
 // SiloDefinition is the resolver for the siloDefinition field.
 func (r *dataSourceResolver) SiloDefinition(ctx context.Context, obj *model.DataSource) (*model.SiloDefinition, error) {
-	return loader.GetSiloDefinition(ctx, obj.SiloDefinitionID)
+	return loader.SiloDefinition(ctx, obj.SiloDefinitionID)
 }
 
 // Properties is the resolver for the properties field.
 func (r *dataSourceResolver) Properties(ctx context.Context, obj *model.DataSource) ([]*model.Property, error) {
-	return loader.GetDataSourceProperties(ctx, obj.ID)
+	return loader.DataSourceProperties(ctx, obj.ID)
 }
 
 // CreateDataSource is the resolver for the createDataSource field.
@@ -314,7 +314,7 @@ func (r *mutationResolver) DetectSiloSources(ctx context.Context, workspaceID st
 
 // Categories is the resolver for the categories field.
 func (r *propertyResolver) Categories(ctx context.Context, obj *model.Property) ([]*model.Category, error) {
-	return loader.GetPropertyCategories(ctx, obj.ID)
+	return loader.PropertyCategories(ctx, obj.ID)
 }
 
 // DataSource is the resolver for the dataSource field.

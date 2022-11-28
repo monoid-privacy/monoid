@@ -17,7 +17,7 @@ import (
 
 // SiloDefinition is the resolver for the siloDefinition field.
 func (r *dataDiscoveryResolver) SiloDefinition(ctx context.Context, obj *model.DataDiscovery) (*model.SiloDefinition, error) {
-	return loader.GetSiloDefinition(ctx, obj.SiloDefinitionID)
+	return loader.SiloDefinition(ctx, obj.SiloDefinitionID)
 }
 
 // Data is the resolver for the data field.

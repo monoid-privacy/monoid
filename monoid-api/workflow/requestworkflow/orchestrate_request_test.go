@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"go.temporal.io/sdk/testsuite"
+	"go.temporal.io/sdk/workflow"
 )
 
 type orchestrateUnitTestSuite struct {
@@ -50,8 +51,38 @@ func (s *orchestrateUnitTestSuite) tabularAfter() {
 }
 
 func (s *orchestrateUnitTestSuite) TestSimpleOrchestrate() {
-	for _, numRequests := range []int{1, 10, 500} {
-		s.Run(fmt.Sprintf("Simple %d", numRequests), func() {
+	type testArgs struct {
+		name            string
+		numRequests     int
+		resJobStatus    model.JobStatus
+		workflowResults []ExecuteSiloRequestResult
+	}
+
+	for _, arg := range []testArgs{{
+		name:            "normal_1",
+		numRequests:     1,
+		resJobStatus:    model.JobStatusCompleted,
+		workflowResults: []ExecuteSiloRequestResult{{Status: model.FullRequestStatusExecuted}},
+	}, {
+		name:            "normal_10",
+		numRequests:     10,
+		resJobStatus:    model.JobStatusCompleted,
+		workflowResults: []ExecuteSiloRequestResult{{Status: model.FullRequestStatusExecuted}},
+	}, {
+		name:            "normal_500",
+		numRequests:     500,
+		resJobStatus:    model.JobStatusCompleted,
+		workflowResults: []ExecuteSiloRequestResult{{Status: model.FullRequestStatusExecuted}},
+	}, {
+		name:         "partial_fail",
+		numRequests:  10,
+		resJobStatus: model.JobStatusPartialFailed,
+		workflowResults: []ExecuteSiloRequestResult{
+			{Status: model.FullRequestStatusExecuted},
+			{Status: model.FullRequestStatusFailed},
+		},
+	}} {
+		s.Run(fmt.Sprintf("Simple %s", arg.name), func() {
 			s.tabularSetup()
 
 			requestArgs := ExecuteRequestArgs{
@@ -60,10 +91,10 @@ func (s *orchestrateUnitTestSuite) TestSimpleOrchestrate() {
 				WorkspaceID: "test_workspace_id",
 			}
 
-			silos := make([]model.SiloDefinition, numRequests)
+			silos := make([]model.SiloDefinition, arg.numRequests)
 			siloMap := map[string]model.SiloDefinition{}
 
-			for i := 0; i < numRequests; i++ {
+			for i := 0; i < arg.numRequests; i++ {
 				silos[i] = model.SiloDefinition{
 					ID: uuid.New(),
 				}
@@ -73,13 +104,14 @@ func (s *orchestrateUnitTestSuite) TestSimpleOrchestrate() {
 
 			s.env.OnActivity(s.ac.UpdateJobStatus, mock.Anything, activity.JobStatusInput{
 				ID:     "test_job_id",
-				Status: model.JobStatusCompleted,
+				Status: arg.resJobStatus,
 			}).Return(nil).Times(1)
 
 			s.env.OnActivity(s.ra.FindDBSilos, mock.Anything).Return(
 				silos, nil,
 			)
 
+			n := 0
 			s.env.OnWorkflow(
 				s.rw.ExecuteSiloRequestWorkflow, mock.Anything, mock.MatchedBy(func(args SiloRequestArgs) bool {
 					if _, ok := siloMap[args.SiloDefinitionID]; !ok {
@@ -88,7 +120,10 @@ func (s *orchestrateUnitTestSuite) TestSimpleOrchestrate() {
 
 					return args.RequestID == requestArgs.RequestID
 				}),
-			).Return(nil).Times(numRequests)
+			).Return(func(ctx workflow.Context, args SiloRequestArgs) (ExecuteSiloRequestResult, error) {
+				n++
+				return arg.workflowResults[n%len(arg.workflowResults)], nil
+			}).Times(arg.numRequests)
 
 			s.env.ExecuteWorkflow(s.rw.ExecuteRequestWorkflow, requestArgs)
 

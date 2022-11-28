@@ -74,6 +74,10 @@ export function StatusBadge({ status }: { status: string }) {
       disp = 'Failed';
       badgeColor = 'red';
       break;
+    case 'PARTIAL_FAILED':
+      disp = 'Partially Failed';
+      badgeColor = 'yellow';
+      break;
     case 'IN_PROGRESS':
       disp = 'In Progress';
       badgeColor = 'blue';

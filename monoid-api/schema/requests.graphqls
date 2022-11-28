@@ -60,8 +60,16 @@ type Request {
     primaryKeyValues: [PrimaryKeyValue!]
     requestStatuses(query: RequestStatusQuery, offset: Int, limit: Int!): RequestStatusListResult!
     type: UserDataRequestType!
-    status: RequestStatusType!
+    status: FullRequestStatus!
     createdAt: Time
+}
+
+enum FullRequestStatus {
+    CREATED
+    IN_PROGRESS
+    EXECUTED
+    PARTIAL_FAILED
+    FAILED
 }
 
 enum RequestStatusType {

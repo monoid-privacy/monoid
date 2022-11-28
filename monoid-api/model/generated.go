@@ -315,25 +315,74 @@ func (e DiscoveryType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
+type FullRequestStatus string
+
+const (
+	FullRequestStatusCreated       FullRequestStatus = "CREATED"
+	FullRequestStatusInProgress    FullRequestStatus = "IN_PROGRESS"
+	FullRequestStatusExecuted      FullRequestStatus = "EXECUTED"
+	FullRequestStatusPartialFailed FullRequestStatus = "PARTIAL_FAILED"
+	FullRequestStatusFailed        FullRequestStatus = "FAILED"
+)
+
+var AllFullRequestStatus = []FullRequestStatus{
+	FullRequestStatusCreated,
+	FullRequestStatusInProgress,
+	FullRequestStatusExecuted,
+	FullRequestStatusPartialFailed,
+	FullRequestStatusFailed,
+}
+
+func (e FullRequestStatus) IsValid() bool {
+	switch e {
+	case FullRequestStatusCreated, FullRequestStatusInProgress, FullRequestStatusExecuted, FullRequestStatusPartialFailed, FullRequestStatusFailed:
+		return true
+	}
+	return false
+}
+
+func (e FullRequestStatus) String() string {
+	return string(e)
+}
+
+func (e *FullRequestStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = FullRequestStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid FullRequestStatus", str)
+	}
+	return nil
+}
+
+func (e FullRequestStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
 type JobStatus string
 
 const (
-	JobStatusQueued    JobStatus = "QUEUED"
-	JobStatusRunning   JobStatus = "RUNNING"
-	JobStatusCompleted JobStatus = "COMPLETED"
-	JobStatusFailed    JobStatus = "FAILED"
+	JobStatusQueued        JobStatus = "QUEUED"
+	JobStatusRunning       JobStatus = "RUNNING"
+	JobStatusCompleted     JobStatus = "COMPLETED"
+	JobStatusPartialFailed JobStatus = "PARTIAL_FAILED"
+	JobStatusFailed        JobStatus = "FAILED"
 )
 
 var AllJobStatus = []JobStatus{
 	JobStatusQueued,
 	JobStatusRunning,
 	JobStatusCompleted,
+	JobStatusPartialFailed,
 	JobStatusFailed,
 }
 
 func (e JobStatus) IsValid() bool {
 	switch e {
-	case JobStatusQueued, JobStatusRunning, JobStatusCompleted, JobStatusFailed:
+	case JobStatusQueued, JobStatusRunning, JobStatusCompleted, JobStatusPartialFailed, JobStatusFailed:
 		return true
 	}
 	return false

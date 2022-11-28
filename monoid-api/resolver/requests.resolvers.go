@@ -5,7 +5,6 @@ package resolver
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/brist-ai/monoid/generated"
@@ -328,26 +327,29 @@ func (r *requestResolver) RequestStatuses(ctx context.Context, obj *model.Reques
 }
 
 // Status is the resolver for the status field.
-func (r *requestResolver) Status(ctx context.Context, obj *model.Request) (model.RequestStatusType, error) {
-	job := model.Job{}
-	if err := r.Conf.DB.Where("id = ?", obj.JobID).First(&job).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return model.RequestStatusTypeCreated, nil
-		}
+func (r *requestResolver) Status(ctx context.Context, obj *model.Request) (model.FullRequestStatus, error) {
+	if obj.JobID == nil {
+		return model.FullRequestStatusCreated, nil
+	}
 
-		return model.RequestStatusTypeCreated, handleError(err, "Error finding status")
+	job, err := loader.Job(ctx, *obj.JobID)
+
+	if err != nil {
+		return model.FullRequestStatusCreated, handleError(err, "Error computing status.")
 	}
 
 	switch job.Status {
 	case model.JobStatusCompleted:
-		return model.RequestStatusTypeExecuted, nil
+		return model.FullRequestStatusExecuted, nil
 	case model.JobStatusFailed:
-		return model.RequestStatusTypeFailed, nil
+		return model.FullRequestStatusFailed, nil
+	case model.JobStatusPartialFailed:
+		return model.FullRequestStatusPartialFailed, nil
 	case model.JobStatusQueued, model.JobStatusRunning:
-		return model.RequestStatusTypeInProgress, nil
+		return model.FullRequestStatusInProgress, nil
 	}
 
-	return model.RequestStatusTypeCreated, handleError(
+	return model.FullRequestStatusCreated, handleError(
 		fmt.Errorf("error finding status"), "Error finding status",
 	)
 }
@@ -359,12 +361,12 @@ func (r *requestStatusResolver) Request(ctx context.Context, obj *model.RequestS
 
 // DataSource is the resolver for the dataSource field.
 func (r *requestStatusResolver) DataSource(ctx context.Context, obj *model.RequestStatus) (*model.DataSource, error) {
-	return loader.GetDataSource(ctx, obj.DataSourceID)
+	return loader.DataSource(ctx, obj.DataSourceID)
 }
 
 // QueryResult is the resolver for the queryResult field.
 func (r *requestStatusResolver) QueryResult(ctx context.Context, obj *model.RequestStatus) (*model.QueryResult, error) {
-	q, err := loader.GetQueryResult(ctx, obj.ID)
+	q, err := loader.QueryResult(ctx, obj.ID)
 	if err != nil {
 		return nil, err
 	}

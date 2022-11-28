@@ -32,13 +32,18 @@ func (w *RequestWorkflow) ExecuteRequestWorkflow(
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	reqAc := requestactivity.RequestActivity{}
+	status := model.JobStatusCompleted
+	hasSuccess := false
 
 	cleanupCtx, _ := workflow.NewDisconnectedContext(ctx)
 	defer func() {
 		ac := activity.Activity{}
-		status := model.JobStatusCompleted
 
 		if err != nil {
+			status = model.JobStatusFailed
+		}
+
+		if !hasSuccess && status == model.JobStatusPartialFailed {
 			status = model.JobStatusFailed
 		}
 
@@ -69,10 +74,24 @@ func (w *RequestWorkflow) ExecuteRequestWorkflow(
 			RequestID:        args.RequestID,
 			SiloDefinitionID: silo.ID,
 		}), func(f workflow.Future) {
-			if err := f.Get(ctx, nil); err != nil {
+			res := ExecuteSiloRequestResult{}
+
+			if err := f.Get(ctx, &res); err != nil {
 				logger.Error("error scheduling execute request", map[string]interface{}{
 					"silo": silos[i],
 				}, err)
+
+				status = model.JobStatusPartialFailed
+			}
+
+			switch res.Status {
+			case model.FullRequestStatusFailed:
+				status = model.JobStatusPartialFailed
+			case model.FullRequestStatusPartialFailed:
+				status = model.JobStatusPartialFailed
+				hasSuccess = true
+			case model.FullRequestStatusExecuted:
+				hasSuccess = true
 			}
 		})
 	}
