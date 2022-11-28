@@ -22,6 +22,7 @@ query GetRequests($id: ID!, $limit: Int!, $offset: Int) {
         id
         type
         createdAt
+        status
       }
       numRequests
     }

@@ -14,6 +14,7 @@ import { Request } from '../../../../../lib/models';
 import Badge from '../../../../../components/Badge';
 import Pagination from '../../../../../components/Pagination';
 import { GET_REQUESTS } from '../../../../../graphql/requests_queries';
+import { StatusBadge } from '../../RequestPage/components/RequestStatuses';
 
 dayjs.extend(updateLocale);
 dayjs.extend(duration);
@@ -70,6 +71,10 @@ export default function RequestList() {
           header: 'Request Type',
           key: 'request_type',
         },
+        {
+          header: 'Status',
+          key: 'request_status',
+        },
       ]}
       tableRows={
         data?.workspace.requests.requests.map((req) => ({
@@ -92,6 +97,12 @@ export default function RequestList() {
                 <Badge>
                   {req.type === 'QUERY' ? 'Query' : 'Delete'}
                 </Badge>
+              ),
+            },
+            {
+              key: 'request_status',
+              content: (
+                <StatusBadge status={req.status!} />
               ),
             },
           ],

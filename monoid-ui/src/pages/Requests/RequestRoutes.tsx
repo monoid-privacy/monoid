@@ -10,7 +10,7 @@ export default function RequestRoutes() {
       <Route index element={<RequestIndex />} />
       <Route path="new" element={<NewRequestPage />} />
       <Route path=":requestId">
-        <Route index element={<Navigate to="primary_key_values" />} />
+        <Route index element={<Navigate to="request_statuses" />} />
         <Route path="request_statuses" element={<RequestPage tab="request_statuses" />} />
         <Route path="primary_key_values" element={<RequestPage tab="primary_key_values" />} />
       </Route>

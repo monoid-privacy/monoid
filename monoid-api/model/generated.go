@@ -363,20 +363,22 @@ func (e JobStatus) MarshalGQL(w io.Writer) {
 type RequestStatusType string
 
 const (
-	RequestStatusTypeCreated  RequestStatusType = "CREATED"
-	RequestStatusTypeExecuted RequestStatusType = "EXECUTED"
-	RequestStatusTypeFailed   RequestStatusType = "FAILED"
+	RequestStatusTypeCreated    RequestStatusType = "CREATED"
+	RequestStatusTypeInProgress RequestStatusType = "IN_PROGRESS"
+	RequestStatusTypeExecuted   RequestStatusType = "EXECUTED"
+	RequestStatusTypeFailed     RequestStatusType = "FAILED"
 )
 
 var AllRequestStatusType = []RequestStatusType{
 	RequestStatusTypeCreated,
+	RequestStatusTypeInProgress,
 	RequestStatusTypeExecuted,
 	RequestStatusTypeFailed,
 }
 
 func (e RequestStatusType) IsValid() bool {
 	switch e {
-	case RequestStatusTypeCreated, RequestStatusTypeExecuted, RequestStatusTypeFailed:
+	case RequestStatusTypeCreated, RequestStatusTypeInProgress, RequestStatusTypeExecuted, RequestStatusTypeFailed:
 		return true
 	}
 	return false

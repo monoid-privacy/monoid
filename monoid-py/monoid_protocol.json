@@ -163,10 +163,10 @@
     "MonoidPersistenceConfig": {
       "type": "object",
       "required": [
-        "directory"
+        "temp_store"
       ],
       "properties": {
-        "directory": {
+        "temp_store": {
           "type": "string"
         }
       }

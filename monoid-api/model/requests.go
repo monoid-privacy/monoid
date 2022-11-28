@@ -39,6 +39,9 @@ type Request struct {
 	RequestStatuses  []RequestStatus
 	Type             UserDataRequestType
 
+	JobID *string
+	Job   *Job
+
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }

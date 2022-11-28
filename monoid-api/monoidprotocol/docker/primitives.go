@@ -23,7 +23,7 @@ func (dp *DockerMonoidProtocol) createVolume(
 ) (string, error) {
 	volName := fmt.Sprintf("monoid_%s", randSeq(10))
 
-	vol, err := dp.client.VolumeCreate(ctx, volume.VolumeCreateBody{
+	vol, err := dp.client.VolumeCreate(ctx, volume.CreateOptions{
 		Driver:     "local",
 		DriverOpts: map[string]string{},
 		Labels:     map[string]string{},
@@ -220,7 +220,7 @@ func (dp *DockerMonoidProtocol) constructContainer(
 		filePath := "/monoid_persist/" + randSeq(8)
 		fileMounts[filePath] = v
 		jsonArgsCp[k] = monoidprotocol.MonoidPersistenceConfig{
-			Directory: filePath,
+			TempStore: filePath,
 		}
 	}
 

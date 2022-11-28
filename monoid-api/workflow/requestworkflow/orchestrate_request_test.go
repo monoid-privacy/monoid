@@ -6,6 +6,7 @@ import (
 
 	"github.com/brist-ai/monoid/config"
 	"github.com/brist-ai/monoid/model"
+	"github.com/brist-ai/monoid/workflow/activity"
 	"github.com/brist-ai/monoid/workflow/activity/requestactivity"
 	"github.com/pborman/uuid"
 	"github.com/stretchr/testify/mock"
@@ -17,6 +18,7 @@ type orchestrateUnitTestSuite struct {
 	suite.Suite
 	testsuite.WorkflowTestSuite
 
+	ac  *activity.Activity
 	ra  *requestactivity.RequestActivity
 	rw  *RequestWorkflow
 	env *testsuite.TestWorkflowEnvironment
@@ -27,6 +29,8 @@ func (s *orchestrateUnitTestSuite) SetupTest() {
 		Conf: &config.BaseConfig{},
 	}
 
+	s.ac = &activity.Activity{}
+
 	s.rw = &RequestWorkflow{
 		Conf: &config.BaseConfig{},
 	}
@@ -36,6 +40,7 @@ func (s *orchestrateUnitTestSuite) tabularSetup() {
 	s.env = s.NewTestWorkflowEnvironment()
 
 	s.env.RegisterActivity(s.ra.FindDBSilos)
+	s.env.RegisterActivity(s.ac.UpdateJobStatus)
 	s.env.RegisterWorkflow(s.rw.ExecuteRequestWorkflow)
 	s.env.RegisterWorkflow(s.rw.ExecuteSiloRequestWorkflow)
 }
@@ -65,6 +70,11 @@ func (s *orchestrateUnitTestSuite) TestSimpleOrchestrate() {
 
 				siloMap[silos[i].ID] = silos[i]
 			}
+
+			s.env.OnActivity(s.ac.UpdateJobStatus, mock.Anything, activity.JobStatusInput{
+				ID:     "test_job_id",
+				Status: model.JobStatusCompleted,
+			}).Return(nil).Times(1)
 
 			s.env.OnActivity(s.ra.FindDBSilos, mock.Anything).Return(
 				silos, nil,

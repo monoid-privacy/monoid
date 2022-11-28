@@ -228,6 +228,7 @@ type ComplexityRoot struct {
 		ID               func(childComplexity int) int
 		PrimaryKeyValues func(childComplexity int) int
 		RequestStatuses  func(childComplexity int, query *model.RequestStatusQuery, offset *int, limit int) int
+		Status           func(childComplexity int) int
 		Type             func(childComplexity int) int
 	}
 
@@ -347,7 +348,7 @@ type MutationResolver interface {
 	UpdateUserPrimaryKey(ctx context.Context, input model.UpdateUserPrimaryKeyInput) (*model.UserPrimaryKey, error)
 	DeleteUserPrimaryKey(ctx context.Context, id string) (*string, error)
 	CreateUserDataRequest(ctx context.Context, input *model.UserDataRequestInput) (*model.Request, error)
-	ExecuteUserDataRequest(ctx context.Context, requestID string, workspaceID string) (*model.Job, error)
+	ExecuteUserDataRequest(ctx context.Context, requestID string, workspaceID string) (*model.Request, error)
 	LinkPropertyToPrimaryKey(ctx context.Context, propertyID string, userPrimaryKeyID *string) (*model.Property, error)
 	CreateSiloDefinition(ctx context.Context, input *model.CreateSiloDefinitionInput) (*model.SiloDefinition, error)
 	UpdateSiloDefinition(ctx context.Context, input *model.UpdateSiloDefinitionInput) (*model.SiloDefinition, error)
@@ -396,6 +397,8 @@ type QueryResultResolver interface {
 type RequestResolver interface {
 	PrimaryKeyValues(ctx context.Context, obj *model.Request) ([]*model.PrimaryKeyValue, error)
 	RequestStatuses(ctx context.Context, obj *model.Request, query *model.RequestStatusQuery, offset *int, limit int) (*model.RequestStatusListResult, error)
+
+	Status(ctx context.Context, obj *model.Request) (model.RequestStatusType, error)
 }
 type RequestStatusResolver interface {
 	Request(ctx context.Context, obj *model.RequestStatus) (*model.Request, error)
@@ -1418,6 +1421,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Request.RequestStatuses(childComplexity, args["query"].(*model.RequestStatusQuery), args["offset"].(*int), args["limit"].(int)), true
 
+	case "Request.status":
+		if e.complexity.Request.Status == nil {
+			break
+		}
+
+		return e.complexity.Request.Status(childComplexity), true
+
 	case "Request.type":
 		if e.complexity.Request.Type == nil {
 			break
@@ -2288,11 +2298,13 @@ type Request {
     primaryKeyValues: [PrimaryKeyValue!]
     requestStatuses(query: RequestStatusQuery, offset: Int, limit: Int!): RequestStatusListResult!
     type: UserDataRequestType!
+    status: RequestStatusType!
     createdAt: Time
 }
 
 enum RequestStatusType {
     CREATED
+    IN_PROGRESS
     EXECUTED
     FAILED
 }
@@ -2325,7 +2337,7 @@ extend type Mutation {
 
 
     createUserDataRequest(input: UserDataRequestInput): Request
-    executeUserDataRequest(requestId: ID!, workspaceId: ID!): Job
+    executeUserDataRequest(requestId: ID!, workspaceId: ID!): Request
     linkPropertyToPrimaryKey(propertyId: ID!, userPrimaryKeyId: ID): Property
 }
 
@@ -6672,6 +6684,8 @@ func (ec *executionContext) fieldContext_Mutation_createUserDataRequest(ctx cont
 				return ec.fieldContext_Request_requestStatuses(ctx, field)
 			case "type":
 				return ec.fieldContext_Request_type(ctx, field)
+			case "status":
+				return ec.fieldContext_Request_status(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Request_createdAt(ctx, field)
 			}
@@ -6715,9 +6729,9 @@ func (ec *executionContext) _Mutation_executeUserDataRequest(ctx context.Context
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.Job)
+	res := resTmp.(*model.Request)
 	fc.Result = res
-	return ec.marshalOJob2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJob(ctx, field.Selections, res)
+	return ec.marshalORequest2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequest(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_executeUserDataRequest(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -6729,23 +6743,19 @@ func (ec *executionContext) fieldContext_Mutation_executeUserDataRequest(ctx con
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Job_id(ctx, field)
-			case "jobType":
-				return ec.fieldContext_Job_jobType(ctx, field)
-			case "resourceId":
-				return ec.fieldContext_Job_resourceId(ctx, field)
+				return ec.fieldContext_Request_id(ctx, field)
+			case "primaryKeyValues":
+				return ec.fieldContext_Request_primaryKeyValues(ctx, field)
+			case "requestStatuses":
+				return ec.fieldContext_Request_requestStatuses(ctx, field)
+			case "type":
+				return ec.fieldContext_Request_type(ctx, field)
 			case "status":
-				return ec.fieldContext_Job_status(ctx, field)
-			case "siloDefinition":
-				return ec.fieldContext_Job_siloDefinition(ctx, field)
-			case "logs":
-				return ec.fieldContext_Job_logs(ctx, field)
+				return ec.fieldContext_Request_status(ctx, field)
 			case "createdAt":
-				return ec.fieldContext_Job_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Job_updatedAt(ctx, field)
+				return ec.fieldContext_Request_createdAt(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Job", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Request", field.Name)
 		},
 	}
 	defer func() {
@@ -7758,6 +7768,8 @@ func (ec *executionContext) fieldContext_PrimaryKeyValue_request(ctx context.Con
 				return ec.fieldContext_Request_requestStatuses(ctx, field)
 			case "type":
 				return ec.fieldContext_Request_type(ctx, field)
+			case "status":
+				return ec.fieldContext_Request_status(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Request_createdAt(ctx, field)
 			}
@@ -8894,6 +8906,8 @@ func (ec *executionContext) fieldContext_Query_request(ctx context.Context, fiel
 				return ec.fieldContext_Request_requestStatuses(ctx, field)
 			case "type":
 				return ec.fieldContext_Request_type(ctx, field)
+			case "status":
+				return ec.fieldContext_Request_status(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Request_createdAt(ctx, field)
 			}
@@ -9510,6 +9524,50 @@ func (ec *executionContext) fieldContext_Request_type(ctx context.Context, field
 	return fc, nil
 }
 
+func (ec *executionContext) _Request_status(ctx context.Context, field graphql.CollectedField, obj *model.Request) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Request_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Request().Status(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.RequestStatusType)
+	fc.Result = res
+	return ec.marshalNRequestStatusType2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatusType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Request_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Request",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type RequestStatusType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Request_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Request) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Request_createdAt(ctx, field)
 	if err != nil {
@@ -9642,6 +9700,8 @@ func (ec *executionContext) fieldContext_RequestStatus_request(ctx context.Conte
 				return ec.fieldContext_Request_requestStatuses(ctx, field)
 			case "type":
 				return ec.fieldContext_Request_type(ctx, field)
+			case "status":
+				return ec.fieldContext_Request_status(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Request_createdAt(ctx, field)
 			}
@@ -9945,6 +10005,8 @@ func (ec *executionContext) fieldContext_RequestsResult_requests(ctx context.Con
 				return ec.fieldContext_Request_requestStatuses(ctx, field)
 			case "type":
 				return ec.fieldContext_Request_type(ctx, field)
+			case "status":
+				return ec.fieldContext_Request_status(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Request_createdAt(ctx, field)
 			}
@@ -16266,6 +16328,26 @@ func (ec *executionContext) _Request(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "status":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Request_status(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "createdAt":
 
 			out.Values[i] = ec._Request_createdAt(ctx, field, obj)

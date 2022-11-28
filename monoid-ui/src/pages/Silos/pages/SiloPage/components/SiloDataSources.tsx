@@ -1,19 +1,12 @@
 import React, { useContext } from 'react';
 import {
-  ApolloError,
-  gql, useMutation, useQuery,
+  gql, useQuery,
 } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  CircleStackIcon, ExclamationCircleIcon, FolderIcon, MinusCircleIcon,
-  PlusCircleIcon, XCircleIcon,
+  CircleStackIcon, ExclamationCircleIcon, FolderIcon,
 } from '@heroicons/react/24/outline';
-import {
-  CheckIcon, XMarkIcon,
-} from '@heroicons/react/24/solid';
 
-import Spinner from '../../../../../components/Spinner';
-import AlertRegion from '../../../../../components/AlertRegion';
 import Table from '../../../../../components/Table';
 import { DataSource, Property } from '../../../../../lib/models';
 import CategoryCombobox from './CategoryCombobox';
@@ -27,6 +20,8 @@ import Button from '../../../../../components/Button';
 import IdentifierSelect from './IdentifierSelect';
 import Text from '../../../../../components/Text';
 import { MonoidA } from '../../../../../components/MonoidLink';
+import Spinner from '../../../../../components/Spinner';
+import AlertRegion from '../../../../../components/AlertRegion';
 
 const SILO_DATA_SOURCES = gql`
   query SiloDataSources($id: ID!, $workspaceId: ID!) {
@@ -55,91 +50,6 @@ const SILO_DATA_SOURCES = gql`
     }
   }
 `;
-
-const REVIEW_PROPERTIES = gql`
-  mutation ReviewProperties($input: ReviewPropertiesInput!) {
-    reviewProperties(input: $input) {
-      id
-      tentative
-    }
-  }
-`;
-
-function TentativePropertyBadge(props: { property: Property }) {
-  const { property } = props;
-  const [reviewProperty, reviewPropertyRes] = useMutation(REVIEW_PROPERTIES);
-  const toastCtx = useContext(ToastContext);
-
-  return (
-    <Badge
-      key={property.id}
-      className="mt-1"
-      color={property.tentative === 'CREATED' ? 'green' : 'red'}
-      actions={reviewPropertyRes.loading ? [] : [
-        {
-          onClick: () => {
-            reviewProperty({
-              variables: {
-                input: {
-                  propertyIDs: [property.id!],
-                  reviewResult: 'APPROVE',
-                },
-              },
-            }).catch((err: ApolloError) => {
-              toastCtx.showToast({
-                variant: 'danger',
-                title: 'Error',
-                message: err.message,
-                icon: XCircleIcon,
-              });
-            });
-          },
-          content: (
-            <CheckIcon className="w-3" />
-          ),
-          key: 'approve',
-        },
-        {
-          onClick: () => {
-            reviewProperty({
-              variables: {
-                input: {
-                  propertyIDs: [property.id!],
-                  reviewResult: 'DENY',
-                },
-              },
-            }).catch((err: ApolloError) => {
-              toastCtx.showToast({
-                variant: 'danger',
-                title: 'Error',
-                message: err.message,
-                icon: XCircleIcon,
-              });
-            });
-          },
-          content: (
-            <XMarkIcon className="w-3" />
-          ),
-          key: 'reject',
-        },
-      ]}
-    >
-      {
-        reviewPropertyRes.loading
-          ? <Spinner />
-          : (
-            <div>
-              {
-                property.tentative === 'CREATED'
-                  ? 'Scan: Discovered'
-                  : 'Scan: Deleted'
-              }
-            </div>
-          )
-      }
-    </Badge>
-  );
-}
 
 export default function SiloDataSources() {
   const { siloId, id } = useParams<{ siloId: string, id: string }>();
@@ -240,24 +150,6 @@ export default function SiloDataSources() {
                             {ds.group}
                           </Text>
                         </div>
-                        <div className="space-x-2">
-                          {
-                            ds.tentative
-                            && (
-                              <Badge color={ds.tentative === 'CREATED' ? 'green' : 'red'} className="mt-2">
-                                {ds.tentative === 'CREATED' ? 'Discovered' : 'Deleted'}
-                              </Badge>
-                            )
-                          }
-                          {
-                            (ds.properties?.filter((p) => p.tentative).length || 0) !== 0
-                            && (
-                              <Badge color="yellow" className="mt-2">
-                                Property Changes Discovered
-                              </Badge>
-                            )
-                          }
-                        </div>
                       </div>
                     ),
                   },
@@ -269,35 +161,10 @@ export default function SiloDataSources() {
                           dedup(
                             // Get all the categories that are listed under the properties for
                             // the data source.
-                            ds.properties?.flatMap((p) => p.categories?.map(((c) => {
-                              if (!p.tentative) {
-                                return {
-                                  ...c,
-                                  tentative: c.tentative,
-                                };
-                              }
-
-                              if (p.tentative === 'DELETED') {
-                                return {
-                                  ...c,
-                                  tentative: 'DELETED',
-                                };
-                              }
-                              return {
-                                ...c,
-                                tentative: c.tentative ? c.tentative : p.tentative,
-                              };
-                            })) || []) || [],
+                            ds.properties?.flatMap((p) => p.categories || []) || [],
                             (c) => c.id!,
                           ).map((c) => (
-                            <Badge key={c.id} color={c.tentative ? 'yellow' : 'blue'}>
-                              <div className="mr-1">
-                                {c.tentative && (
-                                  c.tentative === 'CREATED'
-                                    ? <PlusCircleIcon className="w-4 h-4" />
-                                    : <MinusCircleIcon className="w-4 h-4" />
-                                )}
-                              </div>
+                            <Badge key={c.id} color="blue">
                               {c.name}
                             </Badge>
                           ))
@@ -336,14 +203,6 @@ export default function SiloDataSources() {
                                     content: (
                                       <div className="flex flex-col items-start">
                                         {p.name}
-                                        {p.tentative
-                                          && (
-                                            <TentativePropertyBadge
-                                              key={p.id}
-                                              property={p}
-                                            />
-                                          )}
-
                                       </div>
                                     ),
                                   },

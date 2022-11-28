@@ -60,11 +60,13 @@ type Request {
     primaryKeyValues: [PrimaryKeyValue!]
     requestStatuses(query: RequestStatusQuery, offset: Int, limit: Int!): RequestStatusListResult!
     type: UserDataRequestType!
+    status: RequestStatusType!
     createdAt: Time
 }
 
 enum RequestStatusType {
     CREATED
+    IN_PROGRESS
     EXECUTED
     FAILED
 }
@@ -97,7 +99,7 @@ extend type Mutation {
 
 
     createUserDataRequest(input: UserDataRequestInput): Request
-    executeUserDataRequest(requestId: ID!, workspaceId: ID!): Job
+    executeUserDataRequest(requestId: ID!, workspaceId: ID!): Request
     linkPropertyToPrimaryKey(propertyId: ID!, userPrimaryKeyId: ID): Property
 }
 

@@ -1,7 +1,7 @@
 import {
-  gql, useQuery, useMutation, useApolloClient, ApolloError,
+  gql, useQuery, useMutation, ApolloError,
 } from '@apollo/client';
-import React, { useEffect, useContext } from 'react';
+import React, { useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { XCircleIcon } from '@heroicons/react/24/outline';
 import AlertRegion from '../../../../components/AlertRegion';
@@ -14,22 +14,12 @@ import PrimaryKeyValues from './components/PrimaryKeyValues';
 import RequestStatuses from './components/RequestStatuses';
 import ToastContext from '../../../../contexts/ToastContext';
 import Badge from '../../../../components/Badge';
+import StepView from '../../../../components/Steps';
 
 const EXECUTE_REQUEST = gql`
   mutation ExecuteRequest($id: ID!, $workspaceId: ID!) {
     executeUserDataRequest(requestId: $id, workspaceId: $workspaceId) {
       id
-      status
-      jobType
-    }
-  }
-`;
-
-const RUNNING_EXECUTE_REQUEST_JOBS = gql`
-  query RunningDiscoverJobs($resourceId: ID!) {
-    jobs(resourceId: $resourceId, jobType: "execute_request", status: [RUNNING, QUEUED]) {
-      id
-      jobType
       status
     }
   }
@@ -40,74 +30,10 @@ const GET_REQUEST_METADATA = gql`
       request(id: $id) {
         id
         type
+        status
       }
   }
 `;
-
-function ScanRegion(props: {
-  requestId: string,
-  children: React.ReactNode,
-  onScanStatusChange?: (status: 'COMPLETED' | 'STARTED') => void,
-}) {
-  const { requestId, children, onScanStatusChange } = props;
-
-  const {
-    data,
-    previousData,
-    loading,
-    error,
-  } = useQuery<{ jobs: Job[] }>(RUNNING_EXECUTE_REQUEST_JOBS, {
-    variables: {
-      resourceId: requestId,
-    },
-    pollInterval: 5000,
-  });
-
-  useEffect(() => {
-    if (!onScanStatusChange || !previousData) {
-      return;
-    }
-
-    if (previousData?.jobs.length === 0 && data?.jobs.length !== 0) {
-      onScanStatusChange('STARTED');
-    }
-
-    if (previousData?.jobs.length !== 0 && data?.jobs.length === 0) {
-      onScanStatusChange('COMPLETED');
-    }
-  }, [data, previousData]);
-
-  if (loading) {
-    return <Spinner />;
-  }
-
-  if (error) {
-    return (
-      <AlertRegion alertTitle={error.message} />
-    );
-  }
-
-  if (data!.jobs.length === 0) {
-    return (
-      <div>
-        {children}
-      </div>
-    );
-  }
-
-  return (
-    <Button disabled>
-      <div className="flex items-center">
-        <div className="mr-1"> Request Execution In Progress </div>
-        <Spinner size="sm" color="white" />
-      </div>
-    </Button>
-  );
-}
-
-ScanRegion.defaultProps = {
-  onScanStatusChange: () => { },
-};
 
 export default function RequestPage(
   props: {
@@ -117,7 +43,6 @@ export default function RequestPage(
   const { tab } = props;
   const [executeReq, executeReqRes] = useMutation<{ executeUserDataRequest: Job }>(EXECUTE_REQUEST);
   const navigate = useNavigate();
-  const client = useApolloClient();
   const toastCtx = useContext(ToastContext);
   const { requestId, id } = useParams<{ requestId: string, id: string }>();
   const { data, loading, error } = useQuery<{
@@ -154,47 +79,74 @@ export default function RequestPage(
           </Badge>
         )}
         actionItem={(
-          <Button onClick={() => {
-            executeReq({
-              variables: {
-                id: requestId,
-                workspaceId: id,
-              },
-            }).then(({ data: resData }) => {
-              client.writeQuery({
-                query: RUNNING_EXECUTE_REQUEST_JOBS,
-                data: {
-                  jobs: [resData!.executeUserDataRequest],
-                },
-                variables: {
-                  resourceId: requestId,
-                },
-              });
-            }).catch((err: ApolloError) => {
-              toastCtx.showToast({
-                variant: 'danger',
-                title: 'Error',
-                message: err.message,
-                icon: XCircleIcon,
-              });
-            });
-          }}
-          >
-            {executeReqRes.loading ? <Spinner color="white" size="sm" /> : 'Execute Request'}
-          </Button>
+          <div className="flex flex-col space-y-2 items-end">
+            {
+              (request?.status === 'CREATED' || request?.status === 'FAILED')
+              && (
+                <Button onClick={() => {
+                  executeReq({
+                    variables: {
+                      id: requestId,
+                      workspaceId: id,
+                    },
+                  }).catch((err: ApolloError) => {
+                    toastCtx.showToast({
+                      variant: 'danger',
+                      title: 'Error',
+                      message: err.message,
+                      icon: XCircleIcon,
+                    });
+                  });
+                }}
+                >
+                  {executeReqRes.loading ? <Spinner color="white" size="sm" /> : 'Execute Request'}
+                </Button>
+              )
+            }
+          </div>
         )}
+      />
+      <StepView
+        steps={[
+          {
+            id: '1',
+            name: 'Created',
+            status: 'complete',
+            completedDesc: 'The request was created.',
+            upcomingDesc: '',
+          },
+          {
+            id: '2',
+            name: 'Processing',
+            status: request?.status === 'CREATED' ? 'upcoming' : 'complete',
+            completedDesc: 'You executed the request.',
+            upcomingDesc: 'The request will start processing once you execute the request.',
+          },
+          {
+            id: '3',
+            name: (request?.status === 'FAILED' ? 'Failed' : 'Finished'),
+            // eslint-disable-next-line no-nested-ternary
+            status: request?.status === 'CREATED' || request?.status === 'IN_PROGRESS' ? 'upcoming' : (
+              request?.status === 'EXECUTED' ? 'complete' : 'failed'
+            ),
+            completedDesc: (request?.status === 'FAILED'
+              ? 'The request failed.' : 'The request completed successfully.'
+            ),
+            upcomingDesc: 'The request will start processing once you execute the request.',
+          },
+        ]}
       />
       <Tabs
         tabs={[
           {
-            tabName: 'User Identifiers',
-            tabKey: 'primary_key_values',
-            tabBody: <PrimaryKeyValues />,
-          },
-          {
             tabName: 'Request Statuses',
             tabKey: 'request_statuses',
             tabBody: <RequestStatuses />,
+          },
+          {
+            tabName: 'User Identifiers',
+            tabKey: 'primary_key_values',
+            tabBody: <PrimaryKeyValues />,
           },
         ]}
         current={tab}

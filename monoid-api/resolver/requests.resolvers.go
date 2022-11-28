@@ -5,6 +5,8 @@ package resolver
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/brist-ai/monoid/generated"
 	"github.com/brist-ai/monoid/loader"
@@ -140,7 +142,7 @@ func (r *mutationResolver) CreateUserDataRequest(ctx context.Context, input *mod
 }
 
 // ExecuteUserDataRequest is the resolver for the executeUserDataRequest field.
-func (r *mutationResolver) ExecuteUserDataRequest(ctx context.Context, requestID string, workspaceID string) (*model.Job, error) {
+func (r *mutationResolver) ExecuteUserDataRequest(ctx context.Context, requestID string, workspaceID string) (*model.Request, error) {
 	job := model.Job{
 		ID:          uuid.NewString(),
 		WorkspaceID: workspaceID,
@@ -149,25 +151,34 @@ func (r *mutationResolver) ExecuteUserDataRequest(ctx context.Context, requestID
 		ResourceID:  requestID,
 	}
 
+	request := model.Request{}
+	if err := r.Conf.DB.Where("id = ?", requestID).First(&request).Error; err != nil {
+		return nil, handleError(err, "Error finding request")
+	}
+
+	options := client.StartWorkflowOptions{
+		ID:        job.ID,
+		TaskQueue: workflow.DockerRunnerQueue,
+	}
+
+	sf := requestworkflow.RequestWorkflow{
+		Conf: r.Conf,
+	}
+
+	wf, err := r.Conf.TemporalClient.ExecuteWorkflow(ctx, options, sf.ExecuteRequestWorkflow, requestworkflow.ExecuteRequestArgs{
+		RequestID:   requestID,
+		WorkspaceID: workspaceID,
+		JobID:       job.ID,
+	})
+
+	if err != nil {
+		return nil, handleError(err, "Error executing job")
+	}
+
 	if err := r.Conf.DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(&job).Error; err != nil {
 			return err
 		}
-
-		options := client.StartWorkflowOptions{
-			ID:        job.ID,
-			TaskQueue: workflow.DockerRunnerQueue,
-		}
-
-		sf := requestworkflow.RequestWorkflow{
-			Conf: r.Conf,
-		}
-
-		wf, err := r.Conf.TemporalClient.ExecuteWorkflow(ctx, options, sf.ExecuteRequestWorkflow, requestworkflow.ExecuteRequestArgs{
-			RequestID:   requestID,
-			WorkspaceID: workspaceID,
-			JobID:       job.ID,
-		})
 
 		if err != nil {
 			return err
@@ -177,13 +188,17 @@ func (r *mutationResolver) ExecuteUserDataRequest(ctx context.Context, requestID
 			log.Err(err).Msg("Error uploading workflow ID")
 		}
 
+		if err := tx.Model(&request).Update("job_id", &job.ID).Error; err != nil {
+			log.Err(err).Msg("Error updating job ID")
+		}
+
 		return nil
 
 	}); err != nil {
 		return nil, handleError(err, "Error running job.")
 	}
 
-	return &job, nil
+	return &request, nil
 }
 
 // LinkPropertyToPrimaryKey is the resolver for the linkPropertyToPrimaryKey field.
@@ -310,6 +325,31 @@ func (r *requestResolver) RequestStatuses(ctx context.Context, obj *model.Reques
 		RequestStatusRows: statuses,
 		NumStatuses:       int(numStatuses),
 	}, nil
+}
+
+// Status is the resolver for the status field.
+func (r *requestResolver) Status(ctx context.Context, obj *model.Request) (model.RequestStatusType, error) {
+	job := model.Job{}
+	if err := r.Conf.DB.Where("id = ?", obj.JobID).First(&job).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return model.RequestStatusTypeCreated, nil
+		}
+
+		return model.RequestStatusTypeCreated, handleError(err, "Error finding status")
+	}
+
+	switch job.Status {
+	case model.JobStatusCompleted:
+		return model.RequestStatusTypeExecuted, nil
+	case model.JobStatusFailed:
+		return model.RequestStatusTypeFailed, nil
+	case model.JobStatusQueued, model.JobStatusRunning:
+		return model.RequestStatusTypeInProgress, nil
+	}
+
+	return model.RequestStatusTypeCreated, handleError(
+		fmt.Errorf("error finding status"), "Error finding status",
+	)
 }
 
 // Request is the resolver for the request field.

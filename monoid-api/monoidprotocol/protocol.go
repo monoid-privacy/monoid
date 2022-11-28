@@ -48,8 +48,8 @@ const MonoidMessageTypeSPEC MonoidMessageType = "SPEC"
 const MonoidMessageTypeVALIDATE MonoidMessageType = "VALIDATE"
 
 type MonoidPersistenceConfig struct {
-	// Directory corresponds to the JSON schema field "directory".
-	Directory string `json:"directory"`
+	// TempStore corresponds to the JSON schema field "temp_store".
+	TempStore string `json:"temp_store"`
 }
 
 type MonoidProtocolJson struct {
@@ -63,8 +63,8 @@ func (j *MonoidPersistenceConfig) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, &raw); err != nil {
 		return err
 	}
-	if v, ok := raw["directory"]; !ok || v == nil {
-		return fmt.Errorf("field directory: required")
+	if v, ok := raw["temp_store"]; !ok || v == nil {
+		return fmt.Errorf("field temp_store: required")
 	}
 	type Plain MonoidPersistenceConfig
 	var plain Plain

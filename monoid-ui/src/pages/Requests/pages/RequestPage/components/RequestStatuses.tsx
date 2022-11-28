@@ -62,7 +62,7 @@ query GetRequestData($id: ID!, $limit: Int!, $offset: Int!, $query: RequestStatu
 }
 `;
 
-function StatusBadge({ status }: { status: string }) {
+export function StatusBadge({ status }: { status: string }) {
   let disp = status;
   let badgeColor: BadgeColor = 'blue';
 
@@ -73,6 +73,10 @@ function StatusBadge({ status }: { status: string }) {
     case 'FAILED':
       disp = 'Failed';
       badgeColor = 'red';
+      break;
+    case 'IN_PROGRESS':
+      disp = 'In Progress';
+      badgeColor = 'blue';
       break;
     case 'EXECUTED':
       disp = 'Executed';
@@ -286,7 +290,14 @@ export default function RequestStatuses() {
             {
               key: 'status',
               content: (
-                <StatusBadge status={req.status!} />
+                <div className="flex flex-wrap space-x-1">
+                  <StatusBadge status={req.status!} />
+                  {req.queryResult && (
+                    <Badge>
+                      Has Data
+                    </Badge>
+                  )}
+                </div>
               ),
             },
           ],

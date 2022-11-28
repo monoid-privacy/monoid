@@ -19,8 +19,6 @@ export interface Workspace {
   userPrimaryKeys?: UserPrimaryKey[]
 }
 
-type TentativeValue = 'CREATED' | 'DELETED' | null;
-
 export interface Request {
   id?: string
   createdAt?: string
@@ -29,6 +27,7 @@ export interface Request {
     numStatuses?: number,
     requestStatusRows?: RequestStatus[]
   }
+  status?: string
   type?: string
 }
 
@@ -74,7 +73,6 @@ export interface UserPrimaryKey {
 export interface Property {
   id?: string
   name?: string
-  tentative?: TentativeValue
   userPrimaryKey?: UserPrimaryKey | null
   categories?: Category[]
   dataSource?: DataSource
@@ -85,14 +83,12 @@ export interface DataSource {
   name?: string
   group?: string
   properties?: Property[]
-  tentative?: TentativeValue
   siloDefinition?: SiloDefinition
 }
 
 export interface Category {
   id?: string
   name?: string
-  tentative?: TentativeValue
 }
 
 export interface Job {
