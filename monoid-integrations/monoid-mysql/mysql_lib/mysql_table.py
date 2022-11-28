@@ -2,7 +2,7 @@ import base64
 from unicodedata import name
 import mysql.connector
 from monoid_pydev.silos.db_data_store import DBDataStore
-from monoid_pydev.models import MonoidRecord, MonoidQueryIdentifier, MonoidSchema
+from monoid_pydev.models import MonoidRecord, MonoidQueryIdentifier, MonoidSchema, MonoidPersistenceConfig
 from typing import Any, Dict, Iterable, Optional
 from pypika import Table, Query, Field
 
@@ -108,7 +108,7 @@ class MySQLTableDataStore(DBDataStore):
 
         return schema
 
-    def query_records(self, query_identifier: MonoidQueryIdentifier) -> Iterable[MonoidRecord]:
+    def query_records(self, persistence_conf: MonoidPersistenceConfig, query_identifier: MonoidQueryIdentifier) -> Iterable[MonoidRecord]:
         query_cols = [f for f in query_identifier.json_schema["properties"]]
 
         with self.conn.cursor() as cur:
@@ -129,7 +129,11 @@ class MySQLTableDataStore(DBDataStore):
                     }
                 )
 
-    def scan_records(self, schema: MonoidSchema) -> Iterable[MonoidRecord]:
+    def scan_records(
+        self,
+        persistence_conf: MonoidPersistenceConfig,
+        schema: MonoidSchema
+        ) -> Iterable[MonoidRecord]:
         query_cols = [f for f in schema.json_schema["properties"]]
 
         with self.conn.cursor() as cur:
@@ -148,14 +152,19 @@ class MySQLTableDataStore(DBDataStore):
                     }
                 )
 
-    def delete_records(self, query_identifier: MonoidQueryIdentifier) -> Iterable[MonoidRecord]:
-        res = [q for q in self.query_records(query_identifier)]
+    def delete_records(
+        self,
+        persistence_conf: MonoidPersistenceConfig,
+        query_identifier: MonoidQueryIdentifier,
+    ) -> Iterable[MonoidRecord]:
+        res = [q for q in self.query_records(persistence_conf, query_identifier)]
         with self.conn.cursor() as cur:
             tbl = Table(self.table)
             q = Query.from_(tbl).delete().where(
                 Field(query_identifier.identifier) ==
                 query_identifier.identifier_query).get_sql(quote_char=None)
             cur.execute(str(q))
+            self.conn.commit()
 
         return res
 

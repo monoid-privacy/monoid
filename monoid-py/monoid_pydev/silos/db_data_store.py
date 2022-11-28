@@ -78,7 +78,7 @@ class DBDataStore(DataStore):
         """
 
         self.delete_records(persistence_conf, query)
-
+        
         return MonoidRequestResult(
             status=MonoidRequestStatus(
                 schema_group=self.group(),
@@ -89,6 +89,7 @@ class DBDataStore(DataStore):
             handle=MonoidRequestHandle(
                 schema_group=self.group(),
                 schema_name=self.name(),
+                request_type=RequestType.DELETE,
                 data={
                     "query": query
                 }

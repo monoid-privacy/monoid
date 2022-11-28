@@ -163,10 +163,10 @@ class PostgresTableDataStore(DBDataStore):
 
     def delete_records(
         self,
-        query_identifier: MonoidQueryIdentifier,
-        persistence_conf: MonoidPersistenceConfig
+        persistence_conf: MonoidPersistenceConfig,
+        query_identifier: MonoidQueryIdentifier
     ) -> Iterable[MonoidRecord]:
-        res = [q for q in self.query_records(query_identifier, persistence_conf)]
+        res = [q for q in self.query_records(persistence_conf, query_identifier)]
 
         logger.info(
             f"Deleting records from table {self.group()}.{self.name()}")

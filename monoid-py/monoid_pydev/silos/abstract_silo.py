@@ -83,7 +83,7 @@ class AbstractSilo(ABC):
             data_store = data_stores[(
                 query_rule.schema_group, query_rule.schema_name)]
 
-            yield from data_store.run_delete_request(
+            yield data_store.run_delete_request(
                 persistence_conf,
                 query_rule
             )
