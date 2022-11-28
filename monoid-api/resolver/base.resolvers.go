@@ -8,9 +8,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/brist-ai/monoid/generated"
-	"github.com/brist-ai/monoid/model"
 	"github.com/google/uuid"
+	"github.com/monoid-privacy/monoid/generated"
+	"github.com/monoid-privacy/monoid/model"
 )
 
 // CreateWorkspace is the resolver for the createWorkspace field.

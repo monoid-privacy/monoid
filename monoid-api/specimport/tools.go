@@ -3,8 +3,8 @@ package specimport
 import (
 	"context"
 
-	"github.com/brist-ai/monoid/monoidprotocol/docker"
 	"github.com/docker/docker/client"
+	"github.com/monoid-privacy/monoid/monoidprotocol/docker"
 )
 
 // GetFullSpec enriches the manifest entry with the data from the docker image

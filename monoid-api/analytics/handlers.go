@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/brist-ai/monoid/analytics/ingestor"
+	"github.com/monoid-privacy/monoid/analytics/ingestor"
 )
 
 type AnalyticsHandler struct {

@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/brist-ai/monoid/config"
 	"github.com/graph-gophers/dataloader"
+	"github.com/monoid-privacy/monoid/config"
 )
 
 type ctxKey string

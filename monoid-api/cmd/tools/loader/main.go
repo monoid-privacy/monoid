@@ -6,12 +6,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/brist-ai/monoid/cmd"
-	"github.com/brist-ai/monoid/config"
-	"github.com/brist-ai/monoid/model"
-	"github.com/brist-ai/monoid/specimport"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
+	"github.com/monoid-privacy/monoid/cmd"
+	"github.com/monoid-privacy/monoid/config"
+	"github.com/monoid-privacy/monoid/model"
+	"github.com/monoid-privacy/monoid/specimport"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
 )

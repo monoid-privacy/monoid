@@ -3,8 +3,8 @@ package activity
 import (
 	"context"
 
-	"github.com/brist-ai/monoid/model"
 	"github.com/google/uuid"
+	"github.com/monoid-privacy/monoid/model"
 	"go.temporal.io/sdk/activity"
 )
 

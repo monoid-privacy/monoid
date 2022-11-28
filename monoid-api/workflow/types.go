@@ -1,6 +1,6 @@
 package workflow
 
-import "github.com/brist-ai/monoid/config"
+import "github.com/monoid-privacy/monoid/config"
 
 type Workflow struct {
 	Conf *config.BaseConfig

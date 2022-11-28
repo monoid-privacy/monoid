@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/brist-ai/monoid/model"
-	"github.com/brist-ai/monoid/monoidprotocol"
+	"github.com/monoid-privacy/monoid/model"
+	"github.com/monoid-privacy/monoid/monoidprotocol"
 	"go.temporal.io/sdk/activity"
 )
 

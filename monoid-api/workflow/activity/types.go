@@ -1,6 +1,6 @@
 package activity
 
-import "github.com/brist-ai/monoid/config"
+import "github.com/monoid-privacy/monoid/config"
 
 type Activity struct {
 	Conf *config.BaseConfig

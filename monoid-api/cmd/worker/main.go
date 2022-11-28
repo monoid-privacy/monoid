@@ -4,11 +4,11 @@ import (
 	"log"
 	"os"
 
-	"github.com/brist-ai/monoid/cmd"
-	"github.com/brist-ai/monoid/workflow"
-	"github.com/brist-ai/monoid/workflow/activity"
-	"github.com/brist-ai/monoid/workflow/activity/requestactivity"
-	"github.com/brist-ai/monoid/workflow/requestworkflow"
+	"github.com/monoid-privacy/monoid/cmd"
+	"github.com/monoid-privacy/monoid/workflow"
+	"github.com/monoid-privacy/monoid/workflow/activity"
+	"github.com/monoid-privacy/monoid/workflow/activity/requestactivity"
+	"github.com/monoid-privacy/monoid/workflow/requestworkflow"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
 )

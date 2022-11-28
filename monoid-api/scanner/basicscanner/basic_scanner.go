@@ -4,10 +4,10 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/brist-ai/monoid/jsonschema"
-	"github.com/brist-ai/monoid/monoidprotocol"
-	"github.com/brist-ai/monoid/scanner"
 	"github.com/mitchellh/mapstructure"
+	"github.com/monoid-privacy/monoid/jsonschema"
+	"github.com/monoid-privacy/monoid/monoidprotocol"
+	"github.com/monoid-privacy/monoid/scanner"
 )
 
 type BasicScanner struct {

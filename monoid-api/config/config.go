@@ -3,9 +3,9 @@ package config
 import (
 	"net/http"
 
-	"github.com/brist-ai/monoid/analytics/ingestor"
-	"github.com/brist-ai/monoid/filestore"
-	"github.com/brist-ai/monoid/monoidprotocol"
+	"github.com/monoid-privacy/monoid/analytics/ingestor"
+	"github.com/monoid-privacy/monoid/filestore"
+	"github.com/monoid-privacy/monoid/monoidprotocol"
 	"go.temporal.io/sdk/client"
 	"gorm.io/gorm"
 )

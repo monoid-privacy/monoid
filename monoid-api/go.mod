@@ -1,4 +1,4 @@
-module github.com/brist-ai/monoid
+module github.com/monoid-privacy/monoid
 
 go 1.18
 

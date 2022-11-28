@@ -3,8 +3,8 @@ package loader
 import (
 	"context"
 
-	"github.com/brist-ai/monoid/model"
 	"github.com/graph-gophers/dataloader"
+	"github.com/monoid-privacy/monoid/model"
 	"github.com/rs/zerolog/log"
 )
 

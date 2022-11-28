@@ -4,7 +4,7 @@ import (
 	"errors"
 	"regexp"
 
-	"github.com/brist-ai/monoid/monoidprotocol"
+	"github.com/monoid-privacy/monoid/monoidprotocol"
 )
 
 func stringInSlice(a string, list []string) bool {

@@ -3,8 +3,8 @@ package resolver
 import (
 	"fmt"
 
-	"github.com/brist-ai/monoid/model"
-	"github.com/brist-ai/monoid/monoidprotocol"
+	"github.com/monoid-privacy/monoid/model"
+	"github.com/monoid-privacy/monoid/monoidprotocol"
 	"github.com/rs/zerolog/log"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"gorm.io/gorm"

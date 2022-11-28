@@ -3,8 +3,8 @@ package workflow
 import (
 	"time"
 
-	"github.com/brist-ai/monoid/monoidprotocol"
-	"github.com/brist-ai/monoid/workflow/activity"
+	"github.com/monoid-privacy/monoid/monoidprotocol"
+	"github.com/monoid-privacy/monoid/workflow/activity"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )

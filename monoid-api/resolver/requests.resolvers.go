@@ -7,12 +7,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/brist-ai/monoid/generated"
-	"github.com/brist-ai/monoid/loader"
-	"github.com/brist-ai/monoid/model"
-	"github.com/brist-ai/monoid/workflow"
-	"github.com/brist-ai/monoid/workflow/requestworkflow"
 	"github.com/google/uuid"
+	"github.com/monoid-privacy/monoid/generated"
+	"github.com/monoid-privacy/monoid/loader"
+	"github.com/monoid-privacy/monoid/model"
+	"github.com/monoid-privacy/monoid/workflow"
+	"github.com/monoid-privacy/monoid/workflow/requestworkflow"
 	"github.com/rs/zerolog/log"
 	"go.temporal.io/sdk/client"
 	"gorm.io/gorm"
@@ -280,7 +280,7 @@ func (r *requestResolver) RequestStatuses(ctx context.Context, obj *model.Reques
 		doffset = *offset
 	}
 
-	q := r.Conf.DB.Debug().Where(
+	q := r.Conf.DB.Where(
 		"request_id = ?",
 		obj.ID,
 	).Joins(

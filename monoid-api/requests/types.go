@@ -1,8 +1,8 @@
 package requests
 
 import (
-	"github.com/brist-ai/monoid/model"
-	"github.com/brist-ai/monoid/monoidprotocol"
+	"github.com/monoid-privacy/monoid/model"
+	"github.com/monoid-privacy/monoid/monoidprotocol"
 )
 
 const (

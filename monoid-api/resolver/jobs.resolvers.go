@@ -9,9 +9,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/brist-ai/monoid/generated"
-	"github.com/brist-ai/monoid/loader"
-	"github.com/brist-ai/monoid/model"
+	"github.com/monoid-privacy/monoid/generated"
+	"github.com/monoid-privacy/monoid/loader"
+	"github.com/monoid-privacy/monoid/model"
 	"gorm.io/gorm"
 )
 

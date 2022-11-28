@@ -8,7 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	monoidprotocol "github.com/brist-ai/monoid/monoidprotocol"
+	monoidprotocol "github.com/monoid-privacy/monoid/monoidprotocol"
 	gomock "github.com/golang/mock/gomock"
 )
 

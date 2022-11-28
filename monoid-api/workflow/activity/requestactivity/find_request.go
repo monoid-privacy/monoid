@@ -1,6 +1,6 @@
 package requestactivity
 
-import "github.com/brist-ai/monoid/model"
+import "github.com/monoid-privacy/monoid/model"
 
 type FindRequestArgs struct {
 	WorkspaceID string `json:"workspaceId"`

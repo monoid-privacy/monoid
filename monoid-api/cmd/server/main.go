@@ -7,11 +7,11 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/brist-ai/monoid/cmd"
-	"github.com/brist-ai/monoid/generated"
-	"github.com/brist-ai/monoid/loader"
-	"github.com/brist-ai/monoid/resolver"
 	"github.com/gorilla/mux"
+	"github.com/monoid-privacy/monoid/cmd"
+	"github.com/monoid-privacy/monoid/generated"
+	"github.com/monoid-privacy/monoid/loader"
+	"github.com/monoid-privacy/monoid/resolver"
 	"go.temporal.io/sdk/client"
 )
 

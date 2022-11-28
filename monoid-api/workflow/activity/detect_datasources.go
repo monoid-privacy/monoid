@@ -7,11 +7,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/brist-ai/monoid/jsonschema"
-	"github.com/brist-ai/monoid/model"
-	"github.com/brist-ai/monoid/monoidprotocol"
-	"github.com/brist-ai/monoid/scanner"
-	"github.com/brist-ai/monoid/scanner/basicscanner"
+	"github.com/monoid-privacy/monoid/jsonschema"
+	"github.com/monoid-privacy/monoid/model"
+	"github.com/monoid-privacy/monoid/monoidprotocol"
+	"github.com/monoid-privacy/monoid/scanner"
+	"github.com/monoid-privacy/monoid/scanner/basicscanner"
 
 	"github.com/google/uuid"
 	"github.com/mitchellh/mapstructure"

@@ -3,7 +3,7 @@ package basicscanner
 import (
 	"strings"
 
-	"github.com/brist-ai/monoid/scanner"
+	"github.com/monoid-privacy/monoid/scanner"
 )
 
 // make matchfinder an interface with its own config

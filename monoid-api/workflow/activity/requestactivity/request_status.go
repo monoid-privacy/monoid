@@ -7,9 +7,9 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/brist-ai/monoid/model"
-	"github.com/brist-ai/monoid/monoidprotocol"
-	monoidactivity "github.com/brist-ai/monoid/workflow/activity"
+	"github.com/monoid-privacy/monoid/model"
+	"github.com/monoid-privacy/monoid/monoidprotocol"
+	monoidactivity "github.com/monoid-privacy/monoid/workflow/activity"
 	"go.temporal.io/sdk/activity"
 )
 

@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/brist-ai/monoid/filestore"
+	"github.com/monoid-privacy/monoid/filestore"
 )
 
 type localFileStore struct {

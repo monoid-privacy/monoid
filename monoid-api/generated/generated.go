@@ -14,7 +14,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/brist-ai/monoid/model"
+	"github.com/monoid-privacy/monoid/model"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -2463,7 +2463,7 @@ func (ec *executionContext) field_Mutation_createDataSource_args(ctx context.Con
 	var arg0 *model.CreateDataSourceInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOCreateDataSourceInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCreateDataSourceInput(ctx, tmp)
+		arg0, err = ec.unmarshalOCreateDataSourceInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐCreateDataSourceInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2478,7 +2478,7 @@ func (ec *executionContext) field_Mutation_createProperty_args(ctx context.Conte
 	var arg0 *model.CreatePropertyInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOCreatePropertyInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCreatePropertyInput(ctx, tmp)
+		arg0, err = ec.unmarshalOCreatePropertyInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐCreatePropertyInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2493,7 +2493,7 @@ func (ec *executionContext) field_Mutation_createSiloDefinition_args(ctx context
 	var arg0 *model.CreateSiloDefinitionInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOCreateSiloDefinitionInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCreateSiloDefinitionInput(ctx, tmp)
+		arg0, err = ec.unmarshalOCreateSiloDefinitionInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐCreateSiloDefinitionInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2508,7 +2508,7 @@ func (ec *executionContext) field_Mutation_createSiloSpecification_args(ctx cont
 	var arg0 *model.CreateSiloSpecificationInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOCreateSiloSpecificationInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCreateSiloSpecificationInput(ctx, tmp)
+		arg0, err = ec.unmarshalOCreateSiloSpecificationInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐCreateSiloSpecificationInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2523,7 +2523,7 @@ func (ec *executionContext) field_Mutation_createSubject_args(ctx context.Contex
 	var arg0 *model.CreateSubjectInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOCreateSubjectInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCreateSubjectInput(ctx, tmp)
+		arg0, err = ec.unmarshalOCreateSubjectInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐCreateSubjectInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2538,7 +2538,7 @@ func (ec *executionContext) field_Mutation_createUserDataRequest_args(ctx contex
 	var arg0 *model.UserDataRequestInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOUserDataRequestInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUserDataRequestInput(ctx, tmp)
+		arg0, err = ec.unmarshalOUserDataRequestInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUserDataRequestInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2553,7 +2553,7 @@ func (ec *executionContext) field_Mutation_createUserPrimaryKey_args(ctx context
 	var arg0 model.CreateUserPrimaryKeyInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNCreateUserPrimaryKeyInput2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCreateUserPrimaryKeyInput(ctx, tmp)
+		arg0, err = ec.unmarshalNCreateUserPrimaryKeyInput2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐCreateUserPrimaryKeyInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2568,7 +2568,7 @@ func (ec *executionContext) field_Mutation_createWorkspace_args(ctx context.Cont
 	var arg0 model.CreateWorkspaceInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNCreateWorkspaceInput2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCreateWorkspaceInput(ctx, tmp)
+		arg0, err = ec.unmarshalNCreateWorkspaceInput2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐCreateWorkspaceInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2736,7 +2736,7 @@ func (ec *executionContext) field_Mutation_handleAllOpenDiscoveries_args(ctx con
 	var arg0 *model.HandleAllDiscoveriesInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOHandleAllDiscoveriesInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐHandleAllDiscoveriesInput(ctx, tmp)
+		arg0, err = ec.unmarshalOHandleAllDiscoveriesInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐHandleAllDiscoveriesInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2751,7 +2751,7 @@ func (ec *executionContext) field_Mutation_handleDiscovery_args(ctx context.Cont
 	var arg0 *model.HandleDiscoveryInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOHandleDiscoveryInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐHandleDiscoveryInput(ctx, tmp)
+		arg0, err = ec.unmarshalOHandleDiscoveryInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐHandleDiscoveryInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2790,7 +2790,7 @@ func (ec *executionContext) field_Mutation_updateDataSource_args(ctx context.Con
 	var arg0 *model.UpdateDataSourceInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOUpdateDataSourceInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUpdateDataSourceInput(ctx, tmp)
+		arg0, err = ec.unmarshalOUpdateDataSourceInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUpdateDataSourceInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2805,7 +2805,7 @@ func (ec *executionContext) field_Mutation_updateProperty_args(ctx context.Conte
 	var arg0 *model.UpdatePropertyInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOUpdatePropertyInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUpdatePropertyInput(ctx, tmp)
+		arg0, err = ec.unmarshalOUpdatePropertyInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUpdatePropertyInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2820,7 +2820,7 @@ func (ec *executionContext) field_Mutation_updateSiloDefinition_args(ctx context
 	var arg0 *model.UpdateSiloDefinitionInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOUpdateSiloDefinitionInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUpdateSiloDefinitionInput(ctx, tmp)
+		arg0, err = ec.unmarshalOUpdateSiloDefinitionInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUpdateSiloDefinitionInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2835,7 +2835,7 @@ func (ec *executionContext) field_Mutation_updateSiloScanConfig_args(ctx context
 	var arg0 model.SiloScanConfigInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNSiloScanConfigInput2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloScanConfigInput(ctx, tmp)
+		arg0, err = ec.unmarshalNSiloScanConfigInput2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloScanConfigInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2850,7 +2850,7 @@ func (ec *executionContext) field_Mutation_updateSiloSpecification_args(ctx cont
 	var arg0 *model.UpdateSiloSpecificationInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOUpdateSiloSpecificationInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUpdateSiloSpecificationInput(ctx, tmp)
+		arg0, err = ec.unmarshalOUpdateSiloSpecificationInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUpdateSiloSpecificationInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2865,7 +2865,7 @@ func (ec *executionContext) field_Mutation_updateSubject_args(ctx context.Contex
 	var arg0 *model.UpdateSubjectInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOUpdateSubjectInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUpdateSubjectInput(ctx, tmp)
+		arg0, err = ec.unmarshalOUpdateSubjectInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUpdateSubjectInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2880,7 +2880,7 @@ func (ec *executionContext) field_Mutation_updateUserPrimaryKey_args(ctx context
 	var arg0 model.UpdateUserPrimaryKeyInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNUpdateUserPrimaryKeyInput2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUpdateUserPrimaryKeyInput(ctx, tmp)
+		arg0, err = ec.unmarshalNUpdateUserPrimaryKeyInput2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUpdateUserPrimaryKeyInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2895,7 +2895,7 @@ func (ec *executionContext) field_Mutation_updateWorkspaceSettings_args(ctx cont
 	var arg0 model.UpdateWorkspaceSettingsInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNUpdateWorkspaceSettingsInput2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUpdateWorkspaceSettingsInput(ctx, tmp)
+		arg0, err = ec.unmarshalNUpdateWorkspaceSettingsInput2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUpdateWorkspaceSettingsInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2982,7 +2982,7 @@ func (ec *executionContext) field_Query_jobs_args(ctx context.Context, rawArgs m
 	var arg3 []*model.JobStatus
 	if tmp, ok := rawArgs["status"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
-		arg3, err = ec.unmarshalOJobStatus2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJobStatus(ctx, tmp)
+		arg3, err = ec.unmarshalOJobStatus2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐJobStatus(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3135,7 +3135,7 @@ func (ec *executionContext) field_Request_requestStatuses_args(ctx context.Conte
 	var arg0 *model.RequestStatusQuery
 	if tmp, ok := rawArgs["query"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("query"))
-		arg0, err = ec.unmarshalORequestStatusQuery2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatusQuery(ctx, tmp)
+		arg0, err = ec.unmarshalORequestStatusQuery2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequestStatusQuery(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3168,7 +3168,7 @@ func (ec *executionContext) field_SiloDefinition_discoveries_args(ctx context.Co
 	var arg0 []*model.DiscoveryStatus
 	if tmp, ok := rawArgs["statuses"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statuses"))
-		arg0, err = ec.unmarshalODiscoveryStatus2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryStatus(ctx, tmp)
+		arg0, err = ec.unmarshalODiscoveryStatus2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDiscoveryStatus(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3210,7 +3210,7 @@ func (ec *executionContext) field_Workspace_dataMap_args(ctx context.Context, ra
 	var arg0 *model.DataMapQuery
 	if tmp, ok := rawArgs["query"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("query"))
-		arg0, err = ec.unmarshalODataMapQuery2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataMapQuery(ctx, tmp)
+		arg0, err = ec.unmarshalODataMapQuery2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataMapQuery(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3243,7 +3243,7 @@ func (ec *executionContext) field_Workspace_discoveries_args(ctx context.Context
 	var arg0 []*model.DiscoveryStatus
 	if tmp, ok := rawArgs["statuses"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statuses"))
-		arg0, err = ec.unmarshalODiscoveryStatus2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryStatus(ctx, tmp)
+		arg0, err = ec.unmarshalODiscoveryStatus2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDiscoveryStatus(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3309,7 +3309,7 @@ func (ec *executionContext) field_Workspace_jobs_args(ctx context.Context, rawAr
 	var arg1 []*model.JobStatus
 	if tmp, ok := rawArgs["status"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
-		arg1, err = ec.unmarshalOJobStatus2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJobStatus(ctx, tmp)
+		arg1, err = ec.unmarshalOJobStatus2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐJobStatus(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3535,7 +3535,7 @@ func (ec *executionContext) _DataDiscoveriesListResult_discoveries(ctx context.C
 	}
 	res := resTmp.([]*model.DataDiscovery)
 	fc.Result = res
-	return ec.marshalODataDiscovery2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataDiscovery(ctx, field.Selections, res)
+	return ec.marshalODataDiscovery2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataDiscovery(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DataDiscoveriesListResult_discoveries(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3727,7 +3727,7 @@ func (ec *executionContext) _DataDiscovery_siloDefinition(ctx context.Context, f
 	}
 	res := resTmp.(*model.SiloDefinition)
 	fc.Result = res
-	return ec.marshalNSiloDefinition2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloDefinition(ctx, field.Selections, res)
+	return ec.marshalNSiloDefinition2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloDefinition(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DataDiscovery_siloDefinition(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3791,7 +3791,7 @@ func (ec *executionContext) _DataDiscovery_type(ctx context.Context, field graph
 	}
 	res := resTmp.(model.DiscoveryType)
 	fc.Result = res
-	return ec.marshalNDiscoveryType2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryType(ctx, field.Selections, res)
+	return ec.marshalNDiscoveryType2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDiscoveryType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DataDiscovery_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3835,7 +3835,7 @@ func (ec *executionContext) _DataDiscovery_status(ctx context.Context, field gra
 	}
 	res := resTmp.(model.DiscoveryStatus)
 	fc.Result = res
-	return ec.marshalNDiscoveryStatus2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryStatus(ctx, field.Selections, res)
+	return ec.marshalNDiscoveryStatus2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDiscoveryStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DataDiscovery_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3879,7 +3879,7 @@ func (ec *executionContext) _DataDiscovery_data(ctx context.Context, field graph
 	}
 	res := resTmp.(model.DataDiscoveryData)
 	fc.Result = res
-	return ec.marshalNDataDiscoveryData2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataDiscoveryData(ctx, field.Selections, res)
+	return ec.marshalNDataDiscoveryData2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataDiscoveryData(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DataDiscovery_data(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3964,7 +3964,7 @@ func (ec *executionContext) _DataMapResult_dataMapRows(ctx context.Context, fiel
 	}
 	res := resTmp.([]*model.DataMapRow)
 	fc.Result = res
-	return ec.marshalODataMapRow2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataMapRowᚄ(ctx, field.Selections, res)
+	return ec.marshalODataMapRow2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataMapRowᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DataMapResult_dataMapRows(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4060,7 +4060,7 @@ func (ec *executionContext) _DataMapRow_siloDefinition(ctx context.Context, fiel
 	}
 	res := resTmp.(model.SiloDefinition)
 	fc.Result = res
-	return ec.marshalNSiloDefinition2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloDefinition(ctx, field.Selections, res)
+	return ec.marshalNSiloDefinition2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloDefinition(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DataMapRow_siloDefinition(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4124,7 +4124,7 @@ func (ec *executionContext) _DataMapRow_property(ctx context.Context, field grap
 	}
 	res := resTmp.(model.Property)
 	fc.Result = res
-	return ec.marshalNProperty2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐProperty(ctx, field.Selections, res)
+	return ec.marshalNProperty2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐProperty(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DataMapRow_property(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4180,7 +4180,7 @@ func (ec *executionContext) _DataMapRow_dataSource(ctx context.Context, field gr
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DataMapRow_dataSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4369,7 +4369,7 @@ func (ec *executionContext) _DataSource_siloDefinition(ctx context.Context, fiel
 	}
 	res := resTmp.(*model.SiloDefinition)
 	fc.Result = res
-	return ec.marshalNSiloDefinition2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloDefinition(ctx, field.Selections, res)
+	return ec.marshalNSiloDefinition2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloDefinition(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DataSource_siloDefinition(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4430,7 +4430,7 @@ func (ec *executionContext) _DataSource_properties(ctx context.Context, field gr
 	}
 	res := resTmp.([]*model.Property)
 	fc.Result = res
-	return ec.marshalOProperty2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPropertyᚄ(ctx, field.Selections, res)
+	return ec.marshalOProperty2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐPropertyᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DataSource_properties(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4524,7 +4524,7 @@ func (ec *executionContext) _DataSource_requestStatuses(ctx context.Context, fie
 	}
 	res := resTmp.([]*model.RequestStatus)
 	fc.Result = res
-	return ec.marshalORequestStatus2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatusᚄ(ctx, field.Selections, res)
+	return ec.marshalORequestStatus2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequestStatusᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DataSource_requestStatuses(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4621,7 +4621,7 @@ func (ec *executionContext) _DataSourceMissingDiscovery_dataSource(ctx context.C
 	}
 	res := resTmp.(*model.DataSource)
 	fc.Result = res
-	return ec.marshalODataSource2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalODataSource2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DataSourceMissingDiscovery_dataSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4813,7 +4813,7 @@ func (ec *executionContext) _Job_status(ctx context.Context, field graphql.Colle
 	}
 	res := resTmp.(model.JobStatus)
 	fc.Result = res
-	return ec.marshalNJobStatus2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJobStatus(ctx, field.Selections, res)
+	return ec.marshalNJobStatus2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐJobStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Job_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4857,7 +4857,7 @@ func (ec *executionContext) _Job_siloDefinition(ctx context.Context, field graph
 	}
 	res := resTmp.(*model.SiloDefinition)
 	fc.Result = res
-	return ec.marshalNSiloDefinition2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloDefinition(ctx, field.Selections, res)
+	return ec.marshalNSiloDefinition2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloDefinition(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Job_siloDefinition(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5047,7 +5047,7 @@ func (ec *executionContext) _JobsResult_jobs(ctx context.Context, field graphql.
 	}
 	res := resTmp.([]*model.Job)
 	fc.Result = res
-	return ec.marshalOJob2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJobᚄ(ctx, field.Selections, res)
+	return ec.marshalOJob2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐJobᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_JobsResult_jobs(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5279,7 +5279,7 @@ func (ec *executionContext) _Mutation_createWorkspace(ctx context.Context, field
 	}
 	res := resTmp.(*model.Workspace)
 	fc.Result = res
-	return ec.marshalOWorkspace2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐWorkspace(ctx, field.Selections, res)
+	return ec.marshalOWorkspace2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐWorkspace(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createWorkspace(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5361,7 +5361,7 @@ func (ec *executionContext) _Mutation_updateWorkspaceSettings(ctx context.Contex
 	}
 	res := resTmp.(*model.Workspace)
 	fc.Result = res
-	return ec.marshalOWorkspace2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐWorkspace(ctx, field.Selections, res)
+	return ec.marshalOWorkspace2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐWorkspace(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_updateWorkspaceSettings(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5495,7 +5495,7 @@ func (ec *executionContext) _Mutation_createDataSource(ctx context.Context, fiel
 	}
 	res := resTmp.(*model.DataSource)
 	fc.Result = res
-	return ec.marshalODataSource2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalODataSource2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createDataSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5563,7 +5563,7 @@ func (ec *executionContext) _Mutation_createSiloSpecification(ctx context.Contex
 	}
 	res := resTmp.(*model.SiloSpecification)
 	fc.Result = res
-	return ec.marshalOSiloSpecification2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloSpecification(ctx, field.Selections, res)
+	return ec.marshalOSiloSpecification2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloSpecification(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createSiloSpecification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5629,7 +5629,7 @@ func (ec *executionContext) _Mutation_createProperty(ctx context.Context, field 
 	}
 	res := resTmp.(*model.Property)
 	fc.Result = res
-	return ec.marshalOProperty2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐProperty(ctx, field.Selections, res)
+	return ec.marshalOProperty2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐProperty(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createProperty(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5693,7 +5693,7 @@ func (ec *executionContext) _Mutation_createSubject(ctx context.Context, field g
 	}
 	res := resTmp.(*model.Subject)
 	fc.Result = res
-	return ec.marshalOSubject2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSubject(ctx, field.Selections, res)
+	return ec.marshalOSubject2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSubject(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createSubject(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5751,7 +5751,7 @@ func (ec *executionContext) _Mutation_updateDataSource(ctx context.Context, fiel
 	}
 	res := resTmp.(*model.DataSource)
 	fc.Result = res
-	return ec.marshalODataSource2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalODataSource2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_updateDataSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5819,7 +5819,7 @@ func (ec *executionContext) _Mutation_updateSiloSpecification(ctx context.Contex
 	}
 	res := resTmp.(*model.SiloSpecification)
 	fc.Result = res
-	return ec.marshalOSiloSpecification2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloSpecification(ctx, field.Selections, res)
+	return ec.marshalOSiloSpecification2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloSpecification(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_updateSiloSpecification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5885,7 +5885,7 @@ func (ec *executionContext) _Mutation_updateProperty(ctx context.Context, field 
 	}
 	res := resTmp.(*model.Property)
 	fc.Result = res
-	return ec.marshalOProperty2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐProperty(ctx, field.Selections, res)
+	return ec.marshalOProperty2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐProperty(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_updateProperty(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5949,7 +5949,7 @@ func (ec *executionContext) _Mutation_updateSubject(ctx context.Context, field g
 	}
 	res := resTmp.(*model.Subject)
 	fc.Result = res
-	return ec.marshalOSubject2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSubject(ctx, field.Selections, res)
+	return ec.marshalOSubject2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSubject(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_updateSubject(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -6218,7 +6218,7 @@ func (ec *executionContext) _Mutation_detectSiloSources(ctx context.Context, fie
 	}
 	res := resTmp.(*model.Job)
 	fc.Result = res
-	return ec.marshalNJob2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJob(ctx, field.Selections, res)
+	return ec.marshalNJob2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐJob(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_detectSiloSources(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -6288,7 +6288,7 @@ func (ec *executionContext) _Mutation_handleDiscovery(ctx context.Context, field
 	}
 	res := resTmp.(*model.DataDiscovery)
 	fc.Result = res
-	return ec.marshalODataDiscovery2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataDiscovery(ctx, field.Selections, res)
+	return ec.marshalODataDiscovery2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataDiscovery(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_handleDiscovery(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -6356,7 +6356,7 @@ func (ec *executionContext) _Mutation_handleAllOpenDiscoveries(ctx context.Conte
 	}
 	res := resTmp.([]*model.DataDiscovery)
 	fc.Result = res
-	return ec.marshalODataDiscovery2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataDiscovery(ctx, field.Selections, res)
+	return ec.marshalODataDiscovery2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataDiscovery(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_handleAllOpenDiscoveries(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -6424,7 +6424,7 @@ func (ec *executionContext) _Mutation_cancelJob(ctx context.Context, field graph
 	}
 	res := resTmp.(*model.Job)
 	fc.Result = res
-	return ec.marshalOJob2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJob(ctx, field.Selections, res)
+	return ec.marshalOJob2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐJob(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_cancelJob(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -6494,7 +6494,7 @@ func (ec *executionContext) _Mutation_createUserPrimaryKey(ctx context.Context, 
 	}
 	res := resTmp.(*model.UserPrimaryKey)
 	fc.Result = res
-	return ec.marshalOUserPrimaryKey2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUserPrimaryKey(ctx, field.Selections, res)
+	return ec.marshalOUserPrimaryKey2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUserPrimaryKey(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createUserPrimaryKey(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -6558,7 +6558,7 @@ func (ec *executionContext) _Mutation_updateUserPrimaryKey(ctx context.Context, 
 	}
 	res := resTmp.(*model.UserPrimaryKey)
 	fc.Result = res
-	return ec.marshalOUserPrimaryKey2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUserPrimaryKey(ctx, field.Selections, res)
+	return ec.marshalOUserPrimaryKey2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUserPrimaryKey(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_updateUserPrimaryKey(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -6674,7 +6674,7 @@ func (ec *executionContext) _Mutation_createUserDataRequest(ctx context.Context,
 	}
 	res := resTmp.(*model.Request)
 	fc.Result = res
-	return ec.marshalORequest2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequest(ctx, field.Selections, res)
+	return ec.marshalORequest2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequest(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createUserDataRequest(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -6740,7 +6740,7 @@ func (ec *executionContext) _Mutation_executeUserDataRequest(ctx context.Context
 	}
 	res := resTmp.(*model.Request)
 	fc.Result = res
-	return ec.marshalORequest2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequest(ctx, field.Selections, res)
+	return ec.marshalORequest2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequest(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_executeUserDataRequest(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -6806,7 +6806,7 @@ func (ec *executionContext) _Mutation_linkPropertyToPrimaryKey(ctx context.Conte
 	}
 	res := resTmp.(*model.Property)
 	fc.Result = res
-	return ec.marshalOProperty2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐProperty(ctx, field.Selections, res)
+	return ec.marshalOProperty2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐProperty(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_linkPropertyToPrimaryKey(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -6870,7 +6870,7 @@ func (ec *executionContext) _Mutation_createSiloDefinition(ctx context.Context, 
 	}
 	res := resTmp.(*model.SiloDefinition)
 	fc.Result = res
-	return ec.marshalOSiloDefinition2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloDefinition(ctx, field.Selections, res)
+	return ec.marshalOSiloDefinition2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloDefinition(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createSiloDefinition(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -6942,7 +6942,7 @@ func (ec *executionContext) _Mutation_updateSiloDefinition(ctx context.Context, 
 	}
 	res := resTmp.(*model.SiloDefinition)
 	fc.Result = res
-	return ec.marshalOSiloDefinition2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloDefinition(ctx, field.Selections, res)
+	return ec.marshalOSiloDefinition2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloDefinition(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_updateSiloDefinition(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -7066,7 +7066,7 @@ func (ec *executionContext) _Mutation_updateSiloScanConfig(ctx context.Context, 
 	}
 	res := resTmp.(*model.SiloDefinition)
 	fc.Result = res
-	return ec.marshalOSiloDefinition2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloDefinition(ctx, field.Selections, res)
+	return ec.marshalOSiloDefinition2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloDefinition(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_updateSiloScanConfig(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -7226,7 +7226,7 @@ func (ec *executionContext) _NewCategoryDiscovery_category(ctx context.Context, 
 	}
 	res := resTmp.(*model.Category)
 	fc.Result = res
-	return ec.marshalNCategory2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCategory(ctx, field.Selections, res)
+	return ec.marshalNCategory2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐCategory(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_NewCategoryDiscovery_category(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -7273,7 +7273,7 @@ func (ec *executionContext) _NewCategoryDiscovery_property(ctx context.Context, 
 	}
 	res := resTmp.(*model.Property)
 	fc.Result = res
-	return ec.marshalOProperty2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐProperty(ctx, field.Selections, res)
+	return ec.marshalOProperty2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐProperty(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_NewCategoryDiscovery_property(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -7411,7 +7411,7 @@ func (ec *executionContext) _NewDataSourceDiscovery_properties(ctx context.Conte
 	}
 	res := resTmp.([]model.NewPropertyDiscovery)
 	fc.Result = res
-	return ec.marshalONewPropertyDiscovery2ᚕgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐNewPropertyDiscovery(ctx, field.Selections, res)
+	return ec.marshalONewPropertyDiscovery2ᚕgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐNewPropertyDiscovery(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_NewDataSourceDiscovery_properties(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -7506,7 +7506,7 @@ func (ec *executionContext) _NewPropertyDiscovery_categories(ctx context.Context
 	}
 	res := resTmp.([]model.NewCategoryDiscovery)
 	fc.Result = res
-	return ec.marshalONewCategoryDiscovery2ᚕgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐNewCategoryDiscovery(ctx, field.Selections, res)
+	return ec.marshalONewCategoryDiscovery2ᚕgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐNewCategoryDiscovery(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_NewPropertyDiscovery_categories(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -7598,7 +7598,7 @@ func (ec *executionContext) _NewPropertyDiscovery_dataSource(ctx context.Context
 	}
 	res := resTmp.(*model.DataSource)
 	fc.Result = res
-	return ec.marshalODataSource2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalODataSource2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_NewPropertyDiscovery_dataSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -7702,7 +7702,7 @@ func (ec *executionContext) _PrimaryKeyValue_userPrimaryKey(ctx context.Context,
 	}
 	res := resTmp.(*model.UserPrimaryKey)
 	fc.Result = res
-	return ec.marshalNUserPrimaryKey2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUserPrimaryKey(ctx, field.Selections, res)
+	return ec.marshalNUserPrimaryKey2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUserPrimaryKey(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PrimaryKeyValue_userPrimaryKey(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -7758,7 +7758,7 @@ func (ec *executionContext) _PrimaryKeyValue_request(ctx context.Context, field 
 	}
 	res := resTmp.(*model.Request)
 	fc.Result = res
-	return ec.marshalNRequest2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequest(ctx, field.Selections, res)
+	return ec.marshalNRequest2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequest(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PrimaryKeyValue_request(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -7945,7 +7945,7 @@ func (ec *executionContext) _Property_categories(ctx context.Context, field grap
 	}
 	res := resTmp.([]*model.Category)
 	fc.Result = res
-	return ec.marshalOCategory2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCategoryᚄ(ctx, field.Selections, res)
+	return ec.marshalOCategory2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐCategoryᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Property_categories(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -7995,7 +7995,7 @@ func (ec *executionContext) _Property_dataSource(ctx context.Context, field grap
 	}
 	res := resTmp.(*model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Property_dataSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8052,7 +8052,7 @@ func (ec *executionContext) _Property_userPrimaryKey(ctx context.Context, field 
 	}
 	res := resTmp.(*model.UserPrimaryKey)
 	fc.Result = res
-	return ec.marshalOUserPrimaryKey2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUserPrimaryKey(ctx, field.Selections, res)
+	return ec.marshalOUserPrimaryKey2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUserPrimaryKey(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Property_userPrimaryKey(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8149,7 +8149,7 @@ func (ec *executionContext) _PropertyMissingDiscovery_property(ctx context.Conte
 	}
 	res := resTmp.(*model.Property)
 	fc.Result = res
-	return ec.marshalOProperty2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐProperty(ctx, field.Selections, res)
+	return ec.marshalOProperty2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐProperty(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PropertyMissingDiscovery_property(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8202,7 +8202,7 @@ func (ec *executionContext) _Query_workspaces(ctx context.Context, field graphql
 	}
 	res := resTmp.([]*model.Workspace)
 	fc.Result = res
-	return ec.marshalOWorkspace2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐWorkspace(ctx, field.Selections, res)
+	return ec.marshalOWorkspace2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐWorkspace(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_workspaces(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8273,7 +8273,7 @@ func (ec *executionContext) _Query_workspace(ctx context.Context, field graphql.
 	}
 	res := resTmp.(*model.Workspace)
 	fc.Result = res
-	return ec.marshalOWorkspace2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐWorkspace(ctx, field.Selections, res)
+	return ec.marshalOWorkspace2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐWorkspace(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_workspace(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8355,7 +8355,7 @@ func (ec *executionContext) _Query_dataSource(ctx context.Context, field graphql
 	}
 	res := resTmp.(*model.DataSource)
 	fc.Result = res
-	return ec.marshalODataSource2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalODataSource2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_dataSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8423,7 +8423,7 @@ func (ec *executionContext) _Query_siloSpecification(ctx context.Context, field 
 	}
 	res := resTmp.(*model.SiloSpecification)
 	fc.Result = res
-	return ec.marshalOSiloSpecification2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloSpecification(ctx, field.Selections, res)
+	return ec.marshalOSiloSpecification2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloSpecification(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_siloSpecification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8489,7 +8489,7 @@ func (ec *executionContext) _Query_siloSpecifications(ctx context.Context, field
 	}
 	res := resTmp.([]*model.SiloSpecification)
 	fc.Result = res
-	return ec.marshalOSiloSpecification2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloSpecificationᚄ(ctx, field.Selections, res)
+	return ec.marshalOSiloSpecification2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloSpecificationᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_siloSpecifications(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8544,7 +8544,7 @@ func (ec *executionContext) _Query_subjects(ctx context.Context, field graphql.C
 	}
 	res := resTmp.([]*model.Subject)
 	fc.Result = res
-	return ec.marshalOSubject2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSubjectᚄ(ctx, field.Selections, res)
+	return ec.marshalOSubject2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSubjectᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_subjects(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8591,7 +8591,7 @@ func (ec *executionContext) _Query_category(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(*model.Category)
 	fc.Result = res
-	return ec.marshalOCategory2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCategory(ctx, field.Selections, res)
+	return ec.marshalOCategory2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐCategory(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_category(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8649,7 +8649,7 @@ func (ec *executionContext) _Query_subject(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(*model.Subject)
 	fc.Result = res
-	return ec.marshalOSubject2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSubject(ctx, field.Selections, res)
+	return ec.marshalOSubject2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSubject(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_subject(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8707,7 +8707,7 @@ func (ec *executionContext) _Query_property(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(*model.Property)
 	fc.Result = res
-	return ec.marshalOProperty2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐProperty(ctx, field.Selections, res)
+	return ec.marshalOProperty2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐProperty(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_property(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8774,7 +8774,7 @@ func (ec *executionContext) _Query_jobs(ctx context.Context, field graphql.Colle
 	}
 	res := resTmp.(*model.JobsResult)
 	fc.Result = res
-	return ec.marshalNJobsResult2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJobsResult(ctx, field.Selections, res)
+	return ec.marshalNJobsResult2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐJobsResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_jobs(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8832,7 +8832,7 @@ func (ec *executionContext) _Query_userPrimaryKey(ctx context.Context, field gra
 	}
 	res := resTmp.(*model.UserPrimaryKey)
 	fc.Result = res
-	return ec.marshalOUserPrimaryKey2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUserPrimaryKey(ctx, field.Selections, res)
+	return ec.marshalOUserPrimaryKey2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUserPrimaryKey(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_userPrimaryKey(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8896,7 +8896,7 @@ func (ec *executionContext) _Query_request(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(*model.Request)
 	fc.Result = res
-	return ec.marshalORequest2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequest(ctx, field.Selections, res)
+	return ec.marshalORequest2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequest(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_request(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8962,7 +8962,7 @@ func (ec *executionContext) _Query_requestStatus(ctx context.Context, field grap
 	}
 	res := resTmp.(*model.RequestStatus)
 	fc.Result = res
-	return ec.marshalORequestStatus2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatus(ctx, field.Selections, res)
+	return ec.marshalORequestStatus2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequestStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_requestStatus(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -9026,7 +9026,7 @@ func (ec *executionContext) _Query_primaryKeyValue(ctx context.Context, field gr
 	}
 	res := resTmp.(*model.PrimaryKeyValue)
 	fc.Result = res
-	return ec.marshalOPrimaryKeyValue2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPrimaryKeyValue(ctx, field.Selections, res)
+	return ec.marshalOPrimaryKeyValue2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐPrimaryKeyValue(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_primaryKeyValue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -9264,7 +9264,7 @@ func (ec *executionContext) _QueryResult_requestStatus(ctx context.Context, fiel
 	}
 	res := resTmp.(*model.RequestStatus)
 	fc.Result = res
-	return ec.marshalNRequestStatus2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatus(ctx, field.Selections, res)
+	return ec.marshalNRequestStatus2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequestStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_QueryResult_requestStatus(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -9402,7 +9402,7 @@ func (ec *executionContext) _Request_primaryKeyValues(ctx context.Context, field
 	}
 	res := resTmp.([]*model.PrimaryKeyValue)
 	fc.Result = res
-	return ec.marshalOPrimaryKeyValue2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPrimaryKeyValueᚄ(ctx, field.Selections, res)
+	return ec.marshalOPrimaryKeyValue2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐPrimaryKeyValueᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Request_primaryKeyValues(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -9456,7 +9456,7 @@ func (ec *executionContext) _Request_requestStatuses(ctx context.Context, field 
 	}
 	res := resTmp.(*model.RequestStatusListResult)
 	fc.Result = res
-	return ec.marshalNRequestStatusListResult2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatusListResult(ctx, field.Selections, res)
+	return ec.marshalNRequestStatusListResult2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequestStatusListResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Request_requestStatuses(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -9517,7 +9517,7 @@ func (ec *executionContext) _Request_type(ctx context.Context, field graphql.Col
 	}
 	res := resTmp.(model.UserDataRequestType)
 	fc.Result = res
-	return ec.marshalNUserDataRequestType2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUserDataRequestType(ctx, field.Selections, res)
+	return ec.marshalNUserDataRequestType2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUserDataRequestType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Request_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -9561,7 +9561,7 @@ func (ec *executionContext) _Request_status(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(model.FullRequestStatus)
 	fc.Result = res
-	return ec.marshalNFullRequestStatus2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐFullRequestStatus(ctx, field.Selections, res)
+	return ec.marshalNFullRequestStatus2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐFullRequestStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Request_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -9690,7 +9690,7 @@ func (ec *executionContext) _RequestStatus_request(ctx context.Context, field gr
 	}
 	res := resTmp.(*model.Request)
 	fc.Result = res
-	return ec.marshalNRequest2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequest(ctx, field.Selections, res)
+	return ec.marshalNRequest2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequest(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_RequestStatus_request(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -9748,7 +9748,7 @@ func (ec *executionContext) _RequestStatus_dataSource(ctx context.Context, field
 	}
 	res := resTmp.(*model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_RequestStatus_dataSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -9808,7 +9808,7 @@ func (ec *executionContext) _RequestStatus_status(ctx context.Context, field gra
 	}
 	res := resTmp.(model.RequestStatusType)
 	fc.Result = res
-	return ec.marshalNRequestStatusType2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatusType(ctx, field.Selections, res)
+	return ec.marshalNRequestStatusType2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequestStatusType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_RequestStatus_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -9849,7 +9849,7 @@ func (ec *executionContext) _RequestStatus_queryResult(ctx context.Context, fiel
 	}
 	res := resTmp.(*model.QueryResult)
 	fc.Result = res
-	return ec.marshalOQueryResult2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐQueryResult(ctx, field.Selections, res)
+	return ec.marshalOQueryResult2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐQueryResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_RequestStatus_queryResult(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -9898,7 +9898,7 @@ func (ec *executionContext) _RequestStatusListResult_requestStatusRows(ctx conte
 	}
 	res := resTmp.([]*model.RequestStatus)
 	fc.Result = res
-	return ec.marshalORequestStatus2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatusᚄ(ctx, field.Selections, res)
+	return ec.marshalORequestStatus2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequestStatusᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_RequestStatusListResult_requestStatusRows(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -9995,7 +9995,7 @@ func (ec *executionContext) _RequestsResult_requests(ctx context.Context, field 
 	}
 	res := resTmp.([]*model.Request)
 	fc.Result = res
-	return ec.marshalORequest2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestᚄ(ctx, field.Selections, res)
+	return ec.marshalORequest2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequestᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_RequestsResult_requests(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -10223,7 +10223,7 @@ func (ec *executionContext) _SiloDefinition_siloSpecification(ctx context.Contex
 	}
 	res := resTmp.(*model.SiloSpecification)
 	fc.Result = res
-	return ec.marshalOSiloSpecification2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloSpecification(ctx, field.Selections, res)
+	return ec.marshalOSiloSpecification2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloSpecification(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SiloDefinition_siloSpecification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -10278,7 +10278,7 @@ func (ec *executionContext) _SiloDefinition_dataSources(ctx context.Context, fie
 	}
 	res := resTmp.([]*model.DataSource)
 	fc.Result = res
-	return ec.marshalODataSource2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSourceᚄ(ctx, field.Selections, res)
+	return ec.marshalODataSource2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataSourceᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SiloDefinition_dataSources(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -10335,7 +10335,7 @@ func (ec *executionContext) _SiloDefinition_subjects(ctx context.Context, field 
 	}
 	res := resTmp.([]model.Subject)
 	fc.Result = res
-	return ec.marshalOSubject2ᚕgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSubjectᚄ(ctx, field.Selections, res)
+	return ec.marshalOSubject2ᚕgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSubjectᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SiloDefinition_subjects(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -10423,7 +10423,7 @@ func (ec *executionContext) _SiloDefinition_scanConfig(ctx context.Context, fiel
 	}
 	res := resTmp.(*model.SiloScanConfig)
 	fc.Result = res
-	return ec.marshalOSiloScanConfig2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloScanConfig(ctx, field.Selections, res)
+	return ec.marshalOSiloScanConfig2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloScanConfig(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SiloDefinition_scanConfig(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -10471,7 +10471,7 @@ func (ec *executionContext) _SiloDefinition_discoveries(ctx context.Context, fie
 	}
 	res := resTmp.(*model.DataDiscoveriesListResult)
 	fc.Result = res
-	return ec.marshalNDataDiscoveriesListResult2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataDiscoveriesListResult(ctx, field.Selections, res)
+	return ec.marshalNDataDiscoveriesListResult2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataDiscoveriesListResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SiloDefinition_discoveries(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -11092,7 +11092,7 @@ func (ec *executionContext) _UserPrimaryKey_properties(ctx context.Context, fiel
 	}
 	res := resTmp.([]*model.Property)
 	fc.Result = res
-	return ec.marshalOProperty2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPropertyᚄ(ctx, field.Selections, res)
+	return ec.marshalOProperty2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐPropertyᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_UserPrimaryKey_properties(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -11230,7 +11230,7 @@ func (ec *executionContext) _Workspace_siloSpecifications(ctx context.Context, f
 	}
 	res := resTmp.([]model.SiloSpecification)
 	fc.Result = res
-	return ec.marshalOSiloSpecification2ᚕgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloSpecificationᚄ(ctx, field.Selections, res)
+	return ec.marshalOSiloSpecification2ᚕgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloSpecificationᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Workspace_siloSpecifications(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -11329,7 +11329,7 @@ func (ec *executionContext) _Workspace_subjects(ctx context.Context, field graph
 	}
 	res := resTmp.([]model.Subject)
 	fc.Result = res
-	return ec.marshalOSubject2ᚕgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSubjectᚄ(ctx, field.Selections, res)
+	return ec.marshalOSubject2ᚕgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSubjectᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Workspace_subjects(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -11376,7 +11376,7 @@ func (ec *executionContext) _Workspace_categories(ctx context.Context, field gra
 	}
 	res := resTmp.([]*model.Category)
 	fc.Result = res
-	return ec.marshalOCategory2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCategoryᚄ(ctx, field.Selections, res)
+	return ec.marshalOCategory2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐCategoryᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Workspace_categories(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -11426,7 +11426,7 @@ func (ec *executionContext) _Workspace_dataMap(ctx context.Context, field graphq
 	}
 	res := resTmp.(*model.DataMapResult)
 	fc.Result = res
-	return ec.marshalNDataMapResult2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataMapResult(ctx, field.Selections, res)
+	return ec.marshalNDataMapResult2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataMapResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Workspace_dataMap(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -11487,7 +11487,7 @@ func (ec *executionContext) _Workspace_discoveries(ctx context.Context, field gr
 	}
 	res := resTmp.(*model.DataDiscoveriesListResult)
 	fc.Result = res
-	return ec.marshalNDataDiscoveriesListResult2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataDiscoveriesListResult(ctx, field.Selections, res)
+	return ec.marshalNDataDiscoveriesListResult2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataDiscoveriesListResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Workspace_discoveries(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -11548,7 +11548,7 @@ func (ec *executionContext) _Workspace_jobs(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(*model.JobsResult)
 	fc.Result = res
-	return ec.marshalNJobsResult2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJobsResult(ctx, field.Selections, res)
+	return ec.marshalNJobsResult2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐJobsResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Workspace_jobs(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -11609,7 +11609,7 @@ func (ec *executionContext) _Workspace_job(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(*model.Job)
 	fc.Result = res
-	return ec.marshalNJob2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJob(ctx, field.Selections, res)
+	return ec.marshalNJob2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐJob(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Workspace_job(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -11682,7 +11682,7 @@ func (ec *executionContext) _Workspace_requests(ctx context.Context, field graph
 	}
 	res := resTmp.(*model.RequestsResult)
 	fc.Result = res
-	return ec.marshalNRequestsResult2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestsResult(ctx, field.Selections, res)
+	return ec.marshalNRequestsResult2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequestsResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Workspace_requests(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -11740,7 +11740,7 @@ func (ec *executionContext) _Workspace_userPrimaryKeys(ctx context.Context, fiel
 	}
 	res := resTmp.([]*model.UserPrimaryKey)
 	fc.Result = res
-	return ec.marshalOUserPrimaryKey2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUserPrimaryKeyᚄ(ctx, field.Selections, res)
+	return ec.marshalOUserPrimaryKey2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUserPrimaryKeyᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Workspace_userPrimaryKeys(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -11793,7 +11793,7 @@ func (ec *executionContext) _Workspace_siloDefinitions(ctx context.Context, fiel
 	}
 	res := resTmp.([]*model.SiloDefinition)
 	fc.Result = res
-	return ec.marshalOSiloDefinition2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloDefinitionᚄ(ctx, field.Selections, res)
+	return ec.marshalOSiloDefinition2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloDefinitionᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Workspace_siloDefinitions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -11854,7 +11854,7 @@ func (ec *executionContext) _Workspace_siloDefinition(ctx context.Context, field
 	}
 	res := resTmp.(*model.SiloDefinition)
 	fc.Result = res
-	return ec.marshalOSiloDefinition2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloDefinition(ctx, field.Selections, res)
+	return ec.marshalOSiloDefinition2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloDefinition(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Workspace_siloDefinition(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -14076,7 +14076,7 @@ func (ec *executionContext) unmarshalInputCreateWorkspaceInput(ctx context.Conte
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("settings"))
-			it.Settings, err = ec.unmarshalOKVPair2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐKVPair(ctx, v)
+			it.Settings, err = ec.unmarshalOKVPair2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐKVPair(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -14104,7 +14104,7 @@ func (ec *executionContext) unmarshalInputDataMapQuery(ctx context.Context, obj 
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categories"))
-			it.Categories, err = ec.unmarshalOCategoryQuery2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCategoryQuery(ctx, v)
+			it.Categories, err = ec.unmarshalOCategoryQuery2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐCategoryQuery(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -14148,7 +14148,7 @@ func (ec *executionContext) unmarshalInputHandleAllDiscoveriesInput(ctx context.
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("action"))
-			it.Action, err = ec.unmarshalNDiscoveryAction2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryAction(ctx, v)
+			it.Action, err = ec.unmarshalNDiscoveryAction2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDiscoveryAction(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -14184,7 +14184,7 @@ func (ec *executionContext) unmarshalInputHandleDiscoveryInput(ctx context.Conte
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("action"))
-			it.Action, err = ec.unmarshalNDiscoveryAction2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryAction(ctx, v)
+			it.Action, err = ec.unmarshalNDiscoveryAction2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDiscoveryAction(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -14620,7 +14620,7 @@ func (ec *executionContext) unmarshalInputUpdateWorkspaceSettingsInput(ctx conte
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("settings"))
-			it.Settings, err = ec.unmarshalOKVPair2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐKVPair(ctx, v)
+			it.Settings, err = ec.unmarshalOKVPair2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐKVPair(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -14648,7 +14648,7 @@ func (ec *executionContext) unmarshalInputUserDataRequestInput(ctx context.Conte
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("primaryKeys"))
-			it.PrimaryKeys, err = ec.unmarshalOUserPrimaryKeyInput2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUserPrimaryKeyInputᚄ(ctx, v)
+			it.PrimaryKeys, err = ec.unmarshalOUserPrimaryKeyInput2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUserPrimaryKeyInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -14664,7 +14664,7 @@ func (ec *executionContext) unmarshalInputUserDataRequestInput(ctx context.Conte
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
-			it.Type, err = ec.unmarshalNUserDataRequestType2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUserDataRequestType(ctx, v)
+			it.Type, err = ec.unmarshalNUserDataRequestType2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUserDataRequestType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -17403,11 +17403,11 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNCategory2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCategory(ctx context.Context, sel ast.SelectionSet, v model.Category) graphql.Marshaler {
+func (ec *executionContext) marshalNCategory2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐCategory(ctx context.Context, sel ast.SelectionSet, v model.Category) graphql.Marshaler {
 	return ec._Category(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNCategory2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCategory(ctx context.Context, sel ast.SelectionSet, v *model.Category) graphql.Marshaler {
+func (ec *executionContext) marshalNCategory2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐCategory(ctx context.Context, sel ast.SelectionSet, v *model.Category) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -17417,21 +17417,21 @@ func (ec *executionContext) marshalNCategory2ᚖgithubᚗcomᚋbristᚑaiᚋmono
 	return ec._Category(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNCreateUserPrimaryKeyInput2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCreateUserPrimaryKeyInput(ctx context.Context, v interface{}) (model.CreateUserPrimaryKeyInput, error) {
+func (ec *executionContext) unmarshalNCreateUserPrimaryKeyInput2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐCreateUserPrimaryKeyInput(ctx context.Context, v interface{}) (model.CreateUserPrimaryKeyInput, error) {
 	res, err := ec.unmarshalInputCreateUserPrimaryKeyInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNCreateWorkspaceInput2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCreateWorkspaceInput(ctx context.Context, v interface{}) (model.CreateWorkspaceInput, error) {
+func (ec *executionContext) unmarshalNCreateWorkspaceInput2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐCreateWorkspaceInput(ctx context.Context, v interface{}) (model.CreateWorkspaceInput, error) {
 	res, err := ec.unmarshalInputCreateWorkspaceInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNDataDiscoveriesListResult2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataDiscoveriesListResult(ctx context.Context, sel ast.SelectionSet, v model.DataDiscoveriesListResult) graphql.Marshaler {
+func (ec *executionContext) marshalNDataDiscoveriesListResult2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataDiscoveriesListResult(ctx context.Context, sel ast.SelectionSet, v model.DataDiscoveriesListResult) graphql.Marshaler {
 	return ec._DataDiscoveriesListResult(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNDataDiscoveriesListResult2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataDiscoveriesListResult(ctx context.Context, sel ast.SelectionSet, v *model.DataDiscoveriesListResult) graphql.Marshaler {
+func (ec *executionContext) marshalNDataDiscoveriesListResult2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataDiscoveriesListResult(ctx context.Context, sel ast.SelectionSet, v *model.DataDiscoveriesListResult) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -17441,7 +17441,7 @@ func (ec *executionContext) marshalNDataDiscoveriesListResult2ᚖgithubᚗcomᚋ
 	return ec._DataDiscoveriesListResult(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNDataDiscoveryData2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataDiscoveryData(ctx context.Context, sel ast.SelectionSet, v model.DataDiscoveryData) graphql.Marshaler {
+func (ec *executionContext) marshalNDataDiscoveryData2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataDiscoveryData(ctx context.Context, sel ast.SelectionSet, v model.DataDiscoveryData) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -17451,11 +17451,11 @@ func (ec *executionContext) marshalNDataDiscoveryData2githubᚗcomᚋbristᚑai�
 	return ec._DataDiscoveryData(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNDataMapResult2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataMapResult(ctx context.Context, sel ast.SelectionSet, v model.DataMapResult) graphql.Marshaler {
+func (ec *executionContext) marshalNDataMapResult2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataMapResult(ctx context.Context, sel ast.SelectionSet, v model.DataMapResult) graphql.Marshaler {
 	return ec._DataMapResult(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNDataMapResult2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataMapResult(ctx context.Context, sel ast.SelectionSet, v *model.DataMapResult) graphql.Marshaler {
+func (ec *executionContext) marshalNDataMapResult2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataMapResult(ctx context.Context, sel ast.SelectionSet, v *model.DataMapResult) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -17465,7 +17465,7 @@ func (ec *executionContext) marshalNDataMapResult2ᚖgithubᚗcomᚋbristᚑai�
 	return ec._DataMapResult(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNDataMapRow2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataMapRow(ctx context.Context, sel ast.SelectionSet, v *model.DataMapRow) graphql.Marshaler {
+func (ec *executionContext) marshalNDataMapRow2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataMapRow(ctx context.Context, sel ast.SelectionSet, v *model.DataMapRow) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -17475,11 +17475,11 @@ func (ec *executionContext) marshalNDataMapRow2ᚖgithubᚗcomᚋbristᚑaiᚋmo
 	return ec._DataMapRow(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNDataSource2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSource(ctx context.Context, sel ast.SelectionSet, v model.DataSource) graphql.Marshaler {
+func (ec *executionContext) marshalNDataSource2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataSource(ctx context.Context, sel ast.SelectionSet, v model.DataSource) graphql.Marshaler {
 	return ec._DataSource(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNDataSource2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSource(ctx context.Context, sel ast.SelectionSet, v *model.DataSource) graphql.Marshaler {
+func (ec *executionContext) marshalNDataSource2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataSource(ctx context.Context, sel ast.SelectionSet, v *model.DataSource) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -17489,43 +17489,43 @@ func (ec *executionContext) marshalNDataSource2ᚖgithubᚗcomᚋbristᚑaiᚋmo
 	return ec._DataSource(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNDiscoveryAction2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryAction(ctx context.Context, v interface{}) (model.DiscoveryAction, error) {
+func (ec *executionContext) unmarshalNDiscoveryAction2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDiscoveryAction(ctx context.Context, v interface{}) (model.DiscoveryAction, error) {
 	var res model.DiscoveryAction
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNDiscoveryAction2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryAction(ctx context.Context, sel ast.SelectionSet, v model.DiscoveryAction) graphql.Marshaler {
+func (ec *executionContext) marshalNDiscoveryAction2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDiscoveryAction(ctx context.Context, sel ast.SelectionSet, v model.DiscoveryAction) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalNDiscoveryStatus2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryStatus(ctx context.Context, v interface{}) (model.DiscoveryStatus, error) {
+func (ec *executionContext) unmarshalNDiscoveryStatus2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDiscoveryStatus(ctx context.Context, v interface{}) (model.DiscoveryStatus, error) {
 	var res model.DiscoveryStatus
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNDiscoveryStatus2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryStatus(ctx context.Context, sel ast.SelectionSet, v model.DiscoveryStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNDiscoveryStatus2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDiscoveryStatus(ctx context.Context, sel ast.SelectionSet, v model.DiscoveryStatus) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalNDiscoveryType2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryType(ctx context.Context, v interface{}) (model.DiscoveryType, error) {
+func (ec *executionContext) unmarshalNDiscoveryType2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDiscoveryType(ctx context.Context, v interface{}) (model.DiscoveryType, error) {
 	var res model.DiscoveryType
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNDiscoveryType2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryType(ctx context.Context, sel ast.SelectionSet, v model.DiscoveryType) graphql.Marshaler {
+func (ec *executionContext) marshalNDiscoveryType2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDiscoveryType(ctx context.Context, sel ast.SelectionSet, v model.DiscoveryType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalNFullRequestStatus2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐFullRequestStatus(ctx context.Context, v interface{}) (model.FullRequestStatus, error) {
+func (ec *executionContext) unmarshalNFullRequestStatus2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐFullRequestStatus(ctx context.Context, v interface{}) (model.FullRequestStatus, error) {
 	var res model.FullRequestStatus
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNFullRequestStatus2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐFullRequestStatus(ctx context.Context, sel ast.SelectionSet, v model.FullRequestStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNFullRequestStatus2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐFullRequestStatus(ctx context.Context, sel ast.SelectionSet, v model.FullRequestStatus) graphql.Marshaler {
 	return v
 }
 
@@ -17559,11 +17559,11 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
-func (ec *executionContext) marshalNJob2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJob(ctx context.Context, sel ast.SelectionSet, v model.Job) graphql.Marshaler {
+func (ec *executionContext) marshalNJob2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐJob(ctx context.Context, sel ast.SelectionSet, v model.Job) graphql.Marshaler {
 	return ec._Job(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNJob2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJob(ctx context.Context, sel ast.SelectionSet, v *model.Job) graphql.Marshaler {
+func (ec *executionContext) marshalNJob2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐJob(ctx context.Context, sel ast.SelectionSet, v *model.Job) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -17573,21 +17573,21 @@ func (ec *executionContext) marshalNJob2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋ
 	return ec._Job(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNJobStatus2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJobStatus(ctx context.Context, v interface{}) (model.JobStatus, error) {
+func (ec *executionContext) unmarshalNJobStatus2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐJobStatus(ctx context.Context, v interface{}) (model.JobStatus, error) {
 	var res model.JobStatus
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNJobStatus2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJobStatus(ctx context.Context, sel ast.SelectionSet, v model.JobStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNJobStatus2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐJobStatus(ctx context.Context, sel ast.SelectionSet, v model.JobStatus) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNJobsResult2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJobsResult(ctx context.Context, sel ast.SelectionSet, v model.JobsResult) graphql.Marshaler {
+func (ec *executionContext) marshalNJobsResult2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐJobsResult(ctx context.Context, sel ast.SelectionSet, v model.JobsResult) graphql.Marshaler {
 	return ec._JobsResult(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNJobsResult2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJobsResult(ctx context.Context, sel ast.SelectionSet, v *model.JobsResult) graphql.Marshaler {
+func (ec *executionContext) marshalNJobsResult2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐJobsResult(ctx context.Context, sel ast.SelectionSet, v *model.JobsResult) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -17618,7 +17618,7 @@ func (ec *executionContext) marshalNMap2map(ctx context.Context, sel ast.Selecti
 	return res
 }
 
-func (ec *executionContext) marshalNPrimaryKeyValue2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPrimaryKeyValue(ctx context.Context, sel ast.SelectionSet, v *model.PrimaryKeyValue) graphql.Marshaler {
+func (ec *executionContext) marshalNPrimaryKeyValue2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐPrimaryKeyValue(ctx context.Context, sel ast.SelectionSet, v *model.PrimaryKeyValue) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -17628,11 +17628,11 @@ func (ec *executionContext) marshalNPrimaryKeyValue2ᚖgithubᚗcomᚋbristᚑai
 	return ec._PrimaryKeyValue(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNProperty2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐProperty(ctx context.Context, sel ast.SelectionSet, v model.Property) graphql.Marshaler {
+func (ec *executionContext) marshalNProperty2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐProperty(ctx context.Context, sel ast.SelectionSet, v model.Property) graphql.Marshaler {
 	return ec._Property(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNProperty2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐProperty(ctx context.Context, sel ast.SelectionSet, v *model.Property) graphql.Marshaler {
+func (ec *executionContext) marshalNProperty2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐProperty(ctx context.Context, sel ast.SelectionSet, v *model.Property) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -17642,11 +17642,11 @@ func (ec *executionContext) marshalNProperty2ᚖgithubᚗcomᚋbristᚑaiᚋmono
 	return ec._Property(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNRequest2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequest(ctx context.Context, sel ast.SelectionSet, v model.Request) graphql.Marshaler {
+func (ec *executionContext) marshalNRequest2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequest(ctx context.Context, sel ast.SelectionSet, v model.Request) graphql.Marshaler {
 	return ec._Request(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNRequest2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequest(ctx context.Context, sel ast.SelectionSet, v *model.Request) graphql.Marshaler {
+func (ec *executionContext) marshalNRequest2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequest(ctx context.Context, sel ast.SelectionSet, v *model.Request) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -17656,11 +17656,11 @@ func (ec *executionContext) marshalNRequest2ᚖgithubᚗcomᚋbristᚑaiᚋmonoi
 	return ec._Request(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNRequestStatus2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatus(ctx context.Context, sel ast.SelectionSet, v model.RequestStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNRequestStatus2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequestStatus(ctx context.Context, sel ast.SelectionSet, v model.RequestStatus) graphql.Marshaler {
 	return ec._RequestStatus(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNRequestStatus2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatus(ctx context.Context, sel ast.SelectionSet, v *model.RequestStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNRequestStatus2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequestStatus(ctx context.Context, sel ast.SelectionSet, v *model.RequestStatus) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -17670,11 +17670,11 @@ func (ec *executionContext) marshalNRequestStatus2ᚖgithubᚗcomᚋbristᚑai�
 	return ec._RequestStatus(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNRequestStatusListResult2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatusListResult(ctx context.Context, sel ast.SelectionSet, v model.RequestStatusListResult) graphql.Marshaler {
+func (ec *executionContext) marshalNRequestStatusListResult2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequestStatusListResult(ctx context.Context, sel ast.SelectionSet, v model.RequestStatusListResult) graphql.Marshaler {
 	return ec._RequestStatusListResult(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNRequestStatusListResult2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatusListResult(ctx context.Context, sel ast.SelectionSet, v *model.RequestStatusListResult) graphql.Marshaler {
+func (ec *executionContext) marshalNRequestStatusListResult2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequestStatusListResult(ctx context.Context, sel ast.SelectionSet, v *model.RequestStatusListResult) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -17684,21 +17684,21 @@ func (ec *executionContext) marshalNRequestStatusListResult2ᚖgithubᚗcomᚋbr
 	return ec._RequestStatusListResult(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNRequestStatusType2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatusType(ctx context.Context, v interface{}) (model.RequestStatusType, error) {
+func (ec *executionContext) unmarshalNRequestStatusType2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequestStatusType(ctx context.Context, v interface{}) (model.RequestStatusType, error) {
 	var res model.RequestStatusType
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNRequestStatusType2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatusType(ctx context.Context, sel ast.SelectionSet, v model.RequestStatusType) graphql.Marshaler {
+func (ec *executionContext) marshalNRequestStatusType2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequestStatusType(ctx context.Context, sel ast.SelectionSet, v model.RequestStatusType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNRequestsResult2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestsResult(ctx context.Context, sel ast.SelectionSet, v model.RequestsResult) graphql.Marshaler {
+func (ec *executionContext) marshalNRequestsResult2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequestsResult(ctx context.Context, sel ast.SelectionSet, v model.RequestsResult) graphql.Marshaler {
 	return ec._RequestsResult(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNRequestsResult2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestsResult(ctx context.Context, sel ast.SelectionSet, v *model.RequestsResult) graphql.Marshaler {
+func (ec *executionContext) marshalNRequestsResult2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequestsResult(ctx context.Context, sel ast.SelectionSet, v *model.RequestsResult) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -17708,11 +17708,11 @@ func (ec *executionContext) marshalNRequestsResult2ᚖgithubᚗcomᚋbristᚑai�
 	return ec._RequestsResult(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNSiloDefinition2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloDefinition(ctx context.Context, sel ast.SelectionSet, v model.SiloDefinition) graphql.Marshaler {
+func (ec *executionContext) marshalNSiloDefinition2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloDefinition(ctx context.Context, sel ast.SelectionSet, v model.SiloDefinition) graphql.Marshaler {
 	return ec._SiloDefinition(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSiloDefinition2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloDefinition(ctx context.Context, sel ast.SelectionSet, v *model.SiloDefinition) graphql.Marshaler {
+func (ec *executionContext) marshalNSiloDefinition2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloDefinition(ctx context.Context, sel ast.SelectionSet, v *model.SiloDefinition) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -17722,16 +17722,16 @@ func (ec *executionContext) marshalNSiloDefinition2ᚖgithubᚗcomᚋbristᚑai�
 	return ec._SiloDefinition(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNSiloScanConfigInput2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloScanConfigInput(ctx context.Context, v interface{}) (model.SiloScanConfigInput, error) {
+func (ec *executionContext) unmarshalNSiloScanConfigInput2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloScanConfigInput(ctx context.Context, v interface{}) (model.SiloScanConfigInput, error) {
 	res, err := ec.unmarshalInputSiloScanConfigInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNSiloSpecification2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloSpecification(ctx context.Context, sel ast.SelectionSet, v model.SiloSpecification) graphql.Marshaler {
+func (ec *executionContext) marshalNSiloSpecification2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloSpecification(ctx context.Context, sel ast.SelectionSet, v model.SiloSpecification) graphql.Marshaler {
 	return ec._SiloSpecification(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSiloSpecification2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloSpecification(ctx context.Context, sel ast.SelectionSet, v *model.SiloSpecification) graphql.Marshaler {
+func (ec *executionContext) marshalNSiloSpecification2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloSpecification(ctx context.Context, sel ast.SelectionSet, v *model.SiloSpecification) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -17777,11 +17777,11 @@ func (ec *executionContext) marshalNString2ᚖstring(ctx context.Context, sel as
 	return res
 }
 
-func (ec *executionContext) marshalNSubject2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSubject(ctx context.Context, sel ast.SelectionSet, v model.Subject) graphql.Marshaler {
+func (ec *executionContext) marshalNSubject2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSubject(ctx context.Context, sel ast.SelectionSet, v model.Subject) graphql.Marshaler {
 	return ec._Subject(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSubject2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSubject(ctx context.Context, sel ast.SelectionSet, v *model.Subject) graphql.Marshaler {
+func (ec *executionContext) marshalNSubject2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSubject(ctx context.Context, sel ast.SelectionSet, v *model.Subject) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -17806,31 +17806,31 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 	return res
 }
 
-func (ec *executionContext) unmarshalNUpdateUserPrimaryKeyInput2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUpdateUserPrimaryKeyInput(ctx context.Context, v interface{}) (model.UpdateUserPrimaryKeyInput, error) {
+func (ec *executionContext) unmarshalNUpdateUserPrimaryKeyInput2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUpdateUserPrimaryKeyInput(ctx context.Context, v interface{}) (model.UpdateUserPrimaryKeyInput, error) {
 	res, err := ec.unmarshalInputUpdateUserPrimaryKeyInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNUpdateWorkspaceSettingsInput2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUpdateWorkspaceSettingsInput(ctx context.Context, v interface{}) (model.UpdateWorkspaceSettingsInput, error) {
+func (ec *executionContext) unmarshalNUpdateWorkspaceSettingsInput2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUpdateWorkspaceSettingsInput(ctx context.Context, v interface{}) (model.UpdateWorkspaceSettingsInput, error) {
 	res, err := ec.unmarshalInputUpdateWorkspaceSettingsInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNUserDataRequestType2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUserDataRequestType(ctx context.Context, v interface{}) (model.UserDataRequestType, error) {
+func (ec *executionContext) unmarshalNUserDataRequestType2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUserDataRequestType(ctx context.Context, v interface{}) (model.UserDataRequestType, error) {
 	var res model.UserDataRequestType
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNUserDataRequestType2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUserDataRequestType(ctx context.Context, sel ast.SelectionSet, v model.UserDataRequestType) graphql.Marshaler {
+func (ec *executionContext) marshalNUserDataRequestType2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUserDataRequestType(ctx context.Context, sel ast.SelectionSet, v model.UserDataRequestType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNUserPrimaryKey2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUserPrimaryKey(ctx context.Context, sel ast.SelectionSet, v model.UserPrimaryKey) graphql.Marshaler {
+func (ec *executionContext) marshalNUserPrimaryKey2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUserPrimaryKey(ctx context.Context, sel ast.SelectionSet, v model.UserPrimaryKey) graphql.Marshaler {
 	return ec._UserPrimaryKey(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNUserPrimaryKey2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUserPrimaryKey(ctx context.Context, sel ast.SelectionSet, v *model.UserPrimaryKey) graphql.Marshaler {
+func (ec *executionContext) marshalNUserPrimaryKey2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUserPrimaryKey(ctx context.Context, sel ast.SelectionSet, v *model.UserPrimaryKey) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -17840,7 +17840,7 @@ func (ec *executionContext) marshalNUserPrimaryKey2ᚖgithubᚗcomᚋbristᚑai�
 	return ec._UserPrimaryKey(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNUserPrimaryKeyInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUserPrimaryKeyInput(ctx context.Context, v interface{}) (*model.UserPrimaryKeyInput, error) {
+func (ec *executionContext) unmarshalNUserPrimaryKeyInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUserPrimaryKeyInput(ctx context.Context, v interface{}) (*model.UserPrimaryKeyInput, error) {
 	res, err := ec.unmarshalInputUserPrimaryKeyInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
@@ -18124,7 +18124,7 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) marshalOCategory2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCategoryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Category) graphql.Marshaler {
+func (ec *executionContext) marshalOCategory2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐCategoryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Category) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -18151,7 +18151,7 @@ func (ec *executionContext) marshalOCategory2ᚕᚖgithubᚗcomᚋbristᚑaiᚋm
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNCategory2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCategory(ctx, sel, v[i])
+			ret[i] = ec.marshalNCategory2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐCategory(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -18171,14 +18171,14 @@ func (ec *executionContext) marshalOCategory2ᚕᚖgithubᚗcomᚋbristᚑaiᚋm
 	return ret
 }
 
-func (ec *executionContext) marshalOCategory2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCategory(ctx context.Context, sel ast.SelectionSet, v *model.Category) graphql.Marshaler {
+func (ec *executionContext) marshalOCategory2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐCategory(ctx context.Context, sel ast.SelectionSet, v *model.Category) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Category(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOCategoryQuery2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCategoryQuery(ctx context.Context, v interface{}) (*model.CategoryQuery, error) {
+func (ec *executionContext) unmarshalOCategoryQuery2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐCategoryQuery(ctx context.Context, v interface{}) (*model.CategoryQuery, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -18186,7 +18186,7 @@ func (ec *executionContext) unmarshalOCategoryQuery2ᚖgithubᚗcomᚋbristᚑai
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOCreateDataSourceInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCreateDataSourceInput(ctx context.Context, v interface{}) (*model.CreateDataSourceInput, error) {
+func (ec *executionContext) unmarshalOCreateDataSourceInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐCreateDataSourceInput(ctx context.Context, v interface{}) (*model.CreateDataSourceInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -18194,7 +18194,7 @@ func (ec *executionContext) unmarshalOCreateDataSourceInput2ᚖgithubᚗcomᚋbr
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOCreatePropertyInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCreatePropertyInput(ctx context.Context, v interface{}) (*model.CreatePropertyInput, error) {
+func (ec *executionContext) unmarshalOCreatePropertyInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐCreatePropertyInput(ctx context.Context, v interface{}) (*model.CreatePropertyInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -18202,7 +18202,7 @@ func (ec *executionContext) unmarshalOCreatePropertyInput2ᚖgithubᚗcomᚋbris
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOCreateSiloDefinitionInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCreateSiloDefinitionInput(ctx context.Context, v interface{}) (*model.CreateSiloDefinitionInput, error) {
+func (ec *executionContext) unmarshalOCreateSiloDefinitionInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐCreateSiloDefinitionInput(ctx context.Context, v interface{}) (*model.CreateSiloDefinitionInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -18210,7 +18210,7 @@ func (ec *executionContext) unmarshalOCreateSiloDefinitionInput2ᚖgithubᚗcom�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOCreateSiloSpecificationInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCreateSiloSpecificationInput(ctx context.Context, v interface{}) (*model.CreateSiloSpecificationInput, error) {
+func (ec *executionContext) unmarshalOCreateSiloSpecificationInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐCreateSiloSpecificationInput(ctx context.Context, v interface{}) (*model.CreateSiloSpecificationInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -18218,7 +18218,7 @@ func (ec *executionContext) unmarshalOCreateSiloSpecificationInput2ᚖgithubᚗc
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOCreateSubjectInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐCreateSubjectInput(ctx context.Context, v interface{}) (*model.CreateSubjectInput, error) {
+func (ec *executionContext) unmarshalOCreateSubjectInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐCreateSubjectInput(ctx context.Context, v interface{}) (*model.CreateSubjectInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -18226,7 +18226,7 @@ func (ec *executionContext) unmarshalOCreateSubjectInput2ᚖgithubᚗcomᚋbrist
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalODataDiscovery2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataDiscovery(ctx context.Context, sel ast.SelectionSet, v []*model.DataDiscovery) graphql.Marshaler {
+func (ec *executionContext) marshalODataDiscovery2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataDiscovery(ctx context.Context, sel ast.SelectionSet, v []*model.DataDiscovery) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -18253,7 +18253,7 @@ func (ec *executionContext) marshalODataDiscovery2ᚕᚖgithubᚗcomᚋbristᚑa
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalODataDiscovery2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataDiscovery(ctx, sel, v[i])
+			ret[i] = ec.marshalODataDiscovery2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataDiscovery(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -18267,14 +18267,14 @@ func (ec *executionContext) marshalODataDiscovery2ᚕᚖgithubᚗcomᚋbristᚑa
 	return ret
 }
 
-func (ec *executionContext) marshalODataDiscovery2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataDiscovery(ctx context.Context, sel ast.SelectionSet, v *model.DataDiscovery) graphql.Marshaler {
+func (ec *executionContext) marshalODataDiscovery2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataDiscovery(ctx context.Context, sel ast.SelectionSet, v *model.DataDiscovery) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._DataDiscovery(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalODataMapQuery2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataMapQuery(ctx context.Context, v interface{}) (*model.DataMapQuery, error) {
+func (ec *executionContext) unmarshalODataMapQuery2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataMapQuery(ctx context.Context, v interface{}) (*model.DataMapQuery, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -18282,7 +18282,7 @@ func (ec *executionContext) unmarshalODataMapQuery2ᚖgithubᚗcomᚋbristᚑai�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalODataMapRow2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataMapRowᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DataMapRow) graphql.Marshaler {
+func (ec *executionContext) marshalODataMapRow2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataMapRowᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DataMapRow) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -18309,7 +18309,7 @@ func (ec *executionContext) marshalODataMapRow2ᚕᚖgithubᚗcomᚋbristᚑai�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNDataMapRow2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataMapRow(ctx, sel, v[i])
+			ret[i] = ec.marshalNDataMapRow2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataMapRow(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -18329,7 +18329,7 @@ func (ec *executionContext) marshalODataMapRow2ᚕᚖgithubᚗcomᚋbristᚑai�
 	return ret
 }
 
-func (ec *executionContext) marshalODataSource2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSourceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DataSource) graphql.Marshaler {
+func (ec *executionContext) marshalODataSource2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataSourceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DataSource) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -18356,7 +18356,7 @@ func (ec *executionContext) marshalODataSource2ᚕᚖgithubᚗcomᚋbristᚑai�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNDataSource2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSource(ctx, sel, v[i])
+			ret[i] = ec.marshalNDataSource2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataSource(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -18376,14 +18376,14 @@ func (ec *executionContext) marshalODataSource2ᚕᚖgithubᚗcomᚋbristᚑai�
 	return ret
 }
 
-func (ec *executionContext) marshalODataSource2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDataSource(ctx context.Context, sel ast.SelectionSet, v *model.DataSource) graphql.Marshaler {
+func (ec *executionContext) marshalODataSource2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDataSource(ctx context.Context, sel ast.SelectionSet, v *model.DataSource) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._DataSource(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalODiscoveryStatus2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryStatus(ctx context.Context, v interface{}) ([]*model.DiscoveryStatus, error) {
+func (ec *executionContext) unmarshalODiscoveryStatus2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDiscoveryStatus(ctx context.Context, v interface{}) ([]*model.DiscoveryStatus, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -18395,7 +18395,7 @@ func (ec *executionContext) unmarshalODiscoveryStatus2ᚕᚖgithubᚗcomᚋbrist
 	res := make([]*model.DiscoveryStatus, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalODiscoveryStatus2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryStatus(ctx, vSlice[i])
+		res[i], err = ec.unmarshalODiscoveryStatus2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDiscoveryStatus(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -18403,7 +18403,7 @@ func (ec *executionContext) unmarshalODiscoveryStatus2ᚕᚖgithubᚗcomᚋbrist
 	return res, nil
 }
 
-func (ec *executionContext) marshalODiscoveryStatus2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryStatus(ctx context.Context, sel ast.SelectionSet, v []*model.DiscoveryStatus) graphql.Marshaler {
+func (ec *executionContext) marshalODiscoveryStatus2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDiscoveryStatus(ctx context.Context, sel ast.SelectionSet, v []*model.DiscoveryStatus) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -18430,7 +18430,7 @@ func (ec *executionContext) marshalODiscoveryStatus2ᚕᚖgithubᚗcomᚋbrist�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalODiscoveryStatus2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryStatus(ctx, sel, v[i])
+			ret[i] = ec.marshalODiscoveryStatus2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDiscoveryStatus(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -18444,7 +18444,7 @@ func (ec *executionContext) marshalODiscoveryStatus2ᚕᚖgithubᚗcomᚋbrist�
 	return ret
 }
 
-func (ec *executionContext) unmarshalODiscoveryStatus2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryStatus(ctx context.Context, v interface{}) (*model.DiscoveryStatus, error) {
+func (ec *executionContext) unmarshalODiscoveryStatus2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDiscoveryStatus(ctx context.Context, v interface{}) (*model.DiscoveryStatus, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -18453,14 +18453,14 @@ func (ec *executionContext) unmarshalODiscoveryStatus2ᚖgithubᚗcomᚋbristᚑ
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalODiscoveryStatus2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐDiscoveryStatus(ctx context.Context, sel ast.SelectionSet, v *model.DiscoveryStatus) graphql.Marshaler {
+func (ec *executionContext) marshalODiscoveryStatus2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDiscoveryStatus(ctx context.Context, sel ast.SelectionSet, v *model.DiscoveryStatus) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) unmarshalOHandleAllDiscoveriesInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐHandleAllDiscoveriesInput(ctx context.Context, v interface{}) (*model.HandleAllDiscoveriesInput, error) {
+func (ec *executionContext) unmarshalOHandleAllDiscoveriesInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐHandleAllDiscoveriesInput(ctx context.Context, v interface{}) (*model.HandleAllDiscoveriesInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -18468,7 +18468,7 @@ func (ec *executionContext) unmarshalOHandleAllDiscoveriesInput2ᚖgithubᚗcom�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOHandleDiscoveryInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐHandleDiscoveryInput(ctx context.Context, v interface{}) (*model.HandleDiscoveryInput, error) {
+func (ec *executionContext) unmarshalOHandleDiscoveryInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐHandleDiscoveryInput(ctx context.Context, v interface{}) (*model.HandleDiscoveryInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -18546,7 +18546,7 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	return res
 }
 
-func (ec *executionContext) marshalOJob2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJobᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Job) graphql.Marshaler {
+func (ec *executionContext) marshalOJob2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐJobᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Job) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -18573,7 +18573,7 @@ func (ec *executionContext) marshalOJob2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoid
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNJob2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJob(ctx, sel, v[i])
+			ret[i] = ec.marshalNJob2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐJob(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -18593,14 +18593,14 @@ func (ec *executionContext) marshalOJob2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoid
 	return ret
 }
 
-func (ec *executionContext) marshalOJob2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJob(ctx context.Context, sel ast.SelectionSet, v *model.Job) graphql.Marshaler {
+func (ec *executionContext) marshalOJob2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐJob(ctx context.Context, sel ast.SelectionSet, v *model.Job) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Job(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOJobStatus2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJobStatus(ctx context.Context, v interface{}) ([]*model.JobStatus, error) {
+func (ec *executionContext) unmarshalOJobStatus2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐJobStatus(ctx context.Context, v interface{}) ([]*model.JobStatus, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -18612,7 +18612,7 @@ func (ec *executionContext) unmarshalOJobStatus2ᚕᚖgithubᚗcomᚋbristᚑai�
 	res := make([]*model.JobStatus, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalOJobStatus2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJobStatus(ctx, vSlice[i])
+		res[i], err = ec.unmarshalOJobStatus2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐJobStatus(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -18620,7 +18620,7 @@ func (ec *executionContext) unmarshalOJobStatus2ᚕᚖgithubᚗcomᚋbristᚑai�
 	return res, nil
 }
 
-func (ec *executionContext) marshalOJobStatus2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJobStatus(ctx context.Context, sel ast.SelectionSet, v []*model.JobStatus) graphql.Marshaler {
+func (ec *executionContext) marshalOJobStatus2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐJobStatus(ctx context.Context, sel ast.SelectionSet, v []*model.JobStatus) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -18647,7 +18647,7 @@ func (ec *executionContext) marshalOJobStatus2ᚕᚖgithubᚗcomᚋbristᚑaiᚋ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOJobStatus2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJobStatus(ctx, sel, v[i])
+			ret[i] = ec.marshalOJobStatus2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐJobStatus(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -18661,7 +18661,7 @@ func (ec *executionContext) marshalOJobStatus2ᚕᚖgithubᚗcomᚋbristᚑaiᚋ
 	return ret
 }
 
-func (ec *executionContext) unmarshalOJobStatus2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJobStatus(ctx context.Context, v interface{}) (*model.JobStatus, error) {
+func (ec *executionContext) unmarshalOJobStatus2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐJobStatus(ctx context.Context, v interface{}) (*model.JobStatus, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -18670,14 +18670,14 @@ func (ec *executionContext) unmarshalOJobStatus2ᚖgithubᚗcomᚋbristᚑaiᚋm
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOJobStatus2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐJobStatus(ctx context.Context, sel ast.SelectionSet, v *model.JobStatus) graphql.Marshaler {
+func (ec *executionContext) marshalOJobStatus2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐJobStatus(ctx context.Context, sel ast.SelectionSet, v *model.JobStatus) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) unmarshalOKVPair2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐKVPair(ctx context.Context, v interface{}) ([]*model.KVPair, error) {
+func (ec *executionContext) unmarshalOKVPair2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐKVPair(ctx context.Context, v interface{}) ([]*model.KVPair, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -18689,7 +18689,7 @@ func (ec *executionContext) unmarshalOKVPair2ᚕᚖgithubᚗcomᚋbristᚑaiᚋm
 	res := make([]*model.KVPair, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalOKVPair2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐKVPair(ctx, vSlice[i])
+		res[i], err = ec.unmarshalOKVPair2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐKVPair(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -18697,7 +18697,7 @@ func (ec *executionContext) unmarshalOKVPair2ᚕᚖgithubᚗcomᚋbristᚑaiᚋm
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalOKVPair2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐKVPair(ctx context.Context, v interface{}) (*model.KVPair, error) {
+func (ec *executionContext) unmarshalOKVPair2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐKVPair(ctx context.Context, v interface{}) (*model.KVPair, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -18721,11 +18721,11 @@ func (ec *executionContext) marshalOMap2map(ctx context.Context, sel ast.Selecti
 	return res
 }
 
-func (ec *executionContext) marshalONewCategoryDiscovery2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐNewCategoryDiscovery(ctx context.Context, sel ast.SelectionSet, v model.NewCategoryDiscovery) graphql.Marshaler {
+func (ec *executionContext) marshalONewCategoryDiscovery2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐNewCategoryDiscovery(ctx context.Context, sel ast.SelectionSet, v model.NewCategoryDiscovery) graphql.Marshaler {
 	return ec._NewCategoryDiscovery(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalONewCategoryDiscovery2ᚕgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐNewCategoryDiscovery(ctx context.Context, sel ast.SelectionSet, v []model.NewCategoryDiscovery) graphql.Marshaler {
+func (ec *executionContext) marshalONewCategoryDiscovery2ᚕgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐNewCategoryDiscovery(ctx context.Context, sel ast.SelectionSet, v []model.NewCategoryDiscovery) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -18752,7 +18752,7 @@ func (ec *executionContext) marshalONewCategoryDiscovery2ᚕgithubᚗcomᚋbrist
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalONewCategoryDiscovery2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐNewCategoryDiscovery(ctx, sel, v[i])
+			ret[i] = ec.marshalONewCategoryDiscovery2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐNewCategoryDiscovery(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -18766,11 +18766,11 @@ func (ec *executionContext) marshalONewCategoryDiscovery2ᚕgithubᚗcomᚋbrist
 	return ret
 }
 
-func (ec *executionContext) marshalONewPropertyDiscovery2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐNewPropertyDiscovery(ctx context.Context, sel ast.SelectionSet, v model.NewPropertyDiscovery) graphql.Marshaler {
+func (ec *executionContext) marshalONewPropertyDiscovery2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐNewPropertyDiscovery(ctx context.Context, sel ast.SelectionSet, v model.NewPropertyDiscovery) graphql.Marshaler {
 	return ec._NewPropertyDiscovery(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalONewPropertyDiscovery2ᚕgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐNewPropertyDiscovery(ctx context.Context, sel ast.SelectionSet, v []model.NewPropertyDiscovery) graphql.Marshaler {
+func (ec *executionContext) marshalONewPropertyDiscovery2ᚕgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐNewPropertyDiscovery(ctx context.Context, sel ast.SelectionSet, v []model.NewPropertyDiscovery) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -18797,7 +18797,7 @@ func (ec *executionContext) marshalONewPropertyDiscovery2ᚕgithubᚗcomᚋbrist
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalONewPropertyDiscovery2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐNewPropertyDiscovery(ctx, sel, v[i])
+			ret[i] = ec.marshalONewPropertyDiscovery2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐNewPropertyDiscovery(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -18811,7 +18811,7 @@ func (ec *executionContext) marshalONewPropertyDiscovery2ᚕgithubᚗcomᚋbrist
 	return ret
 }
 
-func (ec *executionContext) marshalOPrimaryKeyValue2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPrimaryKeyValueᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.PrimaryKeyValue) graphql.Marshaler {
+func (ec *executionContext) marshalOPrimaryKeyValue2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐPrimaryKeyValueᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.PrimaryKeyValue) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -18838,7 +18838,7 @@ func (ec *executionContext) marshalOPrimaryKeyValue2ᚕᚖgithubᚗcomᚋbrist�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNPrimaryKeyValue2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPrimaryKeyValue(ctx, sel, v[i])
+			ret[i] = ec.marshalNPrimaryKeyValue2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐPrimaryKeyValue(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -18858,14 +18858,14 @@ func (ec *executionContext) marshalOPrimaryKeyValue2ᚕᚖgithubᚗcomᚋbrist�
 	return ret
 }
 
-func (ec *executionContext) marshalOPrimaryKeyValue2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPrimaryKeyValue(ctx context.Context, sel ast.SelectionSet, v *model.PrimaryKeyValue) graphql.Marshaler {
+func (ec *executionContext) marshalOPrimaryKeyValue2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐPrimaryKeyValue(ctx context.Context, sel ast.SelectionSet, v *model.PrimaryKeyValue) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._PrimaryKeyValue(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOProperty2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐPropertyᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Property) graphql.Marshaler {
+func (ec *executionContext) marshalOProperty2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐPropertyᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Property) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -18892,7 +18892,7 @@ func (ec *executionContext) marshalOProperty2ᚕᚖgithubᚗcomᚋbristᚑaiᚋm
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNProperty2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐProperty(ctx, sel, v[i])
+			ret[i] = ec.marshalNProperty2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐProperty(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -18912,21 +18912,21 @@ func (ec *executionContext) marshalOProperty2ᚕᚖgithubᚗcomᚋbristᚑaiᚋm
 	return ret
 }
 
-func (ec *executionContext) marshalOProperty2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐProperty(ctx context.Context, sel ast.SelectionSet, v *model.Property) graphql.Marshaler {
+func (ec *executionContext) marshalOProperty2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐProperty(ctx context.Context, sel ast.SelectionSet, v *model.Property) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Property(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOQueryResult2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐQueryResult(ctx context.Context, sel ast.SelectionSet, v *model.QueryResult) graphql.Marshaler {
+func (ec *executionContext) marshalOQueryResult2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐQueryResult(ctx context.Context, sel ast.SelectionSet, v *model.QueryResult) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._QueryResult(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalORequest2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Request) graphql.Marshaler {
+func (ec *executionContext) marshalORequest2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequestᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Request) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -18953,7 +18953,7 @@ func (ec *executionContext) marshalORequest2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmo
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNRequest2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequest(ctx, sel, v[i])
+			ret[i] = ec.marshalNRequest2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequest(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -18973,14 +18973,14 @@ func (ec *executionContext) marshalORequest2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmo
 	return ret
 }
 
-func (ec *executionContext) marshalORequest2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequest(ctx context.Context, sel ast.SelectionSet, v *model.Request) graphql.Marshaler {
+func (ec *executionContext) marshalORequest2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequest(ctx context.Context, sel ast.SelectionSet, v *model.Request) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Request(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalORequestStatus2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.RequestStatus) graphql.Marshaler {
+func (ec *executionContext) marshalORequestStatus2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequestStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.RequestStatus) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -19007,7 +19007,7 @@ func (ec *executionContext) marshalORequestStatus2ᚕᚖgithubᚗcomᚋbristᚑa
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNRequestStatus2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatus(ctx, sel, v[i])
+			ret[i] = ec.marshalNRequestStatus2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequestStatus(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -19027,14 +19027,14 @@ func (ec *executionContext) marshalORequestStatus2ᚕᚖgithubᚗcomᚋbristᚑa
 	return ret
 }
 
-func (ec *executionContext) marshalORequestStatus2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatus(ctx context.Context, sel ast.SelectionSet, v *model.RequestStatus) graphql.Marshaler {
+func (ec *executionContext) marshalORequestStatus2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequestStatus(ctx context.Context, sel ast.SelectionSet, v *model.RequestStatus) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._RequestStatus(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalORequestStatusQuery2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐRequestStatusQuery(ctx context.Context, v interface{}) (*model.RequestStatusQuery, error) {
+func (ec *executionContext) unmarshalORequestStatusQuery2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequestStatusQuery(ctx context.Context, v interface{}) (*model.RequestStatusQuery, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -19042,7 +19042,7 @@ func (ec *executionContext) unmarshalORequestStatusQuery2ᚖgithubᚗcomᚋbrist
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOSiloDefinition2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloDefinitionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SiloDefinition) graphql.Marshaler {
+func (ec *executionContext) marshalOSiloDefinition2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloDefinitionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SiloDefinition) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -19069,7 +19069,7 @@ func (ec *executionContext) marshalOSiloDefinition2ᚕᚖgithubᚗcomᚋbristᚑ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSiloDefinition2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloDefinition(ctx, sel, v[i])
+			ret[i] = ec.marshalNSiloDefinition2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloDefinition(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -19089,21 +19089,21 @@ func (ec *executionContext) marshalOSiloDefinition2ᚕᚖgithubᚗcomᚋbristᚑ
 	return ret
 }
 
-func (ec *executionContext) marshalOSiloDefinition2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloDefinition(ctx context.Context, sel ast.SelectionSet, v *model.SiloDefinition) graphql.Marshaler {
+func (ec *executionContext) marshalOSiloDefinition2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloDefinition(ctx context.Context, sel ast.SelectionSet, v *model.SiloDefinition) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._SiloDefinition(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOSiloScanConfig2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloScanConfig(ctx context.Context, sel ast.SelectionSet, v *model.SiloScanConfig) graphql.Marshaler {
+func (ec *executionContext) marshalOSiloScanConfig2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloScanConfig(ctx context.Context, sel ast.SelectionSet, v *model.SiloScanConfig) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._SiloScanConfig(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOSiloSpecification2ᚕgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloSpecificationᚄ(ctx context.Context, sel ast.SelectionSet, v []model.SiloSpecification) graphql.Marshaler {
+func (ec *executionContext) marshalOSiloSpecification2ᚕgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloSpecificationᚄ(ctx context.Context, sel ast.SelectionSet, v []model.SiloSpecification) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -19130,7 +19130,7 @@ func (ec *executionContext) marshalOSiloSpecification2ᚕgithubᚗcomᚋbristᚑ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSiloSpecification2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloSpecification(ctx, sel, v[i])
+			ret[i] = ec.marshalNSiloSpecification2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloSpecification(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -19150,7 +19150,7 @@ func (ec *executionContext) marshalOSiloSpecification2ᚕgithubᚗcomᚋbristᚑ
 	return ret
 }
 
-func (ec *executionContext) marshalOSiloSpecification2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloSpecificationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SiloSpecification) graphql.Marshaler {
+func (ec *executionContext) marshalOSiloSpecification2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloSpecificationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SiloSpecification) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -19177,7 +19177,7 @@ func (ec *executionContext) marshalOSiloSpecification2ᚕᚖgithubᚗcomᚋbrist
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSiloSpecification2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloSpecification(ctx, sel, v[i])
+			ret[i] = ec.marshalNSiloSpecification2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloSpecification(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -19197,7 +19197,7 @@ func (ec *executionContext) marshalOSiloSpecification2ᚕᚖgithubᚗcomᚋbrist
 	return ret
 }
 
-func (ec *executionContext) marshalOSiloSpecification2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSiloSpecification(ctx context.Context, sel ast.SelectionSet, v *model.SiloSpecification) graphql.Marshaler {
+func (ec *executionContext) marshalOSiloSpecification2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloSpecification(ctx context.Context, sel ast.SelectionSet, v *model.SiloSpecification) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -19268,7 +19268,7 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	return res
 }
 
-func (ec *executionContext) marshalOSubject2ᚕgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSubjectᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Subject) graphql.Marshaler {
+func (ec *executionContext) marshalOSubject2ᚕgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSubjectᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Subject) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -19295,7 +19295,7 @@ func (ec *executionContext) marshalOSubject2ᚕgithubᚗcomᚋbristᚑaiᚋmonoi
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSubject2githubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSubject(ctx, sel, v[i])
+			ret[i] = ec.marshalNSubject2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSubject(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -19315,7 +19315,7 @@ func (ec *executionContext) marshalOSubject2ᚕgithubᚗcomᚋbristᚑaiᚋmonoi
 	return ret
 }
 
-func (ec *executionContext) marshalOSubject2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSubjectᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Subject) graphql.Marshaler {
+func (ec *executionContext) marshalOSubject2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSubjectᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Subject) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -19342,7 +19342,7 @@ func (ec *executionContext) marshalOSubject2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmo
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSubject2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSubject(ctx, sel, v[i])
+			ret[i] = ec.marshalNSubject2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSubject(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -19362,7 +19362,7 @@ func (ec *executionContext) marshalOSubject2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmo
 	return ret
 }
 
-func (ec *executionContext) marshalOSubject2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐSubject(ctx context.Context, sel ast.SelectionSet, v *model.Subject) graphql.Marshaler {
+func (ec *executionContext) marshalOSubject2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSubject(ctx context.Context, sel ast.SelectionSet, v *model.Subject) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -19379,7 +19379,7 @@ func (ec *executionContext) marshalOTime2timeᚐTime(ctx context.Context, sel as
 	return res
 }
 
-func (ec *executionContext) unmarshalOUpdateDataSourceInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUpdateDataSourceInput(ctx context.Context, v interface{}) (*model.UpdateDataSourceInput, error) {
+func (ec *executionContext) unmarshalOUpdateDataSourceInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUpdateDataSourceInput(ctx context.Context, v interface{}) (*model.UpdateDataSourceInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -19387,7 +19387,7 @@ func (ec *executionContext) unmarshalOUpdateDataSourceInput2ᚖgithubᚗcomᚋbr
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOUpdatePropertyInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUpdatePropertyInput(ctx context.Context, v interface{}) (*model.UpdatePropertyInput, error) {
+func (ec *executionContext) unmarshalOUpdatePropertyInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUpdatePropertyInput(ctx context.Context, v interface{}) (*model.UpdatePropertyInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -19395,7 +19395,7 @@ func (ec *executionContext) unmarshalOUpdatePropertyInput2ᚖgithubᚗcomᚋbris
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOUpdateSiloDefinitionInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUpdateSiloDefinitionInput(ctx context.Context, v interface{}) (*model.UpdateSiloDefinitionInput, error) {
+func (ec *executionContext) unmarshalOUpdateSiloDefinitionInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUpdateSiloDefinitionInput(ctx context.Context, v interface{}) (*model.UpdateSiloDefinitionInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -19403,7 +19403,7 @@ func (ec *executionContext) unmarshalOUpdateSiloDefinitionInput2ᚖgithubᚗcom�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOUpdateSiloSpecificationInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUpdateSiloSpecificationInput(ctx context.Context, v interface{}) (*model.UpdateSiloSpecificationInput, error) {
+func (ec *executionContext) unmarshalOUpdateSiloSpecificationInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUpdateSiloSpecificationInput(ctx context.Context, v interface{}) (*model.UpdateSiloSpecificationInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -19411,7 +19411,7 @@ func (ec *executionContext) unmarshalOUpdateSiloSpecificationInput2ᚖgithubᚗc
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOUpdateSubjectInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUpdateSubjectInput(ctx context.Context, v interface{}) (*model.UpdateSubjectInput, error) {
+func (ec *executionContext) unmarshalOUpdateSubjectInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUpdateSubjectInput(ctx context.Context, v interface{}) (*model.UpdateSubjectInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -19419,7 +19419,7 @@ func (ec *executionContext) unmarshalOUpdateSubjectInput2ᚖgithubᚗcomᚋbrist
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOUserDataRequestInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUserDataRequestInput(ctx context.Context, v interface{}) (*model.UserDataRequestInput, error) {
+func (ec *executionContext) unmarshalOUserDataRequestInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUserDataRequestInput(ctx context.Context, v interface{}) (*model.UserDataRequestInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -19427,7 +19427,7 @@ func (ec *executionContext) unmarshalOUserDataRequestInput2ᚖgithubᚗcomᚋbri
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOUserPrimaryKey2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUserPrimaryKeyᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.UserPrimaryKey) graphql.Marshaler {
+func (ec *executionContext) marshalOUserPrimaryKey2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUserPrimaryKeyᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.UserPrimaryKey) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -19454,7 +19454,7 @@ func (ec *executionContext) marshalOUserPrimaryKey2ᚕᚖgithubᚗcomᚋbristᚑ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNUserPrimaryKey2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUserPrimaryKey(ctx, sel, v[i])
+			ret[i] = ec.marshalNUserPrimaryKey2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUserPrimaryKey(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -19474,14 +19474,14 @@ func (ec *executionContext) marshalOUserPrimaryKey2ᚕᚖgithubᚗcomᚋbristᚑ
 	return ret
 }
 
-func (ec *executionContext) marshalOUserPrimaryKey2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUserPrimaryKey(ctx context.Context, sel ast.SelectionSet, v *model.UserPrimaryKey) graphql.Marshaler {
+func (ec *executionContext) marshalOUserPrimaryKey2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUserPrimaryKey(ctx context.Context, sel ast.SelectionSet, v *model.UserPrimaryKey) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._UserPrimaryKey(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOUserPrimaryKeyInput2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUserPrimaryKeyInputᚄ(ctx context.Context, v interface{}) ([]*model.UserPrimaryKeyInput, error) {
+func (ec *executionContext) unmarshalOUserPrimaryKeyInput2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUserPrimaryKeyInputᚄ(ctx context.Context, v interface{}) ([]*model.UserPrimaryKeyInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -19493,7 +19493,7 @@ func (ec *executionContext) unmarshalOUserPrimaryKeyInput2ᚕᚖgithubᚗcomᚋb
 	res := make([]*model.UserPrimaryKeyInput, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNUserPrimaryKeyInput2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐUserPrimaryKeyInput(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNUserPrimaryKeyInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUserPrimaryKeyInput(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -19501,7 +19501,7 @@ func (ec *executionContext) unmarshalOUserPrimaryKeyInput2ᚕᚖgithubᚗcomᚋb
 	return res, nil
 }
 
-func (ec *executionContext) marshalOWorkspace2ᚕᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐWorkspace(ctx context.Context, sel ast.SelectionSet, v []*model.Workspace) graphql.Marshaler {
+func (ec *executionContext) marshalOWorkspace2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐWorkspace(ctx context.Context, sel ast.SelectionSet, v []*model.Workspace) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -19528,7 +19528,7 @@ func (ec *executionContext) marshalOWorkspace2ᚕᚖgithubᚗcomᚋbristᚑaiᚋ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOWorkspace2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐWorkspace(ctx, sel, v[i])
+			ret[i] = ec.marshalOWorkspace2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐWorkspace(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -19542,7 +19542,7 @@ func (ec *executionContext) marshalOWorkspace2ᚕᚖgithubᚗcomᚋbristᚑaiᚋ
 	return ret
 }
 
-func (ec *executionContext) marshalOWorkspace2ᚖgithubᚗcomᚋbristᚑaiᚋmonoidᚋmodelᚐWorkspace(ctx context.Context, sel ast.SelectionSet, v *model.Workspace) graphql.Marshaler {
+func (ec *executionContext) marshalOWorkspace2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐWorkspace(ctx context.Context, sel ast.SelectionSet, v *model.Workspace) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

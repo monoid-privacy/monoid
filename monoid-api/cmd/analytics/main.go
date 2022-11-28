@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/brist-ai/monoid/analytics"
-	"github.com/brist-ai/monoid/analytics/ingestor"
 	"github.com/gorilla/mux"
+	"github.com/monoid-privacy/monoid/analytics"
+	"github.com/monoid-privacy/monoid/analytics/ingestor"
 	"github.com/rs/zerolog/log"
 )
 

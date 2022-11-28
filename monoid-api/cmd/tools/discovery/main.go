@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/brist-ai/monoid/specimport"
 	"github.com/docker/docker/client"
 	"github.com/joho/godotenv"
+	"github.com/monoid-privacy/monoid/specimport"
 	"gopkg.in/yaml.v3"
 )
 

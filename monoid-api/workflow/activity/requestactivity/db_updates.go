@@ -3,7 +3,7 @@ package requestactivity
 import (
 	"context"
 
-	"github.com/brist-ai/monoid/model"
+	"github.com/monoid-privacy/monoid/model"
 )
 
 type UpdateRequestStatusArgs struct {

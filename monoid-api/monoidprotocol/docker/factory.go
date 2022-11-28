@@ -1,6 +1,6 @@
 package docker
 
-import "github.com/brist-ai/monoid/monoidprotocol"
+import "github.com/monoid-privacy/monoid/monoidprotocol"
 
 type DockerProtocolFactory struct{}
 

@@ -3,9 +3,9 @@ package requestworkflow
 import (
 	"time"
 
-	"github.com/brist-ai/monoid/model"
-	"github.com/brist-ai/monoid/monoidprotocol"
-	"github.com/brist-ai/monoid/workflow/activity/requestactivity"
+	"github.com/monoid-privacy/monoid/model"
+	"github.com/monoid-privacy/monoid/monoidprotocol"
+	"github.com/monoid-privacy/monoid/workflow/activity/requestactivity"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )

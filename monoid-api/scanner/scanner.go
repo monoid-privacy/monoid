@@ -1,7 +1,7 @@
 package scanner
 
 import (
-	"github.com/brist-ai/monoid/monoidprotocol"
+	"github.com/monoid-privacy/monoid/monoidprotocol"
 )
 
 type Scanner interface {

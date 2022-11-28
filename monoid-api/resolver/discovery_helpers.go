@@ -3,9 +3,9 @@ package resolver
 import (
 	"encoding/json"
 
-	"github.com/brist-ai/monoid/config"
-	"github.com/brist-ai/monoid/model"
 	"github.com/google/uuid"
+	"github.com/monoid-privacy/monoid/config"
+	"github.com/monoid-privacy/monoid/model"
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 )
