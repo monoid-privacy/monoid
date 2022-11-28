@@ -1,12 +1,12 @@
 - name: Postgres
   id: d454d06e-4a7d-47d2-b8af-b3c877eceed5
   documentationUrl: https://docs.monoid.co
-  dockerImage: monoid/monoid-postgres
+  dockerImage: monoidco/monoid-postgres
   dockerTag: 0.0.1
   logo: postgres.svg
 - name: MySQL
   id: cd4ca115-9761-476b-8404-6507b852fd82
   documentationUrl: https://docs.monoid.co
-  dockerImage: monoid/monoid-mysql
+  dockerImage: monoidco/monoid-mysql
   dockerTag: 0.0.1
   logo: mysql.svg

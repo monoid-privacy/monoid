@@ -1,18 +1,17 @@
 from typing import Any, Mapping, Optional
-import snowflake.connector
+import redshift_connector
 from monoid_pydev.logger import get_logger
 
-logger = get_logger("snowflake")
+logger = get_logger("redshift")
 
 
-def get_connection(conf: Mapping[str, Any], db_name: Optional[str] = None):
+def get_connection(conf: Mapping[str, Any], db_name: Optional[str] = None) -> redshift_connector.Connection:
     if db_name is None:
         db_name = conf["database"]
 
-    return snowflake.connector.connect(
+    return redshift_connector.connect(
         user=conf["username"],
         password=conf["password"],
-        account=conf["account"],
-        warehouse=conf["warehouse"],
+        host=conf["host"],
         database=db_name,
     )

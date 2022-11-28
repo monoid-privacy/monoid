@@ -1,12 +1,12 @@
 import base64
 from unicodedata import name
 from monoid_pydev.silos.db_data_store import DBDataStore
-import psycopg
+import redshift_connector
 from monoid_pydev.models import MonoidRecord, MonoidQueryIdentifier, MonoidSchema, MonoidPersistenceConfig
 from typing import Any, Dict, Iterable, Mapping, Optional
 from pypika import Table, Query, Field
 
-from postgres.helpers import get_connection, logger
+from redshift_lib.helpers import get_connection, logger
 
 
 def type_to_jsonschema(pg_type: str) -> Optional[str]:
@@ -48,14 +48,14 @@ def serializable_val(val: Any) -> Any:
     return val
 
 
-class PostgresTableDataStore(DBDataStore):
+class RedshiftTableDataStore(DBDataStore):
     def __init__(
         self,
         table: str,
         db_name: str,
         schema: str,
         conf: Mapping[str, any],
-        conn: Optional[psycopg.Connection] = None
+        conn: Optional[redshift_connector.Connection] = None
     ):
         self.conf = conf
         self.table = table

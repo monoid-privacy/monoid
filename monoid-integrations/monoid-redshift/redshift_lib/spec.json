@@ -3,6 +3,12 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
     "properties": {
+        "host": {
+            "type": "string",
+            "title": "Host",
+            "description": "The AWS Redshift host address",
+            "order": 1
+          },
       "database": {
         "type": "string",
         "title": "Default Database",
@@ -22,12 +28,6 @@
         "title": "Password",
         "description": "The password for the database",
         "order": 4
-      },
-      "warehouse": {
-        "type": "string",
-        "title": "Password",
-        "description": "The warehouse to use for database operations",
-        "order": 5
       },
       "scan_all": {
         "type": "boolean",
@@ -67,7 +67,6 @@
       "username",
       "password",
       "account",
-      "warehouse",
       "schemas",
       "database"
     ]

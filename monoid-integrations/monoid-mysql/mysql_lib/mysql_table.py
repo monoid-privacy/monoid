@@ -116,7 +116,7 @@ class MySQLTableDataStore(DBDataStore):
             q = Query.from_(tbl).select(
                 *query_cols).where(
                     Field(query_identifier.identifier) ==
-                query_identifier.identifier_query)
+                query_identifier.identifier_query).get_sql(quote_char=None)
 
             cur.execute(str(q))
 
@@ -129,12 +129,13 @@ class MySQLTableDataStore(DBDataStore):
                     }
                 )
 
-    def sample_records(self, schema: MonoidSchema) -> Iterable[MonoidRecord]:
+    def scan_records(self, schema: MonoidSchema) -> Iterable[MonoidRecord]:
         query_cols = [f for f in schema.json_schema["properties"]]
 
         with self.conn.cursor() as cur:
             tbl = Table(self.table)
-            q = Query.from_(tbl).select(*query_cols).limit(5)
+            q = Query.from_(tbl).select(*query_cols).limit(5).get_sql(quote_char=None)
+            print(str(q))
             cur.execute(str(q))
 
             for r in cur:
@@ -153,7 +154,11 @@ class MySQLTableDataStore(DBDataStore):
             tbl = Table(self.table)
             q = Query.from_(tbl).delete().where(
                 Field(query_identifier.identifier) ==
-                query_identifier.identifier_query)
+                query_identifier.identifier_query).get_sql(quote_char=None)
             cur.execute(str(q))
 
         return res
+
+    def teardown(self):
+        if self._conn is not None and self._close_conn:
+            self._conn.close()
