@@ -95,9 +95,12 @@ type QueryResult {
 
 extend type Query {
     userPrimaryKey(id: ID!): UserPrimaryKey
-    request(id: ID!): Request
     requestStatus(id: ID!): RequestStatus
     primaryKeyValue(id: ID!): PrimaryKeyValue
+}
+
+type DownloadLink {
+    url: String!
 }
 
 extend type Mutation {
@@ -109,6 +112,8 @@ extend type Mutation {
     createUserDataRequest(input: UserDataRequestInput): Request
     executeUserDataRequest(requestId: ID!, workspaceId: ID!): Request
     linkPropertyToPrimaryKey(propertyId: ID!, userPrimaryKeyId: ID): Property
+
+    generateRequestDownloadLink(requestId: ID!): DownloadLink!
 }
 
 type RequestsResult {
@@ -118,6 +123,7 @@ type RequestsResult {
 
 extend type Workspace {
     requests(offset: Int, limit: Int!): RequestsResult!
+    request(id: ID!): Request
     userPrimaryKeys: [UserPrimaryKey!]
 }
 

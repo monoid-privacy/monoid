@@ -20,6 +20,8 @@ type RequestStatus struct {
 	DataSource    DataSource `gorm:"constraint:OnDelete:CASCADE;"`
 	Status        RequestStatusType
 	RequestHandle SecretString
+
+	QueryResult *QueryResult
 }
 
 type UserPrimaryKey struct {
@@ -31,6 +33,11 @@ type UserPrimaryKey struct {
 	Properties    []*Property `json:"properties"`
 }
 
+type DownloadableFile struct {
+	ID          string
+	StoragePath string
+}
+
 type Request struct {
 	ID               string
 	PrimaryKeyValues []PrimaryKeyValue
@@ -39,11 +46,29 @@ type Request struct {
 	RequestStatuses  []RequestStatus
 	Type             UserDataRequestType
 
+	DownloadableFileID *string
+	DownloadableFile   *DownloadableFile
+
 	JobID *string
 	Job   *Job
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
+}
+
+func (r *Request) Status() (FullRequestStatus, error) {
+	switch r.Job.Status {
+	case JobStatusCompleted:
+		return FullRequestStatusExecuted, nil
+	case JobStatusFailed:
+		return FullRequestStatusFailed, nil
+	case JobStatusPartialFailed:
+		return FullRequestStatusPartialFailed, nil
+	case JobStatusQueued, JobStatusRunning:
+		return FullRequestStatusInProgress, nil
+	}
+
+	return FullRequestStatusCreated, fmt.Errorf("error finding status")
 }
 
 type PrimaryKeyValue struct {

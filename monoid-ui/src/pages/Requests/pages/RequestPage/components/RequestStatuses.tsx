@@ -29,32 +29,34 @@ const FILTER_OPTIONS_QUERY = gql`
 `;
 
 const GET_REQUEST_DATA = gql`
-query GetRequestData($id: ID!, $limit: Int!, $offset: Int!, $query: RequestStatusQuery!) {
-  request(id: $id) {
-    id
-    type
-    requestStatuses(offset: $offset, limit: $limit, query: $query) {
-      numStatuses
-      requestStatusRows {
-        id
-        status
-        dataSource {
+query GetRequestData($workspaceId: ID!, $id: ID!, $limit: Int!, $offset: Int!, $query: RequestStatusQuery!) {
+  workspace(id: $workspaceId) {
+    request(id: $id) {
+      id
+      type
+      requestStatuses(offset: $offset, limit: $limit, query: $query) {
+        numStatuses
+        requestStatusRows {
           id
-          name
-          group
-          siloDefinition {
+          status
+          dataSource {
             id
             name
-            siloSpecification {
+            group
+            siloDefinition {
               id
               name
-              logo
+              siloSpecification {
+                id
+                name
+                logo
+              }
             }
           }
-        }
-        queryResult {
-          id
-          records
+          queryResult {
+            id
+            records
+          }
         }
       }
     }
@@ -145,7 +147,7 @@ function Filters(props: {
 }
 
 export default function RequestStatuses() {
-  const { requestId } = useParams<{ requestId: string }>();
+  const { id, requestId } = useParams<{ id: string, requestId: string }>();
   const [offset, setOffset] = useState(0);
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -199,10 +201,13 @@ export default function RequestStatuses() {
   const {
     data, loading, error, fetchMore,
   } = useQuery<{
-    request: Request
+    workspace: {
+      request: Request
+    }
   }>(GET_REQUEST_DATA, {
     variables: {
       id: requestId,
+      workspaceId: id,
       limit: 10,
       offset,
       query,
@@ -223,7 +228,7 @@ export default function RequestStatuses() {
     );
   }
 
-  const request = data?.request;
+  const request = data?.workspace.request;
   return (
     <>
       <Filters onChange={setFilters} value={filters} />

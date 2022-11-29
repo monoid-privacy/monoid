@@ -79,6 +79,10 @@ type DataMapResult struct {
 	NumRows     int           `json:"numRows"`
 }
 
+type DownloadLink struct {
+	URL string `json:"url"`
+}
+
 type HandleAllDiscoveriesInput struct {
 	SiloID string          `json:"siloId"`
 	Action DiscoveryAction `json:"action"`

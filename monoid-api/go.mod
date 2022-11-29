@@ -132,7 +132,6 @@ require (
 	go.opentelemetry.io/proto/otlp v0.12.0 // indirect
 	go.temporal.io/api v1.11.1-0.20220907050538-6de5285cf463 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
-	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect
 	golang.org/x/net v0.0.0-20220906165146-f3363e06e74c // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
 	golang.org/x/sync v0.1.0 // indirect
@@ -179,10 +178,12 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/graph-gophers/dataloader v5.0.0+incompatible
 	github.com/lib/pq v1.10.2
+	github.com/minio/sio v0.3.0
 	github.com/pborman/uuid v1.2.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/stretchr/testify v1.8.1
 	github.com/testcontainers/testcontainers-go v0.16.0
+	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
 	gorm.io/datatypes v1.0.7
 	gorm.io/gorm v1.24.1-0.20221019064659-5dd2bb482755
 )

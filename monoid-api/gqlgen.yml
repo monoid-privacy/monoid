@@ -109,6 +109,10 @@ models:
         resolver: true
       requestStatuses:
         resolver: true
+      resultFileUrl:
+        resolver: true
+      status:
+        resolver: true
   PrimaryKeyValue:
     fields:
       userPrimaryKey:

@@ -27,12 +27,22 @@ const EXECUTE_REQUEST = gql`
 `;
 
 const GET_REQUEST_METADATA = gql`
-  query GetRequestMetadata($id: ID!) {
+  query GetRequestMetadata($id: ID!, $workspaceId: ID!) {
+    workspace(id: $workspaceId) {
       request(id: $id) {
         id
         type
         status
       }
+    }
+  }
+`;
+
+const GET_REQUEST_FILE = gql`
+  mutation GetRequestFile($id: ID!) {
+    generateRequestDownloadLink(requestId: $id) {
+      url
+    }
   }
 `;
 
@@ -43,12 +53,25 @@ export default function RequestPage(
 ) {
   const { tab } = props;
   const [executeReq, executeReqRes] = useMutation<{ executeUserDataRequest: Job }>(EXECUTE_REQUEST);
+
   const navigate = useNavigate();
   const toastCtx = useContext(ToastContext);
   const { requestId, id } = useParams<{ requestId: string, id: string }>();
   const { data, loading, error } = useQuery<{
-    request: Request
+    workspace: {
+      request: Request
+    }
   }>(GET_REQUEST_METADATA, {
+    variables: {
+      id: requestId,
+      workspaceId: id,
+    },
+  });
+  const [getReqFile, reqFileRes] = useMutation<{
+    generateRequestDownloadLink: {
+      url: string
+    }
+  }>(GET_REQUEST_FILE, {
     variables: {
       id: requestId,
     },
@@ -68,7 +91,7 @@ export default function RequestPage(
     );
   }
 
-  const request = data?.request;
+  const request = data?.workspace.request;
 
   return (
     <>
@@ -104,57 +127,79 @@ export default function RequestPage(
                 </Button>
               )
             }
+            {
+              (request?.status === 'EXECUTED' || request?.status === 'PARTIAL_FAILED')
+              && (
+                <Button onClick={() => {
+                  getReqFile().then(({ data: d }) => {
+                    window.open(d!.generateRequestDownloadLink.url, '_blank');
+                  }).catch((err: ApolloError) => {
+                    toastCtx.showToast({
+                      variant: 'danger',
+                      title: 'Error',
+                      message: err.message,
+                      icon: XCircleIcon,
+                    });
+                  });
+                }}
+                >
+                  {reqFileRes.loading ? <Spinner color="white" size="sm" /> : 'Download Data'}
+                </Button>
+              )
+            }
           </div>
         )}
       />
       <StepView
-        steps={[
-          {
-            id: '1',
-            name: 'Created',
-            status: 'complete',
-            description: 'The request was created.',
-          },
-          {
-            id: '2',
-            name: 'Processing',
-            status: request?.status === 'CREATED' ? 'upcoming' : (
-              request?.status === 'IN_PROGRESS' ? 'current' : 'complete'
-            ),
-            description: (
-              request?.status === 'CREATED' ? 'The request will start processing once you execute the request.' : (
-                request?.status === 'IN_PROGRESS' ? 'The request is processing.' : 'You executed the request.'
-              )
-            ),
-          },
-          {
-            id: '3',
-            name: (
-              request?.status === 'FAILED' ? 'Failed' : (
-                request?.status === 'PARTIAL_FAILED' ? 'Partially Finished' : 'Finished'
-              )
-            ),
-            // eslint-disable-next-line no-nested-ternary
-            status: request?.status === 'CREATED' || request?.status === 'IN_PROGRESS'
-              ? 'upcoming' : (
-                request?.status === 'EXECUTED' ? 'complete' : (
-                  request?.status === 'PARTIAL_FAILED'
-                    ? 'warn'
-                    : 'failed'
+        steps={
+          [
+            {
+              id: '1',
+              name: 'Created',
+              status: 'complete',
+              description: 'The request was created.',
+            },
+            {
+              id: '2',
+              name: 'Processing',
+              status: request?.status === 'CREATED' ? 'upcoming' : (
+                request?.status === 'IN_PROGRESS' ? 'current' : 'complete'
+              ),
+              description: (
+                request?.status === 'CREATED' ? 'The request will start processing once you execute the request.' : (
+                  request?.status === 'IN_PROGRESS' ? 'The request is processing.' : 'You executed the request.'
                 )
               ),
-            description: (
-              request?.status === 'CREATED' || request?.status === 'IN_PROGRESS'
-                ? 'Once the request is finished processing, you\'ll be able to download the data.' : (
-                  request?.status === 'EXECUTED' ? 'The request completed successfully.' : (
-                    request?.status === 'PARTIAL_FAILED'
-                      ? 'At least one data source failed to collect data.'
-                      : 'The request failed.'
-                  )
+            },
+            {
+              id: '3',
+              name: (
+                request?.status === 'FAILED' ? 'Failed' : (
+                  request?.status === 'PARTIAL_FAILED' ? 'Partially Finished' : 'Finished'
                 )
-            ),
-          },
-        ]}
+              ),
+              // eslint-disable-next-line no-nested-ternary
+              status: request?.status === 'CREATED' || request?.status === 'IN_PROGRESS'
+                ? 'upcoming' : (
+                  request?.status === 'EXECUTED' ? 'complete' : (
+                    request?.status === 'PARTIAL_FAILED'
+                      ? 'warn'
+                      : 'failed'
+                  )
+                ),
+              description: (
+                request?.status === 'CREATED' || request?.status === 'IN_PROGRESS'
+                  ? 'Once the request is finished processing, you\'ll be able to download the data.' : (
+                    request?.status === 'EXECUTED' ? 'The request completed successfully.' : (
+                      request?.status === 'PARTIAL_FAILED'
+                        ? 'At least one data source failed to collect data.'
+                        : 'The request failed.'
+                    )
+                  )
+              ),
+            },
+          ]
+        }
       />
       <Tabs
         tabs={[

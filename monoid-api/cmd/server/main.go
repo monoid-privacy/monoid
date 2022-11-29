@@ -9,6 +9,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gorilla/mux"
 	"github.com/monoid-privacy/monoid/cmd"
+	"github.com/monoid-privacy/monoid/download"
 	"github.com/monoid-privacy/monoid/generated"
 	"github.com/monoid-privacy/monoid/loader"
 	"github.com/monoid-privacy/monoid/resolver"
@@ -52,8 +53,12 @@ func main() {
 		},
 	))
 
-	// http.Handle("/", playground.Handler("GraphQL playground", "/query"))
+	dh := download.DownloadHandler{
+		Conf: &conf,
+	}
+
 	router.Handle("/", playground.Handler("GraphQL playground", "/query"))
+	router.HandleFunc("/downloads/{id}", dh.HandleDownload)
 	router.Handle("/query", srv)
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)

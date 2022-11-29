@@ -17,8 +17,10 @@ type BaseConfig struct {
 	WebURL            string
 	ProtocolFactory   monoidprotocol.MonoidProtocolFactory
 	FileStore         filestore.FileStore
+	TempStorePath     string
 	TemporalClient    client.Client
 	AnalyticsIngestor ingestor.Ingestor
+	EncryptionKey     []byte
 	ResourcePath      string
 }
 

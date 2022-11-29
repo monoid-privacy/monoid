@@ -106,6 +106,10 @@ type ComplexityRoot struct {
 		ID         func(childComplexity int) int
 	}
 
+	DownloadLink struct {
+		URL func(childComplexity int) int
+	}
+
 	Job struct {
 		CreatedAt      func(childComplexity int) int
 		ID             func(childComplexity int) int
@@ -129,35 +133,36 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CancelJob                func(childComplexity int, id string, workspaceID string) int
-		CreateDataSource         func(childComplexity int, input *model.CreateDataSourceInput) int
-		CreateProperty           func(childComplexity int, input *model.CreatePropertyInput) int
-		CreateSiloDefinition     func(childComplexity int, input *model.CreateSiloDefinitionInput) int
-		CreateSiloSpecification  func(childComplexity int, input *model.CreateSiloSpecificationInput) int
-		CreateSubject            func(childComplexity int, input *model.CreateSubjectInput) int
-		CreateUserDataRequest    func(childComplexity int, input *model.UserDataRequestInput) int
-		CreateUserPrimaryKey     func(childComplexity int, input model.CreateUserPrimaryKeyInput) int
-		CreateWorkspace          func(childComplexity int, input model.CreateWorkspaceInput) int
-		DeleteDataSource         func(childComplexity int, id string) int
-		DeleteProperty           func(childComplexity int, id string) int
-		DeleteSiloDefinition     func(childComplexity int, id string) int
-		DeleteSiloSpecification  func(childComplexity int, id string) int
-		DeleteSubject            func(childComplexity int, id string) int
-		DeleteUserPrimaryKey     func(childComplexity int, id string) int
-		DeleteWorkspace          func(childComplexity int, id *string) int
-		DetectSiloSources        func(childComplexity int, workspaceID string, id string) int
-		ExecuteUserDataRequest   func(childComplexity int, requestID string, workspaceID string) int
-		HandleAllOpenDiscoveries func(childComplexity int, input *model.HandleAllDiscoveriesInput) int
-		HandleDiscovery          func(childComplexity int, input *model.HandleDiscoveryInput) int
-		LinkPropertyToPrimaryKey func(childComplexity int, propertyID string, userPrimaryKeyID *string) int
-		UpdateDataSource         func(childComplexity int, input *model.UpdateDataSourceInput) int
-		UpdateProperty           func(childComplexity int, input *model.UpdatePropertyInput) int
-		UpdateSiloDefinition     func(childComplexity int, input *model.UpdateSiloDefinitionInput) int
-		UpdateSiloScanConfig     func(childComplexity int, input model.SiloScanConfigInput) int
-		UpdateSiloSpecification  func(childComplexity int, input *model.UpdateSiloSpecificationInput) int
-		UpdateSubject            func(childComplexity int, input *model.UpdateSubjectInput) int
-		UpdateUserPrimaryKey     func(childComplexity int, input model.UpdateUserPrimaryKeyInput) int
-		UpdateWorkspaceSettings  func(childComplexity int, input model.UpdateWorkspaceSettingsInput) int
+		CancelJob                   func(childComplexity int, id string, workspaceID string) int
+		CreateDataSource            func(childComplexity int, input *model.CreateDataSourceInput) int
+		CreateProperty              func(childComplexity int, input *model.CreatePropertyInput) int
+		CreateSiloDefinition        func(childComplexity int, input *model.CreateSiloDefinitionInput) int
+		CreateSiloSpecification     func(childComplexity int, input *model.CreateSiloSpecificationInput) int
+		CreateSubject               func(childComplexity int, input *model.CreateSubjectInput) int
+		CreateUserDataRequest       func(childComplexity int, input *model.UserDataRequestInput) int
+		CreateUserPrimaryKey        func(childComplexity int, input model.CreateUserPrimaryKeyInput) int
+		CreateWorkspace             func(childComplexity int, input model.CreateWorkspaceInput) int
+		DeleteDataSource            func(childComplexity int, id string) int
+		DeleteProperty              func(childComplexity int, id string) int
+		DeleteSiloDefinition        func(childComplexity int, id string) int
+		DeleteSiloSpecification     func(childComplexity int, id string) int
+		DeleteSubject               func(childComplexity int, id string) int
+		DeleteUserPrimaryKey        func(childComplexity int, id string) int
+		DeleteWorkspace             func(childComplexity int, id *string) int
+		DetectSiloSources           func(childComplexity int, workspaceID string, id string) int
+		ExecuteUserDataRequest      func(childComplexity int, requestID string, workspaceID string) int
+		GenerateRequestDownloadLink func(childComplexity int, requestID string) int
+		HandleAllOpenDiscoveries    func(childComplexity int, input *model.HandleAllDiscoveriesInput) int
+		HandleDiscovery             func(childComplexity int, input *model.HandleDiscoveryInput) int
+		LinkPropertyToPrimaryKey    func(childComplexity int, propertyID string, userPrimaryKeyID *string) int
+		UpdateDataSource            func(childComplexity int, input *model.UpdateDataSourceInput) int
+		UpdateProperty              func(childComplexity int, input *model.UpdatePropertyInput) int
+		UpdateSiloDefinition        func(childComplexity int, input *model.UpdateSiloDefinitionInput) int
+		UpdateSiloScanConfig        func(childComplexity int, input model.SiloScanConfigInput) int
+		UpdateSiloSpecification     func(childComplexity int, input *model.UpdateSiloSpecificationInput) int
+		UpdateSubject               func(childComplexity int, input *model.UpdateSubjectInput) int
+		UpdateUserPrimaryKey        func(childComplexity int, input model.UpdateUserPrimaryKeyInput) int
+		UpdateWorkspaceSettings     func(childComplexity int, input model.UpdateWorkspaceSettingsInput) int
 	}
 
 	NewCategoryDiscovery struct {
@@ -206,7 +211,6 @@ type ComplexityRoot struct {
 		Jobs               func(childComplexity int, resourceID string, jobType string, query *string, status []*model.JobStatus, limit int, offset int) int
 		PrimaryKeyValue    func(childComplexity int, id string) int
 		Property           func(childComplexity int, id string) int
-		Request            func(childComplexity int, id string) int
 		RequestStatus      func(childComplexity int, id string) int
 		SiloSpecification  func(childComplexity int, id string) int
 		SiloSpecifications func(childComplexity int) int
@@ -296,6 +300,7 @@ type ComplexityRoot struct {
 		Job                func(childComplexity int, id string) int
 		Jobs               func(childComplexity int, jobType string, status []*model.JobStatus, query *string, limit int, offset int) int
 		Name               func(childComplexity int) int
+		Request            func(childComplexity int, id string) int
 		Requests           func(childComplexity int, offset *int, limit int) int
 		Settings           func(childComplexity int) int
 		SiloDefinition     func(childComplexity int, id string) int
@@ -350,6 +355,7 @@ type MutationResolver interface {
 	CreateUserDataRequest(ctx context.Context, input *model.UserDataRequestInput) (*model.Request, error)
 	ExecuteUserDataRequest(ctx context.Context, requestID string, workspaceID string) (*model.Request, error)
 	LinkPropertyToPrimaryKey(ctx context.Context, propertyID string, userPrimaryKeyID *string) (*model.Property, error)
+	GenerateRequestDownloadLink(ctx context.Context, requestID string) (*model.DownloadLink, error)
 	CreateSiloDefinition(ctx context.Context, input *model.CreateSiloDefinitionInput) (*model.SiloDefinition, error)
 	UpdateSiloDefinition(ctx context.Context, input *model.UpdateSiloDefinitionInput) (*model.SiloDefinition, error)
 	DeleteSiloDefinition(ctx context.Context, id string) (*string, error)
@@ -386,7 +392,6 @@ type QueryResolver interface {
 	Property(ctx context.Context, id string) (*model.Property, error)
 	Jobs(ctx context.Context, resourceID string, jobType string, query *string, status []*model.JobStatus, limit int, offset int) (*model.JobsResult, error)
 	UserPrimaryKey(ctx context.Context, id string) (*model.UserPrimaryKey, error)
-	Request(ctx context.Context, id string) (*model.Request, error)
 	RequestStatus(ctx context.Context, id string) (*model.RequestStatus, error)
 	PrimaryKeyValue(ctx context.Context, id string) (*model.PrimaryKeyValue, error)
 }
@@ -426,6 +431,7 @@ type WorkspaceResolver interface {
 	Jobs(ctx context.Context, obj *model.Workspace, jobType string, status []*model.JobStatus, query *string, limit int, offset int) (*model.JobsResult, error)
 	Job(ctx context.Context, obj *model.Workspace, id string) (*model.Job, error)
 	Requests(ctx context.Context, obj *model.Workspace, offset *int, limit int) (*model.RequestsResult, error)
+	Request(ctx context.Context, obj *model.Workspace, id string) (*model.Request, error)
 	UserPrimaryKeys(ctx context.Context, obj *model.Workspace) ([]*model.UserPrimaryKey, error)
 	SiloDefinitions(ctx context.Context, obj *model.Workspace) ([]*model.SiloDefinition, error)
 	SiloDefinition(ctx context.Context, obj *model.Workspace, id string) (*model.SiloDefinition, error)
@@ -620,6 +626,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DataSourceMissingDiscovery.ID(childComplexity), true
+
+	case "DownloadLink.url":
+		if e.complexity.DownloadLink.URL == nil {
+			break
+		}
+
+		return e.complexity.DownloadLink.URL(childComplexity), true
 
 	case "Job.createdAt":
 		if e.complexity.Job.CreatedAt == nil {
@@ -927,6 +940,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ExecuteUserDataRequest(childComplexity, args["requestId"].(string), args["workspaceId"].(string)), true
+
+	case "Mutation.generateRequestDownloadLink":
+		if e.complexity.Mutation.GenerateRequestDownloadLink == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_generateRequestDownloadLink_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.GenerateRequestDownloadLink(childComplexity, args["requestId"].(string)), true
 
 	case "Mutation.handleAllOpenDiscoveries":
 		if e.complexity.Mutation.HandleAllOpenDiscoveries == nil {
@@ -1273,18 +1298,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Property(childComplexity, args["id"].(string)), true
-
-	case "Query.request":
-		if e.complexity.Query.Request == nil {
-			break
-		}
-
-		args, err := ec.field_Query_request_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.Request(childComplexity, args["id"].(string)), true
 
 	case "Query.requestStatus":
 		if e.complexity.Query.RequestStatus == nil {
@@ -1732,6 +1745,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Workspace.Name(childComplexity), true
+
+	case "Workspace.request":
+		if e.complexity.Workspace.Request == nil {
+			break
+		}
+
+		args, err := ec.field_Workspace_request_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Workspace.Request(childComplexity, args["id"].(string)), true
 
 	case "Workspace.requests":
 		if e.complexity.Workspace.Requests == nil {
@@ -2334,9 +2359,12 @@ type QueryResult {
 
 extend type Query {
     userPrimaryKey(id: ID!): UserPrimaryKey
-    request(id: ID!): Request
     requestStatus(id: ID!): RequestStatus
     primaryKeyValue(id: ID!): PrimaryKeyValue
+}
+
+type DownloadLink {
+    url: String!
 }
 
 extend type Mutation {
@@ -2348,6 +2376,8 @@ extend type Mutation {
     createUserDataRequest(input: UserDataRequestInput): Request
     executeUserDataRequest(requestId: ID!, workspaceId: ID!): Request
     linkPropertyToPrimaryKey(propertyId: ID!, userPrimaryKeyId: ID): Property
+
+    generateRequestDownloadLink(requestId: ID!): DownloadLink!
 }
 
 type RequestsResult {
@@ -2357,6 +2387,7 @@ type RequestsResult {
 
 extend type Workspace {
     requests(offset: Int, limit: Int!): RequestsResult!
+    request(id: ID!): Request
     userPrimaryKeys: [UserPrimaryKey!]
 }
 
@@ -2730,6 +2761,21 @@ func (ec *executionContext) field_Mutation_executeUserDataRequest_args(ctx conte
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_generateRequestDownloadLink_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["requestId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requestId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["requestId"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_handleAllOpenDiscoveries_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -3054,21 +3100,6 @@ func (ec *executionContext) field_Query_requestStatus_args(ctx context.Context, 
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_request_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	return args, nil
-}
-
 func (ec *executionContext) field_Query_siloSpecification_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -3342,6 +3373,21 @@ func (ec *executionContext) field_Workspace_jobs_args(ctx context.Context, rawAr
 		}
 	}
 	args["offset"] = arg4
+	return args, nil
+}
+
+func (ec *executionContext) field_Workspace_request_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -4653,6 +4699,50 @@ func (ec *executionContext) fieldContext_DataSourceMissingDiscovery_dataSource(c
 	return fc, nil
 }
 
+func (ec *executionContext) _DownloadLink_url(ctx context.Context, field graphql.CollectedField, obj *model.DownloadLink) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DownloadLink_url(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.URL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DownloadLink_url(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DownloadLink",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Job_id(ctx context.Context, field graphql.CollectedField, obj *model.Job) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Job_id(ctx, field)
 	if err != nil {
@@ -5312,6 +5402,8 @@ func (ec *executionContext) fieldContext_Mutation_createWorkspace(ctx context.Co
 				return ec.fieldContext_Workspace_job(ctx, field)
 			case "requests":
 				return ec.fieldContext_Workspace_requests(ctx, field)
+			case "request":
+				return ec.fieldContext_Workspace_request(ctx, field)
 			case "userPrimaryKeys":
 				return ec.fieldContext_Workspace_userPrimaryKeys(ctx, field)
 			case "siloDefinitions":
@@ -5394,6 +5486,8 @@ func (ec *executionContext) fieldContext_Mutation_updateWorkspaceSettings(ctx co
 				return ec.fieldContext_Workspace_job(ctx, field)
 			case "requests":
 				return ec.fieldContext_Workspace_requests(ctx, field)
+			case "request":
+				return ec.fieldContext_Workspace_request(ctx, field)
 			case "userPrimaryKeys":
 				return ec.fieldContext_Workspace_userPrimaryKeys(ctx, field)
 			case "siloDefinitions":
@@ -6845,6 +6939,65 @@ func (ec *executionContext) fieldContext_Mutation_linkPropertyToPrimaryKey(ctx c
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_generateRequestDownloadLink(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_generateRequestDownloadLink(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().GenerateRequestDownloadLink(rctx, fc.Args["requestId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.DownloadLink)
+	fc.Result = res
+	return ec.marshalNDownloadLink2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDownloadLink(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_generateRequestDownloadLink(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "url":
+				return ec.fieldContext_DownloadLink_url(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DownloadLink", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_generateRequestDownloadLink_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_createSiloDefinition(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_createSiloDefinition(ctx, field)
 	if err != nil {
@@ -8235,6 +8388,8 @@ func (ec *executionContext) fieldContext_Query_workspaces(ctx context.Context, f
 				return ec.fieldContext_Workspace_job(ctx, field)
 			case "requests":
 				return ec.fieldContext_Workspace_requests(ctx, field)
+			case "request":
+				return ec.fieldContext_Workspace_request(ctx, field)
 			case "userPrimaryKeys":
 				return ec.fieldContext_Workspace_userPrimaryKeys(ctx, field)
 			case "siloDefinitions":
@@ -8306,6 +8461,8 @@ func (ec *executionContext) fieldContext_Query_workspace(ctx context.Context, fi
 				return ec.fieldContext_Workspace_job(ctx, field)
 			case "requests":
 				return ec.fieldContext_Workspace_requests(ctx, field)
+			case "request":
+				return ec.fieldContext_Workspace_request(ctx, field)
 			case "userPrimaryKeys":
 				return ec.fieldContext_Workspace_userPrimaryKeys(ctx, field)
 			case "siloDefinitions":
@@ -8865,72 +9022,6 @@ func (ec *executionContext) fieldContext_Query_userPrimaryKey(ctx context.Contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_userPrimaryKey_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_request(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_request(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Request(rctx, fc.Args["id"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.Request)
-	fc.Result = res
-	return ec.marshalORequest2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequest(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_request(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Request_id(ctx, field)
-			case "primaryKeyValues":
-				return ec.fieldContext_Request_primaryKeyValues(ctx, field)
-			case "requestStatuses":
-				return ec.fieldContext_Request_requestStatuses(ctx, field)
-			case "type":
-				return ec.fieldContext_Request_type(ctx, field)
-			case "status":
-				return ec.fieldContext_Request_status(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Request_createdAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Request", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_request_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -11709,6 +11800,72 @@ func (ec *executionContext) fieldContext_Workspace_requests(ctx context.Context,
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Workspace_requests_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Workspace_request(ctx context.Context, field graphql.CollectedField, obj *model.Workspace) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Workspace_request(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Workspace().Request(rctx, obj, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Request)
+	fc.Result = res
+	return ec.marshalORequest2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐRequest(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Workspace_request(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Workspace",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Request_id(ctx, field)
+			case "primaryKeyValues":
+				return ec.fieldContext_Request_primaryKeyValues(ctx, field)
+			case "requestStatuses":
+				return ec.fieldContext_Request_requestStatuses(ctx, field)
+			case "type":
+				return ec.fieldContext_Request_type(ctx, field)
+			case "status":
+				return ec.fieldContext_Request_status(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Request_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Request", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Workspace_request_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -15141,6 +15298,34 @@ func (ec *executionContext) _DataSourceMissingDiscovery(ctx context.Context, sel
 	return out
 }
 
+var downloadLinkImplementors = []string{"DownloadLink"}
+
+func (ec *executionContext) _DownloadLink(ctx context.Context, sel ast.SelectionSet, obj *model.DownloadLink) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, downloadLinkImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DownloadLink")
+		case "url":
+
+			out.Values[i] = ec._DownloadLink_url(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var jobImplementors = []string{"Job"}
 
 func (ec *executionContext) _Job(ctx context.Context, sel ast.SelectionSet, obj *model.Job) graphql.Marshaler {
@@ -15484,6 +15669,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_linkPropertyToPrimaryKey(ctx, field)
 			})
 
+		case "generateRequestDownloadLink":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_generateRequestDownloadLink(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "createSiloDefinition":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -16118,26 +16312,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_userPrimaryKey(ctx, field)
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return rrm(innerCtx)
-			})
-		case "request":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_request(ctx, field)
 				return res
 			}
 
@@ -17008,6 +17182,23 @@ func (ec *executionContext) _Workspace(ctx context.Context, sel ast.SelectionSet
 				return innerFunc(ctx)
 
 			})
+		case "request":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Workspace_request(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "userPrimaryKeys":
 			field := field
 
@@ -17517,6 +17708,20 @@ func (ec *executionContext) unmarshalNDiscoveryType2githubᚗcomᚋmonoidᚑpriv
 
 func (ec *executionContext) marshalNDiscoveryType2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDiscoveryType(ctx context.Context, sel ast.SelectionSet, v model.DiscoveryType) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) marshalNDownloadLink2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDownloadLink(ctx context.Context, sel ast.SelectionSet, v model.DownloadLink) graphql.Marshaler {
+	return ec._DownloadLink(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNDownloadLink2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐDownloadLink(ctx context.Context, sel ast.SelectionSet, v *model.DownloadLink) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DownloadLink(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNFullRequestStatus2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐFullRequestStatus(ctx context.Context, v interface{}) (model.FullRequestStatus, error) {

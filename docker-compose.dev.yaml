@@ -84,9 +84,11 @@ services:
     container_name: monoid-dev-api
     volumes:
       - ./monoid-api:/app
-      - filestore:${FILESTORE_PATH}
+      - ${LOCAL_FILESTORE_PATH}:${FILESTORE_PATH}
+      - ${LOCAL_TEMPSTORE_PATH}:/tmp/monoid
       - ./monoid-config/resources:${RESOURCE_PATH}
     environment:
+      - API_URL=${API_URL}
       - WEB_URL=${WEB_URL}
       - DB_USER=${DATABASE_USER}
       - DB_PASS=${DATABASE_PASSWORD}
@@ -96,6 +98,7 @@ services:
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - RESOURCE_PATH=${RESOURCE_PATH}
       - SEGMENT_KEY=${SEGMENT_KEY}
+      - FILESTORE_PATH=${FILESTORE_PATH}
       - TEMPORAL=monoid-dev-temporal:7233
     depends_on:
       db:
@@ -137,6 +140,7 @@ services:
     container_name: monoid-dev-worker
     working_dir: /app
     environment:
+      - API_URL=${API_URL}
       - WEB_URL=${WEB_URL}
       - DB_USER=${DATABASE_USER}
       - DB_PASS=${DATABASE_PASSWORD}
@@ -159,8 +163,8 @@ services:
       - monoid-network
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - filestore:${FILESTORE_PATH}
-      - /tmp/monoid:/tmp/monoid
+      - ${LOCAL_FILESTORE_PATH}:${FILESTORE_PATH}
+      - ${LOCAL_TEMPSTORE_PATH}:/tmp/monoid
       - ./monoid-api:/app
 networks:
   monoid-network:
@@ -169,5 +173,3 @@ networks:
 volumes:
   db:
     name: monoid-dev-db
-  filestore:
-    name: monoid-dev-filestore

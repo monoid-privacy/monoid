@@ -1,3 +1,4 @@
 secrets/
 .DS_Store
 tmp/
+monoid-filestore/

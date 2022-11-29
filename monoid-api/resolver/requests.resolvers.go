@@ -11,6 +11,7 @@ import (
 	"github.com/monoid-privacy/monoid/generated"
 	"github.com/monoid-privacy/monoid/loader"
 	"github.com/monoid-privacy/monoid/model"
+	"github.com/monoid-privacy/monoid/requests"
 	"github.com/monoid-privacy/monoid/workflow"
 	"github.com/monoid-privacy/monoid/workflow/requestworkflow"
 	"github.com/rs/zerolog/log"
@@ -214,6 +215,63 @@ func (r *mutationResolver) LinkPropertyToPrimaryKey(ctx context.Context, propert
 	return &property, nil
 }
 
+// GenerateRequestDownloadLink is the resolver for the generateRequestDownloadLink field.
+func (r *mutationResolver) GenerateRequestDownloadLink(ctx context.Context, requestID string) (*model.DownloadLink, error) {
+	request := model.Request{}
+
+	if err := r.Conf.DB.Where("id = ?", requestID).Preload("Job").First(&request).Error; err != nil {
+		return nil, handleError(err, "Could not find the request")
+	}
+
+	status, err := request.Status()
+	if err != nil {
+		return nil, err
+	}
+
+	if status == model.FullRequestStatusInProgress ||
+		status == model.FullRequestStatusCreated ||
+		status == model.FullRequestStatusFailed {
+		return nil, handleError(
+			fmt.Errorf("request must be completed to get file results"),
+			"The request must be completed in order to get file URLs.",
+		)
+	}
+
+	if request.DownloadableFileID != nil {
+		return &model.DownloadLink{
+			URL: r.Conf.ApiURL + "/downloads/" + *request.DownloadableFileID,
+		}, nil
+	}
+
+	res, err := requests.GenerateRequestTar(ctx, r.Conf, request.ID)
+	if err != nil {
+		return nil, handleError(err, "Error generating file.")
+	}
+
+	dlfile := model.DownloadableFile{
+		ID:          uuid.NewString(),
+		StoragePath: res,
+	}
+
+	if err := r.Conf.DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(&dlfile).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Model(&request).Update("downloadable_file_id", dlfile.ID).Error; err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
+		return nil, handleError(err, "Error creating file")
+	}
+
+	return &model.DownloadLink{
+		URL: r.Conf.ApiURL + "/downloads/" + *request.DownloadableFileID,
+	}, nil
+}
+
 // UserPrimaryKey is the resolver for the userPrimaryKey field.
 func (r *primaryKeyValueResolver) UserPrimaryKey(ctx context.Context, obj *model.PrimaryKeyValue) (*model.UserPrimaryKey, error) {
 	return findObjectByID[model.UserPrimaryKey](obj.UserPrimaryKeyID, r.Conf.DB, "Error finding user primary key.")
@@ -236,11 +294,6 @@ func (r *propertyResolver) UserPrimaryKey(ctx context.Context, obj *model.Proper
 // UserPrimaryKey is the resolver for the userPrimaryKey field.
 func (r *queryResolver) UserPrimaryKey(ctx context.Context, id string) (*model.UserPrimaryKey, error) {
 	return findObjectByID[model.UserPrimaryKey](id, r.Conf.DB, "Error finding user primary key.")
-}
-
-// Request is the resolver for the request field.
-func (r *queryResolver) Request(ctx context.Context, id string) (*model.Request, error) {
-	return findObjectByID[model.Request](id, r.Conf.DB, "Error finding request.")
 }
 
 // RequestStatus is the resolver for the requestStatus field.
@@ -338,20 +391,15 @@ func (r *requestResolver) Status(ctx context.Context, obj *model.Request) (model
 		return model.FullRequestStatusCreated, handleError(err, "Error computing status.")
 	}
 
-	switch job.Status {
-	case model.JobStatusCompleted:
-		return model.FullRequestStatusExecuted, nil
-	case model.JobStatusFailed:
-		return model.FullRequestStatusFailed, nil
-	case model.JobStatusPartialFailed:
-		return model.FullRequestStatusPartialFailed, nil
-	case model.JobStatusQueued, model.JobStatusRunning:
-		return model.FullRequestStatusInProgress, nil
+	o := *obj
+	o.Job = job
+
+	status, err := o.Status()
+	if err != nil {
+		return model.FullRequestStatusCreated, handleError(err, "Error finding status")
 	}
 
-	return model.FullRequestStatusCreated, handleError(
-		fmt.Errorf("error finding status"), "Error finding status",
-	)
+	return status, nil
 }
 
 // Request is the resolver for the request field.
@@ -399,6 +447,20 @@ func (r *workspaceResolver) Requests(ctx context.Context, obj *model.Workspace, 
 		Requests:    requests,
 		NumRequests: int(numRequests),
 	}, nil
+}
+
+// Request is the resolver for the request field.
+func (r *workspaceResolver) Request(ctx context.Context, obj *model.Workspace, id string) (*model.Request, error) {
+	request := model.Request{}
+
+	if err := r.Conf.DB.Where(
+		"id = ?",
+		id,
+	).Where("workspace_id = ?", obj.ID).First(&request).Error; err != nil {
+		return nil, err
+	}
+
+	return &request, nil
 }
 
 // UserPrimaryKeys is the resolver for the userPrimaryKeys field.

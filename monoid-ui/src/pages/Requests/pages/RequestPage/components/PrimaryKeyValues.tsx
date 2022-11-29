@@ -7,17 +7,19 @@ import AlertRegion from '../../../../../components/AlertRegion';
 import { Request } from '../../../../../lib/models';
 
 const GET_REQUEST_DATA = gql`
-query GetRequestData($id: ID!) {
-  request(id: $id) {
-    id
-    type
-    primaryKeyValues {
+query GetRequestData($id: ID!, $workspaceId: ID!) {
+  workspace(id: $workspaceId) {
+    request(id: $id) {
       id
-      value
-      userPrimaryKey {
+      type
+      primaryKeyValues {
         id
-        name
-        apiIdentifier
+        value
+        userPrimaryKey {
+          id
+          name
+          apiIdentifier
+        }
       }
     }
   }
@@ -25,12 +27,15 @@ query GetRequestData($id: ID!) {
 `;
 
 export default function PrimaryKeyValues() {
-  const { requestId } = useParams<{ requestId: string }>();
+  const { requestId, id } = useParams<{ requestId: string, id: string }>();
   const { data, loading, error } = useQuery<{
-    request: Request
+    workspace: {
+      request: Request
+    }
   }>(GET_REQUEST_DATA, {
     variables: {
       id: requestId,
+      workspaceId: id,
     },
   });
 
@@ -48,7 +53,7 @@ export default function PrimaryKeyValues() {
     );
   }
 
-  const request = data?.request;
+  const request = data?.workspace.request;
   return (
     <Table
       tableCols={[
