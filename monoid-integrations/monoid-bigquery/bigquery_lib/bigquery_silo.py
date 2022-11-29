@@ -15,8 +15,8 @@ class BigQuerySilo(AbstractSilo):
     def _get_databases(self, conf: Mapping[str, Any]) -> List[str]:
         logger.info("Getting databases")
         client = get_connection(conf)
-        datasets = list(client.list_datasets())
-        res = [dataset.full_dataset_id for dataset in datasets]
+        datasets = filter(lambda ds: ds.dataset_id not in conf.get("exclude_dbs", []), list(client.list_datasets()))
+        res =  [dataset.full_dataset_id for dataset in datasets]
         return res
 
     def _get_database_table_stores(self, db_name: str, conf: Mapping[str, Any]) -> List[BigQueryTableDataStore]:
@@ -27,8 +27,11 @@ class BigQuerySilo(AbstractSilo):
         project, dataset_id = db_name.split(":")
 
         client = get_connection(conf)
+        print("got client")
         dataset = client.get_dataset(dataset_id)
+        print("got dataset")
         tables = list(client.list_tables(dataset))
+        print("got tables")
 
         for table in tables:
             data_stores.append(BigQueryTableDataStore(

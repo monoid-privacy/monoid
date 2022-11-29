@@ -10,3 +10,9 @@
   dockerImage: monoidco/monoid-mysql
   dockerTag: 0.0.1
   logo: mysql.svg
+- name: BigQuery
+  id: df51dc01-28ba-4785-bc94-a665afcf698b
+  documentationUrl: https://docs.monoid.co
+  dockerImage: monoidco/monoid-bigquery
+  dockerTag: 0.0.1
+  logo: bigquery.svg

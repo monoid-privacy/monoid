@@ -123,20 +123,29 @@ class BigQueryTableDataStore(DBDataStore):
 
         client = self._get_connection()
 
+        print(f"""
+            SELECT column_name, data_type FROM {self.db_name}.INFORMATION_SCHEMA.COLUMNS
+            WHERE table_name = '{self.table}'
+            """)
         res = client.query(
             f"""
             SELECT column_name, data_type FROM {self.db_name}.INFORMATION_SCHEMA.COLUMNS
-            WHERE table_name = '{self.table}''
+            WHERE table_name = '{self.table}'
             """
-        )
-
-        for column, _ in res:
-            js_type = type_to_jsonschema(column[1])
+        ).result()
+        print(f"for {self.table}")
+        print("res is ")
+        print(res)
+        for column, data_type in res:
+            js_type = type_to_jsonschema(data_type)
+            print(js_type)
             if js_type is not None:
-                schema["properties"][column[0]] = {
+                schema["properties"][column] = {
                     "type": js_type
                 }
-
+        print(f"for {self.table}")
+        print("the schema is ")
+        print(schema)
         return schema
 
     def query_records(
@@ -154,15 +163,19 @@ class BigQueryTableDataStore(DBDataStore):
         q = Query.from_(tbl).select(
             *query_cols).where(
                 Field(query_identifier.identifier) ==
-            query_identifier.identifier_query)
+            query_identifier.identifier_query).get_sql(quote_char=None)
+        
+        logger.info(str(q))
 
-        records = list(client.query(str(q)).results())[:-1]
-
+        records = client.query(str(q)).result()
+        logger.info("GOT RECORDS. ENTERING")
         for r in records:
-            vals, schema = r
+            logger.info("I AM WITHIN RECORDS.")
+            vals, schema = r.values(), r.keys()
             data = {} 
-            for key in schema: 
-                data[key] = vals[schema[key]]
+            for i, key in enumerate(schema): 
+                data[key] = vals[i]
+            logger.info(data)
             yield MonoidRecord(
                 schema_name=self.name(),
                 schema_group=self.group(),
@@ -176,19 +189,27 @@ class BigQueryTableDataStore(DBDataStore):
     ) -> Iterable[MonoidRecord]:
         client = self._get_connection()
         query_cols = [f for f in schema.json_schema["properties"]]
-
+        print("for table")
+        print(self.table)
+        print("query cols is")
+        print(query_cols)
+        print(len(query_cols))
+        if len(query_cols) == 0: 
+            return
         logger.info(
             f"Sampling records from table {self.group()}.{self.name()}")
 
         tbl = Table(f"{self.db_name}.{self.table}")
-        q = Query.from_(tbl).select(*query_cols).limit(5)
-        records = list(client.query(str(q)).results())[:-1]
+        q = Query.from_(tbl).select(*query_cols).limit(5).get_sql(quote_char=None)
+        print('QUERY IS')
+        print(str(q))
+        records = list(client.query(str(q)).result())[:-1]
 
         for r in records:
-            vals, schema = r
+            vals, schema = r.values(), r.keys()
             data = {} 
-            for key in schema: 
-                data[key] = vals[schema[key]]
+            for i, key in enumerate(schema): 
+                data[key] = vals[i]
             yield MonoidRecord(
                 schema_name=self.name(),
                 schema_group=self.group(),
@@ -210,7 +231,7 @@ class BigQueryTableDataStore(DBDataStore):
         tbl = Table(f"{self.db_name}.{self.table}")
         q = Query.from_(tbl).delete().where(
             Field(query_identifier.identifier) ==
-            query_identifier.identifier_query)
+            query_identifier.identifier_query).get_sql(quote_char=None)
 
         # TODO: parse/error handle this (need paid tier)
         client.query(q)

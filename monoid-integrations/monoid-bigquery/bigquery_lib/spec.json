@@ -8,14 +8,14 @@
         "secret": true,
         "title": "Service Account JSON",
         "description": "The authentication key JSON for the created service account.",
-        "order": 4
+        "order": 0
       },
       "scan_all": {
         "type": "boolean",
         "title": "Scan All DBs",
         "description": "If true, Monoid will scan all databases.",
         "default": true,
-        "order": 5
+        "order": 2
       },
       "exclude_dbs": {
         "title": "Exclude DBs",
@@ -27,7 +27,7 @@
         "minItems": 0,
         "uniqueItems": true,
         "default": [],
-        "order": 8
+        "order": 1
       }
     },
     "required": [

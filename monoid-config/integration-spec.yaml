@@ -152,3 +152,36 @@
         - ssl
         - database
     type: object
+- id: df51dc01-28ba-4785-bc94-a665afcf698b
+  name: BigQuery
+  documentationUrl: https://docs.monoid.co
+  dockerImage: monoidco/monoid-bigquery
+  dockerTag: 0.0.1
+  logo: bigquery.svg
+  spec:
+    $schema: http://json-schema.org/draft-07/schema#
+    properties:
+        exclude_dbs:
+            default: []
+            description: A list of databases to exclude for silo discovery.
+            items:
+                type: string
+            minItems: 0
+            order: 8
+            title: Exclude DBs
+            type: array
+            uniqueItems: true
+        scan_all:
+            default: true
+            description: If true, Monoid will scan all databases.
+            order: 5
+            title: Scan All DBs
+            type: boolean
+        service_account_json:
+            description: The authentication key JSON for the created service account.
+            order: 4
+            title: Service Account JSON
+            type: string
+    required:
+        - service_account_json
+    type: object
