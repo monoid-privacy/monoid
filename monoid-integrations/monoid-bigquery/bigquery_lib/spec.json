@@ -1,0 +1,37 @@
+{
+  "spec": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+      "service_account_json": {
+        "type": "string",
+        "secret": true,
+        "title": "Service Account JSON",
+        "description": "The authentication key JSON for the created service account.",
+        "order": 4
+      },
+      "scan_all": {
+        "type": "boolean",
+        "title": "Scan All DBs",
+        "description": "If true, Monoid will scan all databases.",
+        "default": true,
+        "order": 5
+      },
+      "exclude_dbs": {
+        "title": "Exclude DBs",
+        "description": "A list of databases to exclude for silo discovery.",
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "minItems": 0,
+        "uniqueItems": true,
+        "default": [],
+        "order": 8
+      }
+    },
+    "required": [
+      "service_account_json"
+    ]
+  }
+}
