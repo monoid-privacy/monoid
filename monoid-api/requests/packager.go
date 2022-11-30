@@ -55,7 +55,6 @@ func generateSiloFile(
 ) error {
 	baseName := silo.Name
 	fileAdded := false
-	log.Info().Msgf("Silo %s", baseName)
 
 	for _, stat := range statuses {
 		if stat.QueryResult == nil || stat.QueryResult.Records == nil {
@@ -68,7 +67,6 @@ func generateSiloFile(
 		fileAdded = true
 		switch stat.QueryResult.ResultType {
 		case model.ResultTypeFile:
-			log.Info().Msg("Result type file")
 			data := model.QueryResultFileData{}
 			if err := json.Unmarshal([]byte(records), &data); err != nil {
 				log.Err(err).Msg("Error decoding data")

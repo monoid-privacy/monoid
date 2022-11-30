@@ -180,7 +180,6 @@ require (
 	github.com/lib/pq v1.10.2
 	github.com/minio/sio v0.3.0
 	github.com/pborman/uuid v1.2.1
-	github.com/robfig/cron/v3 v3.0.1
 	github.com/stretchr/testify v1.8.1
 	github.com/testcontainers/testcontainers-go v0.16.0
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa

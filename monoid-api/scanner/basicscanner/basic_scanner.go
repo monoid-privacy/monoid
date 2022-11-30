@@ -62,16 +62,17 @@ func (r *BasicScanner) ScanNames() {
 	}
 }
 
-func getValuePathsHelper(schema *jsonschema.Schema, path []string, valuePaths []scanner.ValuePath) {
+func getValuePathsHelper(schema *jsonschema.Schema, path []string, valuePaths *[]scanner.ValuePath) {
 	if schema == nil {
 		return
 	}
+
 	for propertyName, propertyValue := range schema.Properties {
 		path = append(path, propertyName)
 		if stringInSlice(propertyValue.Type, []string{"string", "number", "integer"}) {
 			copiedPath := make([]string, len(path))
 			copy(copiedPath, path)
-			valuePaths = append(valuePaths, scanner.ValuePath{
+			*valuePaths = append(*valuePaths, scanner.ValuePath{
 				Path: copiedPath,
 				Type: propertyValue.Type,
 			})
@@ -86,7 +87,7 @@ func getValuePathsHelper(schema *jsonschema.Schema, path []string, valuePaths []
 
 func getValuePaths(schema jsonschema.Schema) []scanner.ValuePath {
 	valuePaths := []scanner.ValuePath{}
-	getValuePathsHelper(&schema, []string{}, valuePaths)
+	getValuePathsHelper(&schema, []string{}, &valuePaths)
 	return valuePaths
 }
 
@@ -121,6 +122,7 @@ func (r *BasicScanner) Scan(record *monoidprotocol.MonoidRecord) error {
 	if record.SchemaGroup != nil {
 		group = *record.SchemaGroup
 	}
+
 	if record.SchemaName != r.SchemaName || group != r.SchemaGroup {
 		return errors.New("record not compatible with scanner's schema")
 	}
@@ -137,7 +139,6 @@ func (r *BasicScanner) Scan(record *monoidprotocol.MonoidRecord) error {
 
 		r.MatchFinder.ScanString(value, valuePath.Path)
 	}
-	// TODO: parse numbers as well
 
 	return nil
 }

@@ -303,6 +303,8 @@ func scanProtocol(
 	schemas []monoidprotocol.MonoidSchema,
 ) (map[DataSourceMatcher]map[string][]scanner.RuleMatch, error) {
 	logger := activity.GetLogger(ctx)
+
+	// Create PII scanners for each schema
 	matchers := map[DataSourceMatcher]scanner.Scanner{}
 	for _, s := range schemas {
 		sc, err := basicscanner.NewBasicScanner(s)
@@ -324,6 +326,7 @@ func scanProtocol(
 		return nil, err
 	}
 
+	// Get the schema and scan every output record
 	for record := range recordChan {
 		matcher := matchers[NewDataSourceMatcher(
 			record.SchemaName,
@@ -335,13 +338,16 @@ func scanProtocol(
 		}
 	}
 
+	// Get all the rule matches from each schema
 	res := map[DataSourceMatcher]map[string][]scanner.RuleMatch{}
 	for k, v := range matchers {
 		if _, ok := res[k]; !ok {
 			res[k] = map[string][]scanner.RuleMatch{}
 		}
 
-		for _, match := range v.Summary() {
+		matches := v.Summary()
+
+		for _, match := range matches {
 			if _, ok := res[k][match.Identifier]; !ok {
 				res[k][match.Identifier] = []scanner.RuleMatch{}
 			}
@@ -376,8 +382,9 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) (in
 			select {
 			case <-ticker.C:
 				activity.RecordHeartbeat(ctx)
+
+			// End the heartbeats if the context is cancelled.
 			case <-ctx.Done():
-				logger.Info("Activity done")
 				break L
 			}
 		}
