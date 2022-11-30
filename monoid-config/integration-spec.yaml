@@ -250,3 +250,74 @@
         - host
         - database
     type: object
+- id: 35b27655-f7c2-4409-a8a8-2246482af7c0
+  name: Snowflake
+  documentationUrl: https://docs.monoid.co
+  dockerImage: monoidco/monoid-snowflake
+  dockerTag: 0.0.1
+  logo: snowflake.svg
+  spec:
+    $schema: http://json-schema.org/draft-07/schema#
+    properties:
+        account:
+            description: The Snowflake account string
+            order: 1
+            title: Account
+            type: string
+        database:
+            default: SNOWFLAKE
+            description: The default database to connect to. Monoid can scan for all databases on your instance, but this is the one the system will connect to initially.
+            order: 2
+            title: Default Database
+            type: string
+        exclude_dbs:
+            default: []
+            description: A list of databases to exclude for silo discovery.
+            items:
+                type: string
+            minItems: 0
+            order: 8
+            title: Exclude DBs
+            type: array
+            uniqueItems: true
+        password:
+            description: The password for the database
+            order: 4
+            secret: true
+            title: Password
+            type: string
+        scan_all:
+            default: true
+            description: If true, Monoid will scan all databases.
+            order: 6
+            title: Scan All DBs
+            type: boolean
+        schemas:
+            default:
+                - public
+            description: A list of schemas to sync with, default public.
+            items:
+                type: string
+            minItems: 0
+            order: 7
+            title: Schemas
+            type: array
+            uniqueItems: true
+        username:
+            description: The username for the databse.
+            order: 3
+            title: Username
+            type: string
+        warehouse:
+            description: The warehouse to use for database operations
+            order: 5
+            title: Warehouse
+            type: string
+    required:
+        - username
+        - password
+        - account
+        - warehouse
+        - schemas
+        - database
+    type: object

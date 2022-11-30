@@ -22,3 +22,9 @@
   dockerImage: monoidco/monoid-redshift
   dockerTag: 0.0.1
   logo: redshift.svg
+- name: Snowflake
+  id: 35b27655-f7c2-4409-a8a8-2246482af7c0
+  documentationUrl: https://docs.monoid.co
+  dockerImage: monoidco/monoid-snowflake
+  dockerTag: 0.0.1
+  logo: snowflake.svg
