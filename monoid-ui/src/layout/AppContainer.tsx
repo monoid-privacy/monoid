@@ -125,7 +125,7 @@ export default function AppContainer(props: {
         icon: faComponent(faSlack),
         onClick: () => {
           window.open(
-            'https://github.com/monoid-privacy/monoid/issues',
+            'https://join.slack.com/t/monoidworkspace/shared_invite/zt-1jvlndiw6-l9~KhMXhG35OOgRqFGXnGg',
             '_blank',
           );
         },
