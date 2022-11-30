@@ -85,7 +85,7 @@ func (a *RequestActivity) processSiloDefStatuses(
 
 	go func() {
 		for l := range logChan {
-			logger.Debug(l.Message)
+			logger.Info("container-log", "log", l.Message)
 		}
 	}()
 

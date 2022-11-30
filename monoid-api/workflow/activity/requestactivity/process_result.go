@@ -200,7 +200,7 @@ func (a *RequestActivity) ProcessRequestResults(
 
 		go func() {
 			for l := range logChan {
-				logger.Debug(l.Message)
+				logger.Info("container-log", "log", l.Message)
 			}
 		}()
 
@@ -218,11 +218,11 @@ func (a *RequestActivity) ProcessRequestResults(
 
 		wg.Add(1)
 
+		result := int64(0)
+
 		go func() {
-			for range completeCh {
-				wg.Done()
-				return
-			}
+			result = <-completeCh
+			wg.Done()
 		}()
 
 		type queryResult struct {
@@ -259,6 +259,10 @@ func (a *RequestActivity) ProcessRequestResults(
 					defer fileWg.Done()
 
 					wg.Wait()
+
+					if result != 0 {
+						return
+					}
 
 					resultMutex.Lock()
 					defer resultMutex.Unlock()
@@ -323,6 +327,10 @@ func (a *RequestActivity) ProcessRequestResults(
 		fileWg.Wait()
 		wg.Wait()
 
+		if result != 0 {
+			return ProcessRequestResult{}, fmt.Errorf("container exited with non-zero code (%d)", result)
+		}
+
 		// Write the records back to the db
 		for rsID, qr := range queryResults {
 			if request.Type == model.UserDataRequestTypeQuery {
@@ -356,11 +364,15 @@ func (a *RequestActivity) ProcessRequestResults(
 	}
 
 	results := make([]ProcessRequestItem, len(args.RequestStatusIDs))
+
+	// Add all the results back to the map
 	for i, s := range args.RequestStatusIDs {
 		res, ok := resultMap[s]
 		if !ok {
+			// This means that the protocol returned no records, so there's no data in this
+			// data source for the request.
 			res = ProcessRequestItem{
-				Error: &RequestStatusError{Message: fmt.Sprintf("could not find status for %s", s)},
+				RequestStatusID: s,
 			}
 		}
 

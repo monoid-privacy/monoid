@@ -76,7 +76,6 @@ func readMessages(stream chan []byte, closer io.Closer) chan monoidprotocol.Mono
 					},
 				}
 
-				log.Err(err).Msgf("Error reading: %s", string(s))
 				continue
 			}
 

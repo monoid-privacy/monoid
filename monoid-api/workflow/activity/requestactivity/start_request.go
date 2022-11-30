@@ -141,7 +141,7 @@ func (a *RequestActivity) StartSiloRequestActivity(
 
 	go func() {
 		for l := range logChan {
-			logger.Debug(l.Message)
+			logger.Info("container-log", "log", l.Message)
 		}
 	}()
 
@@ -156,11 +156,15 @@ func (a *RequestActivity) StartSiloRequestActivity(
 	}
 
 	identifiers := []monoidprotocol.MonoidQueryIdentifier{}
-	errorIDs := map[string]error{}
 	results := map[string]*RequestStatusItem{}
 	dsMap := map[monoidactivity.DataSourceMatcher]*model.DataSource{}
+
+	// Map of request status ID to the corresponding data source
 	dsRequestIDMap := map[string]*model.DataSource{}
 
+	// Collect the query identifiers for each data source. If there are no
+	// query identifiers for the data source, update the result to fully
+	// complete
 L:
 	for _, ds := range siloDef.DataSources {
 		if len(ds.RequestStatuses) == 0 {
@@ -179,7 +183,7 @@ L:
 		schema, err := findSchema(ds, sch)
 		if err != nil {
 			logger.Error("Error finding schema", ds.Name, ds.Group)
-			errorIDs[requestStatus.ID] = err
+			results[requestStatus.ID] = &RequestStatusItem{Error: &RequestStatusError{Message: err.Error()}}
 			continue
 		}
 
@@ -201,7 +205,7 @@ L:
 		for _, p := range pkProperties {
 			pkVal, ok := primaryKeyMap[*p.UserPrimaryKeyID]
 			if !ok {
-				errorIDs[requestStatus.ID] = fmt.Errorf("data source's primary key type not defined")
+				results[requestStatus.ID] = &RequestStatusItem{Error: &RequestStatusError{Message: err.Error()}}
 				continue L
 			}
 
@@ -217,19 +221,27 @@ L:
 		dsMap[monoidactivity.NewDataSourceMatcher(ds.Name, ds.Group)] = ds
 	}
 
+	// Run the delete/query request to get handles for any data sources that
+	// aren't already complete.
 	if len(identifiers) > 0 {
 		var reqChan chan monoidprotocol.MonoidRequestResult
+		var statusChan chan int64
 
 		// run the delete or query
 		switch request.Type {
 		case model.UserDataRequestTypeDelete:
-			reqChan, _, err = protocol.Delete(ctx, conf, monoidprotocol.MonoidQuery{
+			reqChan, statusChan, err = protocol.Delete(ctx, conf, monoidprotocol.MonoidQuery{
 				Identifiers: identifiers,
 			})
 		case model.UserDataRequestTypeQuery:
-			reqChan, _, err = protocol.Query(ctx, conf, monoidprotocol.MonoidQuery{
+			reqChan, statusChan, err = protocol.Query(ctx, conf, monoidprotocol.MonoidQuery{
 				Identifiers: identifiers,
 			})
+		default:
+			return RequestStatusResult{}, fmt.Errorf(
+				"unknown request type %s",
+				string(request.Type),
+			)
 		}
 
 		if err != nil {
@@ -238,6 +250,7 @@ L:
 
 		handleUpdates := map[string]monoidprotocol.MonoidRequestHandle{}
 
+		// Get the data source and update the result for the request status.
 		for res := range reqChan {
 			ds, ok := dsMap[monoidactivity.NewDataSourceMatcher(
 				res.Handle.SchemaName,
@@ -258,42 +271,40 @@ L:
 			handleUpdates[ds.RequestStatuses[0].ID] = res.Handle
 		}
 
+		// If the container fails, we fail the entire activity, since the results are not to be trusted
+		status := <-statusChan
+		if status != 0 {
+			return RequestStatusResult{}, fmt.Errorf("container exited with non-zero code (%d)", status)
+		}
+
+		// Update the handles for the resulting statuses
 		for reqStatID, reqHandle := range handleUpdates {
 			handleJSON, err := json.Marshal(reqHandle)
 			if err != nil {
-				errorIDs[reqStatID] = err
+				results[reqStatID] = &RequestStatusItem{Error: &RequestStatusError{Message: err.Error()}}
+				continue
 			}
 
 			if err := a.Conf.DB.Model(&model.RequestStatus{ID: reqStatID}).Update(
 				"request_handle", model.SecretString(handleJSON),
 			).Error; err != nil {
-				errorIDs[reqStatID] = err
+				results[reqStatID] = &RequestStatusItem{Error: &RequestStatusError{Message: err.Error()}}
+				continue
 			}
 		}
 	}
 
 	resultArr := make([]RequestStatusItem, 0, len(siloDef.DataSources))
-	for k, v := range results {
-		if _, ok := errorIDs[k]; ok {
-			continue
-		}
-
-		ds, ok := dsRequestIDMap[k]
+	for requestID, ds := range dsRequestIDMap {
+		res, ok := results[requestID]
 		if !ok {
-			continue
+			res = &RequestStatusItem{Error: &RequestStatusError{Message: "No handle provided for data source."}}
 		}
 
-		v.SchemaGroup = ds.Group
-		v.SchemaName = ds.Name
-		v.RequestStatusID = k
-		resultArr = append(resultArr, *v)
-	}
-
-	for k, err := range errorIDs {
-		resultArr = append(resultArr, RequestStatusItem{
-			RequestStatusID: k,
-			Error:           &RequestStatusError{Message: err.Error()},
-		})
+		res.SchemaGroup = ds.Group
+		res.SchemaName = ds.Name
+		res.RequestStatusID = requestID
+		resultArr = append(resultArr, *res)
 	}
 
 	return RequestStatusResult{ResultItems: resultArr}, nil

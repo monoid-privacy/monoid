@@ -40,8 +40,8 @@ func (a *Activity) ValidateDataSiloDef(ctx context.Context, args ValidateDSArgs)
 	}
 
 	go func() {
-		for logMsg := range logChan {
-			logger.Info("Msg", logMsg.Message)
+		for l := range logChan {
+			logger.Info("container-log", "log", l.Message)
 		}
 	}()
 

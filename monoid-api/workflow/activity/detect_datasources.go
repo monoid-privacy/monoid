@@ -3,6 +3,7 @@ package activity
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"time"
@@ -313,7 +314,7 @@ func scanProtocol(
 		matchers[NewDataSourceMatcher(s.Name, s.Group)] = sc
 	}
 
-	recordChan, _, err := mp.Scan(
+	recordChan, resChan, err := mp.Scan(
 		ctx,
 		config,
 		monoidprotocol.MonoidSchemasMessage{Schemas: schemas},
@@ -347,6 +348,11 @@ func scanProtocol(
 
 			res[k][match.Identifier] = append(res[k][match.Identifier], match)
 		}
+	}
+
+	status := <-resChan
+	if status != 0 {
+		return nil, fmt.Errorf("container exited with non-zero code (%d)", status)
 	}
 
 	return res, nil

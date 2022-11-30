@@ -11,46 +11,46 @@ from bigquery_lib.helpers import get_connection, logger
 
 def type_to_jsonschema(bq_type: str) -> Optional[str]:
     int_types = [
-      "int", 
+      "int",
       "int64",
-      "integer", 
+      "integer",
       "mediumint",
-      "smallint", 
-      "tinyint", 
-      "bigint", 
+      "smallint",
+      "tinyint",
+      "bigint",
       "byteint"
     ]
 
     number_types = [
       "decimal",
       "bigdecimal",
-      "bignumeric", 
+      "bignumeric",
       "number",
-      "numeric", 
-      "float", 
+      "numeric",
+      "float",
       "float4",
       "float8",
       "float64",
-      "double", 
-      "real", 
+      "double",
+      "real",
       "double precision",
     ]
 
     time_types = [
-      "date", 
-      "time", 
-      "datetime", 
-      "timestamp", 
+      "date",
+      "time",
+      "datetime",
+      "timestamp",
       "timestamp_ltz",
-      "timestamp_ntz", 
-      "timestamp_tz", 
+      "timestamp_ntz",
+      "timestamp_tz",
       "year",
     ]
 
     string_types = [
-      "char", 
-      "varchar", 
-      "tinytext", 
+      "char",
+      "varchar",
+      "tinytext",
       "text",
       "mediumtext",
       "longtext",
@@ -159,8 +159,8 @@ class BigQueryTableDataStore(DBDataStore):
         records = client.query(str(q)).result()
         for r in records:
             vals, schema = r.values(), r.keys()
-            data = {} 
-            for i, key in enumerate(schema): 
+            data = {}
+            for i, key in enumerate(schema):
                 data[key] = vals[i]
             yield MonoidRecord(
                 schema_name=self.name(),
@@ -177,7 +177,7 @@ class BigQueryTableDataStore(DBDataStore):
         client = self._get_connection()
         query_cols = [f for f in schema.json_schema["properties"]]
 
-        if len(query_cols) == 0: 
+        if len(query_cols) == 0:
             return
 
         logger.info(
@@ -190,8 +190,8 @@ class BigQueryTableDataStore(DBDataStore):
 
         for r in records:
             vals, schema = r.values(), r.keys()
-            data = {} 
-            for i, key in enumerate(schema): 
+            data = {}
+            for i, key in enumerate(schema):
                 data[key] = vals[i]
             yield MonoidRecord(
                 schema_name=self.name(),
@@ -217,13 +217,9 @@ class BigQueryTableDataStore(DBDataStore):
             Field(query_identifier.identifier) ==
             query_identifier.identifier_query).get_sql(quote_char=None)
 
-        print("LOOK AT THIS JOBY")
-        print(str(q))
         # TODO: parse/error handle this (need paid tier)
-        res = client.query(str(q))
-        print(res.result())
+        client.query(str(q))
 
-        return res
 
     def teardown(self):
         if self._conn is not None and self._close_conn:
