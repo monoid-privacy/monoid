@@ -7,6 +7,8 @@ import snowflake.connector
 from snowflake_lib.snowflake_table import SnowflakeTableDataStore
 
 
+
+
 class SnowflakeSilo(AbstractSilo):
     def __init__(self):
         self._data_stores: Optional[SnowflakeTableDataStore] = None
@@ -19,6 +21,9 @@ class SnowflakeSilo(AbstractSilo):
 
         with get_connection(conf) as conn:
             with conn.cursor() as cur:
+                cur.execute(f"""
+                    USE WAREHOUSE {conf["warehouse"]}
+                """)
                 cur.execute(
                     """
                     SHOW DATABASES
@@ -41,6 +46,9 @@ class SnowflakeSilo(AbstractSilo):
         self._conns.append(conn)
 
         with conn.cursor() as cur:
+            cur.execute(f"""
+                USE WAREHOUSE {conf["warehouse"]}
+            """)
             cur.execute(
                 """
                     SELECT table_name
@@ -53,7 +61,7 @@ class SnowflakeSilo(AbstractSilo):
                 data_stores.append(SnowflakeTableDataStore(
                     table=record[0],
                     db_name=db_name,
-                    schema='public',
+                    schema='PUBLIC',
                     conf=conf,
                     conn=conn
                 ))

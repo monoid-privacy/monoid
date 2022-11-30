@@ -16,3 +16,4 @@ def get_connection(conf: Mapping[str, Any], db_name: Optional[str] = None):
         warehouse=conf["warehouse"],
         database=db_name,
     )
+    

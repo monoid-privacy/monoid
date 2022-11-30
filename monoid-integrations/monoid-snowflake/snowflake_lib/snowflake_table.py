@@ -120,9 +120,12 @@ class SnowflakeTableDataStore(DBDataStore):
         }
 
         with self._get_connection().cursor() as cur:
+            cur.execute(f"""
+                USE WAREHOUSE {self.conf["warehouse"]}
+            """)
             cur.execute(
                 f"""
-                SELECT column_name, udt_name
+                SELECT column_name, data_type
                     FROM information_schema.columns
                     WHERE table_schema = '{self.schema}'
                     AND table_name   = '{self.table}';
@@ -154,7 +157,9 @@ class SnowflakeTableDataStore(DBDataStore):
                 *query_cols).where(
                     Field(query_identifier.identifier) ==
                 query_identifier.identifier_query)
-
+            cur.execute(f"""
+                USE WAREHOUSE {self.conf["warehouse"]}
+            """)
             cur.execute(str(q))
 
             for r in cur:
@@ -179,6 +184,9 @@ class SnowflakeTableDataStore(DBDataStore):
         with self._get_connection().cursor() as cur:
             tbl = Table(self.table, schema=self.schema)
             q = Query.from_(tbl).select(*query_cols).limit(5)
+            cur.execute(f"""
+                USE WAREHOUSE {self.conf["warehouse"]}
+            """)
             cur.execute(str(q))
 
             for r in cur:
@@ -206,6 +214,9 @@ class SnowflakeTableDataStore(DBDataStore):
             q = Query.from_(tbl).delete().where(
                 Field(query_identifier.identifier) ==
                 query_identifier.identifier_query)
+            cur.execute(f"""
+                USE WAREHOUSE {self.conf["warehouse"]}
+            """)
             cur.execute(str(q))
 
         return res
