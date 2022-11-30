@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/google/uuid"
 	"github.com/monoid-privacy/monoid/model"
@@ -36,8 +37,6 @@ func (a *RequestActivity) copyTarGzToStorage(
 	ctx context.Context,
 	sourcePath string,
 ) (string, error) {
-	logger := activity.GetLogger(ctx)
-
 	wr, fp, err := a.Conf.FileStore.NewWriter(ctx, uuid.NewString(), false)
 
 	if err != nil {
@@ -58,6 +57,8 @@ func (a *RequestActivity) copyTarGzToStorage(
 		return "", fmt.Errorf("file must be gzipped tar")
 	}
 
+	defer gz.Close()
+
 	tr := tar.NewReader(gz)
 	_, err = tr.Next()
 	if err != nil {
@@ -69,12 +70,10 @@ func (a *RequestActivity) copyTarGzToStorage(
 		return "", err
 	}
 
-	wri, err := io.Copy(wr, fileReader)
+	_, err = io.Copy(wr, fileReader)
 	if err != nil {
 		return "", err
 	}
-
-	logger.Info("Written", map[string]int64{"written": wri})
 
 	return fp, nil
 }
@@ -205,13 +204,26 @@ func (a *RequestActivity) ProcessRequestResults(
 			}
 		}()
 
-		recordCh, err := protocol.RequestResults(ctx, conf, monoidprotocol.MonoidRequestsMessage{
+		var wg sync.WaitGroup
+		var fileWg sync.WaitGroup
+		var resultMutex sync.Mutex
+
+		recordCh, completeCh, err := protocol.RequestResults(ctx, conf, monoidprotocol.MonoidRequestsMessage{
 			Handles: handles,
 		})
 
 		if err != nil {
 			return ProcessRequestResult{}, err
 		}
+
+		wg.Add(1)
+
+		go func() {
+			for range completeCh {
+				wg.Done()
+				return
+			}
+		}()
 
 		type queryResult struct {
 			resultType model.ResultType
@@ -242,41 +254,52 @@ func (a *RequestActivity) ProcessRequestResults(
 			dataType := prs.DataType
 			switch *dataType {
 			case monoidprotocol.MonoidRequestStatusDataTypeFILE:
-				_, ok := queryResults[rs.ID]
-				if !ok {
-					queryResults[rs.ID] = &queryResult{
-						resultType: model.ResultTypeFile,
-						data:       model.QueryResultFileData{},
+				fileWg.Add(1)
+				go func(record monoidprotocol.MonoidRecord) {
+					defer fileWg.Done()
+
+					wg.Wait()
+
+					resultMutex.Lock()
+					defer resultMutex.Unlock()
+
+					_, ok := queryResults[rs.ID]
+					if !ok {
+						queryResults[rs.ID] = &queryResult{
+							resultType: model.ResultTypeFile,
+							data:       model.QueryResultFileData{},
+						}
 					}
-				}
 
-				_, dok := queryResults[rs.ID].data.(model.QueryResultFileData)
-				if !dok {
-					logger.Warn("Error casting existing data")
-					continue
-				}
+					_, dok := queryResults[rs.ID].data.(model.QueryResultFileData)
+					if !dok {
+						logger.Warn("Error casting existing data")
+						return
+					}
 
-				if dok && ok {
-					logger.Warn("File data results should only be one file path, got multiple.")
-				}
+					if dok && ok {
+						logger.Warn("File data results should only be one file path, got multiple.")
+					}
 
-				if record.File == nil {
-					logger.Warn("File attr must not be nil")
-					continue
-				}
+					if record.File == nil {
+						logger.Warn("File attr must not be nil")
+						return
+					}
 
-				f := filepath.Join(dir, *record.File)
-				logger.Info("Dir", dir)
+					f := filepath.Join(dir, *record.File)
 
-				fp, err := a.copyTarGzToStorage(ctx, f)
-				if err != nil {
-					logger.Error("Error copying file", err)
-				}
+					fp, err := a.copyTarGzToStorage(ctx, f)
+					if err != nil {
+						logger.Error("Error copying file", err)
+					}
 
-				queryResults[rs.ID].data = model.QueryResultFileData{
-					FilePath: fp,
-				}
+					queryResults[rs.ID].data = model.QueryResultFileData{
+						FilePath: fp,
+					}
+				}(record)
 			case monoidprotocol.MonoidRequestStatusDataTypeRECORDS:
+				resultMutex.Lock()
+
 				_, ok := queryResults[rs.ID]
 				if !ok {
 					queryResults[rs.ID] = &queryResult{
@@ -288,12 +311,17 @@ func (a *RequestActivity) ProcessRequestResults(
 				data, ok := queryResults[rs.ID].data.([]*monoidprotocol.MonoidRecordData)
 				if !ok {
 					logger.Warn("Error casting existing data")
+					resultMutex.Unlock()
 					continue
 				}
 
 				queryResults[rs.ID].data = append(data, &record.Data)
+				resultMutex.Unlock()
 			}
 		}
+
+		fileWg.Wait()
+		wg.Wait()
 
 		// Write the records back to the db
 		for rsID, qr := range queryResults {

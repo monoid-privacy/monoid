@@ -25,31 +25,31 @@ type MonoidProtocol interface {
 		ctx context.Context,
 		config map[string]interface{},
 		query MonoidQuery,
-	) (chan MonoidRequestResult, error)
+	) (chan MonoidRequestResult, chan int64, error)
 
 	Scan(
 		ctx context.Context,
 		config map[string]interface{},
 		schemas MonoidSchemasMessage,
-	) (chan MonoidRecord, error)
+	) (chan MonoidRecord, chan int64, error)
 
 	Delete(
 		ctx context.Context,
 		config map[string]interface{},
 		query MonoidQuery,
-	) (chan MonoidRequestResult, error)
+	) (chan MonoidRequestResult, chan int64, error)
 
 	RequestResults(
 		ctx context.Context,
 		config map[string]interface{},
 		requests MonoidRequestsMessage,
-	) (chan MonoidRecord, error)
+	) (chan MonoidRecord, chan int64, error)
 
 	RequestStatus(
 		ctx context.Context,
 		config map[string]interface{},
 		requests MonoidRequestsMessage,
-	) (chan MonoidRequestStatus, error)
+	) (chan MonoidRequestStatus, chan int64, error)
 
 	Schema(
 		ctx context.Context,

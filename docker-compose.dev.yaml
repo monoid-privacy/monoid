@@ -93,6 +93,7 @@ services:
       - DB_USER=${DATABASE_USER}
       - DB_PASS=${DATABASE_PASSWORD}
       - DB_TCP_HOST=monoid-dev-db
+      - TEMP_STORE_PATH=/tmp/monoid
       - DB_PORT=5432
       - DB_NAME=${DATABASE_NAME}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
@@ -148,6 +149,7 @@ services:
       - DB_PORT=5432
       - DB_NAME=${DATABASE_NAME}
       - DOCKER_HOST=unix:///var/run/docker.sock
+      - TEMP_STORE_PATH=/tmp/monoid
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - SEGMENT_KEY=${SEGMENT_KEY}
       - FILESTORE_PATH=${FILESTORE_PATH}

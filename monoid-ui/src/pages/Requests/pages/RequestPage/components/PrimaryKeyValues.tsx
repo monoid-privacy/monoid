@@ -9,6 +9,7 @@ import { Request } from '../../../../../lib/models';
 const GET_REQUEST_DATA = gql`
 query GetRequestData($id: ID!, $workspaceId: ID!) {
   workspace(id: $workspaceId) {
+    id
     request(id: $id) {
       id
       type

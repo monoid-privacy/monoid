@@ -14,7 +14,7 @@ type DockerMonoidProtocol struct {
 	client      *client.Client
 	imageName   string
 	containerID *string
-	volume      *string
+	volumes     []string
 	logChan     chan monoidprotocol.MonoidLogMessage
 	closeClient bool
 	persistDir  string
@@ -32,7 +32,7 @@ func NewDockerMPWithClient(
 	return &DockerMonoidProtocol{
 		client:      cli,
 		imageName:   imageName,
-		volume:      nil,
+		volumes:     []string{},
 		persistDir:  persistDir,
 		logChan:     nil,
 		closeClient: closeClient,
@@ -71,11 +71,12 @@ func (dp *DockerMonoidProtocol) InitConn(ctx context.Context) error {
 }
 
 func (dp *DockerMonoidProtocol) Spec(ctx context.Context) (*monoidprotocol.MonoidSiloSpec, error) {
-	msgChan, err := dp.runCmdLiveLogs(
+	msgChan, _, err := dp.runCmdLiveLogs(
 		ctx,
 		"spec",
 		map[string]interface{}{},
 		map[string]string{},
+		false,
 	)
 
 	if err != nil {
@@ -105,13 +106,14 @@ func (dp *DockerMonoidProtocol) Validate(
 	ctx context.Context,
 	config map[string]interface{},
 ) (*monoidprotocol.MonoidValidateMessage, error) {
-	msgChan, err := dp.runCmdLiveLogs(
+	msgChan, _, err := dp.runCmdLiveLogs(
 		ctx,
 		"validate",
 		map[string]interface{}{
 			"-c": config,
 		},
 		map[string]string{},
+		false,
 	)
 
 	if err != nil {
@@ -141,8 +143,8 @@ func (dp *DockerMonoidProtocol) Query(
 	ctx context.Context,
 	config map[string]interface{},
 	query monoidprotocol.MonoidQuery,
-) (chan monoidprotocol.MonoidRequestResult, error) {
-	msgChan, err := dp.runCmdLiveLogs(
+) (chan monoidprotocol.MonoidRequestResult, chan int64, error) {
+	msgChan, completeCh, err := dp.runCmdLiveLogs(
 		ctx,
 		"query",
 		map[string]interface{}{
@@ -152,24 +154,25 @@ func (dp *DockerMonoidProtocol) Query(
 		map[string]string{
 			"-p": dp.persistDir,
 		},
+		false,
 	)
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	msgChan = collectLogs(msgChan, dp.logChan)
 	ch := readResults(msgChan)
 
-	return ch, nil
+	return ch, completeCh, nil
 }
 
 func (dp *DockerMonoidProtocol) Scan(
 	ctx context.Context,
 	config map[string]interface{},
 	schemas monoidprotocol.MonoidSchemasMessage,
-) (chan monoidprotocol.MonoidRecord, error) {
-	msgChan, err := dp.runCmdLiveLogs(
+) (chan monoidprotocol.MonoidRecord, chan int64, error) {
+	msgChan, completeCh, err := dp.runCmdLiveLogs(
 		ctx,
 		"scan",
 		map[string]interface{}{
@@ -179,24 +182,25 @@ func (dp *DockerMonoidProtocol) Scan(
 		map[string]string{
 			"-p": dp.persistDir,
 		},
+		false,
 	)
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	msgChan = collectLogs(msgChan, dp.logChan)
 	recordChan := readRecords(msgChan)
 
-	return recordChan, nil
+	return recordChan, completeCh, nil
 }
 
 func (dp *DockerMonoidProtocol) Delete(
 	ctx context.Context,
 	config map[string]interface{},
 	query monoidprotocol.MonoidQuery,
-) (chan monoidprotocol.MonoidRequestResult, error) {
-	msgChan, err := dp.runCmdLiveLogs(
+) (chan monoidprotocol.MonoidRequestResult, chan int64, error) {
+	msgChan, completeCh, err := dp.runCmdLiveLogs(
 		ctx,
 		"delete",
 		map[string]interface{}{
@@ -206,29 +210,31 @@ func (dp *DockerMonoidProtocol) Delete(
 		map[string]string{
 			"-p": dp.persistDir,
 		},
+		false,
 	)
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	msgChan = collectLogs(msgChan, dp.logChan)
 	ch := readResults(msgChan)
 
-	return ch, nil
+	return ch, completeCh, nil
 }
 
 func (dp *DockerMonoidProtocol) Schema(
 	ctx context.Context,
 	config map[string]interface{},
 ) (*monoidprotocol.MonoidSchemasMessage, error) {
-	msgChan, err := dp.runCmdLiveLogs(
+	msgChan, _, err := dp.runCmdLiveLogs(
 		ctx,
 		"schema",
 		map[string]interface{}{
 			"-c": config,
 		},
 		map[string]string{},
+		false,
 	)
 
 	if err != nil {
@@ -258,8 +264,8 @@ func (dp *DockerMonoidProtocol) RequestResults(
 	ctx context.Context,
 	config map[string]interface{},
 	requests monoidprotocol.MonoidRequestsMessage,
-) (chan monoidprotocol.MonoidRecord, error) {
-	msgChan, err := dp.runCmdLiveLogs(
+) (chan monoidprotocol.MonoidRecord, chan int64, error) {
+	msgChan, completeCh, err := dp.runCmdLiveLogs(
 		ctx,
 		"request-results",
 		map[string]interface{}{
@@ -269,24 +275,25 @@ func (dp *DockerMonoidProtocol) RequestResults(
 		map[string]string{
 			"-p": dp.persistDir,
 		},
+		true,
 	)
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	msgChan = collectLogs(msgChan, dp.logChan)
 	ch := readRecords(msgChan)
 
-	return ch, nil
+	return ch, completeCh, nil
 }
 
 func (dp *DockerMonoidProtocol) RequestStatus(
 	ctx context.Context,
 	config map[string]interface{},
 	requests monoidprotocol.MonoidRequestsMessage,
-) (chan monoidprotocol.MonoidRequestStatus, error) {
-	msgChan, err := dp.runCmdLiveLogs(
+) (chan monoidprotocol.MonoidRequestStatus, chan int64, error) {
+	msgChan, completeCh, err := dp.runCmdLiveLogs(
 		ctx,
 		"request-status",
 		map[string]interface{}{
@@ -296,16 +303,17 @@ func (dp *DockerMonoidProtocol) RequestStatus(
 		map[string]string{
 			"-p": dp.persistDir,
 		},
+		false,
 	)
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	msgChan = collectLogs(msgChan, dp.logChan)
 	ch := readRequestStatus(msgChan)
 
-	return ch, nil
+	return ch, completeCh, nil
 }
 
 func (dp *DockerMonoidProtocol) AttachLogs(ctx context.Context) (chan monoidprotocol.MonoidLogMessage, error) {

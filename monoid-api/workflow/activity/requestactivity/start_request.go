@@ -217,19 +217,17 @@ L:
 		dsMap[monoidactivity.NewDataSourceMatcher(ds.Name, ds.Group)] = ds
 	}
 
-	logger.Info("Identifiers", identifiers)
-
 	if len(identifiers) > 0 {
 		var reqChan chan monoidprotocol.MonoidRequestResult
 
 		// run the delete or query
 		switch request.Type {
 		case model.UserDataRequestTypeDelete:
-			reqChan, err = protocol.Delete(ctx, conf, monoidprotocol.MonoidQuery{
+			reqChan, _, err = protocol.Delete(ctx, conf, monoidprotocol.MonoidQuery{
 				Identifiers: identifiers,
 			})
 		case model.UserDataRequestTypeQuery:
-			reqChan, err = protocol.Query(ctx, conf, monoidprotocol.MonoidQuery{
+			reqChan, _, err = protocol.Query(ctx, conf, monoidprotocol.MonoidQuery{
 				Identifiers: identifiers,
 			})
 		}

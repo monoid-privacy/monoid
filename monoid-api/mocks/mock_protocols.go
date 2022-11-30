@@ -8,8 +8,8 @@ import (
 	context "context"
 	reflect "reflect"
 
-	monoidprotocol "github.com/monoid-privacy/monoid/monoidprotocol"
 	gomock "github.com/golang/mock/gomock"
+	monoidprotocol "github.com/monoid-privacy/monoid/monoidprotocol"
 )
 
 // MockMonoidProtocolFactory is a mock of MonoidProtocolFactory interface.
@@ -89,12 +89,13 @@ func (mr *MockMonoidProtocolMockRecorder) AttachLogs(ctx interface{}) *gomock.Ca
 }
 
 // Delete mocks base method.
-func (m *MockMonoidProtocol) Delete(ctx context.Context, config map[string]interface{}, query monoidprotocol.MonoidQuery) (chan monoidprotocol.MonoidRequestResult, error) {
+func (m *MockMonoidProtocol) Delete(ctx context.Context, config map[string]interface{}, query monoidprotocol.MonoidQuery) (chan monoidprotocol.MonoidRequestResult, chan int64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", ctx, config, query)
 	ret0, _ := ret[0].(chan monoidprotocol.MonoidRequestResult)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(chan int64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // Delete indicates an expected call of Delete.
@@ -118,12 +119,13 @@ func (mr *MockMonoidProtocolMockRecorder) InitConn(ctx interface{}) *gomock.Call
 }
 
 // Query mocks base method.
-func (m *MockMonoidProtocol) Query(ctx context.Context, config map[string]interface{}, query monoidprotocol.MonoidQuery) (chan monoidprotocol.MonoidRequestResult, error) {
+func (m *MockMonoidProtocol) Query(ctx context.Context, config map[string]interface{}, query monoidprotocol.MonoidQuery) (chan monoidprotocol.MonoidRequestResult, chan int64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Query", ctx, config, query)
 	ret0, _ := ret[0].(chan monoidprotocol.MonoidRequestResult)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(chan int64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // Query indicates an expected call of Query.
@@ -133,12 +135,13 @@ func (mr *MockMonoidProtocolMockRecorder) Query(ctx, config, query interface{}) 
 }
 
 // RequestResults mocks base method.
-func (m *MockMonoidProtocol) RequestResults(ctx context.Context, config map[string]interface{}, requests monoidprotocol.MonoidRequestsMessage) (chan monoidprotocol.MonoidRecord, error) {
+func (m *MockMonoidProtocol) RequestResults(ctx context.Context, config map[string]interface{}, requests monoidprotocol.MonoidRequestsMessage) (chan monoidprotocol.MonoidRecord, chan int64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RequestResults", ctx, config, requests)
 	ret0, _ := ret[0].(chan monoidprotocol.MonoidRecord)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(chan int64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // RequestResults indicates an expected call of RequestResults.
@@ -148,12 +151,13 @@ func (mr *MockMonoidProtocolMockRecorder) RequestResults(ctx, config, requests i
 }
 
 // RequestStatus mocks base method.
-func (m *MockMonoidProtocol) RequestStatus(ctx context.Context, config map[string]interface{}, requests monoidprotocol.MonoidRequestsMessage) (chan monoidprotocol.MonoidRequestStatus, error) {
+func (m *MockMonoidProtocol) RequestStatus(ctx context.Context, config map[string]interface{}, requests monoidprotocol.MonoidRequestsMessage) (chan monoidprotocol.MonoidRequestStatus, chan int64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RequestStatus", ctx, config, requests)
 	ret0, _ := ret[0].(chan monoidprotocol.MonoidRequestStatus)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(chan int64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // RequestStatus indicates an expected call of RequestStatus.
@@ -163,12 +167,13 @@ func (mr *MockMonoidProtocolMockRecorder) RequestStatus(ctx, config, requests in
 }
 
 // Scan mocks base method.
-func (m *MockMonoidProtocol) Scan(ctx context.Context, config map[string]interface{}, schemas monoidprotocol.MonoidSchemasMessage) (chan monoidprotocol.MonoidRecord, error) {
+func (m *MockMonoidProtocol) Scan(ctx context.Context, config map[string]interface{}, schemas monoidprotocol.MonoidSchemasMessage) (chan monoidprotocol.MonoidRecord, chan int64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Scan", ctx, config, schemas)
 	ret0, _ := ret[0].(chan monoidprotocol.MonoidRecord)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(chan int64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // Scan indicates an expected call of Scan.

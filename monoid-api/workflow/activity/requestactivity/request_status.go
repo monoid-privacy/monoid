@@ -60,7 +60,7 @@ func (a *RequestActivity) processSiloDefStatuses(
 	}
 
 	// Create a temporary directory that can be used by the docker container
-	dir, err := ioutil.TempDir("/tmp/monoid", "monoid")
+	dir, err := ioutil.TempDir(a.Conf.TempStorePath, "monoid")
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +93,7 @@ func (a *RequestActivity) processSiloDefStatuses(
 	if err := json.Unmarshal([]byte(siloDef.Config), &conf); err != nil {
 		return nil, err
 	}
-	statCh, err := protocol.RequestStatus(ctx, conf, monoidprotocol.MonoidRequestsMessage{
+	statCh, _, err := protocol.RequestStatus(ctx, conf, monoidprotocol.MonoidRequestsMessage{
 		Handles: handles,
 	})
 

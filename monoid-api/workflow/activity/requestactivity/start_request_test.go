@@ -331,12 +331,17 @@ func (s *startRequestTestSuite) TestStartRequest() {
 					}
 				}
 
+				waitChan := make(chan int64)
 				protocol.EXPECT().Query(
 					gomock.Any(), gomock.Eq(seedData.config), gomock.Eq(
 						monoidprotocol.MonoidQuery{
 							Identifiers: identifiers,
 						},
-					)).Return(results, nil)
+					)).Return(results, waitChan, nil)
+
+				go func() {
+					waitChan <- 0
+				}()
 			}
 
 			protocol.EXPECT().Teardown(gomock.Any()).Return(nil)

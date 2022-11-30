@@ -29,6 +29,7 @@ const EXECUTE_REQUEST = gql`
 const GET_REQUEST_METADATA = gql`
   query GetRequestMetadata($id: ID!, $workspaceId: ID!) {
     workspace(id: $workspaceId) {
+      id
       request(id: $id) {
         id
         type

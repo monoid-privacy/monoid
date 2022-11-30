@@ -37,6 +37,7 @@ const FILTER_OPTIONS_QUERY = gql`
 const GET_REQUEST_DATA = gql`
 query GetRequestData($workspaceId: ID!, $id: ID!, $limit: Int!, $offset: Int!, $query: RequestStatusQuery!) {
   workspace(id: $workspaceId) {
+    id
     request(id: $id) {
       id
       type

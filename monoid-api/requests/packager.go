@@ -89,6 +89,8 @@ func generateSiloFile(
 				continue
 			}
 
+			defer gz.Close()
+
 			tarReader := tar.NewReader(gz)
 
 			if err := tartools.CopyFilesFromTar(tarWriter, baseName, tarReader); err != nil {
@@ -202,7 +204,7 @@ func GenerateRequestTar(ctx context.Context, conf *config.BaseConfig, requestID 
 		return "", err
 	}
 
-	// defer os.Remove(tmpFile)
+	defer os.Remove(tmpFile)
 
 	reader, err := os.Open(tmpFile)
 	if err != nil {

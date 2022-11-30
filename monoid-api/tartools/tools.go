@@ -4,7 +4,11 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"io"
+	"os"
 	"path/filepath"
+	"strings"
+
+	"github.com/rs/zerolog/log"
 )
 
 func WrapInTar(reader io.Reader, name string) (io.ReadCloser, error) {
@@ -68,4 +72,57 @@ func AddFile(tarWriter *tar.Writer, filePath string, fileContent []byte, mode in
 	_, err := tarWriter.Write(fileContent)
 
 	return err
+}
+
+func CopyTarToDir(tr *tar.Reader, dest string) error {
+	for {
+		header, err := tr.Next()
+
+		switch {
+		case err == io.EOF:
+			return nil
+		case err != nil:
+			return err
+		case header == nil:
+			continue
+		}
+
+		headerPath := strings.Split(header.Name, string(os.PathSeparator))[1:]
+
+		target := filepath.Join(append([]string{dest}, headerPath...)...)
+
+		// check the file type
+		switch header.Typeflag {
+		case tar.TypeDir:
+			// this is the root directory of the tar, so it doesn't need
+			// creating
+			if len(headerPath) == 0 {
+				continue
+			}
+
+			if _, err := os.Stat(target); err != nil {
+				if err := os.MkdirAll(target, 0755); err != nil {
+					return err
+				}
+			}
+
+		// if it's a file create it
+		case tar.TypeReg:
+			f, err := os.OpenFile(target, os.O_CREATE|os.O_RDWR, os.FileMode(header.Mode))
+			if err != nil {
+				log.Err(err).Msg("Error opening file")
+				continue
+			}
+
+			// copy over contents
+			if _, err := io.Copy(f, tr); err != nil {
+				log.Err(err).Msg("Error copying contents")
+				continue
+			}
+
+			// manually close here after each file operation; defering would cause each file close
+			// to wait until all operations have completed.
+			f.Close()
+		}
+	}
 }

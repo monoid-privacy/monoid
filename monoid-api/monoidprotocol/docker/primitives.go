@@ -1,6 +1,7 @@
 package docker
 
 import (
+	"archive/tar"
 	"bufio"
 	"bytes"
 	"context"
@@ -15,6 +16,7 @@ import (
 	"github.com/docker/docker/api/types/volume"
 	"github.com/monoid-privacy/monoid/monoidprotocol"
 	"github.com/monoid-privacy/monoid/tartools"
+	"github.com/rs/zerolog/log"
 )
 
 // createVolume creates a docker volume and returns the name of the volume
@@ -34,7 +36,7 @@ func (dp *DockerMonoidProtocol) createVolume(
 		return "", err
 	}
 
-	dp.volume = &volName
+	dp.volumes = append(dp.volumes, volName)
 
 	return vol.Name, nil
 }
@@ -78,8 +80,8 @@ func (dp *DockerMonoidProtocol) copyJSONObjectFiles(
 func (dp *DockerMonoidProtocol) teardownVolumes(
 	ctx context.Context,
 ) error {
-	if dp.volume != nil {
-		dp.client.VolumeRemove(ctx, *dp.volume, true)
+	for _, v := range dp.volumes {
+		dp.client.VolumeRemove(ctx, v, true)
 	}
 
 	return nil
@@ -157,16 +159,17 @@ func (dp *DockerMonoidProtocol) createContainer(
 			mounts = append(mounts, mount.Mount{
 				Source:   v,
 				Target:   "/" + v,
-				Type:     "volume",
+				Type:     mount.TypeVolume,
 				ReadOnly: false,
 			})
 		}
 
 		for k, v := range fileMounts {
 			mounts = append(mounts, mount.Mount{
-				Source: v,
-				Target: "/" + k,
-				Type:   mount.TypeBind,
+				Source:   v,
+				Target:   "/" + k,
+				Type:     mount.TypeVolume,
+				ReadOnly: false,
 			})
 		}
 
@@ -195,16 +198,16 @@ func (dp *DockerMonoidProtocol) constructContainer(
 	cmd string,
 	jsonFileArgs map[string]interface{},
 	persistenceArgs map[string]string,
-) error {
-	volumes := []string{}
+) (fileOutputs map[string]string, err error) {
+	fileVolumes := []string{}
 	if len(jsonFileArgs) != 0 {
-		_, err := dp.createVolume(ctx)
+		volume, err := dp.createVolume(ctx)
 
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		volumes = append(volumes, *dp.volume)
+		fileVolumes = append(fileVolumes, volume)
 	}
 
 	cmdArr := []string{cmd}
@@ -214,11 +217,19 @@ func (dp *DockerMonoidProtocol) constructContainer(
 		jsonArgsCp[k] = v
 	}
 
-	//Test
-	fileMounts := map[string]string{}
+	fileOutputs = map[string]string{}
+	mounts := map[string]string{}
 	for k, v := range persistenceArgs {
+		vol, err := dp.createVolume(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
 		filePath := "/monoid_persist/" + randSeq(8)
-		fileMounts[filePath] = v
+		fileOutputs[filePath] = v
+		mounts[filePath] = vol
+
 		jsonArgsCp[k] = monoidprotocol.MonoidPersistenceConfig{
 			TempStore: filePath,
 		}
@@ -228,26 +239,26 @@ func (dp *DockerMonoidProtocol) constructContainer(
 
 	for k, v := range jsonArgsCp {
 		fileName := randSeq(10)
-		fullPath := "/" + *dp.volume + "/" + fileName + ".json"
+		fullPath := "/" + fileVolumes[0] + "/" + fileName + ".json"
 
 		cmdArr = append(cmdArr, k, fullPath)
 		files[fullPath] = v
 	}
 
-	_, err := dp.createContainer(ctx, cmdArr, volumes, fileMounts)
+	_, err = dp.createContainer(ctx, cmdArr, fileVolumes, mounts)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Copy the files to the container
 	if err = dp.copyJSONObjectFiles(
 		ctx, files,
 	); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return fileOutputs, nil
 }
 
 func (dp *DockerMonoidProtocol) runCmdLiveLogs(
@@ -255,14 +266,17 @@ func (dp *DockerMonoidProtocol) runCmdLiveLogs(
 	cmd string,
 	jsonFileArgs map[string]interface{},
 	persistenceArgs map[string]string,
-) (chan monoidprotocol.MonoidMessage, error) {
-	if err := dp.constructContainer(
+	copyFiles bool,
+) (messageChan chan monoidprotocol.MonoidMessage, completeCh chan int64, err error) {
+	fileMounts, err := dp.constructContainer(
 		ctx,
 		cmd,
 		jsonFileArgs,
 		persistenceArgs,
-	); err != nil {
-		return nil, err
+	)
+
+	if err != nil {
+		return nil, nil, err
 	}
 
 	// Run the container and get the validate message
@@ -271,58 +285,55 @@ func (dp *DockerMonoidProtocol) runCmdLiveLogs(
 		*dp.containerID,
 		types.ContainerStartOptions{},
 	); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	stream, closer, err := dp.containerLogsStream(ctx, true, true)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	messageChan := readMessages(stream, closer)
-	return messageChan, nil
-}
+	messageChan = readMessages(stream, closer)
+	completeCh = make(chan int64, 1)
 
-// runCmdStaticLog runs a docker command on an image, and
-// includes the arguments passed in jsonFileArgs as json serialized
-// files on the container. Returns the single monoid message that
-// is output. If you expect multiple lines of output, use
-// runCmdLiveLogs
-func (dp *DockerMonoidProtocol) runCmdStaticLog(
-	ctx context.Context,
-	cmd string,
-	jsonFileArgs map[string]interface{},
-	persistenceArgs map[string]string,
-) (*monoidprotocol.MonoidMessage, error) {
-	if err := dp.constructContainer(
-		ctx,
-		cmd,
-		jsonFileArgs,
-		persistenceArgs,
-	); err != nil {
-		return nil, err
-	}
+	waitCh, errCh := dp.client.ContainerWait(ctx, *dp.containerID, container.WaitConditionNextExit)
+	go func() {
+		select {
+		case <-ctx.Done():
+			close(completeCh)
+			return
+		case w := <-waitCh:
+			if copyFiles {
+				for k, v := range fileMounts {
+					r, _, err := dp.client.CopyFromContainer(ctx, *dp.containerID, k)
+					if err != nil {
+						log.Err(err).Msg("Error copying from container")
+						continue
+					}
 
-	cid := *dp.containerID
+					defer r.Close()
 
-	// Run the container and get the validate message
-	if err := dp.client.ContainerStart(ctx, cid, types.ContainerStartOptions{}); err != nil {
-		return nil, err
-	}
+					tr := tar.NewReader(r)
+					err = tartools.CopyTarToDir(tr, v)
+					if err != nil {
+						log.Err(err).Msg("Error copying files to container")
+					}
+				}
+			}
 
-	done, _ := ContainerWait(context.Background(), dp.client, cid)
+			completeCh <- w.StatusCode
+			close(completeCh)
+			return
+		case err := <-errCh:
+			if err != nil {
+				log.Err(err).Msg("Error waiting on container.")
+			}
 
-	<-done
+			completeCh <- 1
+			close(completeCh)
+			return
+		}
+	}()
 
-	buf, err := ContainerLogs(ctx, dp.client, cid, true, false)
-	if err != nil {
-		return nil, err
-	}
-
-	msg := monoidprotocol.MonoidMessage{}
-	if err := json.NewDecoder(buf).Decode(&msg); err != nil {
-		return nil, err
-	}
-
-	return &msg, nil
+	return messageChan, completeCh, nil
 }

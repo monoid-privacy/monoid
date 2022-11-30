@@ -313,7 +313,7 @@ func scanProtocol(
 		matchers[NewDataSourceMatcher(s.Name, s.Group)] = sc
 	}
 
-	recordChan, err := mp.Scan(
+	recordChan, _, err := mp.Scan(
 		ctx,
 		config,
 		monoidprotocol.MonoidSchemasMessage{Schemas: schemas},
@@ -371,7 +371,7 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) (in
 			case <-ticker.C:
 				activity.RecordHeartbeat(ctx)
 			case <-ctx.Done():
-				logger.Info("Activity cancelled")
+				logger.Info("Activity done")
 				break L
 			}
 		}
@@ -446,7 +446,7 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) (in
 	}()
 
 	if err := mp.InitConn(ctx); err != nil {
-		logger.Error("Error creating docker connection: %v", err)
+		logger.Error("Error creating docker connection", err)
 		return 0, err
 	}
 
@@ -458,13 +458,13 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) (in
 	schemas, err := mp.Schema(ctx, conf)
 
 	if err != nil {
-		logger.Error("Error running schema: %v", err)
+		logger.Error("Error running schema", err)
 		return 0, err
 	}
 
 	matches, err := scanProtocol(ctx, mp, conf, schemas.Schemas)
 	if err != nil {
-		logger.Error("Error running scan: %v", err)
+		logger.Error("Error running scan", err)
 		return 0, err
 	}
 
@@ -490,7 +490,7 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) (in
 	// The data sources that are in the new schemas
 	currDataSources := map[string]bool{}
 
-	logger.Info("Schemas", schemas.Schemas, sourceMap, len(sourceMap), len(sources))
+	logger.Info("Getting Schemas")
 
 	for _, schema := range schemas.Schemas {
 		sourceMatcher := NewDataSourceMatcher(
