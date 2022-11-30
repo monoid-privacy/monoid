@@ -2,7 +2,7 @@ import base64
 from unicodedata import name
 from monoid_pydev.silos.db_data_store import DBDataStore
 import psycopg
-from monoid_pydev.models import MonoidRecord, MonoidQueryIdentifier, MonoidSchema, MonoidPersistenceConfig
+from monoid_pydev.models import MonoidRecord, MonoidQueryIdentifier, MonoidSchema, MonoidPersistenceConfig, RecordType
 from typing import Any, Dict, Iterable, Mapping, Optional
 from pypika import Table, Query, Field
 
@@ -131,6 +131,7 @@ class PostgresTableDataStore(DBDataStore):
                 yield MonoidRecord(
                     schema_name=self.name(),
                     schema_group=self.group(),
+                    record_type=RecordType.RECORD,
                     data={
                         q: serializable_val(r[i]) for i, q in enumerate(query_cols)
                     }
@@ -156,6 +157,7 @@ class PostgresTableDataStore(DBDataStore):
                 yield MonoidRecord(
                     schema_name=self.name(),
                     schema_group=self.group(),
+                    record_type=RecordType.RECORD,
                     data={
                         q: serializable_val(r[i]) for i, q in enumerate(query_cols)
                     }

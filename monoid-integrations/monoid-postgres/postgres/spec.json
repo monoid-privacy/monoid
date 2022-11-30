@@ -50,20 +50,6 @@
         "description": "Connect using SSL.",
         "order": 6
       },
-      "schemas": {
-        "title": "Schemas",
-        "description": "A list of schemas to sync with, default public.",
-        "type": "array",
-        "items": {
-          "type": "string"
-        },
-        "minItems": 0,
-        "uniqueItems": true,
-        "default": [
-          "public"
-        ],
-        "order": 7
-      },
       "exclude_dbs": {
         "title": "Exclude DBs",
         "description": "A list of databases to exclude for silo discovery.",

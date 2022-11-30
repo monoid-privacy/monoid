@@ -18,7 +18,7 @@ isort==5.10.1
 Jinja2==3.1.2
 jsonschema==3.2.0
 MarkupSafe==2.1.1
-monoid-pydev @ file:///app/monoid/monoid-py
+monoid-pydev==0.0.1a1
 mypy-extensions==0.4.3
 mysql-connector-python==8.0.31
 openapi-schema-validator==0.1.6
