@@ -1,11 +1,15 @@
 package requestactivity
 
 import (
+	"archive/tar"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/google/uuid"
 	"github.com/monoid-privacy/monoid/model"
@@ -26,6 +30,53 @@ type ProcessRequestItem struct {
 
 type ProcessRequestResult struct {
 	ResultItems []ProcessRequestItem
+}
+
+func (a *RequestActivity) copyTarGzToStorage(
+	ctx context.Context,
+	sourcePath string,
+) (string, error) {
+	logger := activity.GetLogger(ctx)
+
+	wr, fp, err := a.Conf.FileStore.NewWriter(ctx, uuid.NewString(), false)
+
+	if err != nil {
+		return "", err
+	}
+
+	defer wr.Close()
+
+	fileReader, err := os.Open(sourcePath)
+	if err != nil {
+		return "", err
+	}
+
+	defer fileReader.Close()
+
+	gz, err := gzip.NewReader(fileReader)
+	if err != nil {
+		return "", fmt.Errorf("file must be gzipped tar")
+	}
+
+	tr := tar.NewReader(gz)
+	_, err = tr.Next()
+	if err != nil {
+		return "", fmt.Errorf("file must be gzipped tar")
+	}
+
+	_, err = fileReader.Seek(0, io.SeekStart)
+	if err != nil {
+		return "", err
+	}
+
+	wri, err := io.Copy(wr, fileReader)
+	if err != nil {
+		return "", err
+	}
+
+	logger.Info("Written", map[string]int64{"written": wri})
+
+	return fp, nil
 }
 
 func (a *RequestActivity) ProcessRequestResults(
@@ -195,17 +246,17 @@ func (a *RequestActivity) ProcessRequestResults(
 				if !ok {
 					queryResults[rs.ID] = &queryResult{
 						resultType: model.ResultTypeFile,
-						data:       map[string]interface{}{},
+						data:       model.QueryResultFileData{},
 					}
 				}
 
-				data, ok := queryResults[rs.ID].data.(map[string]interface{})
-				if !ok {
+				_, dok := queryResults[rs.ID].data.(model.QueryResultFileData)
+				if !dok {
 					logger.Warn("Error casting existing data")
 					continue
 				}
 
-				if len(data) != 0 {
+				if dok && ok {
 					logger.Warn("File data results should only be one file path, got multiple.")
 				}
 
@@ -214,8 +265,16 @@ func (a *RequestActivity) ProcessRequestResults(
 					continue
 				}
 
-				queryResults[rs.ID].data = map[string]interface{}{
-					"filePath": *record.File,
+				f := filepath.Join(dir, *record.File)
+				logger.Info("Dir", dir)
+
+				fp, err := a.copyTarGzToStorage(ctx, f)
+				if err != nil {
+					logger.Error("Error copying file", err)
+				}
+
+				queryResults[rs.ID].data = model.QueryResultFileData{
+					FilePath: fp,
 				}
 			case monoidprotocol.MonoidRequestStatusDataTypeRECORDS:
 				_, ok := queryResults[rs.ID]

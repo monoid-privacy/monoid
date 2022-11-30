@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"context"
 	"crypto/rand"
+	"encoding/json"
 	"fmt"
 	"io"
 	"math/big"
@@ -54,6 +55,7 @@ func generateSiloFile(
 ) error {
 	baseName := silo.Name
 	fileAdded := false
+	log.Info().Msgf("Silo %s", baseName)
 
 	for _, stat := range statuses {
 		if stat.QueryResult == nil || stat.QueryResult.Records == nil {
@@ -66,6 +68,33 @@ func generateSiloFile(
 		fileAdded = true
 		switch stat.QueryResult.ResultType {
 		case model.ResultTypeFile:
+			log.Info().Msg("Result type file")
+			data := model.QueryResultFileData{}
+			if err := json.Unmarshal([]byte(records), &data); err != nil {
+				log.Err(err).Msg("Error decoding data")
+				continue
+			}
+
+			f, err := os.Open(data.FilePath)
+			if err != nil {
+				log.Err(err).Msg("Error opening file")
+				continue
+			}
+
+			defer f.Close()
+
+			gz, err := gzip.NewReader(f)
+			if err != nil {
+				log.Err(err).Msg("Error parsing gzip")
+				continue
+			}
+
+			tarReader := tar.NewReader(gz)
+
+			if err := tartools.CopyFilesFromTar(tarWriter, baseName, tarReader); err != nil {
+				log.Err(err).Msg("Error copying files")
+				continue
+			}
 		case model.ResultTypeRecordsJSON:
 			if err := tartools.AddFile(
 				tarWriter,

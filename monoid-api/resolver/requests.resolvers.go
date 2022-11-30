@@ -5,6 +5,7 @@ package resolver
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -15,6 +16,7 @@ import (
 	"github.com/monoid-privacy/monoid/workflow"
 	"github.com/monoid-privacy/monoid/workflow/requestworkflow"
 	"github.com/rs/zerolog/log"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.temporal.io/sdk/client"
 	"gorm.io/gorm"
 )
@@ -272,6 +274,48 @@ func (r *mutationResolver) GenerateRequestDownloadLink(ctx context.Context, requ
 	}, nil
 }
 
+// GenerateQueryResultDownloadLink is the resolver for the generateQueryResultDownloadLink field.
+func (r *mutationResolver) GenerateQueryResultDownloadLink(ctx context.Context, queryResultID string) (*model.DownloadLink, error) {
+	qr := model.QueryResult{}
+	if err := r.Conf.DB.Where("id = ?", queryResultID).First(&qr).Error; err != nil {
+		return nil, handleError(err, "Could not find result")
+	}
+
+	if qr.ResultType != model.ResultTypeFile {
+		return nil, gqlerror.Errorf("This query result does not have an attached file.")
+	}
+
+	if qr.DownloadableFileID == nil {
+		fileData := model.QueryResultFileData{}
+		if err := json.Unmarshal([]byte(*qr.Records), &fileData); err != nil {
+			return nil, handleError(err, "Error reading file")
+		}
+
+		dlfile := model.DownloadableFile{
+			ID:          uuid.NewString(),
+			StoragePath: fileData.FilePath,
+		}
+
+		if err := r.Conf.DB.Transaction(func(tx *gorm.DB) error {
+			if err := tx.Create(&dlfile).Error; err != nil {
+				return err
+			}
+
+			if err := tx.Model(&qr).Update("downloadable_file_id", dlfile.ID).Error; err != nil {
+				return err
+			}
+
+			return nil
+		}); err != nil {
+			return nil, handleError(err, "Error creating file")
+		}
+	}
+
+	return &model.DownloadLink{
+		URL: r.Conf.ApiURL + "/downloads/" + *qr.DownloadableFileID,
+	}, nil
+}
+
 // UserPrimaryKey is the resolver for the userPrimaryKey field.
 func (r *primaryKeyValueResolver) UserPrimaryKey(ctx context.Context, obj *model.PrimaryKeyValue) (*model.UserPrimaryKey, error) {
 	return findObjectByID[model.UserPrimaryKey](obj.UserPrimaryKeyID, r.Conf.DB, "Error finding user primary key.")
@@ -313,7 +357,7 @@ func (r *queryResultResolver) RequestStatus(ctx context.Context, obj *model.Quer
 
 // Records is the resolver for the records field.
 func (r *queryResultResolver) Records(ctx context.Context, obj *model.QueryResult) (*string, error) {
-	if obj.Records == nil {
+	if obj.Records == nil || obj.ResultType != model.ResultTypeRecordsJSON {
 		return nil, nil
 	}
 

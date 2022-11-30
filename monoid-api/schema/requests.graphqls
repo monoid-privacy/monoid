@@ -87,10 +87,16 @@ type RequestStatus {
     queryResult: QueryResult
 }
 
+enum ResultType {
+    RECORDS_JSON
+    FILE
+}
+
 type QueryResult {
   id: ID!
   requestStatus: RequestStatus!
   records: String
+  resultType: ResultType!
 }
 
 extend type Query {
@@ -114,6 +120,7 @@ extend type Mutation {
     linkPropertyToPrimaryKey(propertyId: ID!, userPrimaryKeyId: ID): Property
 
     generateRequestDownloadLink(requestId: ID!): DownloadLink!
+    generateQueryResultDownloadLink(queryResultId: ID!): DownloadLink!
 }
 
 type RequestsResult {

@@ -1,16 +1,22 @@
-import React, { useMemo, useState } from 'react';
-import { gql, useQuery } from '@apollo/client';
+import React, { useContext, useMemo, useState } from 'react';
+import {
+  ApolloError, gql, useMutation, useQuery,
+} from '@apollo/client';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { CircleStackIcon, FolderIcon, PlusIcon } from '@heroicons/react/24/outline';
+import {
+  CircleStackIcon, FolderIcon, PlusIcon, XCircleIcon,
+} from '@heroicons/react/24/outline';
 import Table from '../../../../../components/Table';
 import Spinner from '../../../../../components/Spinner';
 import AlertRegion from '../../../../../components/AlertRegion';
-import { Request, SiloDefinition } from '../../../../../lib/models';
+import { QueryResult, Request, SiloDefinition } from '../../../../../lib/models';
 import Badge, { BadgeColor } from '../../../../../components/Badge';
 import SVGText from '../../../../../components/SVGText';
 import Pagination from '../../../../../components/Pagination';
 import FilterRegion, { FilterValue } from '../../../../../components/FilterRegion';
 import { SiloDefTag } from '../../../../DataMap/DataMapPage';
+import Button from '../../../../../components/Button';
+import ToastContext from '../../../../../contexts/ToastContext';
 
 const FILTER_OPTIONS_QUERY = gql`
   query RequestFilterOptionsQuery($workspaceId: ID!) {
@@ -56,12 +62,21 @@ query GetRequestData($workspaceId: ID!, $id: ID!, $limit: Int!, $offset: Int!, $
           queryResult {
             id
             records
+            resultType
           }
         }
       }
     }
   }
 }
+`;
+
+const GET_QUERY_RESULT_FILE = gql`
+  mutation GetQueryResultFile($id: ID!) {
+    generateQueryResultDownloadLink(queryResultId: $id) {
+      url
+    }
+  }
 `;
 
 export function StatusBadge({ status }: { status: string }) {
@@ -143,6 +158,47 @@ function Filters(props: {
       </div>
     </FilterRegion>
 
+  );
+}
+
+function RecordCell(props: { queryResult: QueryResult }) {
+  const { queryResult } = props;
+  const toastCtx = useContext(ToastContext);
+  const [genLink, genLinkRes] = useMutation(GET_QUERY_RESULT_FILE, {
+    variables: {
+      id: queryResult.id,
+    },
+  });
+
+  return (
+    <td colSpan={4} className="overflow-hidden">
+      {
+        queryResult.resultType === 'RECORDS_JSON' ? (
+          <pre className="text-xs bg-gray-100 p-4">
+            {JSON.stringify(JSON.parse(queryResult.records || ''), null, 2)}
+          </pre>
+        )
+          : (
+            <div className="p-4">
+              <Button onClick={() => {
+                genLink().then(({ data }) => {
+                  window.open(data.generateQueryResultDownloadLink.url, '_blank');
+                }).catch((err: ApolloError) => {
+                  toastCtx.showToast({
+                    title: 'Error',
+                    message: err.message,
+                    variant: 'danger',
+                    icon: XCircleIcon,
+                  });
+                });
+              }}
+              >
+                {genLinkRes.loading ? <Spinner color="white" /> : 'Download File'}
+              </Button>
+            </div>
+          )
+      }
+    </td>
   );
 }
 
@@ -252,11 +308,7 @@ export default function RequestStatuses() {
           key: req.id!,
           nestedComponent: req.queryResult && (
             <tr>
-              <td colSpan={4} className="overflow-hidden">
-                <pre className="text-xs bg-gray-100 p-4">
-                  {JSON.stringify(JSON.parse(req.queryResult?.records || ''), null, 2)}
-                </pre>
-              </td>
+              <RecordCell queryResult={req.queryResult} />
             </tr>
           ),
           columns: [

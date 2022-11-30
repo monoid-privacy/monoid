@@ -186,6 +186,8 @@ require (
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
 	gorm.io/datatypes v1.0.7
 	gorm.io/gorm v1.24.1-0.20221019064659-5dd2bb482755
+	logur.dev/adapter/zerolog v0.6.0
+	logur.dev/logur v0.17.0
 )
 
 // Hack for testcontainers-go

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -38,6 +39,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	dockerCli.NegotiateAPIVersion(context.Background())
 
 	// Run the docker command to get the json schema for the silos
 	specs := []*specimport.IntegrationFullSpecEntry{}

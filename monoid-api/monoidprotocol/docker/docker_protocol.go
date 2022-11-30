@@ -71,7 +71,7 @@ func (dp *DockerMonoidProtocol) InitConn(ctx context.Context) error {
 }
 
 func (dp *DockerMonoidProtocol) Spec(ctx context.Context) (*monoidprotocol.MonoidSiloSpec, error) {
-	msg, err := dp.runCmdStaticLog(
+	msgChan, err := dp.runCmdLiveLogs(
 		ctx,
 		"spec",
 		map[string]interface{}{},
@@ -82,11 +82,23 @@ func (dp *DockerMonoidProtocol) Spec(ctx context.Context) (*monoidprotocol.Monoi
 		return nil, err
 	}
 
-	if msg.Type != monoidprotocol.MonoidMessageTypeSPEC || msg.Spec == nil {
-		return nil, fmt.Errorf("incorrect message type: %v", msg.Type)
+	msgChan = collectLogs(msgChan, dp.logChan)
+	var res *monoidprotocol.MonoidSiloSpec
+
+	for s := range msgChan {
+		if s.Type != monoidprotocol.MonoidMessageTypeSPEC || s.Spec == nil {
+			log.Debug().Msgf("Message type is not spec: %s", string(s.Type))
+			continue
+		}
+
+		res = s.Spec
 	}
 
-	return msg.Spec, nil
+	if res == nil {
+		return nil, fmt.Errorf("no spec message sent")
+	}
+
+	return res, nil
 }
 
 func (dp *DockerMonoidProtocol) Validate(

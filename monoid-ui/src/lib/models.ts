@@ -35,6 +35,7 @@ export interface QueryResult {
   id?: string
   requestStatus?: RequestStatus
   records?: string
+  resultType?: 'RECORDS_JSON' | 'FILE'
 }
 
 export interface RequestStatus {

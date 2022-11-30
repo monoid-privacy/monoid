@@ -9,8 +9,11 @@ import (
 	"github.com/monoid-privacy/monoid/workflow/activity"
 	"github.com/monoid-privacy/monoid/workflow/activity/requestactivity"
 	"github.com/monoid-privacy/monoid/workflow/requestworkflow"
+	"github.com/rs/zerolog"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
+	zerologadapter "logur.dev/adapter/zerolog"
+	"logur.dev/logur"
 )
 
 const defaultPort = "8080"
@@ -24,9 +27,12 @@ func main() {
 	conf := cmd.GetBaseConfig(false, cmd.Models)
 	defer conf.AnalyticsIngestor.Close()
 
+	logger := logur.LoggerToKV(zerologadapter.New(zerolog.New(os.Stdout).Level(zerolog.InfoLevel)))
+
 	// Create the client object just once per process
 	c, err := client.Dial(client.Options{
 		HostPort: os.Getenv("TEMPORAL"),
+		Logger:   logger,
 	})
 
 	if err != nil {

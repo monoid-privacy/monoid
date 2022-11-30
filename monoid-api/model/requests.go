@@ -80,6 +80,10 @@ type PrimaryKeyValue struct {
 	Value            string
 }
 
+type QueryResultFileData struct {
+	FilePath string `json:"filePath"`
+}
+
 type QueryResult struct {
 	ID         string
 	ResultType ResultType
@@ -87,6 +91,9 @@ type QueryResult struct {
 
 	RequestStatusID string
 	RequestStatus   RequestStatus
+
+	DownloadableFileID *string
+	DownloadableFile   *DownloadableFile
 }
 
 func (q *QueryResult) KeyField(field string) (string, error) {

@@ -1,2 +1,4 @@
 monoid-api/
 monoid-ui/
+docusaurus/
+./**/venv
