@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 [project]
 name = "monoid_pydev"
-version = "0.0.1-alpha"
+version = "0.0.1a1"
 authors = [
   { name="Monoid, Inc.", email="support@monoid.co" },
 ]
@@ -25,8 +25,8 @@ dynamic = ["dependencies"]
 dependencies = {file = ["requirements.txt"]}
 
 [tool.bumpver]
-current_version = "0.0.1-alpha"
-version_pattern = "MAJOR.MINOR.PATCH[-TAG]"
+current_version = "0.0.1a1"
+version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true
 tag = false
