@@ -6,14 +6,14 @@
         "host": {
             "type": "string",
             "title": "Host",
-            "description": "The AWS Redshift host address",
+            "description": "The Amazon Redshift host address",
             "order": 1
           },
       "database": {
         "type": "string",
         "title": "Default Database",
         "description": "The default database to connect to. Monoid can scan for all databases on your instance, but this is the one the system will connect to initially.",
-        "default": "postgres",
+        "default": "dev",
         "order": 2
       },
       "username": {
@@ -66,8 +66,7 @@
     "required": [
       "username",
       "password",
-      "account",
-      "schemas",
+      "host",
       "database"
     ]
   }

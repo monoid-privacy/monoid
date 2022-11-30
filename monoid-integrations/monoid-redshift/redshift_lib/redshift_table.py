@@ -9,34 +9,70 @@ from pypika import Table, Query, Field
 from redshift_lib.helpers import get_connection, logger
 
 
-def type_to_jsonschema(pg_type: str) -> Optional[str]:
-    if (
-        pg_type == "int" or
-        pg_type == "integer" or
-        pg_type == "int8" or
-        pg_type == "int2" or
-        pg_type == "int4" or
-        pg_type == "smallint" or
-        pg_type == "bigint"
-    ):
-        return "integer"
-    elif (
-        pg_type == "decimal" or
-        pg_type == "numeric" or
-        pg_type == "real" or
-        pg_type == "double precision"
-    ):
-        return "number"
-    elif (
-        pg_type == "text" or
-        pg_type == "timestamptz"
-    ):
-        return "string"
-    elif (
-        pg_type == "bytea"
-    ):
-        return "string"
+def type_to_jsonschema(redshift_type: str) -> Optional[str]:
+    int_types = [
+      "int", 
+      "int64",
+      "integer", 
+      "mediumint",
+      "smallint", 
+      "tinyint", 
+      "bigint", 
+      "byteint"
+    ]
 
+    number_types = [
+      "decimal",
+      "bigdecimal",
+      "bignumeric", 
+      "number",
+      "numeric", 
+      "float", 
+      "float4",
+      "float8",
+      "float64",
+      "double", 
+      "real", 
+      "double precision",
+    ]
+
+    time_types = [
+      "date", 
+      "time", 
+      "datetime", 
+      "timestamp", 
+      "timestamp_ltz",
+      "timestamp_ntz", 
+      "timestamp_tz", 
+      "year",
+    ]
+
+    string_types = [
+      "char", 
+      "varchar", 
+      "tinytext", 
+      "text",
+      "mediumtext",
+      "longtext",
+      "tinyblob",
+      "blob",
+      "string",
+      "mediumblob",
+      "longblob",
+      "enum",
+      "set",
+      "binary",
+      "varbinary",
+    ]
+
+    comp_type = redshift_type.lower()
+
+    if comp_type in int_types:
+        return "integer"
+    elif comp_type in number_types:
+        return "number"
+    elif (comp_type in string_types) or (comp_type in time_types):
+        return "string"
     return None
 
 
@@ -163,20 +199,23 @@ class RedshiftTableDataStore(DBDataStore):
 
     def delete_records(
         self,
-        query_identifier: MonoidQueryIdentifier,
-        persistence_conf: MonoidPersistenceConfig
+        persistence_conf: MonoidPersistenceConfig,
+        query_identifier: MonoidQueryIdentifier
     ) -> Iterable[MonoidRecord]:
-        res = [q for q in self.query_records(query_identifier, persistence_conf)]
+        res = [q for q in self.query_records(persistence_conf, query_identifier)]
 
         logger.info(
             f"Deleting records from table {self.group()}.{self.name()}")
 
-        with self._get_connection().cursor() as cur:
+        conn = self._get_connection()
+        with conn.cursor() as cur:
             tbl = Table(self.table, schema=self.schema)
             q = Query.from_(tbl).delete().where(
                 Field(query_identifier.identifier) ==
                 query_identifier.identifier_query)
+            logger.info(str(q))
             cur.execute(str(q))
+            conn.commit()
 
         return res
 

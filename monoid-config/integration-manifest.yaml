@@ -16,3 +16,9 @@
   dockerImage: monoidco/monoid-bigquery
   dockerTag: 0.0.1
   logo: bigquery.svg
+- name: Amazon Redshift
+  id: eedf094b-21e8-466c-87a4-7d86974e0fe6
+  documentationUrl: https://docs.monoid.co
+  dockerImage: monoidco/monoid-redshift
+  dockerTag: 0.0.1
+  logo: redshift.svg
