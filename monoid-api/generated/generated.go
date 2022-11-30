@@ -159,7 +159,6 @@ type ComplexityRoot struct {
 		UpdateDataSource                func(childComplexity int, input *model.UpdateDataSourceInput) int
 		UpdateProperty                  func(childComplexity int, input *model.UpdatePropertyInput) int
 		UpdateSiloDefinition            func(childComplexity int, input *model.UpdateSiloDefinitionInput) int
-		UpdateSiloScanConfig            func(childComplexity int, input model.SiloScanConfigInput) int
 		UpdateSiloSpecification         func(childComplexity int, input *model.UpdateSiloSpecificationInput) int
 		UpdateSubject                   func(childComplexity int, input *model.UpdateSubjectInput) int
 		UpdateUserPrimaryKey            func(childComplexity int, input model.UpdateUserPrimaryKeyInput) int
@@ -262,14 +261,9 @@ type ComplexityRoot struct {
 		Discoveries       func(childComplexity int, statuses []*model.DiscoveryStatus, query *string, limit int, offset int) int
 		ID                func(childComplexity int) int
 		Name              func(childComplexity int) int
-		ScanConfig        func(childComplexity int) int
 		SiloConfig        func(childComplexity int) int
 		SiloSpecification func(childComplexity int) int
 		Subjects          func(childComplexity int) int
-	}
-
-	SiloScanConfig struct {
-		Cron func(childComplexity int) int
 	}
 
 	SiloSpecification struct {
@@ -362,7 +356,6 @@ type MutationResolver interface {
 	CreateSiloDefinition(ctx context.Context, input *model.CreateSiloDefinitionInput) (*model.SiloDefinition, error)
 	UpdateSiloDefinition(ctx context.Context, input *model.UpdateSiloDefinitionInput) (*model.SiloDefinition, error)
 	DeleteSiloDefinition(ctx context.Context, id string) (*string, error)
-	UpdateSiloScanConfig(ctx context.Context, input model.SiloScanConfigInput) (*model.SiloDefinition, error)
 }
 type NewCategoryDiscoveryResolver interface {
 	Category(ctx context.Context, obj *model.NewCategoryDiscovery) (*model.Category, error)
@@ -419,7 +412,6 @@ type SiloDefinitionResolver interface {
 	DataSources(ctx context.Context, obj *model.SiloDefinition) ([]*model.DataSource, error)
 
 	SiloConfig(ctx context.Context, obj *model.SiloDefinition) (map[string]interface{}, error)
-	ScanConfig(ctx context.Context, obj *model.SiloDefinition) (*model.SiloScanConfig, error)
 	Discoveries(ctx context.Context, obj *model.SiloDefinition, statuses []*model.DiscoveryStatus, query *string, limit int, offset int) (*model.DataDiscoveriesListResult, error)
 }
 type SiloSpecificationResolver interface {
@@ -1040,18 +1032,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateSiloDefinition(childComplexity, args["input"].(*model.UpdateSiloDefinitionInput)), true
 
-	case "Mutation.updateSiloScanConfig":
-		if e.complexity.Mutation.UpdateSiloScanConfig == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_updateSiloScanConfig_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.UpdateSiloScanConfig(childComplexity, args["input"].(model.SiloScanConfigInput)), true
-
 	case "Mutation.updateSiloSpecification":
 		if e.complexity.Mutation.UpdateSiloSpecification == nil {
 			break
@@ -1573,13 +1553,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.SiloDefinition.Name(childComplexity), true
 
-	case "SiloDefinition.scanConfig":
-		if e.complexity.SiloDefinition.ScanConfig == nil {
-			break
-		}
-
-		return e.complexity.SiloDefinition.ScanConfig(childComplexity), true
-
 	case "SiloDefinition.siloConfig":
 		if e.complexity.SiloDefinition.SiloConfig == nil {
 			break
@@ -1600,13 +1573,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.SiloDefinition.Subjects(childComplexity), true
-
-	case "SiloScanConfig.cron":
-		if e.complexity.SiloScanConfig.Cron == nil {
-			break
-		}
-
-		return e.complexity.SiloScanConfig.Cron(childComplexity), true
 
 	case "SiloSpecification.dockerImage":
 		if e.complexity.SiloSpecification.DockerImage == nil {
@@ -1861,7 +1827,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputHandleDiscoveryInput,
 		ec.unmarshalInputKVPair,
 		ec.unmarshalInputRequestStatusQuery,
-		ec.unmarshalInputSiloScanConfigInput,
 		ec.unmarshalInputUpdateCategoryInput,
 		ec.unmarshalInputUpdateDataSourceInput,
 		ec.unmarshalInputUpdatePropertyInput,
@@ -2440,10 +2405,6 @@ input UpdateSiloDefinitionInput {
     siloData: String
 }
 
-type SiloScanConfig {
-    cron: String!
-}
-
 type SiloDefinition {
     id: ID!
     name: String!
@@ -2452,7 +2413,6 @@ type SiloDefinition {
     dataSources: [DataSource!]
     subjects: [Subject!]
     siloConfig: Map
-    scanConfig: SiloScanConfig
 }
 
 input CreateSiloDefinitionInput {
@@ -2464,22 +2424,10 @@ input CreateSiloDefinitionInput {
     name: String!
 }
 
-input SiloScanConfigInput {
-    siloId: ID!
-
-    """
-    A cron string that can be used to schedule
-    the scan, or empty string if automatic scanning
-    is disabled.
-    """
-    cron: String!
-}
-
 extend type Mutation {
     createSiloDefinition(input: CreateSiloDefinitionInput): SiloDefinition
     updateSiloDefinition(input: UpdateSiloDefinitionInput): SiloDefinition
     deleteSiloDefinition(id: ID!): ID
-    updateSiloScanConfig(input: SiloScanConfigInput!): SiloDefinition
 }
 
 extend type Workspace {
@@ -2911,21 +2859,6 @@ func (ec *executionContext) field_Mutation_updateSiloDefinition_args(ctx context
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalOUpdateSiloDefinitionInput2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐUpdateSiloDefinitionInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_updateSiloScanConfig_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.SiloScanConfigInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNSiloScanConfigInput2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloScanConfigInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3842,8 +3775,6 @@ func (ec *executionContext) fieldContext_DataDiscovery_siloDefinition(ctx contex
 				return ec.fieldContext_SiloDefinition_subjects(ctx, field)
 			case "siloConfig":
 				return ec.fieldContext_SiloDefinition_siloConfig(ctx, field)
-			case "scanConfig":
-				return ec.fieldContext_SiloDefinition_scanConfig(ctx, field)
 			case "discoveries":
 				return ec.fieldContext_SiloDefinition_discoveries(ctx, field)
 			}
@@ -4175,8 +4106,6 @@ func (ec *executionContext) fieldContext_DataMapRow_siloDefinition(ctx context.C
 				return ec.fieldContext_SiloDefinition_subjects(ctx, field)
 			case "siloConfig":
 				return ec.fieldContext_SiloDefinition_siloConfig(ctx, field)
-			case "scanConfig":
-				return ec.fieldContext_SiloDefinition_scanConfig(ctx, field)
 			case "discoveries":
 				return ec.fieldContext_SiloDefinition_discoveries(ctx, field)
 			}
@@ -4484,8 +4413,6 @@ func (ec *executionContext) fieldContext_DataSource_siloDefinition(ctx context.C
 				return ec.fieldContext_SiloDefinition_subjects(ctx, field)
 			case "siloConfig":
 				return ec.fieldContext_SiloDefinition_siloConfig(ctx, field)
-			case "scanConfig":
-				return ec.fieldContext_SiloDefinition_scanConfig(ctx, field)
 			case "discoveries":
 				return ec.fieldContext_SiloDefinition_discoveries(ctx, field)
 			}
@@ -5016,8 +4943,6 @@ func (ec *executionContext) fieldContext_Job_siloDefinition(ctx context.Context,
 				return ec.fieldContext_SiloDefinition_subjects(ctx, field)
 			case "siloConfig":
 				return ec.fieldContext_SiloDefinition_siloConfig(ctx, field)
-			case "scanConfig":
-				return ec.fieldContext_SiloDefinition_scanConfig(ctx, field)
 			case "discoveries":
 				return ec.fieldContext_SiloDefinition_discoveries(ctx, field)
 			}
@@ -7151,8 +7076,6 @@ func (ec *executionContext) fieldContext_Mutation_createSiloDefinition(ctx conte
 				return ec.fieldContext_SiloDefinition_subjects(ctx, field)
 			case "siloConfig":
 				return ec.fieldContext_SiloDefinition_siloConfig(ctx, field)
-			case "scanConfig":
-				return ec.fieldContext_SiloDefinition_scanConfig(ctx, field)
 			case "discoveries":
 				return ec.fieldContext_SiloDefinition_discoveries(ctx, field)
 			}
@@ -7223,8 +7146,6 @@ func (ec *executionContext) fieldContext_Mutation_updateSiloDefinition(ctx conte
 				return ec.fieldContext_SiloDefinition_subjects(ctx, field)
 			case "siloConfig":
 				return ec.fieldContext_SiloDefinition_siloConfig(ctx, field)
-			case "scanConfig":
-				return ec.fieldContext_SiloDefinition_scanConfig(ctx, field)
 			case "discoveries":
 				return ec.fieldContext_SiloDefinition_discoveries(ctx, field)
 			}
@@ -7291,78 +7212,6 @@ func (ec *executionContext) fieldContext_Mutation_deleteSiloDefinition(ctx conte
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_deleteSiloDefinition_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_updateSiloScanConfig(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_updateSiloScanConfig(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateSiloScanConfig(rctx, fc.Args["input"].(model.SiloScanConfigInput))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.SiloDefinition)
-	fc.Result = res
-	return ec.marshalOSiloDefinition2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloDefinition(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_updateSiloScanConfig(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_SiloDefinition_id(ctx, field)
-			case "name":
-				return ec.fieldContext_SiloDefinition_name(ctx, field)
-			case "description":
-				return ec.fieldContext_SiloDefinition_description(ctx, field)
-			case "siloSpecification":
-				return ec.fieldContext_SiloDefinition_siloSpecification(ctx, field)
-			case "dataSources":
-				return ec.fieldContext_SiloDefinition_dataSources(ctx, field)
-			case "subjects":
-				return ec.fieldContext_SiloDefinition_subjects(ctx, field)
-			case "siloConfig":
-				return ec.fieldContext_SiloDefinition_siloConfig(ctx, field)
-			case "scanConfig":
-				return ec.fieldContext_SiloDefinition_scanConfig(ctx, field)
-			case "discoveries":
-				return ec.fieldContext_SiloDefinition_discoveries(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type SiloDefinition", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateSiloScanConfig_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -10638,51 +10487,6 @@ func (ec *executionContext) fieldContext_SiloDefinition_siloConfig(ctx context.C
 	return fc, nil
 }
 
-func (ec *executionContext) _SiloDefinition_scanConfig(ctx context.Context, field graphql.CollectedField, obj *model.SiloDefinition) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SiloDefinition_scanConfig(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.SiloDefinition().ScanConfig(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.SiloScanConfig)
-	fc.Result = res
-	return ec.marshalOSiloScanConfig2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloScanConfig(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_SiloDefinition_scanConfig(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "SiloDefinition",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "cron":
-				return ec.fieldContext_SiloScanConfig_cron(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type SiloScanConfig", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _SiloDefinition_discoveries(ctx context.Context, field graphql.CollectedField, obj *model.SiloDefinition) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_SiloDefinition_discoveries(ctx, field)
 	if err != nil {
@@ -10740,50 +10544,6 @@ func (ec *executionContext) fieldContext_SiloDefinition_discoveries(ctx context.
 	if fc.Args, err = ec.field_SiloDefinition_discoveries_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _SiloScanConfig_cron(ctx context.Context, field graphql.CollectedField, obj *model.SiloScanConfig) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SiloScanConfig_cron(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Cron, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalNString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_SiloScanConfig_cron(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "SiloScanConfig",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
 	}
 	return fc, nil
 }
@@ -12124,8 +11884,6 @@ func (ec *executionContext) fieldContext_Workspace_siloDefinitions(ctx context.C
 				return ec.fieldContext_SiloDefinition_subjects(ctx, field)
 			case "siloConfig":
 				return ec.fieldContext_SiloDefinition_siloConfig(ctx, field)
-			case "scanConfig":
-				return ec.fieldContext_SiloDefinition_scanConfig(ctx, field)
 			case "discoveries":
 				return ec.fieldContext_SiloDefinition_discoveries(ctx, field)
 			}
@@ -12185,8 +11943,6 @@ func (ec *executionContext) fieldContext_Workspace_siloDefinition(ctx context.Co
 				return ec.fieldContext_SiloDefinition_subjects(ctx, field)
 			case "siloConfig":
 				return ec.fieldContext_SiloDefinition_siloConfig(ctx, field)
-			case "scanConfig":
-				return ec.fieldContext_SiloDefinition_scanConfig(ctx, field)
 			case "discoveries":
 				return ec.fieldContext_SiloDefinition_discoveries(ctx, field)
 			}
@@ -14564,42 +14320,6 @@ func (ec *executionContext) unmarshalInputRequestStatusQuery(ctx context.Context
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputSiloScanConfigInput(ctx context.Context, obj interface{}) (model.SiloScanConfigInput, error) {
-	var it model.SiloScanConfigInput
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"siloId", "cron"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "siloId":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("siloId"))
-			it.SiloID, err = ec.unmarshalNID2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "cron":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cron"))
-			it.Cron, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputUpdateCategoryInput(ctx context.Context, obj interface{}) (model.UpdateCategoryInput, error) {
 	var it model.UpdateCategoryInput
 	asMap := map[string]interface{}{}
@@ -15854,12 +15574,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_deleteSiloDefinition(ctx, field)
 			})
 
-		case "updateSiloScanConfig":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateSiloScanConfig(ctx, field)
-			})
-
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -16950,23 +16664,6 @@ func (ec *executionContext) _SiloDefinition(ctx context.Context, sel ast.Selecti
 				return innerFunc(ctx)
 
 			})
-		case "scanConfig":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._SiloDefinition_scanConfig(ctx, field, obj)
-				return res
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
-
-			})
 		case "discoveries":
 			field := field
 
@@ -16987,34 +16684,6 @@ func (ec *executionContext) _SiloDefinition(ctx context.Context, sel ast.Selecti
 				return innerFunc(ctx)
 
 			})
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var siloScanConfigImplementors = []string{"SiloScanConfig"}
-
-func (ec *executionContext) _SiloScanConfig(ctx context.Context, sel ast.SelectionSet, obj *model.SiloScanConfig) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, siloScanConfigImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("SiloScanConfig")
-		case "cron":
-
-			out.Values[i] = ec._SiloScanConfig_cron(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -18108,11 +17777,6 @@ func (ec *executionContext) marshalNSiloDefinition2ᚖgithubᚗcomᚋmonoidᚑpr
 	return ec._SiloDefinition(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNSiloScanConfigInput2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloScanConfigInput(ctx context.Context, v interface{}) (model.SiloScanConfigInput, error) {
-	res, err := ec.unmarshalInputSiloScanConfigInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
 func (ec *executionContext) marshalNSiloSpecification2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloSpecification(ctx context.Context, sel ast.SelectionSet, v model.SiloSpecification) graphql.Marshaler {
 	return ec._SiloSpecification(ctx, sel, &v)
 }
@@ -18134,27 +17798,6 @@ func (ec *executionContext) unmarshalNString2string(ctx context.Context, v inter
 
 func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	res := graphql.MarshalString(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
-}
-
-func (ec *executionContext) unmarshalNString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
-	res, err := graphql.UnmarshalString(v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNString2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	res := graphql.MarshalString(*v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -19480,13 +19123,6 @@ func (ec *executionContext) marshalOSiloDefinition2ᚖgithubᚗcomᚋmonoidᚑpr
 		return graphql.Null
 	}
 	return ec._SiloDefinition(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalOSiloScanConfig2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloScanConfig(ctx context.Context, sel ast.SelectionSet, v *model.SiloScanConfig) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._SiloScanConfig(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOSiloSpecification2ᚕgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSiloSpecificationᚄ(ctx context.Context, sel ast.SelectionSet, v []model.SiloSpecification) graphql.Marshaler {

@@ -144,7 +144,7 @@ func generateTempRequestTar(conf *config.BaseConfig, requestID string) (string, 
 	}
 
 	out, err := os.CreateTemp(
-		filepath.Join("/tmp/monoid"),
+		filepath.Join(conf.TempStorePath),
 		fmt.Sprintf("%s*.tar.gz", requestID),
 	)
 

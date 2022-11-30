@@ -39,17 +39,10 @@ type SiloDefinition struct {
 	DataSources         []*DataSource
 	Subjects            []Subject `gorm:"many2many:silo_definition_subjects;"`
 	Config              SecretString
-	ScanConfig          *SiloScanConfig
 	DataDiscoveries     []DataDiscovery
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
-}
-
-type SiloScanConfig struct {
-	SiloDefinitionID string
-	Cron             *string
-	WorkflowID       *string
 }
 
 type DataSource struct {

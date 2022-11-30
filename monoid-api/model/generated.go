@@ -123,14 +123,6 @@ type RequestsResult struct {
 	NumRequests int        `json:"numRequests"`
 }
 
-type SiloScanConfigInput struct {
-	SiloID string `json:"siloId"`
-	// A cron string that can be used to schedule
-	// the scan, or empty string if automatic scanning
-	// is disabled.
-	Cron string `json:"cron"`
-}
-
 type UpdateCategoryInput struct {
 	Name *string `json:"name"`
 }

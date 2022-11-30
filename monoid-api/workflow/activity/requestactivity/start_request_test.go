@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"os"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -46,7 +47,8 @@ func (s *startRequestTestSuite) TeardownSuite() {
 func (s *startRequestTestSuite) SetupTest() {
 	s.ra = &RequestActivity{
 		Conf: &config.BaseConfig{
-			DB: s.db,
+			DB:            s.db,
+			TempStorePath: os.TempDir(),
 		},
 	}
 	s.env = s.NewTestActivityEnvironment()

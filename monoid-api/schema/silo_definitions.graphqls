@@ -11,10 +11,6 @@ input UpdateSiloDefinitionInput {
     siloData: String
 }
 
-type SiloScanConfig {
-    cron: String!
-}
-
 type SiloDefinition {
     id: ID!
     name: String!
@@ -23,7 +19,6 @@ type SiloDefinition {
     dataSources: [DataSource!]
     subjects: [Subject!]
     siloConfig: Map
-    scanConfig: SiloScanConfig
 }
 
 input CreateSiloDefinitionInput {
@@ -35,22 +30,10 @@ input CreateSiloDefinitionInput {
     name: String!
 }
 
-input SiloScanConfigInput {
-    siloId: ID!
-
-    """
-    A cron string that can be used to schedule
-    the scan, or empty string if automatic scanning
-    is disabled.
-    """
-    cron: String!
-}
-
 extend type Mutation {
     createSiloDefinition(input: CreateSiloDefinitionInput): SiloDefinition
     updateSiloDefinition(input: UpdateSiloDefinitionInput): SiloDefinition
     deleteSiloDefinition(id: ID!): ID
-    updateSiloScanConfig(input: SiloScanConfigInput!): SiloDefinition
 }
 
 extend type Workspace {

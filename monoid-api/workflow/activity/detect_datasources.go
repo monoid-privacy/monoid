@@ -387,7 +387,7 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) (in
 	logger.Info("Getting schemas")
 
 	// Create a temporary directory that can be used by the docker container
-	dir, err := ioutil.TempDir("/tmp/monoid", "monoid")
+	dir, err := ioutil.TempDir(a.Conf.TempStorePath, "monoid")
 	if err != nil {
 		return 0, err
 	}

@@ -112,7 +112,7 @@ func (a *RequestActivity) StartSiloRequestActivity(
 	}
 
 	// Create a temporary directory that can be used by the docker container
-	dir, err := ioutil.TempDir("/tmp/monoid", "monoid")
+	dir, err := ioutil.TempDir(a.Conf.TempStorePath, "monoid")
 	if err != nil {
 		return RequestStatusResult{}, err
 	}

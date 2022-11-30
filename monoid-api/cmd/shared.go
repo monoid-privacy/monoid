@@ -41,7 +41,6 @@ var Models = []interface{}{
 	model.Category{},
 	model.DataSource{},
 	model.Purpose{},
-	model.SiloScanConfig{},
 	model.SiloDefinition{},
 	model.SiloSpecification{},
 	model.Subject{},
@@ -134,6 +133,7 @@ func GetBaseConfig(runMigrations bool, models []interface{}) config.BaseConfig {
 		ApiURL:          os.Getenv("API_URL"),
 		WebURL:          os.Getenv("WEB_URL"),
 		FileStore:       fileStore,
+		TempStorePath:   os.Getenv("TEMP_STORE_PATH"),
 		ProtocolFactory: &docker.DockerProtocolFactory{},
 		AnalyticsIngestor: ingestor.NewSegmentIngestor(
 			os.Getenv("SEGMENT_KEY"),

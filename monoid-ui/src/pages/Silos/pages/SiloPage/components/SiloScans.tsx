@@ -1,9 +1,8 @@
 import {
-  ApolloError, gql, useMutation, useQuery,
+  gql, useQuery,
 } from '@apollo/client';
 import React, { useContext, useEffect, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
-import { XCircleIcon } from '@heroicons/react/24/solid';
 import dayjs from 'dayjs';
 import updateLocale from 'dayjs/plugin/updateLocale';
 import duration from 'dayjs/plugin/duration';
@@ -12,8 +11,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import { CheckCircleIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import AlertRegion from '../../../../../components/AlertRegion';
 import Card, { CardDivider, CardHeader } from '../../../../../components/Card';
-import Input, { InputLabel } from '../../../../../components/Input';
-import Select from '../../../../../components/Select';
+import Input from '../../../../../components/Input';
 import Spinner from '../../../../../components/Spinner';
 import { Job } from '../../../../../lib/models';
 import ToastContext from '../../../../../contexts/ToastContext';
@@ -21,6 +19,8 @@ import Pagination from '../../../../../components/Pagination';
 import JobRow from './JobRow';
 import EmptyState from '../../../../../components/Empty';
 import ScanButtonRegion from './ScanButton';
+import Text from '../../../../../components/Text';
+import { BristA } from '../../../../../components/Link';
 
 dayjs.extend(updateLocale);
 dayjs.extend(duration);
@@ -45,53 +45,6 @@ const GET_SCANS = gql`
     }
   }
 `;
-
-const GET_SCAN_SCHEDULE = gql`
-  query GetScanSchedule($id: ID!, $workspaceId: ID!) {
-    workspace(id: $workspaceId) {
-      id
-      siloDefinition(id: $id) {
-        id
-        scanConfig {
-          cron
-        }
-      }
-    }
-  }
-`;
-
-const UPDATE_SCAN_SCHEDULE = gql`
-  mutation UpdateScanSchedule($input: SiloScanConfigInput!) {
-    updateSiloScanConfig(input: $input) {
-      id
-      scanConfig {
-        cron
-      }
-    }
-  }
-`;
-
-const scanIntervals = [
-  1,
-  3,
-  12,
-  24,
-  24 * 7,
-  24 * 30,
-];
-
-const scanOptions = [
-  {
-    label: 'Manually',
-    value: '',
-  },
-  ...scanIntervals.map((v) => (
-    {
-      label: `Every ${dayjs.duration(v, 'hours').humanize().replace(/(^a|an)\w*/, '')}`,
-      value: `0 */${v} * * *`,
-    }
-  )),
-];
 
 const limit = 10;
 
@@ -186,24 +139,6 @@ function JobList(props: {
 }
 
 function ScanSettingsCard() {
-  const { siloId, id } = useParams<{ siloId: string, id: string }>();
-  const { data, loading, error } = useQuery(GET_SCAN_SCHEDULE, {
-    variables: {
-      workspaceId: id,
-      id: siloId,
-    },
-  });
-  const [updateScanSchedule, updateScanRes] = useMutation(UPDATE_SCAN_SCHEDULE);
-  const toastCtx = useContext(ToastContext);
-
-  if (error) {
-    return (
-      <AlertRegion alertTitle="Error">
-        {error.message}
-      </AlertRegion>
-    );
-  }
-
   return (
     <Card>
       <CardHeader>
@@ -211,45 +146,17 @@ function ScanSettingsCard() {
       </CardHeader>
       <CardDivider />
       <div>
-        {loading
-          ? <Spinner />
-          : (
-            <>
-              <InputLabel htmlFor="scan-select" className="mb-2">
-                Scan Frequency
-              </InputLabel>
-              <Select
-                id="scan-select"
-                onChange={(e) => {
-                  updateScanSchedule({
-                    variables: {
-                      input: {
-                        siloId,
-                        cron: e.target.value,
-                      },
-                    },
-                  }).catch((err: ApolloError) => {
-                    toastCtx.showToast({
-                      title: 'Error',
-                      message: err.message,
-                      variant: 'danger',
-                      icon: XCircleIcon,
-                    });
-                  });
-                }}
-                value={
-                  data.workspace.siloDefinition.scanConfig.cron || ''
-                }
-              >
-                {!updateScanRes.loading
-                  && scanOptions.map((v) => (
-                    <option key={v.value} value={v.value}>
-                      {v.label}
-                    </option>
-                  ))}
-              </Select>
-            </>
-          )}
+        <Text em="bold" size="md">
+          {' '}
+          Automated scanning requires a
+          {' '}
+          <BristA href="http://monoid.co/#pricing" className="underline" target="_blank">license</BristA>
+          .
+          {' '}
+        </Text>
+        <Text size="sm">
+          You can initiate a scan from the data sources tab.
+        </Text>
       </div>
     </Card>
   );
