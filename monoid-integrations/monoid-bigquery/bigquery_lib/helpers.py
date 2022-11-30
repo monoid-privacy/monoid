@@ -5,7 +5,7 @@ from google.cloud import bigquery
 from google.oauth2 import service_account
 from monoid_pydev.logger import get_logger
 
-logger = get_logger("postgres")
+logger = get_logger("bigquery")
 
 
 def get_connection(conf: Mapping[str, Any], db_name: Optional[str] = None) -> google.cloud.bigquery.client.Client:

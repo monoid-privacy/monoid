@@ -27,11 +27,8 @@ class BigQuerySilo(AbstractSilo):
         project, dataset_id = db_name.split(":")
 
         client = get_connection(conf)
-        print("got client")
         dataset = client.get_dataset(dataset_id)
-        print("got dataset")
         tables = list(client.list_tables(dataset))
-        print("got tables")
 
         for table in tables:
             data_stores.append(BigQueryTableDataStore(

@@ -10,13 +10,6 @@
         "description": "The authentication key JSON for the created service account.",
         "order": 0
       },
-      "scan_all": {
-        "type": "boolean",
-        "title": "Scan All DBs",
-        "description": "If true, Monoid will scan all databases.",
-        "default": true,
-        "order": 2
-      },
       "exclude_dbs": {
         "title": "Exclude DBs",
         "description": "A list of databases to exclude for silo discovery.",
@@ -28,6 +21,13 @@
         "uniqueItems": true,
         "default": [],
         "order": 1
+      },
+      "scan_all": {
+        "type": "boolean",
+        "title": "Scan All DBs",
+        "description": "If true, Monoid will scan all databases.",
+        "default": true,
+        "order": 2
       }
     },
     "required": [
