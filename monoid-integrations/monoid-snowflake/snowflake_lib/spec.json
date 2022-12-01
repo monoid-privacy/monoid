@@ -3,30 +3,30 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
     "properties": {
-    "account": {
+      "account": {
         "type": "string",
         "title": "Account",
         "description": "The Snowflake account string",
         "order": 1
-        },        
+      },
       "database": {
         "type": "string",
         "title": "Default Database",
-        "description": "The default database to connect to. Monoid can scan for all databases on your instance, but this is the one the system will connect to initially.",
+        "description": "The default database to connect to. Monoid can scan for all databases in Snowflake, but this is the one the system will connect to initially.",
         "default": "SNOWFLAKE",
         "order": 2
       },
       "username": {
         "type": "string",
         "title": "Username",
-        "description": "The username for the databse.",
+        "description": "The username for the Snowflake connection.",
         "order": 3
       },
       "password": {
         "type": "string",
         "secret": true,
         "title": "Password",
-        "description": "The password for the database",
+        "description": "The password for the Snowflake connection.",
         "order": 4
       },
       "warehouse": {

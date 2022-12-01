@@ -46,17 +46,6 @@
             order: 5
             title: Scan All DBs
             type: boolean
-        schemas:
-            default:
-                - public
-            description: A list of schemas to sync with, default public.
-            items:
-                type: string
-            minItems: 0
-            order: 7
-            title: Schemas
-            type: array
-            uniqueItems: true
         ssl:
             default: false
             description: Connect using SSL.
@@ -86,20 +75,10 @@
     $schema: http://json-schema.org/draft-07/schema#
     properties:
         database:
-            description: The default database to connect to. Monoid can scan for all databases on your instance, but this is the one the system will connect to initially.
+            description: The database to connect to.
             order: 2
-            title: Default Database
+            title: Database
             type: string
-        exclude_dbs:
-            default: []
-            description: A list of databases to exclude for silo discovery.
-            items:
-                type: string
-            minItems: 0
-            order: 8
-            title: Exclude DBs
-            type: array
-            uniqueItems: true
         hostname:
             description: The hostname of the database
             order: 0
@@ -116,31 +95,8 @@
             order: 1
             title: Port
             type: number
-        scan_all:
-            default: true
-            description: If true, Monoid will scan all databases.
-            order: 5
-            title: Scan All DBs
-            type: boolean
-        schemas:
-            default:
-                - public
-            description: A list of schemas to sync with, default public.
-            items:
-                type: string
-            minItems: 0
-            order: 7
-            title: Schemas
-            type: array
-            uniqueItems: true
-        ssl:
-            default: false
-            description: Connect using SSL.
-            order: 6
-            title: Connect using SSL
-            type: boolean
         username:
-            description: The username for the databse.
+            description: The username for the database.
             order: 3
             title: Username
             type: string
@@ -149,7 +105,6 @@
         - hostname
         - password
         - port
-        - ssl
         - database
     type: object
 - id: df51dc01-28ba-4785-bc94-a665afcf698b
@@ -167,19 +122,19 @@
             items:
                 type: string
             minItems: 0
-            order: 8
+            order: 1
             title: Exclude DBs
             type: array
             uniqueItems: true
         scan_all:
             default: true
             description: If true, Monoid will scan all databases.
-            order: 5
+            order: 2
             title: Scan All DBs
             type: boolean
         service_account_json:
             description: The authentication key JSON for the created service account.
-            order: 4
+            order: 0
             secret: true
             title: Service Account JSON
             type: string
@@ -228,17 +183,6 @@
             order: 6
             title: Scan All DBs
             type: boolean
-        schemas:
-            default:
-                - public
-            description: A list of schemas to sync with, default public.
-            items:
-                type: string
-            minItems: 0
-            order: 7
-            title: Schemas
-            type: array
-            uniqueItems: true
         username:
             description: The username for the databse.
             order: 3
@@ -266,7 +210,7 @@
             type: string
         database:
             default: SNOWFLAKE
-            description: The default database to connect to. Monoid can scan for all databases on your instance, but this is the one the system will connect to initially.
+            description: The default database to connect to. Monoid can scan for all databases in Snowflake, but this is the one the system will connect to initially.
             order: 2
             title: Default Database
             type: string
@@ -281,7 +225,7 @@
             type: array
             uniqueItems: true
         password:
-            description: The password for the database
+            description: The password for the Snowflake connection.
             order: 4
             secret: true
             title: Password
@@ -292,19 +236,8 @@
             order: 6
             title: Scan All DBs
             type: boolean
-        schemas:
-            default:
-                - public
-            description: A list of schemas to sync with, default public.
-            items:
-                type: string
-            minItems: 0
-            order: 7
-            title: Schemas
-            type: array
-            uniqueItems: true
         username:
-            description: The username for the databse.
+            description: The username for the Snowflake connection.
             order: 3
             title: Username
             type: string

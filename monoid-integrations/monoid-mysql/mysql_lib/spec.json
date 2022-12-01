@@ -17,14 +17,14 @@
       },
       "database": {
         "type": "string",
-        "title": "Default Database",
-        "description": "The default database to connect to. Monoid can scan for all databases on your instance, but this is the one the system will connect to initially.",
+        "title": "Database",
+        "description": "The database to connect to.",
         "order": 2
       },
       "username": {
         "type": "string",
         "title": "Username",
-        "description": "The username for the databse.",
+        "description": "The username for the database.",
         "order": 3
       },
       "password": {
@@ -33,32 +33,6 @@
         "title": "Password",
         "description": "The password for the database",
         "order": 4
-      },
-      "scan_all": {
-        "type": "boolean",
-        "title": "Scan All DBs",
-        "description": "If true, Monoid will scan all databases.",
-        "default": true,
-        "order": 5
-      },
-      "ssl": {
-        "title": "Connect using SSL",
-        "type": "boolean",
-        "default": false,
-        "description": "Connect using SSL.",
-        "order": 6
-      },
-      "exclude_dbs": {
-        "title": "Exclude DBs",
-        "description": "A list of databases to exclude for silo discovery.",
-        "type": "array",
-        "items": {
-          "type": "string"
-        },
-        "minItems": 0,
-        "uniqueItems": true,
-        "default": [],
-        "order": 8
       }
     },
     "required": [
@@ -66,7 +40,6 @@
       "hostname",
       "password",
       "port",
-      "ssl",
       "database"
     ]
   }

@@ -3,12 +3,12 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
     "properties": {
-        "host": {
-            "type": "string",
-            "title": "Host",
-            "description": "The Amazon Redshift host address",
-            "order": 1
-          },
+      "host": {
+        "type": "string",
+        "title": "Host",
+        "description": "The Amazon Redshift host address",
+        "order": 1
+      },
       "database": {
         "type": "string",
         "title": "Default Database",

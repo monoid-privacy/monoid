@@ -7,8 +7,6 @@ import snowflake.connector
 from snowflake_lib.snowflake_table import SnowflakeTableDataStore
 
 
-
-
 class SnowflakeSilo(AbstractSilo):
     def __init__(self):
         self._data_stores: Optional[SnowflakeTableDataStore] = None
@@ -18,6 +16,9 @@ class SnowflakeSilo(AbstractSilo):
         res = []
 
         logger.info("Getting databases")
+
+        if not conf.get("scan_all", True):
+            return [conf["database"]]
 
         with get_connection(conf) as conn:
             with conn.cursor() as cur:

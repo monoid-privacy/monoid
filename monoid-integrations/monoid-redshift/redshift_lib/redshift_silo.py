@@ -18,6 +18,9 @@ class RedshiftSilo(AbstractSilo):
 
         logger.info("Getting databases")
 
+        if not conf.get("scan_all", True):
+            return [conf["database"]]
+
         with get_connection(conf) as conn:
             with conn.cursor() as cur:
                 cur.execute(

@@ -15,8 +15,8 @@ class MySQLSilo(AbstractSilo):
           host=conf["hostname"],
           port=conf["port"],
         )
-    
-    def _get_database_table_stores(self, db_name: str, conn: mysql.connector.MySQLConnection): 
+
+    def _get_database_table_stores(self, db_name: str, conn: mysql.connector.MySQLConnection):
         data_stores = []
 
         with conn.cursor() as cur:
