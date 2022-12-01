@@ -13,7 +13,7 @@ services:
     networks:
       - monoid-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -64,6 +64,7 @@ services:
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - TEMP_STORE_PATH=/tmp/monoid
       - SEGMENT_KEY=${SEGMENT_KEY}
+      - RESOURCE_PATH=${RESOURCE_PATH}
       - FILESTORE_PATH=${FILESTORE_PATH}
       - TEMPORAL=monoid-temporal:7233
     depends_on:
@@ -79,6 +80,7 @@ services:
     volumes:
       - filestore:${FILESTORE_PATH}
       - tempstore:/tmp/monoid
+      - ./monoid-config/resources:${RESOURCE_PATH}
   loader:
     container_name: monoid-loader
     command: /monoid-config

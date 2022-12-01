@@ -3,6 +3,8 @@ package docker
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -53,18 +55,18 @@ func NewDockerMP(dockerImage string, dockerTag string, persistDir string) (monoi
 }
 
 func (dp *DockerMonoidProtocol) InitConn(ctx context.Context) error {
-	// logger := activity.GetLogger(ctx)
-
-	// logger.Info("Inspecting", map[string]interface{}{"img": dp.imageName})
 	_, _, err := dp.client.ImageInspectWithRaw(ctx, dp.imageName)
-	// logger.Info("Inspected", map[string]interface{}{"error": err})
 
 	if err != nil {
-		_, err := dp.client.ImagePull(ctx, dp.imageName, types.ImagePullOptions{})
+		log.Info().Msgf("Pulling image: %s", dp.imageName)
+		rc, err := dp.client.ImagePull(ctx, dp.imageName, types.ImagePullOptions{})
 
 		if err != nil {
 			return err
 		}
+
+		defer rc.Close()
+		io.Copy(os.Stdout, rc)
 	}
 
 	return nil
