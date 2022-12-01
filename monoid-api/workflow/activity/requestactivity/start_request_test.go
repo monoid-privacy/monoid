@@ -211,6 +211,20 @@ func (s *startRequestTestSuite) seedDB(params seedParams) (seedRes, error) {
 	}, nil
 }
 
+func cleanErrorItems(items []RequestStatusItem) []RequestStatusItem {
+	res := make([]RequestStatusItem, len(items))
+	for i, item := range items {
+		if item.Error != nil {
+			item.SchemaGroup = nil
+			item.SchemaName = ""
+		}
+
+		res[i] = item
+	}
+
+	return res
+}
+
 func (s *startRequestTestSuite) TestStartRequest() {
 	type testConfig struct {
 		name          string
@@ -417,7 +431,10 @@ func (s *startRequestTestSuite) TestStartRequest() {
 				s.Equal(resHandle, resultsArr[i].Handle)
 			}
 
-			s.ElementsMatch(statusItems, res.ResultItems)
+			s.ElementsMatch(
+				cleanErrorItems(statusItems),
+				cleanErrorItems(res.ResultItems),
+			)
 		})
 	}
 }
