@@ -11,7 +11,7 @@ import dataMapCache from './cache/dataMap';
 import requestStatusCache from './cache/requestStatus';
 
 const client = new ApolloClient({
-  uri: `${process.env.REACT_APP_API_URL}/query`,
+  uri: `${process.env.REACT_APP_API_URL || ''}/query`,
   cache: new InMemoryCache({
     typePolicies: {
       Query: {
