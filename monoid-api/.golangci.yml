@@ -1,0 +1,14 @@
+linters-settings:
+  errcheck:
+    without_tests: true
+    exclude-functions:
+      - (github.com/monoid-privacy/monoid/monoidprotocol.MonoidProtocol).Teardown
+      - (github.com/monoid-privacy/monoid/analytics/ingestor.Ingestor).Identify
+      - (github.com/monoid-privacy/monoid/analytics/ingestor.Ingestor).Close
+      - (github.com/monoid-privacy/monoid/analytics/ingestor.Ingestor).Track
+issues:
+  exclude-rules:
+    # Exclude some linters from running on tests files.
+    - path: _test\.go
+      linters:
+        - errcheck

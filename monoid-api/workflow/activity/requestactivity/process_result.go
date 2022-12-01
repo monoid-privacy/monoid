@@ -193,6 +193,10 @@ func (a *RequestActivity) ProcessRequestResults(
 
 		defer protocol.Teardown(ctx)
 
+		if err := protocol.InitConn(ctx); err != nil {
+			return ProcessRequestResult{}, err
+		}
+
 		logChan, err := protocol.AttachLogs(ctx)
 		if err != nil {
 			return ProcessRequestResult{}, err

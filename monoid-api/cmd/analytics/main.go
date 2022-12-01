@@ -30,5 +30,7 @@ func main() {
 	router.HandleFunc("/identify", analyticsHandler.HandleIdentify)
 
 	log.Info().Msgf("starting analytics service on %s", port)
-	http.ListenAndServe(":"+port, router)
+	if err := http.ListenAndServe(":"+port, router); err != nil {
+		log.Err(err).Msg("Error serving")
+	}
 }

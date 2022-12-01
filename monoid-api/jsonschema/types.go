@@ -73,7 +73,4 @@ type Schema struct {
 	Secret bool `json:"secret,omitempty"`
 
 	Extras map[string]interface{} `json:"-"`
-
-	// Special boolean representation of the Schema - section 4.3.2
-	boolean *bool
 }

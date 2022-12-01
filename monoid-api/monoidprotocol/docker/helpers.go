@@ -1,17 +1,14 @@
 package docker
 
 import (
-	"bytes"
 	"context"
 	"crypto/rand"
 	"encoding/json"
 	"io"
 	"math/big"
 
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
-	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/monoid-privacy/monoid/monoidprotocol"
 	"github.com/rs/zerolog/log"
 )
@@ -44,23 +41,6 @@ func ContainerWait(ctx context.Context, cli *client.Client, containerID string) 
 	}()
 
 	return done, errc
-}
-
-func ContainerLogs(ctx context.Context, cli *client.Client, containerID string, stdout bool, stderr bool) (io.Reader, error) {
-	var buf bytes.Buffer
-
-	res, err := cli.ContainerLogs(ctx, containerID, types.ContainerLogsOptions{
-		ShowStdout: stdout,
-		ShowStderr: stderr,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	stdcopy.StdCopy(&buf, &buf, res)
-	defer res.Close()
-
-	return &buf, nil
 }
 
 func readMessages(stream chan []byte, closer io.Closer) chan monoidprotocol.MonoidMessage {

@@ -3,6 +3,7 @@ package activity
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/monoid-privacy/monoid/model"
 	"github.com/monoid-privacy/monoid/monoidprotocol"
@@ -33,6 +34,10 @@ func (a *Activity) ValidateDataSiloDef(ctx context.Context, args ValidateDSArgs)
 
 	defer mp.Teardown(ctx)
 
+	if err := mp.InitConn(ctx); err != nil {
+		return nil, err
+	}
+
 	logChan, err := mp.AttachLogs(ctx)
 	if err != nil {
 		logger.Error("Error attaching logs: %v", err)
@@ -51,10 +56,14 @@ func (a *Activity) ValidateDataSiloDef(ctx context.Context, args ValidateDSArgs)
 	}
 
 	confString := model.SecretString("")
-	confString.Scan(args.Config)
+	if err := confString.Scan(args.Config); err != nil {
+		return nil, fmt.Errorf("error decrypting config: %v", err)
+	}
 
 	conf := map[string]interface{}{}
-	json.Unmarshal([]byte(confString), &conf)
+	if err := json.Unmarshal([]byte(confString), &conf); err != nil {
+		return nil, fmt.Errorf("error decoding config: %v", err)
+	}
 
 	logger.Info("validating")
 

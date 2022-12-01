@@ -1,10 +1,7 @@
 package basicscanner
 
 import (
-	"errors"
 	"regexp"
-
-	"github.com/monoid-privacy/monoid/monoidprotocol"
 )
 
 func stringInSlice(a string, list []string) bool {
@@ -52,20 +49,4 @@ func unique(arr []string) []string {
 		}
 	}
 	return list
-}
-
-func getValues[T any](key string, records []monoidprotocol.MonoidRecord) ([]T, error) {
-	values := []T{}
-	for _, record := range records {
-		value, ok := record.Data[key]
-		if !ok {
-			return nil, errors.New("monoid record missing key present in schema")
-		}
-		valueParsed, ok := value.(T)
-		if !ok {
-			return nil, errors.New("could not parse data as schema type")
-		}
-		values = append(values, valueParsed)
-	}
-	return values, nil
 }

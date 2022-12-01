@@ -71,7 +71,9 @@ func (dp *DockerMonoidProtocol) copyJSONObjectFiles(
 			return err
 		}
 
-		dp.copyFile(ctx, bytes.NewBuffer(bts), fname)
+		if err := dp.copyFile(ctx, bytes.NewBuffer(bts), fname); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -81,7 +83,9 @@ func (dp *DockerMonoidProtocol) teardownVolumes(
 	ctx context.Context,
 ) error {
 	for _, v := range dp.volumes {
-		dp.client.VolumeRemove(ctx, v, true)
+		if err := dp.client.VolumeRemove(ctx, v, true); err != nil {
+			log.Err(err).Msg("Error removing volume")
+		}
 	}
 
 	return nil

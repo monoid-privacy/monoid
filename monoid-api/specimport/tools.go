@@ -14,14 +14,10 @@ func GetFullSpec(entry *IntegrationManifestEntry, dockerCli *client.Client) (*In
 	mp := docker.NewDockerMPWithClient(entry.DockerImage, entry.DockerTag, "", dockerCli, false)
 	defer mp.Teardown(ctx)
 
-	mp.InitConn(ctx)
-
-	// logChan, err := mp.AttachLogs(ctx)
-	// if err != nil {
-	// 	for l := range logChan {
-	// 		fmt.Println(l)
-	// 	}
-	// }
+	err := mp.InitConn(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	spec, err := mp.Spec(ctx)
 

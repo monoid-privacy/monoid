@@ -123,7 +123,7 @@ func main() {
 		return
 	}
 
-	godotenv.Load()
+	_ = godotenv.Load()
 
 	conf := cmd.GetBaseConfig(true, cmd.Models)
 	defer conf.AnalyticsIngestor.Close()

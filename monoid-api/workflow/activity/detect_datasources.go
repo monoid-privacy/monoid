@@ -420,6 +420,10 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) (in
 
 	defer mp.Teardown(ctx)
 
+	if err := mp.InitConn(ctx); err != nil {
+		return 0, err
+	}
+
 	logChan, err := mp.AttachLogs(ctx)
 	if err != nil {
 		logger.Error("Error attaching logs: %v", err)
@@ -459,12 +463,15 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) (in
 	}()
 
 	if err := mp.InitConn(ctx); err != nil {
-		logger.Error("Error creating docker connection", err)
+		logger.Error("Error creating docker connection", "error", err)
 		return 0, err
 	}
 
 	conf := map[string]interface{}{}
-	json.Unmarshal([]byte(dataSilo.Config), &conf)
+	if err := json.Unmarshal([]byte(dataSilo.Config), &conf); err != nil {
+		logger.Error("Error decoding config", "error", err)
+		return 0, err
+	}
 
 	logger.Info("pulling schema")
 
@@ -477,7 +484,7 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) (in
 
 	matches, err := scanProtocol(ctx, mp, conf, schemas.Schemas)
 	if err != nil {
-		logger.Error("Error running scan", err)
+		logger.Error("Error running scan", "error", err)
 		return 0, err
 	}
 

@@ -78,6 +78,10 @@ func (a *RequestActivity) processSiloDefStatuses(
 
 	defer protocol.Teardown(ctx)
 
+	if err := protocol.InitConn(ctx); err != nil {
+		return nil, err
+	}
+
 	logChan, err := protocol.AttachLogs(ctx)
 	if err != nil {
 		return nil, err

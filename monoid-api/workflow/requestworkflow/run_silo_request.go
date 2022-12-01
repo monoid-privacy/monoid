@@ -181,7 +181,9 @@ func (w *RequestWorkflow) ExecuteSiloRequestWorkflow(
 		}
 
 		// Sleep before getting the new statuses, so we aren't hitting apis too frequently.
-		workflow.Sleep(ctx, pollTime)
+		if err := workflow.Sleep(ctx, pollTime); err != nil {
+			return ExecuteSiloRequestResult{}, err
+		}
 
 		// Run another request to get the status, and process again.
 		statusIDs := make([]string, 0, len(newProcessing))

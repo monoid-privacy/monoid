@@ -1,6 +1,8 @@
 package ingestor
 
 import (
+	"fmt"
+
 	analytics "gopkg.in/segmentio/analytics-go.v3"
 )
 
@@ -18,7 +20,7 @@ func NewSegmentIngestor(key string, userID *string) Ingestor {
 	}
 }
 
-func (si *SegmentIngestor) Identify(userID *string, traits map[string]interface{}) {
+func (si *SegmentIngestor) Identify(userID *string, traits map[string]interface{}) error {
 	segTraits := analytics.NewTraits()
 	for k, v := range traits {
 		switch k {
@@ -43,19 +45,19 @@ func (si *SegmentIngestor) Identify(userID *string, traits map[string]interface{
 
 	if userID == nil {
 		if si.UserID == nil {
-			return
+			return fmt.Errorf("no user id")
 		}
 
 		userID = si.UserID
 	}
 
-	si.client.Enqueue(analytics.Identify{
+	return si.client.Enqueue(analytics.Identify{
 		UserId: *userID,
 		Traits: segTraits,
 	})
 }
 
-func (si *SegmentIngestor) Track(event string, userID *string, properties map[string]interface{}) {
+func (si *SegmentIngestor) Track(event string, userID *string, properties map[string]interface{}) error {
 	props := analytics.NewProperties()
 
 	if userID == nil {
@@ -71,13 +73,13 @@ func (si *SegmentIngestor) Track(event string, userID *string, properties map[st
 		props.Set(k, v)
 	}
 
-	si.client.Enqueue(analytics.Track{
+	return si.client.Enqueue(analytics.Track{
 		UserId:     *userID,
 		Event:      event,
 		Properties: props,
 	})
 }
 
-func (si *SegmentIngestor) Close() {
-	si.client.Close()
+func (si *SegmentIngestor) Close() error {
+	return si.client.Close()
 }

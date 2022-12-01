@@ -18,7 +18,6 @@ const (
 func handleError(err error, msg string) *gqlerror.Error {
 	log.Err(err).Msg(msg)
 	return gqlerror.Errorf(msg)
-
 }
 
 func findChildObjects[childObjectType any](db *gorm.DB, parentObjectID string, queryId string) ([]*childObjectType, error) {
@@ -59,10 +58,6 @@ func DeleteObjectByID[Object any](id string, db *gorm.DB, errMsg string) (*strin
 	}
 
 	return &id, nil
-}
-
-func str(s string) *string {
-	return &s
 }
 
 func MonoidRecordsToMonoidRecordResponses(monoidRecords []monoidprotocol.MonoidRecord) []model.MonoidRecordResponse {

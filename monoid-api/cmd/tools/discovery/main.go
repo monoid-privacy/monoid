@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	godotenv.Load()
+	_ = godotenv.Load()
 
 	if len(os.Args) != 3 {
 		fmt.Println("Usage: ./discovery [manifest_file] [out_file]")
