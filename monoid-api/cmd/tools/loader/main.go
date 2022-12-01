@@ -35,9 +35,16 @@ func loadSpecs(conf *config.BaseConfig, configPath string) {
 
 		schemaStr := string(schema)
 
+		var logoUrl *string = nil
+
+		if s.Logo != "" {
+			logoUrl = &s.Logo
+		}
+
 		newSiloSpec := model.SiloSpecification{
 			ID:          s.ID,
 			Name:        s.Name,
+			LogoURL:     logoUrl,
 			DockerImage: s.DockerImage,
 			DockerTag:   s.DockerTag,
 			Schema:      &schemaStr,
