@@ -130,7 +130,6 @@ func GetBaseConfig(runMigrations bool, models []interface{}) config.BaseConfig {
 	conf := config.BaseConfig{
 		DB:              db,
 		TokenSecret:     os.Getenv("TOKEN_SECRET"),
-		ApiURL:          os.Getenv("API_URL"),
 		WebURL:          os.Getenv("WEB_URL"),
 		FileStore:       fileStore,
 		TempStorePath:   os.Getenv("TEMP_STORE_PATH"),

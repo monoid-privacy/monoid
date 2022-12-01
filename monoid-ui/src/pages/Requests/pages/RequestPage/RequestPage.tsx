@@ -133,7 +133,10 @@ export default function RequestPage(
               && (
                 <Button onClick={() => {
                   getReqFile().then(({ data: d }) => {
-                    window.open(d!.generateRequestDownloadLink.url, '_blank');
+                    const urlStr = (process.env.REACT_APP_API_URL || '') + d!.generateRequestDownloadLink.url;
+                    const url = new URL(urlStr, window.location.origin);
+
+                    window.open(url, '_blank');
                   }).catch((err: ApolloError) => {
                     toastCtx.showToast({
                       variant: 'danger',

@@ -15,12 +15,12 @@ services:
     networks:
       - monoid-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 5s
       timeout: 5s
       retries: 10
     ports:
-      - 5434:5432 
+      - 5434:5432
   web:
     container_name: monoid-dev-web
     build:
@@ -88,7 +88,6 @@ services:
       - ${LOCAL_TEMPSTORE_PATH}:/tmp/monoid
       - ./monoid-config/resources:${RESOURCE_PATH}
     environment:
-      - API_URL=${API_URL}
       - WEB_URL=${WEB_URL}
       - DB_USER=${DATABASE_USER}
       - DB_PASS=${DATABASE_PASSWORD}
@@ -141,7 +140,6 @@ services:
     container_name: monoid-dev-worker
     working_dir: /app
     environment:
-      - API_URL=${API_URL}
       - WEB_URL=${WEB_URL}
       - DB_USER=${DATABASE_USER}
       - DB_PASS=${DATABASE_PASSWORD}

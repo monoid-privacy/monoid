@@ -241,7 +241,7 @@ func (r *mutationResolver) GenerateRequestDownloadLink(ctx context.Context, requ
 
 	if request.DownloadableFileID != nil {
 		return &model.DownloadLink{
-			URL: r.Conf.ApiURL + "/downloads/" + *request.DownloadableFileID,
+			URL: "/downloads/" + *request.DownloadableFileID,
 		}, nil
 	}
 
@@ -270,7 +270,7 @@ func (r *mutationResolver) GenerateRequestDownloadLink(ctx context.Context, requ
 	}
 
 	return &model.DownloadLink{
-		URL: r.Conf.ApiURL + "/downloads/" + *request.DownloadableFileID,
+		URL: "/downloads/" + *request.DownloadableFileID,
 	}, nil
 }
 
@@ -312,7 +312,7 @@ func (r *mutationResolver) GenerateQueryResultDownloadLink(ctx context.Context, 
 	}
 
 	return &model.DownloadLink{
-		URL: r.Conf.ApiURL + "/downloads/" + *qr.DownloadableFileID,
+		URL: "/downloads/" + *qr.DownloadableFileID,
 	}, nil
 }
 

@@ -183,7 +183,10 @@ function RecordCell(props: { queryResult: QueryResult }) {
             <div className="p-4">
               <Button onClick={() => {
                 genLink().then(({ data }) => {
-                  window.open(data.generateQueryResultDownloadLink.url, '_blank');
+                  const urlStr = (process.env.REACT_APP_API_URL || '') + data!.generateQueryResultDownloadLink.url;
+                  const url = new URL(urlStr, window.location.origin);
+
+                  window.open(url, '_blank');
                 }).catch((err: ApolloError) => {
                   toastCtx.showToast({
                     title: 'Error',
