@@ -15,7 +15,7 @@
 * Stay compliant with existing (GDPR, CCPA, etc.) and emerging (CPRA, etc.) regulations.
 * **Coming soon**: cookie banners, RoPA generation, and more!
 
-
+Check out our [docs](https://docs.monoid.co) to learn more.
 
 ## Get started for free
 
