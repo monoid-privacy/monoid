@@ -19,8 +19,6 @@
 
 ## Get started for free
 
-For a thorough guide, please check out our [docs](https://docs.monoid.co)
-
 ### Option 1. Two-line deploy
 1. Generate an encryption key with `openssl rand -base64 32`.
 2. Run `ENCRYPTION_KEY=[key generated in the previous step] docker compose up`. 
@@ -36,6 +34,7 @@ Cloud version coming soon [ETA 11/30]! Contact jagath@monoid.co if you'd like to
 
 Sign up for a paid plan to get white-glove support, regardless of how you choose to deploy. Contact jagath@monoid.co for more information.
 
+For more information on getting set up, please check out our [quick-start guide.](https://docs.monoid.co/category/monoid-open-source-quick-start)
 
 ## Monoid v1.0 Features (WIP)
 
