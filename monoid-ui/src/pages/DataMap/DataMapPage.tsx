@@ -238,7 +238,6 @@ export function SiloDefTag(props: {
   value: FilterValue,
 }) {
   const { value, siloDefs } = props;
-  console.log('Defs', siloDefs);
 
   const siloDefMap = useMemo(() => (
     Object.fromEntries(siloDefs.map((sd) => [sd.id, sd]))

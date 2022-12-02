@@ -8,6 +8,10 @@ module.exports = {
     'airbnb',
     'airbnb-typescript'
   ],
+  ignorePatterns: [
+    '.eslintrc.js', 'react-app-env.d.ts', 'build/*',
+    'postcss.config.js', 'tailwind.config.js',
+  ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaFeatures: {
