@@ -66,7 +66,11 @@ func (dp *DockerMonoidProtocol) InitConn(ctx context.Context) error {
 		}
 
 		defer rc.Close()
-		io.Copy(os.Stdout, rc)
+		_, err = io.Copy(os.Stdout, rc)
+
+		if err != nil {
+			return fmt.Errorf("error copying image pull output: %v", err)
+		}
 	}
 
 	return nil
