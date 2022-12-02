@@ -1,7 +1,8 @@
 import React from 'react';
 
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
+import useQuery from '../../../../../hooks/useQueryPatched';
 import AlertRegion from '../../../../../components/AlertRegion';
 import Spinner from '../../../../../components/Spinner';
 import Table from '../../../../../components/Table';
@@ -35,6 +36,8 @@ export default function SiloList() {
     variables: {
       id,
     },
+    fetchPolicy: 'cache-and-network',
+    nextFetchPolicy: () => 'cache-first',
   });
   const navigate = useNavigate();
 

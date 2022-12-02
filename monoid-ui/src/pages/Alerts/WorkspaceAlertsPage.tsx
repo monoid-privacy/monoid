@@ -1,7 +1,7 @@
-import { useQuery } from '@apollo/client';
 import React, { useState, useEffect } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import { BellAlertIcon } from '@heroicons/react/24/outline';
+import useQuery from '../../hooks/useQueryPatched';
 import AlertRegion from '../../components/AlertRegion';
 import Card, { CardDivider } from '../../components/Card';
 import Input from '../../components/Input';
@@ -28,6 +28,8 @@ function AlertListCardBody(props: { query: string }) {
       limit: 10,
       offset,
     },
+    fetchPolicy: 'cache-and-network',
+    nextFetchPolicy: () => 'cache-first',
   });
 
   if (loading) {

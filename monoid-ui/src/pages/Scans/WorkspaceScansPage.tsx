@@ -1,7 +1,7 @@
-import { useQuery } from '@apollo/client';
 import React, { useState, useEffect } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import useQuery from '../../hooks/useQueryPatched';
 import AlertRegion from '../../components/AlertRegion';
 import Card, { CardDivider } from '../../components/Card';
 import Input from '../../components/Input';
@@ -21,6 +21,8 @@ function ScansListCardBody(props: { query: string }) {
   const {
     data, loading, error, fetchMore,
   } = useQuery(GET_ALL_SCANS, {
+    fetchPolicy: 'cache-and-network',
+    nextFetchPolicy: () => 'cache-first',
     variables: {
       workspaceId: id,
       status: [],

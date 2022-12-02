@@ -1,6 +1,7 @@
 import {
   ApolloError, gql, useMutation, useQuery,
 } from '@apollo/client';
+
 import React, {
   useContext, useEffect, useState,
 } from 'react';
@@ -9,6 +10,7 @@ import {
   BellAlertIcon,
   CheckCircleIcon, XCircleIcon,
 } from '@heroicons/react/24/outline';
+import useQueryPatched from '../../../../../hooks/useQueryPatched';
 import AlertRegion from '../../../../../components/AlertRegion';
 import Card, { CardHeader, CardDivider } from '../../../../../components/Card';
 import Spinner from '../../../../../components/Spinner';
@@ -95,8 +97,10 @@ function SiloCardBody(props: { query?: string }) {
   };
   const {
     data, loading, error, fetchMore, refetch,
-  } = useQuery(GET_DISCOVERIES, {
+  } = useQueryPatched(GET_DISCOVERIES, {
     variables: vars,
+    fetchPolicy: 'cache-and-network',
+    nextFetchPolicy: () => 'cache-first',
   });
 
   if (loading) {

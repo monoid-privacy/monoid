@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 
-import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 import updateLocale from 'dayjs/plugin/updateLocale';
 import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import useQuery from '../../../../../hooks/useQueryPatched';
 
 import AlertRegion from '../../../../../components/AlertRegion';
 import Spinner from '../../../../../components/Spinner';
@@ -39,6 +39,8 @@ export default function RequestList() {
       limit: 10,
       offset,
     },
+    fetchPolicy: 'cache-and-network',
+    nextFetchPolicy: () => 'cache-first',
   });
   const navigate = useNavigate();
 

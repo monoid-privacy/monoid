@@ -1,5 +1,5 @@
 import {
-  gql, useQuery,
+  gql,
 } from '@apollo/client';
 import React, { useContext, useEffect, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
@@ -9,6 +9,7 @@ import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
 import { CheckCircleIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import useQuery from '../../../../../hooks/useQueryPatched';
 import AlertRegion from '../../../../../components/AlertRegion';
 import Card, { CardDivider, CardHeader } from '../../../../../components/Card';
 import Input from '../../../../../components/Input';
@@ -64,6 +65,8 @@ function JobList(props: {
       numJobs: number
     }
   }>(GET_SCANS, {
+    fetchPolicy: 'cache-and-network',
+    nextFetchPolicy: () => 'cache-first',
     variables: {
       resourceId: siloId,
       query: query.trim() !== '' ? query : undefined,
