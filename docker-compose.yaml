@@ -54,7 +54,6 @@ services:
   api:
     container_name: monoid-api
     environment:
-      - API_URL=${API_URL}
       - WEB_URL=${WEB_URL}
       - DB_USER=${DATABASE_USER}
       - DB_PASS=${DATABASE_PASSWORD}
@@ -103,7 +102,6 @@ services:
   worker:
     container_name: monoid-worker
     environment:
-      - API_URL=${API_URL}
       - WEB_URL=${WEB_URL}
       - DB_USER=${DATABASE_USER}
       - DB_PASS=${DATABASE_PASSWORD}
