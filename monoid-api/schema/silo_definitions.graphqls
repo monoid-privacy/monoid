@@ -15,8 +15,8 @@ type SiloDefinition {
     id: ID!
     name: String!
     description: String
-    siloSpecification: SiloSpecification
-    dataSources: [DataSource!]
+    siloSpecification: SiloSpecification @goField(forceResolver: true)
+    dataSources: [DataSource!] @goField(forceResolver: true)
     subjects: [Subject!]
     siloConfig: Map
 }
@@ -37,6 +37,6 @@ extend type Mutation {
 }
 
 extend type Workspace {
-    siloDefinitions: [SiloDefinition!]
+    siloDefinitions: [SiloDefinition!] @goField(forceResolver: true)
     siloDefinition(id: ID!): SiloDefinition
 }

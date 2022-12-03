@@ -1901,13 +1901,18 @@ var sources = []*ast.Source{
 #
 # https://gqlgen.com/getting-started/
 
+directive @goField(
+	forceResolver: Boolean
+	name: String
+) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
+
 type Workspace {
   id: ID!
   name: String
   siloSpecifications: [SiloSpecification!]
-  settings: Map!
+  settings: Map! @goField(forceResolver: true)
   subjects: [Subject!]
-  categories: [Category!]
+  categories: [Category!] @goField(forceResolver: true)
 }
 
 type Query {
@@ -1944,16 +1949,16 @@ type DataSource {
     name: String!
     group: String
 
-    siloDefinition: SiloDefinition!
-    properties: [Property!]
+    siloDefinition: SiloDefinition! @goField(forceResolver: true)
+    properties: [Property!] @goField(forceResolver: true)
     description: String
 }
 
 type Property {
     id: ID!
     name: String!
-    categories: [Category!]
-    dataSource: DataSource!
+    categories: [Category!] @goField(forceResolver: true)
+    dataSource: DataSource! @goField(forceResolver: true)
 }
 
 type SiloSpecification {
@@ -2139,11 +2144,11 @@ type DataDiscovery {
     id: ID!
 
     siloDefinitionID: ID!
-    siloDefinition: SiloDefinition!
+    siloDefinition: SiloDefinition! @goField(forceResolver: true)
 
     type: DiscoveryType!
     status: DiscoveryStatus!
-    data: DataDiscoveryData!
+    data: DataDiscoveryData! @goField(forceResolver: true)
 
     createdAt: Time!
 }
@@ -2210,7 +2215,7 @@ type Job {
     resourceId: ID!
     status: JobStatus!
 
-    siloDefinition: SiloDefinition!
+    siloDefinition: SiloDefinition! @goField(forceResolver: true)
     logs: [String!]
 
     createdAt: Time!
@@ -2292,8 +2297,8 @@ type UserPrimaryKey {
 
 type PrimaryKeyValue {
     id: ID!
-    userPrimaryKey: UserPrimaryKey!
-    request: Request!
+    userPrimaryKey: UserPrimaryKey! @goField(forceResolver: true)
+    request: Request! @goField(forceResolver: true)
     value: String!
 }
 
@@ -2308,10 +2313,10 @@ type RequestStatusListResult {
 
 type Request {
     id: ID!
-    primaryKeyValues: [PrimaryKeyValue!]
+    primaryKeyValues: [PrimaryKeyValue!] @goField(forceResolver: true)
     requestStatuses(query: RequestStatusQuery, offset: Int, limit: Int!): RequestStatusListResult!
     type: UserDataRequestType!
-    status: FullRequestStatus!
+    status: FullRequestStatus! @goField(forceResolver: true)
     createdAt: Time
 }
 
@@ -2332,10 +2337,10 @@ enum RequestStatusType {
 
 type RequestStatus {
     id: ID!
-    request: Request!
-    dataSource: DataSource!
+    request: Request! @goField(forceResolver: true)
+    dataSource: DataSource! @goField(forceResolver: true)
     status: RequestStatusType!
-    queryResult: QueryResult
+    queryResult: QueryResult @goField(forceResolver: true)
 }
 
 enum ResultType {
@@ -2345,7 +2350,7 @@ enum ResultType {
 
 type QueryResult {
   id: ID!
-  requestStatus: RequestStatus!
+  requestStatus: RequestStatus! @goField(forceResolver: true)
   records: String
   resultType: ResultType!
 }
@@ -2386,11 +2391,11 @@ extend type Workspace {
 }
 
 extend type DataSource {
-    requestStatuses: [RequestStatus!]
+    requestStatuses: [RequestStatus!] @goField(forceResolver: true)
 }
 
 extend type Property {
-    userPrimaryKey: UserPrimaryKey
+    userPrimaryKey: UserPrimaryKey @goField(forceResolver: true)
 }`, BuiltIn: false},
 	{Name: "../schema/silo_definitions.graphqls", Input: `scalar Map
 
@@ -2409,8 +2414,8 @@ type SiloDefinition {
     id: ID!
     name: String!
     description: String
-    siloSpecification: SiloSpecification
-    dataSources: [DataSource!]
+    siloSpecification: SiloSpecification @goField(forceResolver: true)
+    dataSources: [DataSource!] @goField(forceResolver: true)
     subjects: [Subject!]
     siloConfig: Map
 }
@@ -2431,7 +2436,7 @@ extend type Mutation {
 }
 
 extend type Workspace {
-    siloDefinitions: [SiloDefinition!]
+    siloDefinitions: [SiloDefinition!] @goField(forceResolver: true)
     siloDefinition(id: ID!): SiloDefinition
 }`, BuiltIn: false},
 }

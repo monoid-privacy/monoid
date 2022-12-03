@@ -7,16 +7,16 @@ type DataSource {
     name: String!
     group: String
 
-    siloDefinition: SiloDefinition!
-    properties: [Property!]
+    siloDefinition: SiloDefinition! @goField(forceResolver: true)
+    properties: [Property!] @goField(forceResolver: true)
     description: String
 }
 
 type Property {
     id: ID!
     name: String!
-    categories: [Category!]
-    dataSource: DataSource!
+    categories: [Category!] @goField(forceResolver: true)
+    dataSource: DataSource! @goField(forceResolver: true)
 }
 
 type SiloSpecification {

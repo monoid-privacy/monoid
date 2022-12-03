@@ -14,7 +14,7 @@ type Job {
     resourceId: ID!
     status: JobStatus!
 
-    siloDefinition: SiloDefinition!
+    siloDefinition: SiloDefinition! @goField(forceResolver: true)
     logs: [String!]
 
     createdAt: Time!

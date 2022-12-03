@@ -2,13 +2,18 @@
 #
 # https://gqlgen.com/getting-started/
 
+directive @goField(
+	forceResolver: Boolean
+	name: String
+) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
+
 type Workspace {
   id: ID!
   name: String
   siloSpecifications: [SiloSpecification!]
-  settings: Map!
+  settings: Map! @goField(forceResolver: true)
   subjects: [Subject!]
-  categories: [Category!]
+  categories: [Category!] @goField(forceResolver: true)
 }
 
 type Query {

@@ -41,8 +41,8 @@ type UserPrimaryKey {
 
 type PrimaryKeyValue {
     id: ID!
-    userPrimaryKey: UserPrimaryKey!
-    request: Request!
+    userPrimaryKey: UserPrimaryKey! @goField(forceResolver: true)
+    request: Request! @goField(forceResolver: true)
     value: String!
 }
 
@@ -57,10 +57,10 @@ type RequestStatusListResult {
 
 type Request {
     id: ID!
-    primaryKeyValues: [PrimaryKeyValue!]
+    primaryKeyValues: [PrimaryKeyValue!] @goField(forceResolver: true)
     requestStatuses(query: RequestStatusQuery, offset: Int, limit: Int!): RequestStatusListResult!
     type: UserDataRequestType!
-    status: FullRequestStatus!
+    status: FullRequestStatus! @goField(forceResolver: true)
     createdAt: Time
 }
 
@@ -81,10 +81,10 @@ enum RequestStatusType {
 
 type RequestStatus {
     id: ID!
-    request: Request!
-    dataSource: DataSource!
+    request: Request! @goField(forceResolver: true)
+    dataSource: DataSource! @goField(forceResolver: true)
     status: RequestStatusType!
-    queryResult: QueryResult
+    queryResult: QueryResult @goField(forceResolver: true)
 }
 
 enum ResultType {
@@ -94,7 +94,7 @@ enum ResultType {
 
 type QueryResult {
   id: ID!
-  requestStatus: RequestStatus!
+  requestStatus: RequestStatus! @goField(forceResolver: true)
   records: String
   resultType: ResultType!
 }
@@ -135,9 +135,9 @@ extend type Workspace {
 }
 
 extend type DataSource {
-    requestStatuses: [RequestStatus!]
+    requestStatuses: [RequestStatus!] @goField(forceResolver: true)
 }
 
 extend type Property {
-    userPrimaryKey: UserPrimaryKey
+    userPrimaryKey: UserPrimaryKey @goField(forceResolver: true)
 }
