@@ -50,11 +50,11 @@ type DataDiscovery {
     id: ID!
 
     siloDefinitionID: ID!
-    siloDefinition: SiloDefinition!
+    siloDefinition: SiloDefinition! @goField(forceResolver: true)
 
     type: DiscoveryType!
     status: DiscoveryStatus!
-    data: DataDiscoveryData!
+    data: DataDiscoveryData! @goField(forceResolver: true)
 
     createdAt: Time!
 }
