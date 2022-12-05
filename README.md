@@ -12,11 +12,10 @@
 ## Monoid is an open-source suite of tools for automating data privacy 
 * Scan your data silos for PII to maintain an up-to-date data map.
 * Automate user data deletion & right-to-know requests with our pre-built SaaS, DB, and warehouse automators. Are we missing a data silo that you use? Build your own automator easily, or make an issue if you'd like us to do so.
-* Stay compliant with existing (GDPR, CCPA, etc.) and emerging (CPRA, Virginia, etc.) regulations.
-* **Coming soon**: cookie banners, CRM connectors, analytics tool connectors, and more!
-* For RoPA generation, audit trails, teams, and more, sign up for our [Monoid Cloud (beta)](https://monoid.co).
+* Stay compliant with existing (GDPR, CCPA, etc.) and emerging (CPRA, etc.) regulations.
+* **Coming soon**: cookie banners, RoPA generation, and more!
 
-See our [docs](https://docs.monoid.co) for a more thorough introduction to Monoid.
+Check out our [docs](https://docs.monoid.co) to learn more.
 
 ## Get started for free
 
@@ -25,11 +24,11 @@ See our [docs](https://docs.monoid.co) for a more thorough introduction to Monoi
 2. Run `ENCRYPTION_KEY=[key generated in the previous step] docker compose up`. 
 ### Option 2: Production instance on your infrastructure
 
-Coming soon [ETA 12/12]! Contact jagath@monoid.co if you'd like to get started with this sooner.
+Coming soon [ETA 11/23]! Contact jagath@monoid.co if you'd like to get started with this sooner.
 
 ### Option 3: If you don't need to self-host
 
-Monoid Cloud is in beta, and will be releasing publicly soon [ETA 12/15]! Contact jagath@monoid.co if you'd like to get started with this sooner.
+Cloud version coming soon [ETA 11/30]! Contact jagath@monoid.co if you'd like to get started with this sooner.
 
 ### Support 
 
@@ -59,7 +58,7 @@ Automate user data deletion/export requests across all silos.
 
 ## Getting the most out of Monoid
 
-Documentation is available [here](https://docs.monoid.co).
+Our documentation is currently a WIP -- it should be up within the next few days! 
 
 Join our [Slack community](https://join.slack.com/t/monoidworkspace/shared_invite/zt-1jvlndiw6-l9~KhMXhG35OOgRqFGXnGg) if you need help, want to chat, or are thinking of a new feature. We're here to help - and to make Monoid even better.
 
@@ -81,7 +80,7 @@ Monoid v1.0 is a data-mapping, PII-scanning, and right-to-know/right-to-delete r
 
 ## Contributing
 
-We value community contributions, especially around building new connectors. Our contributions guide is still WIP, but if you're interested in helping out, please feel free to make a PR or contact jagath@monoid.co
+We value community contributions, especially around building new automators. Our contributions guide is still WIP, but if you're interested in helping out, please feel free to make a PR or contact jagath@monoid.co
 
 ## Open-source vs. paid
 
@@ -89,4 +88,4 @@ This repo is entirely [MIT licensed](/LICENSE).
 
 Paid plans include support and cloud-hosted solutions. Contact us at jagath@monoid.co for more information.
 
-Credit to PostHog and Airbyte for inspiration around public-facing materials (like this README!) and the design of our software (as well as OSS trailblazing!)
+Credit to PostHog for README inspiration (and OSS trailblazing!)
