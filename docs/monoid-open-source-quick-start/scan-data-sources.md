@@ -6,7 +6,7 @@ sidebar_position: 2.5
 
 Once you've connected a data silo, you can scan the silo for its associated data models to create your data map.
 
-To do so, navigate to `Configuration > Data Silos` on the left sidebar, and click on the silo that you want to scan (you'll need to [create the silo](category/monoid-open-source-quick-start/connect-data-silos.md) first). Then, click the `Scan` button on the top right corner to queue the scan job; based on the silo, the job may take a minute or two to complete.
+To do so, navigate to `Configuration > Data Silos` on the left sidebar, and click on the silo that you want to scan (you'll need to [create the silo](monoid-open-source-quick-start/connect-data-silos.md) first). Then, click the `Scan` button on the top right corner to queue the scan job; based on the silo, the job may take a minute or two to complete.
 
 Once the scan is complete, you'll receive alerts for each detected data source; you can navigate to the `Alerts` tab on the data silo's page (or on the left sidebar) to approve or reject each detected data source.
 
