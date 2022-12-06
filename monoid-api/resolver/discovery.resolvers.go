@@ -184,7 +184,9 @@ func (r *workspaceResolver) Discoveries(ctx context.Context, obj *model.Workspac
 
 	discoveries := []*model.DataDiscovery{}
 
-	q := r.Conf.DB.Order(
+	q := r.Conf.DB.Joins(
+		"LEFT JOIN silo_definitions on silo_definitions.id = data_discoveries.silo_definition_id",
+	).Where("silo_definitions.workspace_id = ?", obj.ID).Order(
 		"(CASE WHEN status = 'OPEN' THEN 1 ELSE 2 END) asc, created_at desc, id desc",
 	)
 

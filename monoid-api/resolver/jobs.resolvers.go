@@ -45,11 +45,11 @@ func (r *jobResolver) Logs(ctx context.Context, obj *model.Job) ([]string, error
 }
 
 // CancelJob is the resolver for the cancelJob field.
-func (r *mutationResolver) CancelJob(ctx context.Context, id string, workspaceID string) (*model.Job, error) {
+func (r *mutationResolver) CancelJob(ctx context.Context, id string) (*model.Job, error) {
 	job := model.Job{}
 	if err := r.Conf.DB.Where(
 		"id = ?", id,
-	).Where("workspace_id = ?", workspaceID).First(&job).Error; err != nil {
+	).First(&job).Error; err != nil {
 		return nil, handleError(err, "Error cancelling job")
 	}
 
@@ -69,34 +69,6 @@ func (r *mutationResolver) CancelJob(ctx context.Context, id string, workspaceID
 	}
 
 	return &job, nil
-}
-
-// Jobs is the resolver for the jobs field.
-func (r *queryResolver) Jobs(ctx context.Context, resourceID string, jobType string, query *string, status []*model.JobStatus, limit int, offset int) (*model.JobsResult, error) {
-	jobs := []*model.Job{}
-
-	q := r.Conf.DB.Order("created_at desc").Where("resource_id = ?", resourceID).Where("job_type = ?", jobType)
-	if len(status) != 0 {
-		q = q.Where("status IN ?", status)
-	}
-
-	if query != nil && strings.TrimSpace(*query) != "" {
-		q = q.Where("id = ?", strings.TrimSpace(*query))
-	}
-
-	if err := q.Session(&gorm.Session{}).Offset(offset).Limit(limit).Find(&jobs).Error; err != nil {
-		return nil, handleError(err, "Could not find jobs.")
-	}
-
-	numJobs := int64(0)
-	if err := q.Session(&gorm.Session{}).Model(&model.Job{}).Count(&numJobs).Error; err != nil {
-		return nil, handleError(err, "Error getting job count.")
-	}
-
-	return &model.JobsResult{
-		Jobs:    jobs,
-		NumJobs: int(numJobs),
-	}, nil
 }
 
 // Jobs is the resolver for the jobs field.

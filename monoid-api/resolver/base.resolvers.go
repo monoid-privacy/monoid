@@ -191,6 +191,16 @@ func (r *workspaceResolver) Settings(ctx context.Context, obj *model.Workspace) 
 	return res, nil
 }
 
+// SiloSpecifications is the resolver for the siloSpecifications field.
+func (r *workspaceResolver) SiloSpecifications(ctx context.Context, obj *model.Workspace) ([]*model.SiloSpecification, error) {
+	specs := []*model.SiloSpecification{}
+	if err := r.Conf.DB.Where("workspace_id = ?", obj.ID).Or("workspace_id IS NULL").Find(&specs).Error; err != nil {
+		return nil, handleError(err, "Error getting silo specifications.")
+	}
+
+	return specs, nil
+}
+
 // Categories is the resolver for the categories field.
 func (r *workspaceResolver) Categories(ctx context.Context, obj *model.Workspace) ([]*model.Category, error) {
 	res := []*model.Category{}

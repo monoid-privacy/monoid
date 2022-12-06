@@ -12,7 +12,6 @@ import (
 
 type BaseConfig struct {
 	DB                *gorm.DB
-	TokenSecret       string
 	WebURL            string
 	ProtocolFactory   monoidprotocol.MonoidProtocolFactory
 	FileStore         filestore.FileStore

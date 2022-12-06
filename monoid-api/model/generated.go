@@ -140,7 +140,6 @@ type UpdatePropertyInput struct {
 
 type UpdateSiloDefinitionInput struct {
 	ID          string   `json:"id"`
-	WorkspaceID string   `json:"workspaceId"`
 	Name        *string  `json:"name"`
 	Description *string  `json:"description"`
 	SubjectIDs  []string `json:"subjectIDs"`

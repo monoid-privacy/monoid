@@ -120,7 +120,6 @@ type DataMapResult {
 extend type Query {
     dataSource(id: ID!): DataSource
     siloSpecification(id: ID!): SiloSpecification
-    siloSpecifications: [SiloSpecification!]
     subjects: [Subject!]
     category(id: ID!): Category
     subject(id: ID!): Subject

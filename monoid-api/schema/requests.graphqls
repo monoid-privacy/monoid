@@ -116,7 +116,7 @@ extend type Mutation {
 
 
     createUserDataRequest(input: UserDataRequestInput): Request
-    executeUserDataRequest(requestId: ID!, workspaceId: ID!): Request
+    executeUserDataRequest(requestId: ID!): Request
     linkPropertyToPrimaryKey(propertyId: ID!, userPrimaryKeyId: ID): Property
 
     generateRequestDownloadLink(requestId: ID!): DownloadLink!

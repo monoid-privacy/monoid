@@ -38,17 +38,6 @@ extend type Workspace {
     job(id: ID!): Job!
 }
 
-extend type Query {
-    jobs(
-        resourceId: ID!,
-        jobType: String!,
-        query: String
-        status: [JobStatus],
-        limit: Int!,
-        offset: Int!
-    ): JobsResult!
-}
-
 extend type Mutation {
-    cancelJob(id: ID!, workspaceId: ID!): Job
+    cancelJob(id: ID!): Job
 }
