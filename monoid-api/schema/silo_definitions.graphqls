@@ -2,7 +2,6 @@ scalar Map
 
 input UpdateSiloDefinitionInput {
     id: ID!
-    workspaceId: ID!
 
     name: String
     description: String

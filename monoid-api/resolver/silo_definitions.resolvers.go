@@ -87,9 +87,6 @@ func (r *mutationResolver) UpdateSiloDefinition(ctx context.Context, input *mode
 	if err := r.Conf.DB.Where(
 		"id = ?",
 		input.ID,
-	).Where(
-		"workspace_id = ?",
-		input.WorkspaceID,
 	).Preload("SiloSpecification").First(&siloDefinition).Error; err != nil {
 		return nil, handleError(err, "Error finding silo definition.")
 	}
@@ -133,7 +130,9 @@ func (r *mutationResolver) UpdateSiloDefinition(ctx context.Context, input *mode
 
 	subjects := []model.Subject{}
 
-	if err := r.Conf.DB.Where("id IN ?", input.SubjectIDs).Find(&subjects).Error; err != nil {
+	if err := r.Conf.DB.Where("id IN ?", input.SubjectIDs).Where(
+		"workspace_id = ?", siloDefinition.WorkspaceID,
+	).Find(&subjects).Error; err != nil {
 		return nil, handleError(err, "Error updating silo definition.")
 	}
 
@@ -147,7 +146,7 @@ func (r *mutationResolver) UpdateSiloDefinition(ctx context.Context, input *mode
 		ctx,
 		fmt.Sprintf(
 			"ws-%s/silo-%s-%s",
-			input.WorkspaceID,
+			siloDefinition.WorkspaceID,
 			siloDefinition.SiloSpecification.DockerImage,
 			siloDefinition.ID,
 		),

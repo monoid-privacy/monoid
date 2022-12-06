@@ -144,18 +144,18 @@ func (r *mutationResolver) CreateUserDataRequest(ctx context.Context, input *mod
 }
 
 // ExecuteUserDataRequest is the resolver for the executeUserDataRequest field.
-func (r *mutationResolver) ExecuteUserDataRequest(ctx context.Context, requestID string, workspaceID string) (*model.Request, error) {
-	job := model.Job{
-		ID:          uuid.NewString(),
-		WorkspaceID: workspaceID,
-		JobType:     model.JobTypeExecuteRequest,
-		Status:      model.JobStatusQueued,
-		ResourceID:  requestID,
-	}
-
+func (r *mutationResolver) ExecuteUserDataRequest(ctx context.Context, requestID string) (*model.Request, error) {
 	request := model.Request{}
 	if err := r.Conf.DB.Where("id = ?", requestID).First(&request).Error; err != nil {
 		return nil, handleError(err, "Error finding request")
+	}
+
+	job := model.Job{
+		ID:          uuid.NewString(),
+		WorkspaceID: request.WorkspaceID,
+		JobType:     model.JobTypeExecuteRequest,
+		Status:      model.JobStatusQueued,
+		ResourceID:  requestID,
 	}
 
 	options := client.StartWorkflowOptions{
@@ -169,7 +169,7 @@ func (r *mutationResolver) ExecuteUserDataRequest(ctx context.Context, requestID
 
 	wf, err := r.Conf.TemporalClient.ExecuteWorkflow(ctx, options, sf.ExecuteRequestWorkflow, requestworkflow.ExecuteRequestArgs{
 		RequestID:   requestID,
-		WorkspaceID: workspaceID,
+		WorkspaceID: request.WorkspaceID,
 		JobID:       job.ID,
 	})
 
