@@ -341,11 +341,6 @@ func (r *queryResolver) SiloSpecification(ctx context.Context, id string) (*mode
 	return findObjectByID[model.SiloSpecification](id, r.Conf.DB, "Error finding silo specification.")
 }
 
-// Subjects is the resolver for the subjects field.
-func (r *queryResolver) Subjects(ctx context.Context) ([]*model.Subject, error) {
-	return findAllObjects[model.Subject](r.Conf.DB, "Error finding silo subjects.")
-}
-
 // Category is the resolver for the category field.
 func (r *queryResolver) Category(ctx context.Context, id string) (*model.Category, error) {
 	return findObjectByID[model.Category](id, r.Conf.DB, "Error finding category.")
