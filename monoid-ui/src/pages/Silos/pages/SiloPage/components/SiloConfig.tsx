@@ -10,19 +10,16 @@ import Card, { CardDivider, CardHeader } from '../../../../../components/Card';
 import ToastContext from '../../../../../contexts/ToastContext';
 
 const GET_SILO_CONFIG = gql`
-  query GetSiloConfig($id: ID!, $workspaceId: ID!) {
-    workspace(id: $workspaceId) {
+  query GetSiloConfig($id: ID!) {
+    siloDefinition(id: $id) {
       id
-      siloDefinition(id: $id) {
+      name
+      siloSpecification {
         id
         name
-        siloSpecification {
-          id
-          name
-          logoUrl
-        }
-        siloConfig
+        logoUrl
       }
+      siloConfig
     }
   }
 `;
@@ -36,16 +33,13 @@ const UPDATE_SILO = gql`
 `;
 
 export default function SiloConfig() {
-  const { siloId, id } = useParams<{ siloId: string, id: string }>();
+  const { siloId } = useParams<{ siloId: string }>();
   const controller = useRef(new AbortController());
   const { data, loading, error } = useQuery<{
-    workspace: {
-      siloDefinition: SiloDefinition
-    }
+    siloDefinition: SiloDefinition
   }>(GET_SILO_CONFIG, {
     variables: {
       id: siloId,
-      workspaceId: id,
     },
   });
   const toastCtx = useContext(ToastContext);
@@ -77,7 +71,7 @@ export default function SiloConfig() {
       </CardHeader>
       <CardDivider />
       <SiloForm
-        defaultSilo={data?.workspace.siloDefinition}
+        defaultSilo={data?.siloDefinition}
         onCancel={() => {
           controller.current.abort();
           updateSiloRes.reset();
