@@ -27,14 +27,11 @@ const EXECUTE_REQUEST = gql`
 `;
 
 const GET_REQUEST_METADATA = gql`
-  query GetRequestMetadata($id: ID!, $workspaceId: ID!) {
-    workspace(id: $workspaceId) {
+  query GetRequestMetadata($id: ID!) {
+    request(id: $id) {
       id
-      request(id: $id) {
-        id
-        type
-        status
-      }
+      type
+      status
     }
   }
 `;
@@ -57,15 +54,12 @@ export default function RequestPage(
 
   const navigate = useNavigate();
   const toastCtx = useContext(ToastContext);
-  const { requestId, id } = useParams<{ requestId: string, id: string }>();
+  const { requestId } = useParams<{ requestId: string, id: string }>();
   const { data, loading, error } = useQuery<{
-    workspace: {
-      request: Request
-    }
+    request: Request
   }>(GET_REQUEST_METADATA, {
     variables: {
       id: requestId,
-      workspaceId: id,
     },
   });
   const [getReqFile, reqFileRes] = useMutation<{
@@ -92,7 +86,7 @@ export default function RequestPage(
     );
   }
 
-  const request = data?.workspace.request;
+  const request = data?.request;
 
   return (
     <>

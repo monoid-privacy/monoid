@@ -350,6 +350,20 @@ func (r *queryResolver) PrimaryKeyValue(ctx context.Context, id string) (*model.
 	return findObjectByID[model.PrimaryKeyValue](id, r.Conf.DB, "Error finding primary key value.")
 }
 
+// Request is the resolver for the request field.
+func (r *queryResolver) Request(ctx context.Context, id string) (*model.Request, error) {
+	request := model.Request{}
+
+	if err := r.Conf.DB.Where(
+		"id = ?",
+		id,
+	).First(&request).Error; err != nil {
+		return nil, err
+	}
+
+	return &request, nil
+}
+
 // RequestStatus is the resolver for the requestStatus field.
 func (r *queryResultResolver) RequestStatus(ctx context.Context, obj *model.QueryResult) (*model.RequestStatus, error) {
 	return findObjectByID[model.RequestStatus](obj.RequestStatusID, r.Conf.DB, "Error finding request status.")
@@ -491,20 +505,6 @@ func (r *workspaceResolver) Requests(ctx context.Context, obj *model.Workspace, 
 		Requests:    requests,
 		NumRequests: int(numRequests),
 	}, nil
-}
-
-// Request is the resolver for the request field.
-func (r *workspaceResolver) Request(ctx context.Context, obj *model.Workspace, id string) (*model.Request, error) {
-	request := model.Request{}
-
-	if err := r.Conf.DB.Where(
-		"id = ?",
-		id,
-	).Where("workspace_id = ?", obj.ID).First(&request).Error; err != nil {
-		return nil, err
-	}
-
-	return &request, nil
 }
 
 // UserPrimaryKeys is the resolver for the userPrimaryKeys field.
