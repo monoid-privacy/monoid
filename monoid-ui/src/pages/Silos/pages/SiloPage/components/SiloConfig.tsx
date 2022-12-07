@@ -94,7 +94,6 @@ export default function SiloConfig() {
             variables: {
               input: {
                 id: siloId,
-                workspaceId: id,
                 name: val.name,
                 siloData: JSON.stringify(val.siloData),
               },

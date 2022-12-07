@@ -3,7 +3,6 @@ import {
   BrowserRouter,
   Routes,
   Route,
-  Outlet,
   Navigate,
 } from 'react-router-dom';
 import AppContainer from '../layout/AppContainer';
@@ -17,6 +16,22 @@ import RequestRoutes from './Requests/RequestRoutes';
 import IdentifierRoutes from './Identifiers/IdentifierRoutes';
 import DataMapPage from './DataMap/DataMapPage';
 
+export function WorkspaceRoutes() {
+  return (
+    <Routes>
+      <Route element={<Navigate to="dashboard" />} index />
+      <Route path="dashboard" element={<DashboardPage />} />
+      <Route path="alerts" element={<WorkspaceAlertsPage />} />
+      <Route path="scans" element={<WorkspaceScansPage />} />
+      <Route path="data_map" element={<DataMapPage />} />
+      <Route path="silos/*" element={<SiloRoutes />} />
+      <Route path="requests/*" element={<RequestRoutes />} />
+      <Route path="identifiers/*" element={<IdentifierRoutes />} />
+      <Route path="settings" element={<SettingsPage />} />
+    </Routes>
+  );
+}
+
 export default function MonoidRouter() {
   return (
     <BrowserRouter>
@@ -24,17 +39,7 @@ export default function MonoidRouter() {
         <Route path="/" element={<WorkspaceSelect />} />
         <Route path="workspaces">
           <Route index element={<WorkspaceSelect />} />
-          <Route path=":id" element={<AppContainer><Outlet /></AppContainer>}>
-            <Route element={<Navigate to="dashboard" />} index />
-            <Route path="dashboard" element={<DashboardPage />} />
-            <Route path="alerts" element={<WorkspaceAlertsPage />} />
-            <Route path="scans" element={<WorkspaceScansPage />} />
-            <Route path="data_map" element={<DataMapPage />} />
-            <Route path="silos/*" element={<SiloRoutes />} />
-            <Route path="requests/*" element={<RequestRoutes />} />
-            <Route path="identifiers/*" element={<IdentifierRoutes />} />
-            <Route path="settings" element={<SettingsPage />} />
-          </Route>
+          <Route path=":id/*" element={<AppContainer><WorkspaceRoutes /></AppContainer>} />
         </Route>
       </Routes>
     </BrowserRouter>

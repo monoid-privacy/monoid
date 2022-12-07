@@ -28,21 +28,24 @@ dayjs.extend(duration);
 dayjs.extend(relativeTime);
 
 const GET_SCANS = gql`
-  query DiscoverJobs($resourceId: ID!, $limit: Int!, $offset: Int!, $query: String) {
-    jobs(
-      resourceId: $resourceId,
-      jobType: "discover_sources",
-      query: $query,
-      limit: $limit,
-      offset: $offset
-    ) {
-      jobs {
-        id
-        jobType
-        status
-        createdAt
+  query DiscoverJobs($workspaceId: ID!, $resourceId: ID!, $limit: Int!, $offset: Int!, $query: String) {
+    workspace(id: $workspaceId) {
+      id
+      jobs(
+        resourceId: $resourceId,
+        jobType: "discover_sources",
+        query: $query,
+        limit: $limit,
+        offset: $offset
+      ) {
+        jobs {
+          id
+          jobType
+          status
+          createdAt
+        }
+        numJobs
       }
-      numJobs
     }
   }
 `;
@@ -60,15 +63,18 @@ function JobList(props: {
   const {
     data, loading, error, fetchMore, refetch,
   } = useQuery<{
-    jobs: {
-      jobs: Job[],
-      numJobs: number
+    workspace: {
+      jobs: {
+        jobs: Job[],
+        numJobs: number
+      }
     }
   }>(GET_SCANS, {
     fetchPolicy: 'cache-and-network',
     nextFetchPolicy: () => 'cache-first',
     variables: {
       resourceId: siloId,
+      workspaceId: id,
       query: query.trim() !== '' ? query : undefined,
       limit,
       offset,
@@ -87,7 +93,7 @@ function JobList(props: {
     );
   }
 
-  if (!data?.jobs.jobs.length) {
+  if (!data?.workspace.jobs.jobs.length) {
     return (
       <EmptyState
         icon={MagnifyingGlassIcon}
@@ -121,7 +127,7 @@ function JobList(props: {
     <>
       <ul className="divide-y divide-gray-200">
         {
-          data?.jobs.jobs.map((j) => (
+          data?.workspace.jobs.jobs.map((j) => (
             <JobRow key={j.id} job={j} openable />
           ))
         }
@@ -135,7 +141,7 @@ function JobList(props: {
             offset: o,
           },
         }).then(() => setOffset(o))}
-        totalCount={data?.jobs.numJobs || 0}
+        totalCount={data?.workspace.jobs.numJobs || 0}
       />
     </>
   );

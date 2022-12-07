@@ -96,7 +96,7 @@ export default function RequestList() {
             {
               key: 'silo_type',
               content: (
-                <Badge>
+                <Badge color={req.type === 'QUERY' ? 'blue' : 'red'}>
                   {req.type === 'QUERY' ? 'Query' : 'Delete'}
                 </Badge>
               ),

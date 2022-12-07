@@ -17,7 +17,7 @@ export default function Navbar(props: {
   } = props;
 
   return (
-    <Disclosure as="nav" className="bg-white border-b relative z-20">
+    <Disclosure as="nav" className="bg-white border-b z-20 fixed top-0 w-full">
       {(o: { open: boolean }) => {
         const { open } = o;
         return (
@@ -87,7 +87,7 @@ export default function Navbar(props: {
                                     <button
                                       className={classNames(
                                         active ? 'bg-gray-100' : '',
-                                        'block px-4 py-2 text-sm text-gray-700',
+                                        'block px-4 py-2 text-sm text-gray-700 w-full text-left',
                                       )}
                                       onClick={item.onClick}
                                       type="button"

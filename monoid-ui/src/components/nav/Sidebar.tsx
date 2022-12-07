@@ -1,3 +1,5 @@
+/* eslint-disable jsx-a11y/no-static-element-interactions */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
 import React from 'react';
 import { classNames } from '../../utils/utils';
 import { NavLink } from './types';
@@ -8,14 +10,17 @@ export default function Sidebar(props: {
     key: string,
     links: NavLink[]
   }[],
-  footer?: React.ReactNode
+  footer?: {
+    node: React.ReactNode
+    onClick?: () => void
+  }
 }) {
   const { sections, footer } = props;
 
   return (
     <>
       {/* Static sidebar for desktop */}
-      <div className="hidden md:flex md:w-64 md:flex-col md:relative z-10">
+      <div className="hidden h-[calc(100vh_-_theme(space.16))] top-16 fixed md:w-64 md:flex md:flex-col z-10">
         {/* Sidebar component, swap this element with another sidebar if you like */}
         <div className="flex-1 flex flex-col min-h-0 bg-white border-r border-gray-200">
           <div className="flex-1 flex flex-col overflow-y-auto">
@@ -61,8 +66,16 @@ export default function Sidebar(props: {
           </div>
           {footer
             && (
-              <div className="flex flex-shrink-0 border-t border-gray-200 p-4">
-                {footer}
+              <div
+                className={
+                  classNames(
+                    'flex flex-shrink-0 border-t border-gray-200 p-4',
+                    footer.onClick ? 'cursor-pointer hover:bg-gray-200' : '',
+                  )
+                }
+                onClick={footer.onClick}
+              >
+                {footer.node}
               </div>
             )}
         </div>

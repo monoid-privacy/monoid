@@ -129,7 +129,6 @@ func GetBaseConfig(runMigrations bool, models []interface{}) config.BaseConfig {
 	fileStore := localstore.NewLocalFileStore(os.Getenv("FILESTORE_PATH"))
 	conf := config.BaseConfig{
 		DB:              db,
-		TokenSecret:     os.Getenv("TOKEN_SECRET"),
 		WebURL:          os.Getenv("WEB_URL"),
 		FileStore:       fileStore,
 		TempStorePath:   os.Getenv("TEMP_STORE_PATH"),

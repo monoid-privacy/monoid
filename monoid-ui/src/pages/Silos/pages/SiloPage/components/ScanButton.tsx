@@ -10,8 +10,8 @@ import Spinner from '../../../../../components/Spinner';
 import { Job } from '../../../../../lib/models';
 
 const CANCEL_JOB = gql`
-  mutation CancelJob($id: ID!, $workspaceId: ID!) {
-    cancelJob(id: $id, workspaceId: $workspaceId) {
+  mutation CancelJob($id: ID!) {
+    cancelJob(id: $id) {
       id
       status
     }
@@ -29,12 +29,15 @@ const RUN_SOURCE_SCAN = gql`
 `;
 
 const RUNNING_DETECT_SILO_JOBS = gql`
-  query RunningDiscoverJobs($resourceId: ID!) {
-    jobs(resourceId: $resourceId, jobType: "discover_sources", status: [RUNNING, QUEUED], limit: 1, offset: 0) {
-      jobs {
-        id
-        jobType
-        status
+  query RunningDiscoverJobs($workspaceId: ID!, $resourceId: ID!) {
+    workspace(id: $workspaceId) {
+      id
+      jobs(resourceId: $resourceId, jobType: "discover_sources", status: [RUNNING, QUEUED], limit: 1, offset: 0) {
+        jobs {
+          id
+          jobType
+          status
+        }
       }
     }
   }
@@ -62,13 +65,17 @@ function CoreScanButton({ siloId, workspaceId, children }: CoreScanButtonProps) 
         client.writeQuery({
           query: RUNNING_DETECT_SILO_JOBS,
           data: {
-            jobs: {
-              jobs: [resData!.detectSiloSources],
-              numJobs: 1,
+            workspace: {
+              id: workspaceId,
+              jobs: {
+                jobs: [resData!.detectSiloSources],
+                numJobs: 1,
+              },
             },
           },
           variables: {
             resourceId: siloId,
+            workspaceId,
           },
         });
       }).catch((err: ApolloError) => {
@@ -102,8 +109,9 @@ function ScanButtonRegion(props: {
     loading,
     refetch,
     error,
-  } = useQuery<{ jobs: { jobs: Job[] } }>(RUNNING_DETECT_SILO_JOBS, {
+  } = useQuery<{ workspace: { jobs: { jobs: Job[] } } }>(RUNNING_DETECT_SILO_JOBS, {
     variables: {
+      workspaceId,
       resourceId: siloId,
     },
     pollInterval: 5000,
@@ -117,11 +125,11 @@ function ScanButtonRegion(props: {
       return;
     }
 
-    if (previousData?.jobs.jobs.length === 0 && data?.jobs.jobs.length !== 0) {
+    if (previousData?.workspace.jobs.jobs.length === 0 && data?.workspace.jobs.jobs.length !== 0) {
       onScanStatusChange('STARTED');
     }
 
-    if (previousData?.jobs.jobs.length !== 0 && data?.jobs.jobs.length === 0) {
+    if (previousData?.workspace.jobs.jobs.length !== 0 && data?.workspace.jobs.jobs.length === 0) {
       onScanStatusChange('COMPLETED');
     }
   }, [data, previousData]);
@@ -136,7 +144,7 @@ function ScanButtonRegion(props: {
     );
   }
 
-  if (data!.jobs.jobs.length === 0) {
+  if (data!.workspace.jobs.jobs.length === 0) {
     return (
       <CoreScanButton siloId={siloId} workspaceId={workspaceId}>
         {children}
@@ -149,8 +157,7 @@ function ScanButtonRegion(props: {
       onClick={() => {
         cancelJob({
           variables: {
-            id: data!.jobs.jobs[0].id!,
-            workspaceId,
+            id: data!.workspace.jobs.jobs[0].id!,
           },
         }).then(() => refetch());
       }}
