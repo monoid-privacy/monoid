@@ -73,9 +73,9 @@ function RequestsCardBody() {
               content: dayjs(req.createdAt).fromNow(),
             },
             {
-              key: 'silo_type',
+              key: 'request_type',
               content: (
-                <Badge>
+                <Badge color={req.type === 'QUERY' ? 'blue' : 'red'}>
                   {req.type === 'QUERY' ? 'Query' : 'Delete'}
                 </Badge>
               ),

@@ -29,6 +29,7 @@ type JobsResult {
 extend type Workspace {
     jobs(
         jobType: String!,
+        resourceId: ID,
         status: [JobStatus],
         query: String,
         limit: Int!,

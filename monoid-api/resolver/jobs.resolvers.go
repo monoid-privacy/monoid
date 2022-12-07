@@ -72,7 +72,7 @@ func (r *mutationResolver) CancelJob(ctx context.Context, id string) (*model.Job
 }
 
 // Jobs is the resolver for the jobs field.
-func (r *workspaceResolver) Jobs(ctx context.Context, obj *model.Workspace, jobType string, status []*model.JobStatus, query *string, limit int, offset int) (*model.JobsResult, error) {
+func (r *workspaceResolver) Jobs(ctx context.Context, obj *model.Workspace, jobType string, resourceID *string, status []*model.JobStatus, query *string, limit int, offset int) (*model.JobsResult, error) {
 	jobs := []*model.Job{}
 
 	q := r.Conf.DB.Order("created_at desc").Where("workspace_id = ?", obj.ID).Where(
@@ -82,6 +82,10 @@ func (r *workspaceResolver) Jobs(ctx context.Context, obj *model.Workspace, jobT
 
 	if len(status) != 0 {
 		q = q.Where("status IN ?", status)
+	}
+
+	if resourceID != nil {
+		q = q.Where("resource_id = ?", *resourceID)
 	}
 
 	if query != nil && strings.TrimSpace(*query) != "" {

@@ -18,8 +18,8 @@ import Badge from '../../../../components/Badge';
 import StepView from '../../../../components/Steps';
 
 const EXECUTE_REQUEST = gql`
-  mutation ExecuteRequest($id: ID!, $workspaceId: ID!) {
-    executeUserDataRequest(requestId: $id, workspaceId: $workspaceId) {
+  mutation ExecuteRequest($id: ID!) {
+    executeUserDataRequest(requestId: $id) {
       id
       status
     }
@@ -99,7 +99,7 @@ export default function RequestPage(
       <PageHeader
         title={request?.id}
         subtitle={(
-          <Badge>
+          <Badge color={request?.type === 'QUERY' ? 'blue' : 'red'}>
             {request?.type === 'QUERY' ? 'Query' : 'Delete'}
           </Badge>
         )}
@@ -112,7 +112,6 @@ export default function RequestPage(
                   executeReq({
                     variables: {
                       id: requestId,
-                      workspaceId: id,
                     },
                   }).catch((err: ApolloError) => {
                     toastCtx.showToast({

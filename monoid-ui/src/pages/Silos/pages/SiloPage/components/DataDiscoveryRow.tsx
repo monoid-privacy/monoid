@@ -53,8 +53,8 @@ function DataSourceBody(props: {
           <FolderIcon className="w-3 h-3 mr-1" />
           {dataSource.group}
         </Text>
-        <div className="mt-2 space-x-2">
-          <Badge className="mt-2">
+        <div className="mt-2 flex items-start flex-wrap gap-2">
+          <Badge>
             {dataSource.properties?.length}
             {' '}
             Properties

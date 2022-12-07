@@ -292,7 +292,7 @@ type ComplexityRoot struct {
 		Discoveries        func(childComplexity int, statuses []*model.DiscoveryStatus, query *string, limit int, offset *int) int
 		ID                 func(childComplexity int) int
 		Job                func(childComplexity int, id string) int
-		Jobs               func(childComplexity int, jobType string, status []*model.JobStatus, query *string, limit int, offset int) int
+		Jobs               func(childComplexity int, jobType string, resourceID *string, status []*model.JobStatus, query *string, limit int, offset int) int
 		Name               func(childComplexity int) int
 		Request            func(childComplexity int, id string) int
 		Requests           func(childComplexity int, offset *int, limit int) int
@@ -420,7 +420,7 @@ type WorkspaceResolver interface {
 	Categories(ctx context.Context, obj *model.Workspace) ([]*model.Category, error)
 	DataMap(ctx context.Context, obj *model.Workspace, query *model.DataMapQuery, limit int, offset *int) (*model.DataMapResult, error)
 	Discoveries(ctx context.Context, obj *model.Workspace, statuses []*model.DiscoveryStatus, query *string, limit int, offset *int) (*model.DataDiscoveriesListResult, error)
-	Jobs(ctx context.Context, obj *model.Workspace, jobType string, status []*model.JobStatus, query *string, limit int, offset int) (*model.JobsResult, error)
+	Jobs(ctx context.Context, obj *model.Workspace, jobType string, resourceID *string, status []*model.JobStatus, query *string, limit int, offset int) (*model.JobsResult, error)
 	Job(ctx context.Context, obj *model.Workspace, id string) (*model.Job, error)
 	Requests(ctx context.Context, obj *model.Workspace, offset *int, limit int) (*model.RequestsResult, error)
 	Request(ctx context.Context, obj *model.Workspace, id string) (*model.Request, error)
@@ -1703,7 +1703,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Workspace.Jobs(childComplexity, args["jobType"].(string), args["status"].([]*model.JobStatus), args["query"].(*string), args["limit"].(int), args["offset"].(int)), true
+		return e.complexity.Workspace.Jobs(childComplexity, args["jobType"].(string), args["resourceId"].(*string), args["status"].([]*model.JobStatus), args["query"].(*string), args["limit"].(int), args["offset"].(int)), true
 
 	case "Workspace.name":
 		if e.complexity.Workspace.Name == nil {
@@ -2208,6 +2208,7 @@ type JobsResult {
 extend type Workspace {
     jobs(
         jobType: String!,
+        resourceId: ID,
         status: [JobStatus],
         query: String,
         limit: Int!,
@@ -3207,42 +3208,51 @@ func (ec *executionContext) field_Workspace_jobs_args(ctx context.Context, rawAr
 		}
 	}
 	args["jobType"] = arg0
-	var arg1 []*model.JobStatus
+	var arg1 *string
+	if tmp, ok := rawArgs["resourceId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceId"))
+		arg1, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["resourceId"] = arg1
+	var arg2 []*model.JobStatus
 	if tmp, ok := rawArgs["status"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
-		arg1, err = ec.unmarshalOJobStatus2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐJobStatus(ctx, tmp)
+		arg2, err = ec.unmarshalOJobStatus2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐJobStatus(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["status"] = arg1
-	var arg2 *string
+	args["status"] = arg2
+	var arg3 *string
 	if tmp, ok := rawArgs["query"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("query"))
-		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		arg3, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["query"] = arg2
-	var arg3 int
+	args["query"] = arg3
+	var arg4 int
 	if tmp, ok := rawArgs["limit"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
-		arg3, err = ec.unmarshalNInt2int(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["limit"] = arg3
-	var arg4 int
-	if tmp, ok := rawArgs["offset"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
 		arg4, err = ec.unmarshalNInt2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["offset"] = arg4
+	args["limit"] = arg4
+	var arg5 int
+	if tmp, ok := rawArgs["offset"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+		arg5, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["offset"] = arg5
 	return args, nil
 }
 
@@ -11311,7 +11321,7 @@ func (ec *executionContext) _Workspace_jobs(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Workspace().Jobs(rctx, obj, fc.Args["jobType"].(string), fc.Args["status"].([]*model.JobStatus), fc.Args["query"].(*string), fc.Args["limit"].(int), fc.Args["offset"].(int))
+		return ec.resolvers.Workspace().Jobs(rctx, obj, fc.Args["jobType"].(string), fc.Args["resourceId"].(*string), fc.Args["status"].([]*model.JobStatus), fc.Args["query"].(*string), fc.Args["limit"].(int), fc.Args["offset"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

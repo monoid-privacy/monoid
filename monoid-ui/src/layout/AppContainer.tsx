@@ -155,11 +155,11 @@ export default function AppContainer(props: {
         showDropdown={false}
         hiddenLinks={sidebarSections.map((l) => l.links).flat()}
       />
-      <div className="flex items-top flex-grow">
+      <div>
         <Sidebar
           sections={sidebarSections}
         />
-        <div className="flex-grow bg-gray-100 min-w-0">
+        <div className="w-full md:pl-64 pt-16">
           <main>
             <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
               {children}
