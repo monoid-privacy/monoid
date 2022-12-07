@@ -215,7 +215,6 @@ type ComplexityRoot struct {
 		SiloDefinition    func(childComplexity int, id string) int
 		SiloSpecification func(childComplexity int, id string) int
 		Subject           func(childComplexity int, id string) int
-		Subjects          func(childComplexity int) int
 		UserPrimaryKey    func(childComplexity int, id string) int
 		Workspace         func(childComplexity int, id string) int
 		Workspaces        func(childComplexity int) int
@@ -379,7 +378,6 @@ type QueryResolver interface {
 	Workspace(ctx context.Context, id string) (*model.Workspace, error)
 	DataSource(ctx context.Context, id string) (*model.DataSource, error)
 	SiloSpecification(ctx context.Context, id string) (*model.SiloSpecification, error)
-	Subjects(ctx context.Context) ([]*model.Subject, error)
 	Category(ctx context.Context, id string) (*model.Category, error)
 	Subject(ctx context.Context, id string) (*model.Subject, error)
 	Property(ctx context.Context, id string) (*model.Property, error)
@@ -1339,13 +1337,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Subject(childComplexity, args["id"].(string)), true
 
-	case "Query.subjects":
-		if e.complexity.Query.Subjects == nil {
-			break
-		}
-
-		return e.complexity.Query.Subjects(childComplexity), true
-
 	case "Query.userPrimaryKey":
 		if e.complexity.Query.UserPrimaryKey == nil {
 			break
@@ -2041,7 +2032,6 @@ type DataMapResult {
 extend type Query {
     dataSource(id: ID!): DataSource
     siloSpecification(id: ID!): SiloSpecification
-    subjects: [Subject!]
     category(id: ID!): Category
     subject(id: ID!): Subject
     property(id: ID!): Property
@@ -8459,53 +8449,6 @@ func (ec *executionContext) fieldContext_Query_siloSpecification(ctx context.Con
 	if fc.Args, err = ec.field_Query_siloSpecification_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_subjects(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_subjects(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Subjects(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.([]*model.Subject)
-	fc.Result = res
-	return ec.marshalOSubject2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSubjectᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_subjects(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Subject_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Subject_name(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Subject", field.Name)
-		},
 	}
 	return fc, nil
 }
@@ -15817,26 +15760,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
-		case "subjects":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_subjects(ctx, field)
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return rrm(innerCtx)
-			})
 		case "category":
 			field := field
 
@@ -17548,16 +17471,6 @@ func (ec *executionContext) marshalNSubject2githubᚗcomᚋmonoidᚑprivacyᚋmo
 	return ec._Subject(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSubject2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSubject(ctx context.Context, sel ast.SelectionSet, v *model.Subject) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._Subject(ctx, sel, v)
-}
-
 func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
 	res, err := graphql.UnmarshalTime(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -19009,53 +18922,6 @@ func (ec *executionContext) marshalOSubject2ᚕgithubᚗcomᚋmonoidᚑprivacy�
 				defer wg.Done()
 			}
 			ret[i] = ec.marshalNSubject2githubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSubject(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalOSubject2ᚕᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSubjectᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Subject) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNSubject2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐSubject(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
