@@ -35,36 +35,33 @@ const FILTER_OPTIONS_QUERY = gql`
 `;
 
 const GET_REQUEST_DATA = gql`
-query GetRequestData($workspaceId: ID!, $id: ID!, $limit: Int!, $offset: Int!, $query: RequestStatusQuery!) {
-  workspace(id: $workspaceId) {
+query GetRequestData($id: ID!, $limit: Int!, $offset: Int!, $query: RequestStatusQuery!) {
+  request(id: $id) {
     id
-    request(id: $id) {
-      id
-      type
-      requestStatuses(offset: $offset, limit: $limit, query: $query) {
-        numStatuses
-        requestStatusRows {
+    type
+    requestStatuses(offset: $offset, limit: $limit, query: $query) {
+      numStatuses
+      requestStatusRows {
+        id
+        status
+        dataSource {
           id
-          status
-          dataSource {
+          name
+          group
+          siloDefinition {
             id
             name
-            group
-            siloDefinition {
+            siloSpecification {
               id
               name
-              siloSpecification {
-                id
-                name
-                logo
-              }
+              logo
             }
           }
-          queryResult {
-            id
-            records
-            resultType
-          }
+        }
+        queryResult {
+          id
+          records
+          resultType
         }
       }
     }
@@ -207,7 +204,7 @@ function RecordCell(props: { queryResult: QueryResult }) {
 }
 
 export default function RequestStatuses() {
-  const { id, requestId } = useParams<{ id: string, requestId: string }>();
+  const { requestId } = useParams<{ id: string, requestId: string }>();
   const [offset, setOffset] = useState(0);
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -261,13 +258,10 @@ export default function RequestStatuses() {
   const {
     data, loading, error, fetchMore,
   } = useQuery<{
-    workspace: {
-      request: Request
-    }
+    request: Request
   }>(GET_REQUEST_DATA, {
     variables: {
       id: requestId,
-      workspaceId: id,
       limit: 10,
       offset,
       query,
@@ -288,7 +282,7 @@ export default function RequestStatuses() {
     );
   }
 
-  const request = data?.workspace.request;
+  const request = data?.request;
   return (
     <>
       <Filters onChange={setFilters} value={filters} />

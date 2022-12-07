@@ -103,6 +103,7 @@ extend type Query {
     userPrimaryKey(id: ID!): UserPrimaryKey
     requestStatus(id: ID!): RequestStatus
     primaryKeyValue(id: ID!): PrimaryKeyValue
+    request(id: ID!): Request
 }
 
 type DownloadLink {
@@ -130,7 +131,6 @@ type RequestsResult {
 
 extend type Workspace {
     requests(offset: Int, limit: Int!): RequestsResult!
-    request(id: ID!): Request
     userPrimaryKeys: [UserPrimaryKey!]
 }
 

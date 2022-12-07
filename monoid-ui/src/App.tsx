@@ -14,11 +14,6 @@ const client = new ApolloClient({
   uri: `${process.env.REACT_APP_API_URL || ''}/query`,
   cache: new InMemoryCache({
     typePolicies: {
-      Query: {
-        fields: {
-          jobs: jobsQueryCache(),
-        },
-      },
       Request: {
         fields: {
           requestStatuses: requestStatusCache(),

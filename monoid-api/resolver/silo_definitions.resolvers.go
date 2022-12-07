@@ -198,6 +198,19 @@ func (r *mutationResolver) DeleteSiloDefinition(ctx context.Context, id string) 
 	return &id, nil
 }
 
+// SiloDefinition is the resolver for the siloDefinition field.
+func (r *queryResolver) SiloDefinition(ctx context.Context, id string) (*model.SiloDefinition, error) {
+	silo := &model.SiloDefinition{}
+	if err := r.Conf.DB.Where(
+		"id = ?",
+		id,
+	).First(silo).Error; err != nil {
+		return nil, handleError(err, "Error finding silo definition.")
+	}
+
+	return silo, nil
+}
+
 // SiloSpecification is the resolver for the siloSpecification field.
 func (r *siloDefinitionResolver) SiloSpecification(ctx context.Context, obj *model.SiloDefinition) (*model.SiloSpecification, error) {
 	return loader.SiloSpecification(ctx, obj.SiloSpecificationID)
@@ -252,19 +265,6 @@ func (r *workspaceResolver) SiloDefinitions(ctx context.Context, obj *model.Work
 	}
 
 	return defs, nil
-}
-
-// SiloDefinition is the resolver for the siloDefinition field.
-func (r *workspaceResolver) SiloDefinition(ctx context.Context, obj *model.Workspace, id string) (*model.SiloDefinition, error) {
-	silo := &model.SiloDefinition{}
-	if err := r.Conf.DB.Where(
-		"id = ?",
-		id,
-	).Where("workspace_id = ?", obj.ID).First(silo).Error; err != nil {
-		return nil, handleError(err, "Error finding silo definition.")
-	}
-
-	return silo, nil
 }
 
 // SiloDefinition returns generated.SiloDefinitionResolver implementation.

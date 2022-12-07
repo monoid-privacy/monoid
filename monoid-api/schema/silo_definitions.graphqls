@@ -29,6 +29,10 @@ input CreateSiloDefinitionInput {
     name: String!
 }
 
+extend type Query {
+    siloDefinition(id: ID!): SiloDefinition
+}
+
 extend type Mutation {
     createSiloDefinition(input: CreateSiloDefinitionInput): SiloDefinition
     updateSiloDefinition(input: UpdateSiloDefinitionInput): SiloDefinition
@@ -37,5 +41,4 @@ extend type Mutation {
 
 extend type Workspace {
     siloDefinitions: [SiloDefinition!] @goField(forceResolver: true)
-    siloDefinition(id: ID!): SiloDefinition
 }
