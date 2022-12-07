@@ -15,7 +15,7 @@ import AlertRegion from '../../../../../components/AlertRegion';
 import Card, { CardHeader, CardDivider } from '../../../../../components/Card';
 import Spinner from '../../../../../components/Spinner';
 import {
-  DataDiscovery,
+  DataDiscovery, SiloDefinition,
 } from '../../../../../lib/models';
 import Badge from '../../../../../components/Badge';
 import Button from '../../../../../components/Button';
@@ -28,14 +28,11 @@ import EmptyState from '../../../../../components/Empty';
 import ScanButtonRegion from './ScanButton';
 
 const GET_NUM_ACTIVE_DISCOVERIES = gql`
-  query GetNumActiveDiscoveries($id: ID!, $workspaceId: ID!) {
-    workspace(id: $workspaceId) {
+  query GetNumActiveDiscoveries($id: ID!) {
+    siloDefinition(id: $id) {
       id
-      siloDefinition(id: $id) {
-        id
-        discoveries(limit: 1, offset: 0, statuses: [OPEN]) {
-          numDiscoveries
-        }
+      discoveries(limit: 1, offset: 0, statuses: [OPEN]) {
+        numDiscoveries
       }
     }
   }
@@ -53,21 +50,22 @@ const APPLY_ALL_DISCOVERIES = gql`
 const limit = 10;
 
 export function SiloAlertsTabHeader() {
-  const { siloId, id } = useParams<{ siloId: string, id: string }>();
-  const { data, loading, error } = useQuery(GET_NUM_ACTIVE_DISCOVERIES, {
+  const { siloId } = useParams<{ siloId: string }>();
+  const { data, loading, error } = useQuery<{
+    siloDefinition: SiloDefinition
+  }>(GET_NUM_ACTIVE_DISCOVERIES, {
     variables: {
       id: siloId,
-      workspaceId: id,
     },
   });
 
   let badge: React.ReactNode;
 
   if (!loading && !error
-    && data.workspace.siloDefinition.discoveries.numDiscoveries !== 0) {
+    && data?.siloDefinition?.discoveries?.numDiscoveries !== 0) {
     badge = (
       <Badge size="sm">
-        {data.workspace.siloDefinition.discoveries.numDiscoveries}
+        {data?.siloDefinition?.discoveries?.numDiscoveries}
       </Badge>
     );
   }
@@ -89,7 +87,6 @@ function SiloCardBody(props: { query?: string }) {
   const [offset, setOffset] = useState(0);
   const vars = {
     id: siloId,
-    workspaceId: id,
     query: query && query.trim() !== '' ? query : undefined,
     statuses: [],
     limit,
@@ -97,7 +94,7 @@ function SiloCardBody(props: { query?: string }) {
   };
   const {
     data, loading, error, fetchMore, refetch,
-  } = useQueryPatched(GET_DISCOVERIES, {
+  } = useQueryPatched<{ siloDefinition: SiloDefinition }>(GET_DISCOVERIES, {
     variables: vars,
     fetchPolicy: 'cache-and-network',
     nextFetchPolicy: () => 'cache-first',
@@ -115,7 +112,7 @@ function SiloCardBody(props: { query?: string }) {
     );
   }
 
-  if (data.workspace.siloDefinition.discoveries.discoveries.length === 0) {
+  if (data?.siloDefinition?.discoveries?.discoveries.length === 0) {
     return (
       <EmptyState
         icon={BellAlertIcon}
@@ -149,7 +146,7 @@ function SiloCardBody(props: { query?: string }) {
     <>
       <ul className="divide-y divide-gray-200">
         {
-          data.workspace.siloDefinition.discoveries.discoveries.map((d: DataDiscovery) => (
+          data?.siloDefinition?.discoveries?.discoveries.map((d: DataDiscovery) => (
             <DataDiscoveryRow key={d.id!} discovery={d} />
           ))
         }
@@ -167,7 +164,7 @@ function SiloCardBody(props: { query?: string }) {
             setOffset(o);
           });
         }}
-        totalCount={data?.workspace.siloDefinition.discoveries.numDiscoveries || 0}
+        totalCount={data?.siloDefinition?.discoveries?.numDiscoveries || 0}
       />
     </>
   );
@@ -183,7 +180,7 @@ function ApplyAlertsButton() {
 
   const {
     data, loading, error, refetch,
-  } = useQuery(GET_NUM_ACTIVE_DISCOVERIES, {
+  } = useQuery<{ siloDefinition: SiloDefinition }>(GET_NUM_ACTIVE_DISCOVERIES, {
     variables: {
       id: siloId,
       workspaceId: id,
@@ -212,7 +209,7 @@ function ApplyAlertsButton() {
     },
   });
 
-  const numDiscoveries = data?.workspace.siloDefinition.discoveries.numDiscoveries;
+  const numDiscoveries = data?.siloDefinition?.discoveries?.numDiscoveries;
   if (loading || error || numDiscoveries === 0) {
     return <div />;
   }

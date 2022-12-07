@@ -8,7 +8,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 import Table from '../../../../../components/Table';
-import { DataSource, Property } from '../../../../../lib/models';
+import { DataSource, Property, SiloDefinition } from '../../../../../lib/models';
 import CategoryCombobox from './CategoryCombobox';
 import Badge from '../../../../../components/Badge';
 import { classNames, dedup } from '../../../../../utils/utils';
@@ -24,26 +24,23 @@ import Spinner from '../../../../../components/Spinner';
 import AlertRegion from '../../../../../components/AlertRegion';
 
 const SILO_DATA_SOURCES = gql`
-  query SiloDataSources($id: ID!, $workspaceId: ID!) {
-    workspace(id: $workspaceId) {
+  query SiloDataSources($id: ID!) {
+    siloDefinition(id: $id) {
       id
-      siloDefinition(id: $id) {
+      dataSources {
         id
-        dataSources {
+        name
+        group
+        properties {
           id
           name
-          group
-          properties {
+          categories {
             id
             name
-            categories {
-              id
-              name
-            }
-            userPrimaryKey {
-              id
-              name
-            }
+          }
+          userPrimaryKey {
+            id
+            name
           }
         }
       }
@@ -55,10 +52,9 @@ export default function SiloDataSources() {
   const { siloId, id } = useParams<{ siloId: string, id: string }>();
   const {
     data, loading, error, refetch,
-  } = useQuery(SILO_DATA_SOURCES, {
+  } = useQuery<{ siloDefinition: SiloDefinition }>(SILO_DATA_SOURCES, {
     variables: {
       id: siloId,
-      workspaceId: id,
     },
   });
   const navigate = useNavigate();
@@ -76,7 +72,7 @@ export default function SiloDataSources() {
     );
   }
 
-  const empty = !data.workspace.siloDefinition.dataSources.length;
+  const empty = !data?.siloDefinition?.dataSources?.length;
 
   return (
     <Card
@@ -136,7 +132,7 @@ export default function SiloDataSources() {
                   key: 'purposes',
                 },
               ]}
-              tableRows={data?.workspace.siloDefinition.dataSources.map((ds: DataSource) => ({
+              tableRows={data?.siloDefinition?.dataSources?.map((ds: DataSource) => ({
                 key: ds.id!,
                 columns: [
                   {

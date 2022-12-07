@@ -9,8 +9,13 @@ export interface SiloSpec {
 export interface SiloDefinition {
   id?: string,
   name?: string,
-  siloSpecification?: SiloSpec,
+  siloSpecification?: SiloSpec
   siloConfig?: object
+  discoveries?: {
+    discoveries: DataDiscovery[]
+    numDiscoveries: number
+  }
+  dataSources?: DataSource[]
 }
 
 export interface Workspace {

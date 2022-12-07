@@ -13,17 +13,14 @@ import SiloScans from './components/SiloScans';
 import SVGText from '../../../../components/SVGText';
 
 const GET_SILO_TITLE_DATA = gql`
-  query GetSiloTitle($id: ID!, $workspaceId: ID!) {
-    workspace(id: $workspaceId) {
+  query GetSiloTitle($id: ID!) {
+    siloDefinition(id: $id) {
       id
-      siloDefinition(id: $id) {
+      name
+      siloSpecification {
         id
         name
-        siloSpecification {
-          id
-          name
-          logo
-        }
+        logo
       }
     }
   }
@@ -36,19 +33,16 @@ export default function SiloPage(
 ) {
   const { tab } = props;
   const navigate = useNavigate();
-  const { siloId, id } = useParams<{ siloId: string, id: string }>();
+  const { siloId } = useParams<{ siloId: string, id: string }>();
   const { data, loading, error } = useQuery<{
-    workspace: {
-      siloDefinition: SiloDefinition
-    }
+    siloDefinition: SiloDefinition
   }>(GET_SILO_TITLE_DATA, {
     variables: {
       id: siloId,
-      workspaceId: id,
     },
   });
 
-  const siloDef = data?.workspace.siloDefinition;
+  const siloDef = data?.siloDefinition;
 
   if (loading) {
     return <Spinner />;
