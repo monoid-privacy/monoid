@@ -32,3 +32,13 @@ export const GET_ALL_SCANS = gql`
     }
   }
 `;
+
+export const RUN_SOURCE_SCAN = gql`
+  mutation RunSourceScan($id: ID!, $workspaceId: ID!) {
+    detectSiloSources(id: $id, workspaceId: $workspaceId) {
+      id
+      status
+      jobType
+    }
+  }
+`;

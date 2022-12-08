@@ -43,6 +43,7 @@ function RequestsCardBody() {
 
   return (
     <Table
+      className="flex-1"
       tableCols={[
         {
           header: 'Name',

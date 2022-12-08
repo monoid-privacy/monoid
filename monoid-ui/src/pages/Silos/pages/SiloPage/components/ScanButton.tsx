@@ -3,6 +3,7 @@ import {
 } from '@apollo/client';
 import { XCircleIcon } from '@heroicons/react/24/outline';
 import React, { useContext, useEffect } from 'react';
+import { RUN_SOURCE_SCAN } from 'graphql/jobs_queries';
 import ToastContext from '../../../../../contexts/ToastContext';
 import AlertRegion from '../../../../../components/AlertRegion';
 import Button from '../../../../../components/Button';
@@ -14,16 +15,6 @@ const CANCEL_JOB = gql`
     cancelJob(id: $id) {
       id
       status
-    }
-  }
-`;
-
-const RUN_SOURCE_SCAN = gql`
-  mutation RunSourceScan($id: ID!, $workspaceId: ID!) {
-    detectSiloSources(id: $id, workspaceId: $workspaceId) {
-      id
-      status
-      jobType
     }
   }
 `;

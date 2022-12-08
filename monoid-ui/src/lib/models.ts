@@ -22,6 +22,7 @@ export interface Workspace {
   id?: string,
   requests?: Request[]
   userPrimaryKeys?: UserPrimaryKey[]
+  onboardingComplete?: boolean
 }
 
 export interface Request {

@@ -295,6 +295,7 @@ type ComplexityRoot struct {
 		Job                func(childComplexity int, id string) int
 		Jobs               func(childComplexity int, jobType string, resourceID *string, status []*model.JobStatus, query *string, limit int, offset int) int
 		Name               func(childComplexity int) int
+		OnboardingComplete func(childComplexity int) int
 		Requests           func(childComplexity int, offset *int, limit int) int
 		Settings           func(childComplexity int) int
 		SiloDefinitions    func(childComplexity int) int
@@ -1727,6 +1728,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Workspace.Name(childComplexity), true
 
+	case "Workspace.onboardingComplete":
+		if e.complexity.Workspace.OnboardingComplete == nil {
+			break
+		}
+
+		return e.complexity.Workspace.OnboardingComplete(childComplexity), true
+
 	case "Workspace.requests":
 		if e.complexity.Workspace.Requests == nil {
 			break
@@ -1878,6 +1886,7 @@ directive @goField(
 type Workspace {
   id: ID!
   name: String
+  onboardingComplete: Boolean
   settings: Map! @goField(forceResolver: true)
   siloSpecifications: [SiloSpecification!] @goField(forceResolver: true)
   subjects: [Subject!]
@@ -5249,6 +5258,8 @@ func (ec *executionContext) fieldContext_Mutation_createWorkspace(ctx context.Co
 				return ec.fieldContext_Workspace_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Workspace_name(ctx, field)
+			case "onboardingComplete":
+				return ec.fieldContext_Workspace_onboardingComplete(ctx, field)
 			case "settings":
 				return ec.fieldContext_Workspace_settings(ctx, field)
 			case "siloSpecifications":
@@ -5329,6 +5340,8 @@ func (ec *executionContext) fieldContext_Mutation_updateWorkspaceSettings(ctx co
 				return ec.fieldContext_Workspace_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Workspace_name(ctx, field)
+			case "onboardingComplete":
+				return ec.fieldContext_Workspace_onboardingComplete(ctx, field)
 			case "settings":
 				return ec.fieldContext_Workspace_settings(ctx, field)
 			case "siloSpecifications":
@@ -8210,6 +8223,8 @@ func (ec *executionContext) fieldContext_Query_workspaces(ctx context.Context, f
 				return ec.fieldContext_Workspace_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Workspace_name(ctx, field)
+			case "onboardingComplete":
+				return ec.fieldContext_Workspace_onboardingComplete(ctx, field)
 			case "settings":
 				return ec.fieldContext_Workspace_settings(ctx, field)
 			case "siloSpecifications":
@@ -8279,6 +8294,8 @@ func (ec *executionContext) fieldContext_Query_workspace(ctx context.Context, fi
 				return ec.fieldContext_Workspace_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Workspace_name(ctx, field)
+			case "onboardingComplete":
+				return ec.fieldContext_Workspace_onboardingComplete(ctx, field)
 			case "settings":
 				return ec.fieldContext_Workspace_settings(ctx, field)
 			case "siloSpecifications":
@@ -11053,6 +11070,47 @@ func (ec *executionContext) fieldContext_Workspace_name(ctx context.Context, fie
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Workspace_onboardingComplete(ctx context.Context, field graphql.CollectedField, obj *model.Workspace) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Workspace_onboardingComplete(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OnboardingComplete, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalOBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Workspace_onboardingComplete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Workspace",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -16556,6 +16614,10 @@ func (ec *executionContext) _Workspace(ctx context.Context, sel ast.SelectionSet
 		case "name":
 
 			out.Values[i] = ec._Workspace_name(ctx, field, obj)
+
+		case "onboardingComplete":
+
+			out.Values[i] = ec._Workspace_onboardingComplete(ctx, field, obj)
 
 		case "settings":
 			field := field

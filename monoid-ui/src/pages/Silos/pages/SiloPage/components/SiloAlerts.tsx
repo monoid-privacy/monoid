@@ -10,6 +10,7 @@ import {
   BellAlertIcon,
   CheckCircleIcon, XCircleIcon,
 } from '@heroicons/react/24/outline';
+import { classNames } from 'utils/utils';
 import useQueryPatched from '../../../../../hooks/useQueryPatched';
 import AlertRegion from '../../../../../components/AlertRegion';
 import Card, { CardHeader, CardDivider } from '../../../../../components/Card';
@@ -79,9 +80,14 @@ export function SiloAlertsTabHeader() {
   );
 }
 
-function SiloCardBody(props: { query?: string }) {
-  const { siloId, id } = useParams<{ siloId: string, id: string }>();
-  const { query } = props;
+export function SiloAlertCardBody(props: {
+  query?: string,
+  siloId?: string,
+}) {
+  const { siloId: paramSiloId, id } = useParams<{ siloId: string, id: string }>();
+  const { query, siloId: propSiloId } = props;
+  const siloId = propSiloId || paramSiloId;
+
   const toastCtx = useContext(ToastContext);
 
   const [offset, setOffset] = useState(0);
@@ -170,12 +176,20 @@ function SiloCardBody(props: { query?: string }) {
   );
 }
 
-SiloCardBody.defaultProps = {
+SiloAlertCardBody.defaultProps = {
   query: undefined,
+  siloId: undefined,
 };
 
-function ApplyAlertsButton() {
-  const { siloId, id } = useParams<{ siloId: string, id: string }>();
+export function ApplyAlertsButton(props: {
+  siloId?: string,
+  className?: string,
+  onSuccess: () => void
+}) {
+  const { siloId: paramSiloId, id } = useParams<{ siloId: string, id: string }>();
+  const { siloId: propSiloId, onSuccess, className } = props;
+  const siloId = propSiloId || paramSiloId;
+
   const toastCtx = useContext(ToastContext);
 
   const {
@@ -220,14 +234,9 @@ function ApplyAlertsButton() {
 
   return (
     <Button
-      className="ml-auto"
+      className={classNames('ml-auto', className)}
       onClick={() => handleDiscoveries().then(() => {
-        toastCtx.showToast({
-          title: 'Success',
-          message: 'Applied alerts!',
-          variant: 'success',
-          icon: CheckCircleIcon,
-        });
+        onSuccess();
         refetch();
       }).catch((err: ApolloError) => {
         toastCtx.showToast({
@@ -252,9 +261,15 @@ function ApplyAlertsButton() {
   );
 }
 
+ApplyAlertsButton.defaultProps = {
+  siloId: undefined,
+  className: '',
+};
+
 export default function SiloAlerts() {
   const [query, setQuery] = useState('');
   const location = useLocation();
+  const toastCtx = useContext(ToastContext);
 
   useEffect(() => {
     const urlSearchParams = new URLSearchParams(location.search);
@@ -270,11 +285,21 @@ export default function SiloAlerts() {
         <div>
           Alerts
         </div>
-        {query.trim() === '' ? <ApplyAlertsButton /> : <div />}
+        {query.trim() === '' ? (
+          <ApplyAlertsButton onSuccess={() => {
+            toastCtx.showToast({
+              title: 'Success',
+              message: 'Applied alerts!',
+              variant: 'success',
+              icon: CheckCircleIcon,
+            });
+          }}
+          />
+        ) : <div />}
       </CardHeader>
       <Input className="mt-4" placeholder="Alert ID" value={query} onChange={(e) => setQuery(e.target.value)} />
       <CardDivider />
-      <SiloCardBody query={query} />
+      <SiloAlertCardBody query={query} />
     </Card>
   );
 }
