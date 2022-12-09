@@ -121,10 +121,10 @@ export const GET_WORKSPACE_DISCOVERIES = gql`
 // eslint-disable-next-line import/prefer-default-export
 export const GET_DISCOVERIES = gql`
   ${DISCOVERY_FIELDS}
-  query GetDiscoveries($id: ID!, $limit: Int!, $offset: Int!, $query: String) {
+  query GetDiscoveries($id: ID!, $limit: Int!, $offset: Int!, $query: String, $statuses: [DiscoveryStatus]) {
     siloDefinition(id: $id) {
       id
-      discoveries(limit: $limit, offset: $offset, query: $query) {
+      discoveries(limit: $limit, offset: $offset, query: $query, statuses: $statuses) {
         discoveries {
           ...DiscoveryFields
         }

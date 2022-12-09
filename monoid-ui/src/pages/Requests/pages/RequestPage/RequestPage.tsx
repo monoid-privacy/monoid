@@ -5,6 +5,7 @@ import {
 import React, { useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { XCircleIcon } from '@heroicons/react/24/outline';
+import { EXECUTE_REQUEST } from 'graphql/requests_queries';
 import AlertRegion from '../../../../components/AlertRegion';
 import PageHeader from '../../../../components/PageHeader';
 import Spinner from '../../../../components/Spinner';
@@ -16,15 +17,6 @@ import RequestStatuses from './components/RequestStatuses';
 import ToastContext from '../../../../contexts/ToastContext';
 import Badge from '../../../../components/Badge';
 import StepView from '../../../../components/Steps';
-
-const EXECUTE_REQUEST = gql`
-  mutation ExecuteRequest($id: ID!) {
-    executeUserDataRequest(requestId: $id) {
-      id
-      status
-    }
-  }
-`;
 
 const GET_REQUEST_METADATA = gql`
   query GetRequestMetadata($id: ID!) {

@@ -510,8 +510,6 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) (in
 	// The data sources that are in the new schemas
 	currDataSources := map[string]bool{}
 
-	logger.Info("Getting Schemas")
-
 	for _, schema := range schemas.Schemas {
 		sourceMatcher := NewDataSourceMatcher(
 			schema.Name,

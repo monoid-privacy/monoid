@@ -83,9 +83,14 @@ export function SiloAlertsTabHeader() {
 export function SiloAlertCardBody(props: {
   query?: string,
   siloId?: string,
+  statuses?: ('OPEN' | 'ACCEPTED' | 'REJECTED')[]
+  hideEmptyAction?: boolean,
+  emptyMessage?: string,
 }) {
   const { siloId: paramSiloId, id } = useParams<{ siloId: string, id: string }>();
-  const { query, siloId: propSiloId } = props;
+  const {
+    query, siloId: propSiloId, statuses, hideEmptyAction, emptyMessage,
+  } = props;
   const siloId = propSiloId || paramSiloId;
 
   const toastCtx = useContext(ToastContext);
@@ -94,7 +99,7 @@ export function SiloAlertCardBody(props: {
   const vars = {
     id: siloId,
     query: query && query.trim() !== '' ? query : undefined,
-    statuses: [],
+    statuses: statuses || [],
     limit,
     offset,
   };
@@ -123,8 +128,8 @@ export function SiloAlertCardBody(props: {
       <EmptyState
         icon={BellAlertIcon}
         title="No Alerts"
-        subtitle="Alerts will be created when you run a scan."
-        action={(
+        subtitle={emptyMessage || 'Alerts will be created when you run a scan.'}
+        action={!hideEmptyAction && (
           <ScanButtonRegion
             siloId={siloId!}
             workspaceId={id!}
@@ -179,6 +184,9 @@ export function SiloAlertCardBody(props: {
 SiloAlertCardBody.defaultProps = {
   query: undefined,
   siloId: undefined,
+  statuses: [],
+  hideEmptyAction: false,
+  emptyMessage: 'Alerts will be created when you run a scan.',
 };
 
 export function ApplyAlertsButton(props: {

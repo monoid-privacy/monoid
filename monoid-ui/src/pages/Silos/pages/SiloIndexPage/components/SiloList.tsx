@@ -1,30 +1,13 @@
 import React from 'react';
 
-import { gql } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import useQuery from '../../../../../hooks/useQueryPatched';
-import AlertRegion from '../../../../../components/AlertRegion';
-import Spinner from '../../../../../components/Spinner';
-import Table from '../../../../../components/Table';
-import { SiloDefinition } from '../../../../../lib/models';
-import SVGText from '../../../../../components/SVGText';
-
-const GET_SILOS = gql`
-  query GetSilos($id: ID!) {
-    workspace(id: $id) {
-      id
-      siloDefinitions {
-        id
-        name
-        siloSpecification {
-          id
-          name
-          logo
-        }
-      }
-    }
-  }
-`;
+import useQuery from 'hooks/useQueryPatched';
+import AlertRegion from 'components/AlertRegion';
+import Spinner from 'components/Spinner';
+import Table from 'components/Table';
+import { SiloDefinition } from 'lib/models';
+import SVGText from 'components/SVGText';
+import { GET_SILOS } from 'graphql/silo_queries';
 
 export default function SiloList() {
   const { id } = useParams<{ id: string }>();

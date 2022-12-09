@@ -9,6 +9,7 @@ import { SiloSpec } from '../../../../../lib/models';
 const GET_SILO_SPECS = gql`
   query GetSiloSpecs($workspaceId: ID!) {
     workspace(id: $workspaceId) {
+      id
       siloSpecifications {
         id
         name

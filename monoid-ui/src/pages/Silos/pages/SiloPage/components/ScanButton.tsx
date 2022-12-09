@@ -57,10 +57,10 @@ function CoreScanButton({ siloId, workspaceId, children }: CoreScanButtonProps) 
           query: RUNNING_DETECT_SILO_JOBS,
           data: {
             workspace: {
+              __typename: 'Workspace',
               id: workspaceId,
               jobs: {
                 jobs: [resData!.detectSiloSources],
-                numJobs: 1,
               },
             },
           },

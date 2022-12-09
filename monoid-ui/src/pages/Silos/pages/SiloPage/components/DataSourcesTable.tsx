@@ -1,88 +1,25 @@
-import {
-  gql, useQuery,
-} from '@apollo/client';
 import { CircleStackIcon, FolderIcon } from '@heroicons/react/24/outline';
-import AlertRegion from 'components/AlertRegion';
 import Badge from 'components/Badge';
 import Button from 'components/Button';
 import { CardDivider } from 'components/Card';
 import EmptyState from 'components/Empty';
 import { MonoidA } from 'components/MonoidLink';
-import Spinner from 'components/Spinner';
 import Table from 'components/Table';
 import Text from 'components/Text';
 import { DataSource, Property, SiloDefinition } from 'lib/models';
-import React, { forwardRef, useImperativeHandle } from 'react';
+import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { dedup } from 'utils/utils';
 import CategoryCombobox from './CategoryCombobox';
 import IdentifierSelect from './IdentifierSelect';
 
-const SILO_DATA_SOURCES = gql`
-  query SiloDataSources($id: ID!) {
-    siloDefinition(id: $id) {
-      id
-      dataSources {
-        id
-        name
-        group
-        properties {
-          id
-          name
-          categories {
-            id
-            name
-          }
-          userPrimaryKey {
-            id
-            name
-          }
-        }
-      }
-    }
-  }
-`;
-
-const DataSourcesTable = forwardRef((props: { siloId: string, type: 'card' | 'plain' }, ref: React.ForwardedRef<{
-  refetch: () => void
-} | undefined>) => {
-  const { siloId, type } = props;
+function DataSourcesTable(props: { siloDef?: SiloDefinition, type: 'card' | 'plain' }) {
+  const { siloDef, type } = props;
   const { id } = useParams<{ id: string }>();
 
-  const {
-    data, loading, error, refetch,
-  } = useQuery<{ siloDefinition: SiloDefinition }>(SILO_DATA_SOURCES, {
-    variables: {
-      id: siloId,
-    },
-  });
   const navigate = useNavigate();
 
-  useImperativeHandle(ref, () => ({
-    refetch() {
-      if (refetch) refetch();
-    },
-  }));
-
-  if (loading) {
-    return (
-      <div className="md:px-6 md:-mt-6 px-4 -mt-5 md:pb-6 pb-4">
-        <Spinner />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="md:px-6 md:-mt-6 px-4 -mt-5 md:pb-6 pb-4">
-        <AlertRegion alertTitle="Error">
-          {error.message}
-        </AlertRegion>
-      </div>
-    );
-  }
-
-  const empty = !data?.siloDefinition?.dataSources?.length;
+  const empty = !siloDef?.dataSources?.length;
 
   if (!empty) {
     return (
@@ -110,7 +47,7 @@ const DataSourcesTable = forwardRef((props: { siloId: string, type: 'card' | 'pl
             key: 'purposes',
           },
         ]}
-        tableRows={data?.siloDefinition?.dataSources?.map((ds: DataSource) => ({
+        tableRows={siloDef?.dataSources?.map((ds: DataSource) => ({
           key: ds.id!,
           columns: [
             {
@@ -234,6 +171,10 @@ const DataSourcesTable = forwardRef((props: { siloId: string, type: 'card' | 'pl
       />
     </div>
   );
-});
+}
+
+DataSourcesTable.defaultProps = {
+  siloDef: undefined,
+};
 
 export default DataSourcesTable;

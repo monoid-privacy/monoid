@@ -2,6 +2,7 @@ package basicscanner
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
@@ -96,10 +97,16 @@ func getValueByPath(valuePath scanner.ValuePath, data monoidprotocol.MonoidRecor
 	if !ok {
 		return "", errors.New("property doesn't match path ")
 	}
+
+	if value == nil {
+		return "", nil
+	}
+
 	if len(valuePath.Path) == 1 {
+
 		valueString, ok := value.(string)
 		if !ok {
-			return "", errors.New("value has incorrect type ")
+			return "", fmt.Errorf("value has incorrect type")
 		}
 		return valueString, nil
 	}

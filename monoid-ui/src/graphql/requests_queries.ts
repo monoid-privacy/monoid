@@ -29,3 +29,12 @@ query GetRequests($id: ID!, $limit: Int!, $offset: Int) {
   }
 }
 `;
+
+export const EXECUTE_REQUEST = gql`
+  mutation ExecuteRequest($id: ID!) {
+    executeUserDataRequest(requestId: $id) {
+      id
+      status
+    }
+  }
+`;

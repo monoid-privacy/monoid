@@ -128,7 +128,13 @@ func (dp *DockerMonoidProtocol) containerLogsStream(
 	go func() {
 		for sc.Scan() {
 			bts := sc.Bytes()
-			logChan <- bts
+
+			// Copy the message into a buffer that won't change on future
+			// calls to Bytes()
+			btsCpy := make([]byte, len(bts))
+			copy(btsCpy, bts)
+
+			logChan <- btsCpy
 		}
 
 		close(logChan)

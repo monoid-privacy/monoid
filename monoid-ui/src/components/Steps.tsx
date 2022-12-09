@@ -17,7 +17,7 @@ export function SimpleStepView(props: { steps: Step[] }) {
     <nav aria-label="Progress">
       <ol className="flex items-center">
         {steps.map((step, stepIdx) => (
-          <li key={step.name} className={classNames(stepIdx !== steps.length - 1 ? 'pr-8 sm:pr-20' : '', 'relative')}>
+          <li key={step.id} className={classNames(stepIdx !== steps.length - 1 ? 'pr-8 sm:pr-20' : '', 'relative')}>
             {step.status === 'complete' ? (
               <>
                 <div className="absolute inset-0 flex items-center" aria-hidden="true">

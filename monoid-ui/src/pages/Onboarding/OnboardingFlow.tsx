@@ -1,207 +1,108 @@
 /* eslint-disable no-nested-ternary */
-import NewPrimaryKeyForm from 'pages/Identifiers/pages/NewPrimaryKeyPage/components/NewPrimaryKeyForm';
 import React, {
-  ReactNode, useContext, useState, useEffect,
+  ReactNode, useContext, useMemo,
 } from 'react';
 import { SimpleStepView } from 'components/Steps';
-import ToastContext from 'contexts/ToastContext';
-import { ChevronRightIcon, ExclamationCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import { ChevronRightIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import PageHeader from 'components/PageHeader';
 import Text from 'components/Text';
-import NewSiloForm from 'pages/Silos/pages/NewSiloPage/components/NewSiloForm';
 import { BristA } from 'components/Link';
-import { ApplyAlertsButton, SiloAlertCardBody } from 'pages/Silos/pages/SiloPage/components/SiloAlerts';
-import Card from 'components/Card';
-import { RUN_SOURCE_SCAN } from 'graphql/jobs_queries';
-import { gql, useMutation, useQuery } from '@apollo/client';
-import { Job } from 'lib/models';
-import { useParams } from 'react-router-dom';
-import Spinner from 'components/Spinner';
-import AlertRegion from 'components/AlertRegion';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import Button from 'components/Button';
-import DataSourcesTable from 'pages/Silos/pages/SiloPage/components/DataSourcesTable';
+import { ApolloError, gql, useMutation } from '@apollo/client';
+import ToastContext from 'contexts/ToastContext';
+import UserIdentifierStepBody from './components/UserIdentifierStepBody';
+import CreateSiloDefBody from './components/CreateSiloDefBody';
+import AlertStepBody from './components/AlertStepBody';
+import RequestBody from './components/RequestStepBody';
+import SiloSourcesBody from './components/SiloSourcesStepBody';
 
-const GET_JOB = gql`
-  query GetJobStatus($workspaceId: ID!, $id: ID!) {
-    workspace(id: $workspaceId) {
-      job(
-        id: $id
-      ) {
-        id
-        status
-      }
+const COMPLETE_ONBOARDING = gql`
+  mutation CompleteOnboarding($id: ID!) {
+    completeWorkspaceOnboarding(id: $id) {
+      id
+      onboardingComplete
     }
   }
 `;
 
-function AlertStepBody(props: {
-  siloId: string,
-  jobId: string,
-  onSuccess: () => void,
-}) {
-  const { siloId, jobId, onSuccess } = props;
-  const { id } = useParams<{ id: string }>();
-
-  const {
-    data, loading, error, stopPolling,
-  } = useQuery<{ workspace: { job: Job } }>(GET_JOB, {
-    variables: {
-      id: jobId,
-      workspaceId: id,
-    },
-    pollInterval: 1000,
-  });
-
-  useEffect(() => {
-    if (loading) {
-      return;
-    }
-
-    if (data?.workspace.job.status === 'COMPLETED' || data?.workspace.job.status === 'FAILED') {
-      stopPolling();
-    }
-  }, [data, loading, stopPolling]);
-
-  const scanLoading = loading || (!error && !(
-    data?.workspace.job.status === 'COMPLETED'
-    || data?.workspace.job.status === 'FAILED'
-  ));
-
-  const scanFinished = !scanLoading && !error;
-
-  return (
-    <>
-      <PageHeader title="Review Alerts" className="mb-2" />
-      <Text className="mb-4" size="sm">
-        After Brist scans your silo (this may take a few minutes), review the sources, categories,
-        and properties that are discovered, and add them to the data map.
-      </Text>
-      {scanFinished && (
-        <div className="flex space-x-2 mb-4">
-          <ApplyAlertsButton
-            siloId={siloId}
-            onSuccess={() => {
-              onSuccess();
-            }}
-          />
-          <Button variant="primary" onClick={() => { onSuccess(); }}>
-            <div className="flex items-center space-x-1">
-              <div>Next</div>
-              <ChevronRightIcon className="w-4 h-4" />
-            </div>
-          </Button>
-        </div>
-      )}
-      <Card>
-        {
-          error && <AlertRegion alertTitle="Error">{error.message}</AlertRegion>
-        }
-        {
-          scanLoading
-          && (
-            <div className="flex flex-col items-center text-gray-400">
-              <Spinner />
-              <div>Scanning Silo, this may take a few minutes...</div>
-            </div>
-          )
-        }
-        {scanFinished && <SiloAlertCardBody query="" siloId={siloId} />}
-      </Card>
-    </>
-  );
-}
-
-function CreateSiloDefBody(props: {
-  onSuccess: (siloDefId: string, jobId: string) => void
-}) {
-  const { onSuccess } = props;
-  const toastCtx = useContext(ToastContext);
-  const [runScan] = useMutation<{ detectSiloSources: Job }>(RUN_SOURCE_SCAN);
-  const { id } = useParams<{ id: string }>();
-
-  return (
-    <>
-      <PageHeader title="Sync Data Silo" className="mb-2" />
-      <Text className="mb-4" size="sm">
-        Start by connecting a data silo that uses the identifier defined in the
-        previous step. Brist will automatically scan the silo and find the data sources
-        and categorize them.
-      </Text>
-      <NewSiloForm
-        onSuccess={(sd) => {
-          runScan({
-            variables: {
-              id: sd.id!,
-              workspaceId: id,
-            },
-          }).then(({ data }) => {
-            onSuccess(sd.id!, data?.detectSiloSources.id!);
-          }).catch((err) => {
-            toastCtx.showToast({
-              title: 'Error',
-              message: err.message,
-              icon: XCircleIcon,
-              variant: 'danger',
-            });
-          });
-        }}
-        onError={() => { }}
-        onCancel={() => {
-          toastCtx.showToast({
-            title: 'Cancelled',
-            message: 'Cancelled successfully.',
-            icon: ExclamationCircleIcon,
-            variant: 'success',
-          });
-        }}
-      />
-    </>
-  );
-}
-
 export default function OnboardingFlow() {
-  const [onboardingState, setOnboardingState] = useState<{
-    siloDefinitionId?: string,
-    jobId?: string,
-    step: number
-  }>({
-    siloDefinitionId: undefined,
-    jobId: undefined,
-    step: 0,
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { id } = useParams<{ id: string }>();
+
+  const [completeOnboarding] = useMutation(COMPLETE_ONBOARDING, {
+    variables: {
+      id,
+    },
   });
+
+  const toastCtx = useContext(ToastContext);
+
+  type OnboardingState = {
+    requestId: string | null,
+    siloDefinitionId: string | null,
+    step: number,
+    jobId: string | null,
+  };
+
+  const setOnboardingState = (v: OnboardingState) => {
+    const params = new URLSearchParams();
+
+    if (v.requestId) {
+      params.set('requestId', v.requestId);
+    }
+
+    if (v.siloDefinitionId) {
+      params.set('siloDefinitionId', v.siloDefinitionId);
+    }
+
+    params.set('step', `${v.step}`);
+
+    if (v.jobId) {
+      params.set('jobId', v.jobId);
+    }
+
+    setSearchParams(params);
+  };
+
+  const onboardingState = useMemo<OnboardingState>(() => {
+    const requestId = searchParams.get('requestId');
+    const siloDefinitionId = searchParams.get('siloDefinitionId');
+    let step = parseInt(searchParams.get('step') || '0', 10);
+    const jobId = searchParams.get('jobId');
+
+    if (step > 1 && !siloDefinitionId) {
+      step = 1;
+    }
+
+    if (step > 2 && !jobId) {
+      step = 2;
+    }
+
+    if (step > 4 && !requestId) {
+      step = 4;
+    }
+
+    return {
+      requestId,
+      siloDefinitionId,
+      jobId,
+      step,
+    };
+  }, [searchParams]);
 
   let stepBody: ReactNode;
-  const toastCtx = useContext(ToastContext);
-  console.log('Hi', onboardingState.step);
+  const navigate = useNavigate();
 
   if (onboardingState.step === 0) {
     stepBody = (
-      <>
-        <PageHeader title="Create User Identifier" className="mb-2" />
-        <Text className="mb-4" size="sm">
-          The core of Brist&apos;s automations are user identifiers. You can use them to
-          define the fields of your data sources that can be used to query for user data.
-          You&apos;ll have to provide these identifiers when you create a data request.
-        </Text>
-        <NewPrimaryKeyForm
-          onSuccess={() => {
-            setOnboardingState({
-              ...onboardingState,
-              step: 1,
-            });
-          }}
-          onError={(err) => {
-            toastCtx.showToast(
-              {
-                title: 'Error Creating Identifier',
-                message: err.message,
-                variant: 'danger',
-                icon: XCircleIcon,
-              },
-            );
-          }}
-        />
-      </>
+      <UserIdentifierStepBody onSuccess={() => {
+        setOnboardingState({
+          ...onboardingState,
+          step: 1,
+        });
+      }}
+      />
     );
   } else if (onboardingState.step === 1) {
     stepBody = (
@@ -229,36 +130,47 @@ export default function OnboardingFlow() {
       />
     );
   } else if (onboardingState.step === 3) {
-    console.log('Hi');
+    stepBody = (
+      <SiloSourcesBody
+        siloDefinitionId={onboardingState.siloDefinitionId || ''}
+        onSuccess={() => {
+          setOnboardingState({
+            ...onboardingState,
+            step: 4,
+          });
+        }}
+      />
+    );
+  } else if (onboardingState.step === 4) {
+    stepBody = (
+      <RequestBody
+        onSuccess={(reqId: string) => {
+          setOnboardingState({
+            ...onboardingState,
+            requestId: reqId,
+            step: 5,
+          });
+        }}
+      />
+    );
+  } else if (onboardingState.step === 5) {
     stepBody = (
       <>
-        <PageHeader title="Link User Identifiers" className="mb-2" />
+        <PageHeader title="Congratulations!" className="mb-2" />
         <Text className="mb-4" size="sm">
-          Review the data sources you just created, and link the relevant user identifiers
-          to the properties they correspond to. We&apos;ll use this information to process
-          right-to-know and deletion requests.
+          You&apos;ve created your first Monoid silos and requests. Take a look at the
+          request page to see the results.
         </Text>
-
-        <div className="flex mb-4">
-          <Button
-            variant="primary"
-            className="ml-auto"
-            onClick={() => {
-              setOnboardingState({
-                ...onboardingState,
-                step: 4,
-              });
-            }}
+        <div className="flex items-start">
+          <Button onClick={() => {
+            completeOnboarding().then(() => {
+              navigate(`../requests/${onboardingState.requestId!}`);
+            });
+          }}
           >
-            <div className="flex items-center space-x-1">
-              <div>Next</div>
-              <ChevronRightIcon className="w-4 h-4" />
-            </div>
+            Complete Onboarding &amp; View Request
           </Button>
         </div>
-
-        <DataSourcesTable siloId={onboardingState.siloDefinitionId!} type="card" />
-
       </>
     );
   }
@@ -277,39 +189,29 @@ export default function OnboardingFlow() {
         />
       </div>
       {stepBody}
-      <div className="flex space-x-4 mt-2">
-        <BristA
-          href="#"
-          onClick={() => {
-            setOnboardingState({
-              ...onboardingState,
-              step: onboardingState.step + 1,
-            });
-          }}
-          className="mt-2 text-sm"
-        >
-          <div className="flex space-x-1 items-center">
-            <div>Skip Step</div>
-            <ChevronRightIcon className="w-4 h-4" />
+      {onboardingState.step < 5
+        && (
+          <div className="flex space-x-4 mt-2">
+            <BristA
+              href="#"
+              onClick={() => {
+                completeOnboarding().then(() => {
+                  navigate('..');
+                }).catch((err: ApolloError) => toastCtx.showToast({
+                  title: 'Error Completing Onboarding',
+                  message: err.message,
+                  icon: XCircleIcon,
+                }));
+              }}
+              className="mt-2 text-sm text-red-500 hover:text-red-700"
+            >
+              <div className="flex space-x-1 items-center">
+                <div>Skip Onboarding</div>
+                <ChevronRightIcon className="w-4 h-4" />
+              </div>
+            </BristA>
           </div>
-        </BristA>
-
-        <BristA
-          href="#"
-          onClick={() => {
-            setOnboardingState({
-              ...onboardingState,
-              step: 1,
-            });
-          }}
-          className="mt-2 text-sm text-red-500 hover:text-red-700"
-        >
-          <div className="flex space-x-1 items-center">
-            <div>Skip Onboarding</div>
-            <ChevronRightIcon className="w-4 h-4" />
-          </div>
-        </BristA>
-      </div>
+        )}
     </div>
   );
 }
