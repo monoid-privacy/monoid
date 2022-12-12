@@ -16,7 +16,7 @@ export default function RequestBody(props: { onSuccess: (reqId: string) => void 
       <PageHeader title="Create Request" className="mb-2" />
       <Text className="mb-4" size="sm">
         Now that you&apos;ve set up your silo and sources, you can create a test request.
-        You should try creating a query requeest first, as you&apos;ll be able to see the results
+        You should try creating a query request first, as you&apos;ll be able to see the results
         more clearly. We&apos;ll also automatically execute the request for you
         (by default, future requests will get executed after you manually approve them).
       </Text>
