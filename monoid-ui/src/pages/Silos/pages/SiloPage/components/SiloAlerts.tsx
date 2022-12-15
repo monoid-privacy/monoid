@@ -148,7 +148,6 @@ export function SiloAlertCardBody(props: {
             Scan
           </ScanButtonRegion>
         )}
-        className="pb-5"
       />
     );
   }

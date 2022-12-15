@@ -22,9 +22,13 @@ export const paginationMerge: (fieldName: string, countName: string) => FieldMer
 
     const offset = args?.offset || 0;
     const limit = args?.limit || 0;
-    let merged = (existing && existing[fieldName]) ? existing[fieldName].slice(0) : [];
+    let merged = (existing && existing[fieldName]) ? existing[fieldName].slice(0) : undefined;
 
     if (incoming[fieldName]) {
+      if (!merged) {
+        merged = [];
+      }
+
       for (let i = 0; i < incoming[fieldName].length; i += 1) {
         merged[offset + i] = incoming[fieldName][i];
       }
