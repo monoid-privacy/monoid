@@ -11,6 +11,7 @@ var emailRegex = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-
 type Workspace struct {
 	ID                 string
 	Name               string
+	OnboardingComplete bool `default:"false"`
 	SiloSpecifications []SiloSpecification
 	SiloDefinitions    []SiloDefinition
 	Subjects           []Subject

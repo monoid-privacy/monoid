@@ -134,6 +134,7 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		CancelJob                       func(childComplexity int, id string) int
+		CompleteWorkspaceOnboarding     func(childComplexity int, id string) int
 		CreateDataSource                func(childComplexity int, input *model.CreateDataSourceInput) int
 		CreateProperty                  func(childComplexity int, input *model.CreatePropertyInput) int
 		CreateSiloDefinition            func(childComplexity int, input *model.CreateSiloDefinitionInput) int
@@ -148,7 +149,7 @@ type ComplexityRoot struct {
 		DeleteSiloSpecification         func(childComplexity int, id string) int
 		DeleteSubject                   func(childComplexity int, id string) int
 		DeleteUserPrimaryKey            func(childComplexity int, id string) int
-		DeleteWorkspace                 func(childComplexity int, id *string) int
+		DeleteWorkspace                 func(childComplexity int, id string) int
 		DetectSiloSources               func(childComplexity int, workspaceID string, id string) int
 		ExecuteUserDataRequest          func(childComplexity int, requestID string) int
 		GenerateQueryResultDownloadLink func(childComplexity int, queryResultID string) int
@@ -295,6 +296,7 @@ type ComplexityRoot struct {
 		Job                func(childComplexity int, id string) int
 		Jobs               func(childComplexity int, jobType string, resourceID *string, status []*model.JobStatus, query *string, limit int, offset int) int
 		Name               func(childComplexity int) int
+		OnboardingComplete func(childComplexity int) int
 		Requests           func(childComplexity int, offset *int, limit int) int
 		Settings           func(childComplexity int) int
 		SiloDefinitions    func(childComplexity int) int
@@ -325,7 +327,8 @@ type JobResolver interface {
 type MutationResolver interface {
 	CreateWorkspace(ctx context.Context, input model.CreateWorkspaceInput) (*model.Workspace, error)
 	UpdateWorkspaceSettings(ctx context.Context, input model.UpdateWorkspaceSettingsInput) (*model.Workspace, error)
-	DeleteWorkspace(ctx context.Context, id *string) (*string, error)
+	DeleteWorkspace(ctx context.Context, id string) (*string, error)
+	CompleteWorkspaceOnboarding(ctx context.Context, id string) (*model.Workspace, error)
 	CreateDataSource(ctx context.Context, input *model.CreateDataSourceInput) (*model.DataSource, error)
 	CreateSiloSpecification(ctx context.Context, input *model.CreateSiloSpecificationInput) (*model.SiloSpecification, error)
 	CreateProperty(ctx context.Context, input *model.CreatePropertyInput) (*model.Property, error)
@@ -727,6 +730,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CancelJob(childComplexity, args["id"].(string)), true
 
+	case "Mutation.completeWorkspaceOnboarding":
+		if e.complexity.Mutation.CompleteWorkspaceOnboarding == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_completeWorkspaceOnboarding_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CompleteWorkspaceOnboarding(childComplexity, args["id"].(string)), true
+
 	case "Mutation.createDataSource":
 		if e.complexity.Mutation.CreateDataSource == nil {
 			break
@@ -905,7 +920,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteWorkspace(childComplexity, args["id"].(*string)), true
+		return e.complexity.Mutation.DeleteWorkspace(childComplexity, args["id"].(string)), true
 
 	case "Mutation.detectSiloSources":
 		if e.complexity.Mutation.DetectSiloSources == nil {
@@ -1727,6 +1742,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Workspace.Name(childComplexity), true
 
+	case "Workspace.onboardingComplete":
+		if e.complexity.Workspace.OnboardingComplete == nil {
+			break
+		}
+
+		return e.complexity.Workspace.OnboardingComplete(childComplexity), true
+
 	case "Workspace.requests":
 		if e.complexity.Workspace.Requests == nil {
 			break
@@ -1878,6 +1900,7 @@ directive @goField(
 type Workspace {
   id: ID!
   name: String
+  onboardingComplete: Boolean
   settings: Map! @goField(forceResolver: true)
   siloSpecifications: [SiloSpecification!] @goField(forceResolver: true)
   subjects: [Subject!]
@@ -1907,7 +1930,8 @@ input UpdateWorkspaceSettingsInput {
 extend type Mutation {
   createWorkspace(input: CreateWorkspaceInput!): Workspace
   updateWorkspaceSettings(input: UpdateWorkspaceSettingsInput!): Workspace
-  deleteWorkspace(id: ID): ID
+  deleteWorkspace(id: ID!): ID
+  completeWorkspaceOnboarding(id: ID!): Workspace
 }
 `, BuiltIn: false},
 	{Name: "../schema/data_mapping.graphqls", Input: `# GraphQL schema example
@@ -2421,6 +2445,21 @@ func (ec *executionContext) field_Mutation_cancelJob_args(ctx context.Context, r
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_completeWorkspaceOnboarding_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createDataSource_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -2634,10 +2673,10 @@ func (ec *executionContext) field_Mutation_deleteUserPrimaryKey_args(ctx context
 func (ec *executionContext) field_Mutation_deleteWorkspace_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *string
+	var arg0 string
 	if tmp, ok := rawArgs["id"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -5249,6 +5288,8 @@ func (ec *executionContext) fieldContext_Mutation_createWorkspace(ctx context.Co
 				return ec.fieldContext_Workspace_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Workspace_name(ctx, field)
+			case "onboardingComplete":
+				return ec.fieldContext_Workspace_onboardingComplete(ctx, field)
 			case "settings":
 				return ec.fieldContext_Workspace_settings(ctx, field)
 			case "siloSpecifications":
@@ -5329,6 +5370,8 @@ func (ec *executionContext) fieldContext_Mutation_updateWorkspaceSettings(ctx co
 				return ec.fieldContext_Workspace_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Workspace_name(ctx, field)
+			case "onboardingComplete":
+				return ec.fieldContext_Workspace_onboardingComplete(ctx, field)
 			case "settings":
 				return ec.fieldContext_Workspace_settings(ctx, field)
 			case "siloSpecifications":
@@ -5383,7 +5426,7 @@ func (ec *executionContext) _Mutation_deleteWorkspace(ctx context.Context, field
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteWorkspace(rctx, fc.Args["id"].(*string))
+		return ec.resolvers.Mutation().DeleteWorkspace(rctx, fc.Args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5415,6 +5458,88 @@ func (ec *executionContext) fieldContext_Mutation_deleteWorkspace(ctx context.Co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_deleteWorkspace_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_completeWorkspaceOnboarding(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_completeWorkspaceOnboarding(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CompleteWorkspaceOnboarding(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Workspace)
+	fc.Result = res
+	return ec.marshalOWorkspace2ᚖgithubᚗcomᚋmonoidᚑprivacyᚋmonoidᚋmodelᚐWorkspace(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_completeWorkspaceOnboarding(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Workspace_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Workspace_name(ctx, field)
+			case "onboardingComplete":
+				return ec.fieldContext_Workspace_onboardingComplete(ctx, field)
+			case "settings":
+				return ec.fieldContext_Workspace_settings(ctx, field)
+			case "siloSpecifications":
+				return ec.fieldContext_Workspace_siloSpecifications(ctx, field)
+			case "subjects":
+				return ec.fieldContext_Workspace_subjects(ctx, field)
+			case "categories":
+				return ec.fieldContext_Workspace_categories(ctx, field)
+			case "dataMap":
+				return ec.fieldContext_Workspace_dataMap(ctx, field)
+			case "discoveries":
+				return ec.fieldContext_Workspace_discoveries(ctx, field)
+			case "jobs":
+				return ec.fieldContext_Workspace_jobs(ctx, field)
+			case "job":
+				return ec.fieldContext_Workspace_job(ctx, field)
+			case "requests":
+				return ec.fieldContext_Workspace_requests(ctx, field)
+			case "userPrimaryKeys":
+				return ec.fieldContext_Workspace_userPrimaryKeys(ctx, field)
+			case "siloDefinitions":
+				return ec.fieldContext_Workspace_siloDefinitions(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Workspace", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_completeWorkspaceOnboarding_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -8210,6 +8335,8 @@ func (ec *executionContext) fieldContext_Query_workspaces(ctx context.Context, f
 				return ec.fieldContext_Workspace_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Workspace_name(ctx, field)
+			case "onboardingComplete":
+				return ec.fieldContext_Workspace_onboardingComplete(ctx, field)
 			case "settings":
 				return ec.fieldContext_Workspace_settings(ctx, field)
 			case "siloSpecifications":
@@ -8279,6 +8406,8 @@ func (ec *executionContext) fieldContext_Query_workspace(ctx context.Context, fi
 				return ec.fieldContext_Workspace_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Workspace_name(ctx, field)
+			case "onboardingComplete":
+				return ec.fieldContext_Workspace_onboardingComplete(ctx, field)
 			case "settings":
 				return ec.fieldContext_Workspace_settings(ctx, field)
 			case "siloSpecifications":
@@ -11053,6 +11182,47 @@ func (ec *executionContext) fieldContext_Workspace_name(ctx context.Context, fie
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Workspace_onboardingComplete(ctx context.Context, field graphql.CollectedField, obj *model.Workspace) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Workspace_onboardingComplete(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OnboardingComplete, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalOBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Workspace_onboardingComplete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Workspace",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -15112,6 +15282,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_deleteWorkspace(ctx, field)
 			})
 
+		case "completeWorkspaceOnboarding":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_completeWorkspaceOnboarding(ctx, field)
+			})
+
 		case "createDataSource":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -16556,6 +16732,10 @@ func (ec *executionContext) _Workspace(ctx context.Context, sel ast.SelectionSet
 		case "name":
 
 			out.Values[i] = ec._Workspace_name(ctx, field, obj)
+
+		case "onboardingComplete":
+
+			out.Values[i] = ec._Workspace_onboardingComplete(ctx, field, obj)
 
 		case "settings":
 			field := field

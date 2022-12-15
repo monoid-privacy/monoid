@@ -1,7 +1,7 @@
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import NewPrimaryKeyPage from './pages/NewPrimaryKeyPage/NewPrimaryKeyPage';
-import UserIdentifiersList from './pages/UserIdentifiersList.tsx/UserIdentifiersList';
+import UserIdentifiersList from './pages/UserIdentifiersList/UserIdentifiersList';
 
 export default function IdentifierRoutes() {
   return (

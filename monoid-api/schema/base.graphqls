@@ -10,6 +10,7 @@ directive @goField(
 type Workspace {
   id: ID!
   name: String
+  onboardingComplete: Boolean
   settings: Map! @goField(forceResolver: true)
   siloSpecifications: [SiloSpecification!] @goField(forceResolver: true)
   subjects: [Subject!]
@@ -39,5 +40,6 @@ input UpdateWorkspaceSettingsInput {
 extend type Mutation {
   createWorkspace(input: CreateWorkspaceInput!): Workspace
   updateWorkspaceSettings(input: UpdateWorkspaceSettingsInput!): Workspace
-  deleteWorkspace(id: ID): ID
+  deleteWorkspace(id: ID!): ID
+  completeWorkspaceOnboarding(id: ID!): Workspace
 }

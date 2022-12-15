@@ -150,7 +150,7 @@ func (r *mutationResolver) UpdateWorkspaceSettings(ctx context.Context, input mo
 }
 
 // DeleteWorkspace is the resolver for the deleteWorkspace field.
-func (r *mutationResolver) DeleteWorkspace(ctx context.Context, id *string) (*string, error) {
+func (r *mutationResolver) DeleteWorkspace(ctx context.Context, id string) (*string, error) {
 	workspace := &model.Workspace{}
 
 	if err := r.Conf.DB.Where("id = ?", id).First(workspace).Error; err != nil {
@@ -168,7 +168,23 @@ func (r *mutationResolver) DeleteWorkspace(ctx context.Context, id *string) (*st
 
 	r.Conf.AnalyticsIngestor.Track("workspaceAction", nil, data)
 
-	return id, nil
+	return &id, nil
+}
+
+// CompleteWorkspaceOnboarding is the resolver for the completeWorkspaceOnboarding field.
+func (r *mutationResolver) CompleteWorkspaceOnboarding(ctx context.Context, id string) (*model.Workspace, error) {
+	workspace := model.Workspace{}
+	if err := r.Conf.DB.Where("id = ?", id).First(&workspace).Error; err != nil {
+		return nil, handleError(err, "Couldn't find workspace")
+	}
+
+	if err := r.Conf.DB.Model(&workspace).Update(
+		"onboarding_complete", true,
+	).Error; err != nil {
+		return nil, handleError(err, "Error completing onboarding")
+	}
+
+	return &workspace, nil
 }
 
 // Workspaces is the resolver for the workspaces field.

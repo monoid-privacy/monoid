@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
-import AlertRegion from '../../../../../components/AlertRegion';
-import Button from '../../../../../components/Button';
-import Input, { InputLabel } from '../../../../../components/Input';
-import Spinner from '../../../../../components/Spinner';
-import Select from '../../../../../components/Select';
+import React, { useEffect, useState } from 'react';
+import AlertRegion from 'components/AlertRegion';
+import Button from 'components/Button';
+import Input, { InputLabel } from 'components/Input';
+import Spinner from 'components/Spinner';
+import Select from 'components/Select';
 import {
   UserPrimaryKey, UserDataRequestInput,
-} from '../../../../../lib/models';
+} from 'lib/models';
+import { GET_PRIMARY_KEYS } from 'graphql/requests_queries';
+import { useParams } from 'react-router-dom';
+import { useQuery } from '@apollo/client';
 
 function PrimaryKeyInputs(props: {
   userPrimaryKey: UserPrimaryKey,
@@ -28,21 +31,61 @@ function PrimaryKeyInputs(props: {
 
 export default function RequestForm(props: {
   onSubmit: (req: UserDataRequestInput) => void,
-  userPrimaryKeys?: UserPrimaryKey[],
   formLoading?: boolean,
   formError?: Error,
+  actionName?: string,
 }) {
+  const { id } = useParams<{ id: string }>();
   const {
-    onSubmit, formLoading, formError, userPrimaryKeys,
+    onSubmit, formLoading, formError, actionName,
   } = props;
+
+  const { data, loading, error } = useQuery<{
+    workspace: {
+      userPrimaryKeys: UserPrimaryKey[],
+    },
+  }>(GET_PRIMARY_KEYS, {
+    variables: {
+      id,
+    },
+  });
 
   const [req, setReq] = useState<UserDataRequestInput>({
     type: 'QUERY',
-    primaryKeys: userPrimaryKeys!.map((key) => ({
-      apiIdentifier: key.apiIdentifier,
-      value: '',
-    })),
+    primaryKeys: [],
   });
+
+  const userPrimaryKeys = data?.workspace.userPrimaryKeys;
+
+  useEffect(() => {
+    if (!userPrimaryKeys) {
+      return;
+    }
+
+    setReq(
+      {
+        ...req,
+        primaryKeys: userPrimaryKeys.map((key) => ({
+          apiIdentifier: key.apiIdentifier,
+          value: '',
+        })),
+      },
+    );
+  }, [userPrimaryKeys]);
+
+  if (loading) {
+    return <Spinner />;
+  }
+
+  if (error) {
+    return (
+      <AlertRegion
+        alertTitle="Error"
+      >
+        {error.message}
+      </AlertRegion>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -103,7 +146,7 @@ export default function RequestForm(props: {
             onSubmit(req);
           }}
         >
-          {formLoading ? <Spinner /> : 'Submit'}
+          {formLoading ? <Spinner /> : (actionName || 'Submit')}
         </Button>
       </div>
     </div>
@@ -113,5 +156,5 @@ export default function RequestForm(props: {
 RequestForm.defaultProps = {
   formLoading: false,
   formError: undefined,
-  userPrimaryKeys: [],
+  actionName: undefined,
 };
