@@ -1,7 +1,10 @@
 <p align="center">
-<img src="https://user-images.githubusercontent.com/11621962/202384570-0e6d3724-dde6-4b69-a962-8d0b6aeec72c.png"></img>
+ <picture>
+   <source srcset="https://storage.googleapis.com/monoid-public-marketing/wordmark-light.png" media="(prefers-color-scheme: dark)">
+   <img src="https://storage.googleapis.com/monoid-public-marketing/wordmark-dark.png" height="200">
+ </picture>
+</p>
 
->
 <p align="center">
  
   <a href='http://makeapullrequest.com'><img alt='PRs Welcome' src='https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=shields'/></a>
