@@ -5,10 +5,8 @@ import (
 	"os"
 
 	"github.com/monoid-privacy/monoid/cmd"
+	mworker "github.com/monoid-privacy/monoid/cmd/worker/worker"
 	"github.com/monoid-privacy/monoid/workflow"
-	"github.com/monoid-privacy/monoid/workflow/activity"
-	"github.com/monoid-privacy/monoid/workflow/activity/requestactivity"
-	"github.com/monoid-privacy/monoid/workflow/requestworkflow"
 	"github.com/rs/zerolog"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
@@ -38,38 +36,12 @@ func main() {
 		MaxConcurrentActivityExecutionSize:     5,
 		MaxConcurrentWorkflowTaskExecutionSize: 5,
 	})
-	a := activity.Activity{
-		Conf: &conf,
-	}
-	ra := requestactivity.RequestActivity{
-		Conf: &conf,
-	}
 
-	mwf := workflow.Workflow{
-		Conf: &conf,
-	}
-
-	rmwf := requestworkflow.RequestWorkflow{
-		Conf: &conf,
-	}
-
-	w.RegisterActivity(a.ValidateDataSiloDef)
-	w.RegisterActivity(a.DetectDataSources)
-	w.RegisterActivity(a.FindOrCreateJob)
-	w.RegisterActivity(a.UpdateJobStatus)
-
-	// Request-related activities
-	w.RegisterActivity(ra.UpdateRequestStatusActivity)
-	w.RegisterActivity(ra.FindDBSilos)
-	w.RegisterActivity(ra.ProcessRequestResults)
-	w.RegisterActivity(ra.RequestStatusActivity)
-	w.RegisterActivity(ra.StartSiloRequestActivity)
-	w.RegisterActivity(ra.BatchUpdateRequestStatusActivity)
-
-	w.RegisterWorkflow(mwf.ValidateDSWorkflow)
-	w.RegisterWorkflow(mwf.DetectDSWorkflow)
-	w.RegisterWorkflow(rmwf.ExecuteRequestWorkflow)
-	w.RegisterWorkflow(rmwf.ExecuteSiloRequestWorkflow)
+	mworker.RegisterWorkerWorkflowActivities(
+		w,
+		mworker.DefaultActivites(&conf),
+		mworker.DefaultWorkflows(&conf),
+	)
 
 	// Start listening to the Task Queue
 	err = w.Run(worker.InterruptCh())
