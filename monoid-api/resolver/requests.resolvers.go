@@ -9,8 +9,8 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/monoid-privacy/monoid/dataloader"
 	"github.com/monoid-privacy/monoid/generated"
-	"github.com/monoid-privacy/monoid/loader"
 	"github.com/monoid-privacy/monoid/model"
 	"github.com/monoid-privacy/monoid/requests"
 	"github.com/monoid-privacy/monoid/workflow"
@@ -443,7 +443,7 @@ func (r *requestResolver) Status(ctx context.Context, obj *model.Request) (model
 		return model.FullRequestStatusCreated, nil
 	}
 
-	job, err := loader.Job(ctx, *obj.JobID)
+	job, err := dataloader.Job(ctx, *obj.JobID)
 
 	if err != nil {
 		return model.FullRequestStatusCreated, handleError(err, "Error computing status.")
@@ -467,12 +467,12 @@ func (r *requestStatusResolver) Request(ctx context.Context, obj *model.RequestS
 
 // DataSource is the resolver for the dataSource field.
 func (r *requestStatusResolver) DataSource(ctx context.Context, obj *model.RequestStatus) (*model.DataSource, error) {
-	return loader.DataSource(ctx, obj.DataSourceID)
+	return dataloader.DataSource(ctx, obj.DataSourceID)
 }
 
 // QueryResult is the resolver for the queryResult field.
 func (r *requestStatusResolver) QueryResult(ctx context.Context, obj *model.RequestStatus) (*model.QueryResult, error) {
-	q, err := loader.QueryResult(ctx, obj.ID)
+	q, err := dataloader.QueryResult(ctx, obj.ID)
 	if err != nil {
 		return nil, err
 	}

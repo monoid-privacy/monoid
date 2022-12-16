@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 
 	"github.com/google/uuid"
+	"github.com/monoid-privacy/monoid/dataloader"
 	"github.com/monoid-privacy/monoid/generated"
-	"github.com/monoid-privacy/monoid/loader"
 	"github.com/monoid-privacy/monoid/model"
 	"github.com/monoid-privacy/monoid/workflow"
 	"github.com/rs/zerolog/log"
@@ -22,12 +22,12 @@ import (
 
 // SiloDefinition is the resolver for the siloDefinition field.
 func (r *dataSourceResolver) SiloDefinition(ctx context.Context, obj *model.DataSource) (*model.SiloDefinition, error) {
-	return loader.SiloDefinition(ctx, obj.SiloDefinitionID)
+	return dataloader.SiloDefinition(ctx, obj.SiloDefinitionID)
 }
 
 // Properties is the resolver for the properties field.
 func (r *dataSourceResolver) Properties(ctx context.Context, obj *model.DataSource) ([]*model.Property, error) {
-	return loader.DataSourceProperties(ctx, obj.ID)
+	return dataloader.DataSourceProperties(ctx, obj.ID)
 }
 
 // CreateDataSource is the resolver for the createDataSource field.
@@ -314,7 +314,7 @@ func (r *mutationResolver) DetectSiloSources(ctx context.Context, workspaceID st
 
 // Categories is the resolver for the categories field.
 func (r *propertyResolver) Categories(ctx context.Context, obj *model.Property) ([]*model.Category, error) {
-	return loader.PropertyCategories(ctx, obj.ID)
+	return dataloader.PropertyCategories(ctx, obj.ID)
 }
 
 // DataSource is the resolver for the dataSource field.

@@ -9,15 +9,15 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/monoid-privacy/monoid/dataloader"
 	"github.com/monoid-privacy/monoid/generated"
-	"github.com/monoid-privacy/monoid/loader"
 	"github.com/monoid-privacy/monoid/model"
 	"gorm.io/gorm"
 )
 
 // SiloDefinition is the resolver for the siloDefinition field.
 func (r *dataDiscoveryResolver) SiloDefinition(ctx context.Context, obj *model.DataDiscovery) (*model.SiloDefinition, error) {
-	return loader.SiloDefinition(ctx, obj.SiloDefinitionID)
+	return dataloader.SiloDefinition(ctx, obj.SiloDefinitionID)
 }
 
 // Data is the resolver for the data field.
