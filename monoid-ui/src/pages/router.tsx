@@ -20,8 +20,12 @@ import AlertRegion from '../components/AlertRegion';
 import LoadingPage from '../common/LoadingPage';
 import OnboardingFlow from './Onboarding/OnboardingFlow';
 
-export function WorkspaceRoutes() {
+export function WorkspaceRoutes(props: {
+  children?: React.ReactNode
+}) {
   const { workspace, loading, error } = useContext(WorkspaceContext);
+  const { children } = props;
+
   if (error) {
     return (
       <AlertRegion alertTitle="Error">
@@ -35,30 +39,33 @@ export function WorkspaceRoutes() {
   }
 
   return (
-    <AppContainer>
-      <Routes>
-        <Route
-          element={(
-            <Navigate to={
-              workspace && !workspace.onboardingComplete ? 'onboarding' : 'dashboard'
-            }
-            />
-          )}
-          index
-        />
-        {workspace && !workspace.onboardingComplete && <Route path="onboarding" element={<OnboardingFlow />} />}
-        <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="alerts" element={<WorkspaceAlertsPage />} />
-        <Route path="scans" element={<WorkspaceScansPage />} />
-        <Route path="data_map" element={<DataMapPage />} />
-        <Route path="silos/*" element={<SiloRoutes />} />
-        <Route path="requests/*" element={<RequestRoutes />} />
-        <Route path="identifiers/*" element={<IdentifierRoutes />} />
-        <Route path="settings" element={<SettingsPage />} />
-      </Routes>
-    </AppContainer>
+    <Routes>
+      <Route
+        element={(
+          <Navigate to={
+            workspace && !workspace.onboardingComplete ? 'onboarding' : 'dashboard'
+          }
+          />
+        )}
+        index
+      />
+      {children}
+      {workspace && !workspace.onboardingComplete && <Route path="onboarding" element={<OnboardingFlow />} />}
+      <Route path="dashboard" element={<DashboardPage />} />
+      <Route path="alerts" element={<WorkspaceAlertsPage />} />
+      <Route path="scans" element={<WorkspaceScansPage />} />
+      <Route path="data_map" element={<DataMapPage />} />
+      <Route path="silos/*" element={<SiloRoutes />} />
+      <Route path="requests/*" element={<RequestRoutes />} />
+      <Route path="identifiers/*" element={<IdentifierRoutes />} />
+      <Route path="settings" element={<SettingsPage />} />
+    </Routes>
   );
 }
+
+WorkspaceRoutes.defaultProps = {
+  children: undefined,
+};
 
 export default function MonoidRouter() {
   return (
@@ -71,7 +78,9 @@ export default function MonoidRouter() {
             path=":id/*"
             element={(
               <WorkspaceProvider>
-                <WorkspaceRoutes />
+                <AppContainer>
+                  <WorkspaceRoutes />
+                </AppContainer>
               </WorkspaceProvider>
             )}
           />
