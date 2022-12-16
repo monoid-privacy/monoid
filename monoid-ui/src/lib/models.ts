@@ -20,6 +20,7 @@ export interface SiloDefinition {
 
 export interface Workspace {
   id?: string,
+  name?: string,
   requests?: Request[]
   userPrimaryKeys?: UserPrimaryKey[]
   onboardingComplete?: boolean
