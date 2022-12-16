@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/monoid-privacy/monoid/dataloader"
 	"github.com/monoid-privacy/monoid/generated"
-	"github.com/monoid-privacy/monoid/loader"
 	"github.com/monoid-privacy/monoid/model"
 	"gorm.io/gorm"
 )
@@ -21,7 +21,7 @@ func (r *jobResolver) SiloDefinition(ctx context.Context, obj *model.Job) (*mode
 		return nil, nil
 	}
 
-	return loader.SiloDefinition(ctx, obj.ResourceID)
+	return dataloader.SiloDefinition(ctx, obj.ResourceID)
 }
 
 // Logs is the resolver for the logs field.

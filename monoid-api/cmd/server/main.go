@@ -9,9 +9,9 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gorilla/mux"
 	"github.com/monoid-privacy/monoid/cmd"
+	"github.com/monoid-privacy/monoid/dataloader"
 	"github.com/monoid-privacy/monoid/download"
 	"github.com/monoid-privacy/monoid/generated"
-	"github.com/monoid-privacy/monoid/loader"
 	"github.com/monoid-privacy/monoid/resolver"
 	"go.temporal.io/sdk/client"
 )
@@ -42,7 +42,7 @@ func main() {
 	router := mux.NewRouter()
 
 	router.Use(func(h http.Handler) http.Handler {
-		return conf.PreFlightHandler(loader.Middleware(&conf, h))
+		return conf.PreFlightHandler(dataloader.Middleware(&conf, h))
 	})
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(

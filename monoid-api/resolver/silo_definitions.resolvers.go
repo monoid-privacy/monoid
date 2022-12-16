@@ -9,9 +9,9 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/monoid-privacy/monoid/dataloader"
 	"github.com/monoid-privacy/monoid/generated"
 	"github.com/monoid-privacy/monoid/jsonschema"
-	"github.com/monoid-privacy/monoid/loader"
 	"github.com/monoid-privacy/monoid/model"
 	"github.com/rs/zerolog/log"
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -213,7 +213,7 @@ func (r *queryResolver) SiloDefinition(ctx context.Context, id string) (*model.S
 
 // SiloSpecification is the resolver for the siloSpecification field.
 func (r *siloDefinitionResolver) SiloSpecification(ctx context.Context, obj *model.SiloDefinition) (*model.SiloSpecification, error) {
-	return loader.SiloSpecification(ctx, obj.SiloSpecificationID)
+	return dataloader.SiloSpecification(ctx, obj.SiloSpecificationID)
 }
 
 // DataSources is the resolver for the dataSources field.
