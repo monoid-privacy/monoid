@@ -1,6 +1,8 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-import React from 'react';
+import { Menu, Transition } from '@headlessui/react';
+import { EllipsisHorizontalIcon } from '@heroicons/react/24/outline';
+import React, { Fragment } from 'react';
 import { classNames } from '../../utils/utils';
 import { NavLink } from './types';
 
@@ -12,7 +14,7 @@ export default function Sidebar(props: {
   }[],
   footer?: {
     node: React.ReactNode
-    onClick?: () => void
+    items: NavLink[]
   }
 }) {
   const { sections, footer } = props;
@@ -66,17 +68,60 @@ export default function Sidebar(props: {
           </div>
           {footer
             && (
-              <div
-                className={
-                  classNames(
-                    'flex flex-shrink-0 border-t border-gray-200 p-4',
-                    footer.onClick ? 'cursor-pointer hover:bg-gray-200' : '',
+              <Menu
+                as="div"
+                className="relative"
+              >
+                <Menu.Button
+                  as="div"
+                  className={
+                    classNames(
+                      'flex flex-shrink-0 border-t border-gray-200 p-4',
+                      footer.items.length > 0 ? 'cursor-pointer hover:bg-gray-200' : '',
+                    )
+                  }
+                >
+                  <div className="flex items-center w-full">
+                    <div>
+                      {footer.node}
+                    </div>
+                    {footer.items.length > 0
+                      && <EllipsisHorizontalIcon className="h-6 w-6 text-gray-400 ml-auto" />}
+                  </div>
+                </Menu.Button>
+                {
+                  footer.items.length > 0
+                  && (
+                    <Transition
+                      as={Fragment}
+                      enter="transition ease-out duration-100"
+                      enterFrom="transform opacity-0 scale-95"
+                      enterTo="transform opacity-100 scale-100"
+                      leave="transition ease-in duration-75"
+                      leaveFrom="transform opacity-100 scale-100"
+                      leaveTo="transform opacity-0 scale-95"
+                    >
+                      <Menu.Items className="absolute bottom-0 left-full z-10 ml-2 mb-2 w-56 origin-bottom-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        <div className="py-1">
+                          {footer.items.map((v) => (
+                            <Menu.Item key={v.key}>
+                              {() => (
+                                <button
+                                  type="button"
+                                  className="block text-left px-4 py-2 text-sm w-full hover:bg-gray-100"
+                                  onClick={v.onClick}
+                                >
+                                  {v.title}
+                                </button>
+                              )}
+                            </Menu.Item>
+                          ))}
+                        </div>
+                      </Menu.Items>
+                    </Transition>
                   )
                 }
-                onClick={footer.onClick}
-              >
-                {footer.node}
-              </div>
+              </Menu>
             )}
         </div>
       </div>
