@@ -431,7 +431,7 @@ func (a *Activity) DetectDataSources(ctx context.Context, args DetectDSArgs) (in
 	}
 
 	go func() {
-		wr, _, err := a.Conf.FileStore.NewWriter(ctx, args.LogObjectName, true)
+		wr, _, err := a.Conf.FileStore.NewWriter(context.Background(), args.LogObjectName, true)
 		if err != nil {
 			logger.Error("Error opening log writer: %v", err)
 		}

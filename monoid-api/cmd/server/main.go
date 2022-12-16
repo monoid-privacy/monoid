@@ -24,7 +24,7 @@ func main() {
 		port = defaultPort
 	}
 
-	conf := cmd.GetBaseConfig(true, cmd.Models)
+	conf := cmd.GetBaseConfig(nil)
 	defer conf.AnalyticsIngestor.Close()
 
 	c, err := client.Dial(client.Options{

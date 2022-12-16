@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-	conf := cmd.GetBaseConfig(false, cmd.Models)
+	conf := cmd.GetBaseConfig(nil)
 	defer conf.AnalyticsIngestor.Close()
 
 	logger := logur.LoggerToKV(zerologadapter.New(zerolog.New(os.Stdout).Level(zerolog.InfoLevel)))

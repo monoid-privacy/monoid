@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/monoid-privacy/monoid/filestore"
 )
@@ -19,28 +20,27 @@ func NewLocalFileStore(rootDir string) filestore.FileStore {
 	}
 }
 
-func (ls *localFileStore) NewWriter(ctx context.Context, objectName string, fullPath bool) (io.WriteCloser, string, error) {
-	fp := objectName
-
-	if !fullPath {
-		fp = filepath.Join(ls.RootDir, objectName)
+func safeJoin(root string, objName string) string {
+	if strings.HasPrefix(objName, root+string(os.PathSeparator)) {
+		return objName
 	}
 
+	return filepath.Join(root, objName)
+}
+
+func (ls *localFileStore) NewWriter(ctx context.Context, objectName string, segmentFile bool) (io.WriteCloser, string, error) {
+	fp := filepath.Join(ls.RootDir, objectName)
 	f, err := os.Create(fp)
 
 	if err != nil {
 		return nil, "", err
 	}
 
-	return f, fp, nil
+	return f, objectName, nil
 }
 
-func (ls *localFileStore) NewReader(ctx context.Context, objectName string, fullPath bool) (io.ReadCloser, error) {
-	fp := objectName
-
-	if !fullPath {
-		fp = filepath.Join(ls.RootDir, objectName)
-	}
+func (ls *localFileStore) NewReader(ctx context.Context, objectName string, segmentFile bool) (io.ReadCloser, error) {
+	fp := safeJoin(ls.RootDir, objectName)
 
 	f, err := os.Open(fp)
 

@@ -1,13 +1,14 @@
 package download
 
 import (
+	"context"
+	"io"
 	"net/http"
-	"os"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/monoid-privacy/monoid/config"
 	"github.com/monoid-privacy/monoid/model"
+	"github.com/rs/zerolog/log"
 )
 
 type DownloadHandler struct {
@@ -29,15 +30,18 @@ func (dh *DownloadHandler) HandleDownload(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	f, err := os.Open(df.StoragePath)
+	f, err := dh.Conf.FileStore.NewReader(context.Background(), df.StoragePath, false)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
 	defer f.Close()
-
 	w.Header().Set("Content-Disposition", "attachment; filename=\"result.tar.gz\"")
+	w.Header().Set("Content-Type", "application/octet-stream")
 
-	http.ServeContent(w, r, "result.tar.gz", time.Now(), f)
+	if _, err := io.Copy(w, f); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Err(err).Msg("Error writing file")
+	}
 }

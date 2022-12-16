@@ -82,7 +82,7 @@ func setupDB() (container testcontainers.Container, db *gorm.DB, err error) {
 		Name:     "monoidtest",
 	})
 
-	cmd.MigrateDb(db, cmd.Models)
+	cmd.MigrateDBHelper(db, cmd.Models)
 
 	return container, db, nil
 }

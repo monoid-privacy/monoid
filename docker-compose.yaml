@@ -66,6 +66,11 @@ services:
       - RESOURCE_PATH=/app/config-data/resources
       - FILESTORE_PATH=${FILESTORE_PATH}
       - TEMPORAL=monoid-temporal:7233
+      - STORAGE_TYPE=${STORAGE_TYPE}
+
+      # Uncomment these lines if you're using gcs
+      # - GOOGLE_CLOUD_JSON=/gcloudcreds.json
+      # - GCS_BUCKET=${GCS_BUCKET}
     depends_on:
       db:
         condition: service_healthy
@@ -79,6 +84,10 @@ services:
     volumes:
       - filestore:${FILESTORE_PATH}
       - tempstore:/tmp/monoid
+      - ./monoid-config/resources:${RESOURCE_PATH}
+
+      # Uncomment this line if using gcs
+      # - ${LOCAL_GOOGLE_CLOUD_JSON}:/gcloudcreds.json
   loader:
     container_name: monoid-loader
     command: /app/config-data
@@ -110,6 +119,10 @@ services:
       - SEGMENT_KEY=${SEGMENT_KEY}
       - FILESTORE_PATH=${FILESTORE_PATH}
       - TEMPORAL=monoid-temporal:7233
+      - STORAGE_TYPE=${STORAGE_TYPE}
+      # Uncomment these lines if you're using gcs
+      # - GOOGLE_CLOUD_JSON=/gcloudcreds.json
+      # - GCS_BUCKET=${GCS_BUCKET}
     depends_on:
       db:
         condition: service_healthy
@@ -123,6 +136,9 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - filestore:${FILESTORE_PATH}
       - tempstore:/tmp/monoid
+
+      # Uncomment this line if using gcs
+      # - ${LOCAL_GOOGLE_CLOUD_JSON}:/gcloudcreds.json
     image: monoidco/monoid-worker:${VERSION}
   proxy:
     depends_on:
