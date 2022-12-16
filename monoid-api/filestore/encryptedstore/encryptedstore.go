@@ -26,9 +26,9 @@ func NewEncryptedFileStore(filestore filestore.FileStore, key []byte) filestore.
 func (fs *encryptedFileStore) NewWriter(
 	ctx context.Context,
 	objectName string,
-	fullPath bool,
+	segmentFile bool,
 ) (wr io.WriteCloser, fp string, err error) {
-	writer, filePath, err := fs.filestore.NewWriter(ctx, objectName, fullPath)
+	writer, filePath, err := fs.filestore.NewWriter(ctx, objectName, segmentFile)
 	if err != nil {
 		return nil, "", err
 	}
@@ -60,6 +60,6 @@ func (fs *encryptedFileStore) NewWriter(
 	return writer, filePath, nil
 }
 
-func (ls *encryptedFileStore) NewReader(ctx context.Context, objectName string, fullPath bool) (io.ReadCloser, error) {
-	return ls.filestore.NewReader(ctx, objectName, fullPath)
+func (ls *encryptedFileStore) NewReader(ctx context.Context, objectName string, segmentFile bool) (io.ReadCloser, error) {
+	return ls.filestore.NewReader(ctx, objectName, segmentFile)
 }

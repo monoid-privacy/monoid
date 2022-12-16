@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"database/sql"
 	"encoding/base64"
 	"fmt"
@@ -8,11 +9,15 @@ import (
 	"os"
 	"time"
 
+	"cloud.google.com/go/storage"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/monoid-privacy/monoid/analytics/ingestor"
 	"github.com/monoid-privacy/monoid/config"
+	"github.com/monoid-privacy/monoid/filestore/gcloudstore"
 	"github.com/monoid-privacy/monoid/filestore/localstore"
+	"google.golang.org/api/option"
+
 	"github.com/monoid-privacy/monoid/model"
 	"github.com/monoid-privacy/monoid/monoidprotocol/docker"
 	"github.com/rs/zerolog/log"
@@ -20,7 +25,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func MigrateDb(db *gorm.DB, models []interface{}) {
+func MigrateDBHelper(db *gorm.DB, models []interface{}) {
 	for _, model := range models {
 		if err := db.AutoMigrate(model); err != nil {
 			panic(err)
@@ -54,6 +59,10 @@ var Models = []interface{}{
 	model.OSSRegistration{},
 	model.QueryResult{},
 	model.DownloadableFile{},
+}
+
+func MigrateOSS(db *gorm.DB) {
+	MigrateDBHelper(db, Models)
 }
 
 func InitDb(dbInfo DBInfo) *gorm.DB {
@@ -92,7 +101,7 @@ func InitDb(dbInfo DBInfo) *gorm.DB {
 	return db
 }
 
-func GetBaseConfig(runMigrations bool, models []interface{}) config.BaseConfig {
+func GetBaseConfig(migrator func(db *gorm.DB)) config.BaseConfig {
 	err := godotenv.Load()
 	if err != nil {
 		log.Debug().Msg("No .env file found")
@@ -108,8 +117,8 @@ func GetBaseConfig(runMigrations bool, models []interface{}) config.BaseConfig {
 		Name:     os.Getenv("DB_NAME"),
 	})
 
-	if runMigrations {
-		MigrateDb(db, models)
+	if migrator != nil {
+		migrator(db)
 	}
 
 	// Set the encryption secret
@@ -126,17 +135,38 @@ func GetBaseConfig(runMigrations bool, models []interface{}) config.BaseConfig {
 		reg.ID = "temp_" + uuid.NewString()
 	}
 
-	fileStore := localstore.NewLocalFileStore(os.Getenv("FILESTORE_PATH"))
+	tempStore := os.Getenv("TEMP_STORE_PATH")
+	if tempStore == "" {
+		tempStore = os.TempDir()
+	}
+
 	conf := config.BaseConfig{
 		DB:              db,
 		WebURL:          os.Getenv("WEB_URL"),
-		FileStore:       fileStore,
-		TempStorePath:   os.Getenv("TEMP_STORE_PATH"),
+		TempStorePath:   tempStore,
 		ProtocolFactory: &docker.DockerProtocolFactory{},
 		AnalyticsIngestor: ingestor.NewSegmentIngestor(
 			os.Getenv("SEGMENT_KEY"),
 			&reg.ID,
 		),
+	}
+
+	switch os.Getenv("STORAGE_TYPE") {
+	case "google_cloud":
+		cli, err := storage.NewClient(context.Background(), option.WithCredentialsFile(
+			os.Getenv("GOOGLE_CLOUD_JSON"),
+		))
+
+		if err != nil {
+			panic(err)
+		}
+
+		conf.FileStore = gcloudstore.NewGoogleCloudStore(
+			cli,
+			os.Getenv("GCS_BUCKET"),
+		)
+	default:
+		conf.FileStore = localstore.NewLocalFileStore(os.Getenv("FILESTORE_PATH"))
 	}
 
 	return conf

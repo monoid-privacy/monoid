@@ -35,7 +35,7 @@ func main() {
 
 	_ = godotenv.Load()
 
-	conf := cmd.GetBaseConfig(true, cmd.Models)
+	conf := cmd.GetBaseConfig(cmd.MigrateOSS)
 	defer conf.AnalyticsIngestor.Close()
 
 	if _, err := register(&conf); err != nil {
