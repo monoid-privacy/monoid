@@ -11,7 +11,7 @@ services:
       - POSTGRES_USER=${DATABASE_USER}
     volumes:
       - db:/var/lib/postgresql/data
-      - ./monoid-config/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./monoid-api/config-data/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - monoid-network
     healthcheck:
@@ -59,7 +59,7 @@ services:
     networks:
       - monoid-network
     volumes:
-      - ./monoid-config/temporal:/etc/temporal/config/dynamicconfig
+      - ./monoid-api/config-data/temporal:/etc/temporal/config/dynamicconfig
     healthcheck:
       test:
         [
@@ -86,7 +86,9 @@ services:
       - ./monoid-api:/app
       - ${LOCAL_FILESTORE_PATH}:${FILESTORE_PATH}
       - ${LOCAL_TEMPSTORE_PATH}:/tmp/monoid
-      - ./monoid-config/resources:${RESOURCE_PATH}
+      # Mount resources separately so new connectors can be tested easily.
+      # Don't do this in prod.
+      - ./monoid-api/config-data/resources:${RESOURCE_PATH}
     environment:
       - WEB_URL=${WEB_URL}
       - DB_USER=${DATABASE_USER}
@@ -116,7 +118,7 @@ services:
     build:
       dockerfile: cmd/tools/loader/Dockerfile
       context: ./monoid-api
-    command: /monoid-config
+    command: /app/config-data
     environment:
       - DB_USER=${DATABASE_USER}
       - DB_PASS=${DATABASE_PASSWORD}
@@ -125,8 +127,6 @@ services:
       - DB_NAME=${DATABASE_NAME}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - SEGMENT_KEY=${SEGMENT_KEY}
-    volumes:
-      - ./monoid-config:/monoid-config
     depends_on:
       db:
         condition: service_healthy
