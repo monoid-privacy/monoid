@@ -18,7 +18,7 @@ export default function EmptyState(props: EmptyStateProps) {
 
   return (
     <div className={classNames('text-center', className)}>
-      <Icon className="mx-auto h-12 w-12 text-gray-400" />
+      <Icon className="mx-auto h-12 w-12 text-gray-400 mb-2" />
       <H2>{title}</H2>
       <p className="mt-1 text-sm text-gray-500">{subtitle}</p>
       {action && (

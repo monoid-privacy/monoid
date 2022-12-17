@@ -5,6 +5,8 @@ import dayjs from 'dayjs';
 import updateLocale from 'dayjs/plugin/updateLocale';
 import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import EmptyState from 'components/Empty';
+import { InboxIcon } from '@heroicons/react/24/outline';
 import AlertRegion from '../../../components/AlertRegion';
 import Button from '../../../components/Button';
 import Card, { CardDivider, CardHeader } from '../../../components/Card';
@@ -38,6 +40,18 @@ function RequestsCardBody() {
       <AlertRegion alertTitle="Error">
         {error.message}
       </AlertRegion>
+    );
+  }
+
+  if ((data?.workspace.requests.numRequests || 0) === 0) {
+    return (
+      <EmptyState
+        icon={InboxIcon}
+        title="No Requests"
+        subtitle="No requests were found in this workspace."
+        className="flex-1 flex flex-col justify-center"
+        action={<Button type="link" to="new">New Request</Button>}
+      />
     );
   }
 

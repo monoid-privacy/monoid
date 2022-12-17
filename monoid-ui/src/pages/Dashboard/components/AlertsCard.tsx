@@ -1,6 +1,8 @@
 import { useQuery } from '@apollo/client';
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import EmptyState from 'components/Empty';
+import { BellAlertIcon } from '@heroicons/react/24/outline';
 import AlertRegion from '../../../components/AlertRegion';
 import Button from '../../../components/Button';
 
@@ -31,6 +33,18 @@ function AlertsCardBody() {
       <AlertRegion alertTitle="Error">
         {error.message}
       </AlertRegion>
+    );
+  }
+
+  if ((data.workspace.discoveries.numDiscoveries || 0) === 0) {
+    return (
+      <EmptyState
+        icon={BellAlertIcon}
+        title="No Open Alerts"
+        subtitle="You have no open alerts!"
+        className="flex-1 flex flex-col justify-center"
+        action={null}
+      />
     );
   }
 

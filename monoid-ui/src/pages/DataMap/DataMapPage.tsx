@@ -1,5 +1,7 @@
 import { gql, useQuery } from '@apollo/client';
-import { PlusIcon } from '@heroicons/react/24/outline';
+import { CircleStackIcon, PlusIcon } from '@heroicons/react/24/outline';
+import Card from 'components/Card';
+import EmptyState from 'components/Empty';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import AlertRegion from '../../components/AlertRegion';
@@ -117,6 +119,20 @@ function DataMapList(props: { filters: FilterValue[] }) {
 
   if (error) {
     return <AlertRegion alertTitle="Error">{error.message}</AlertRegion>;
+  }
+
+  if ((data.workspace.dataMap.numRows || 0) === 0) {
+    return (
+      <Card>
+        <EmptyState
+          icon={CircleStackIcon}
+          title="No Data Map Entries"
+          subtitle="No data map entries matched the current set of filters."
+          className="py-7"
+          action={null}
+        />
+      </Card>
+    );
   }
 
   return (

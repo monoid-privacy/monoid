@@ -1,4 +1,6 @@
 import { useQuery } from '@apollo/client';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import EmptyState from 'components/Empty';
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AlertRegion from '../../../components/AlertRegion';
@@ -30,6 +32,18 @@ function ScansCardBody() {
       <AlertRegion alertTitle="Error">
         {error.message}
       </AlertRegion>
+    );
+  }
+
+  if ((data.workspace.jobs.numJobs || 0) === 0) {
+    return (
+      <EmptyState
+        icon={MagnifyingGlassIcon}
+        title="No Scans"
+        subtitle="No scans have been run in this workspace."
+        className="flex-1 flex flex-col justify-center"
+        action={null}
+      />
     );
   }
 

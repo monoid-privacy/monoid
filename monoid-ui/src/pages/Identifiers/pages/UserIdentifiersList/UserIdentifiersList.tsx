@@ -1,4 +1,7 @@
 import { useQuery } from '@apollo/client';
+import { IdentificationIcon } from '@heroicons/react/24/outline';
+import Card from 'components/Card';
+import EmptyState from 'components/Empty';
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AlertRegion from '../../../../components/AlertRegion';
@@ -30,6 +33,20 @@ function UserIdentifiersBody() {
       <AlertRegion alertTitle="Error">
         {error.message}
       </AlertRegion>
+    );
+  }
+
+  if ((data?.workspace.userPrimaryKeys.length || 0) === 0) {
+    return (
+      <Card>
+        <EmptyState
+          icon={IdentificationIcon}
+          title="No User Identifiers"
+          subtitle="No user identifiers were found in this workspace."
+          className="py-7"
+          action={<Button type="link" to="new">New Identifier</Button>}
+        />
+      </Card>
     );
   }
 
