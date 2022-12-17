@@ -118,7 +118,7 @@ function JobList(props: {
             Scan
           </ScanButtonRegion>
         )}
-        className="pb-5"
+        className="py-7"
       />
     );
   }

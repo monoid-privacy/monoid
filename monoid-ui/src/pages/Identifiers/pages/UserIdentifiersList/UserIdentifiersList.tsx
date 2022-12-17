@@ -22,6 +22,7 @@ function UserIdentifiersBody() {
     variables: {
       id,
     },
+    fetchPolicy: 'cache-and-network',
   });
 
   if (loading) {
