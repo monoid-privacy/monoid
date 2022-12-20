@@ -13,6 +13,7 @@ type SiloSpecification struct {
 	LogoURL         *string
 	WorkspaceID     *string
 	Workspace       *Workspace `gorm:"constraint:OnDelete:CASCADE;"`
+	Manual          bool       `gorm:"default:false"`
 	DockerImage     string
 	DockerTag       string
 	Schema          *string

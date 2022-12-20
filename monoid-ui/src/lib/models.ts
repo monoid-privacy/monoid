@@ -4,6 +4,7 @@ export interface SiloSpec {
   logo?: string
   name: string
   schema: string
+  manual: boolean
 }
 
 export interface SiloDefinition {

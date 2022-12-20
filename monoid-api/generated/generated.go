@@ -271,6 +271,7 @@ type ComplexityRoot struct {
 		ID          func(childComplexity int) int
 		Logo        func(childComplexity int) int
 		LogoURL     func(childComplexity int) int
+		Manual      func(childComplexity int) int
 		Name        func(childComplexity int) int
 		Schema      func(childComplexity int) int
 	}
@@ -1610,6 +1611,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.SiloSpecification.LogoURL(childComplexity), true
 
+	case "SiloSpecification.manual":
+		if e.complexity.SiloSpecification.Manual == nil {
+			break
+		}
+
+		return e.complexity.SiloSpecification.Manual(childComplexity), true
+
 	case "SiloSpecification.name":
 		if e.complexity.SiloSpecification.Name == nil {
 			break
@@ -1962,6 +1970,7 @@ type SiloSpecification {
     logo: String
     dockerImage: String!
     schema: String
+    manual: Boolean!
 }
 
 type Subject {
@@ -5683,6 +5692,8 @@ func (ec *executionContext) fieldContext_Mutation_createSiloSpecification(ctx co
 				return ec.fieldContext_SiloSpecification_dockerImage(ctx, field)
 			case "schema":
 				return ec.fieldContext_SiloSpecification_schema(ctx, field)
+			case "manual":
+				return ec.fieldContext_SiloSpecification_manual(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SiloSpecification", field.Name)
 		},
@@ -5939,6 +5950,8 @@ func (ec *executionContext) fieldContext_Mutation_updateSiloSpecification(ctx co
 				return ec.fieldContext_SiloSpecification_dockerImage(ctx, field)
 			case "schema":
 				return ec.fieldContext_SiloSpecification_schema(ctx, field)
+			case "manual":
+				return ec.fieldContext_SiloSpecification_manual(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SiloSpecification", field.Name)
 		},
@@ -8606,6 +8619,8 @@ func (ec *executionContext) fieldContext_Query_siloSpecification(ctx context.Con
 				return ec.fieldContext_SiloSpecification_dockerImage(ctx, field)
 			case "schema":
 				return ec.fieldContext_SiloSpecification_schema(ctx, field)
+			case "manual":
+				return ec.fieldContext_SiloSpecification_manual(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SiloSpecification", field.Name)
 		},
@@ -10392,6 +10407,8 @@ func (ec *executionContext) fieldContext_SiloDefinition_siloSpecification(ctx co
 				return ec.fieldContext_SiloSpecification_dockerImage(ctx, field)
 			case "schema":
 				return ec.fieldContext_SiloSpecification_schema(ctx, field)
+			case "manual":
+				return ec.fieldContext_SiloSpecification_manual(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SiloSpecification", field.Name)
 		},
@@ -10855,6 +10872,50 @@ func (ec *executionContext) fieldContext_SiloSpecification_schema(ctx context.Co
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SiloSpecification_manual(ctx context.Context, field graphql.CollectedField, obj *model.SiloSpecification) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SiloSpecification_manual(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Manual, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SiloSpecification_manual(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SiloSpecification",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -11398,6 +11459,8 @@ func (ec *executionContext) fieldContext_Workspace_siloSpecifications(ctx contex
 				return ec.fieldContext_SiloSpecification_dockerImage(ctx, field)
 			case "schema":
 				return ec.fieldContext_SiloSpecification_schema(ctx, field)
+			case "manual":
+				return ec.fieldContext_SiloSpecification_manual(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SiloSpecification", field.Name)
 		},
@@ -16778,6 +16841,13 @@ func (ec *executionContext) _SiloSpecification(ctx context.Context, sel ast.Sele
 
 			out.Values[i] = ec._SiloSpecification_schema(ctx, field, obj)
 
+		case "manual":
+
+			out.Values[i] = ec._SiloSpecification_manual(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

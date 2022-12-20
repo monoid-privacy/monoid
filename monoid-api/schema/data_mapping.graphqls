@@ -26,6 +26,7 @@ type SiloSpecification {
     logo: String
     dockerImage: String!
     schema: String
+    manual: Boolean!
 }
 
 type Subject {

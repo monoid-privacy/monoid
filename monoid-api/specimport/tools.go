@@ -11,6 +11,12 @@ import (
 func GetFullSpec(entry *IntegrationManifestEntry, dockerCli *client.Client) (*IntegrationFullSpecEntry, error) {
 	ctx := context.Background()
 
+	if entry.Manual {
+		return &IntegrationFullSpecEntry{
+			IntegrationManifestEntry: *entry,
+		}, nil
+	}
+
 	mp := docker.NewDockerMPWithClient(entry.DockerImage, entry.DockerTag, "", dockerCli, false)
 	defer mp.Teardown(ctx)
 
