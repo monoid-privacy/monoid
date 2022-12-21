@@ -20,13 +20,9 @@ function SelectSiloCard(props: {
 }) {
   const { id } = useParams<{ id: string }>();
   const { onSuccess } = props;
-  const { data, loading, error } = useQuery<{
-    workspace: {
-      siloDefinitions: SiloDefinition[]
-    }
-  }>(GET_SILOS, {
+  const { data, loading, error } = useQuery(GET_SILOS, {
     variables: {
-      id,
+      id: id!,
     },
     fetchPolicy: 'cache-and-network',
     nextFetchPolicy: () => 'cache-first',
@@ -57,9 +53,9 @@ function SelectSiloCard(props: {
           </InputLabel>
           <Combobox<SiloDefinition>
             filter={
-              (q) => Promise.resolve(data?.workspace.siloDefinitions.filter((v) => (
+              (q) => Promise.resolve((data?.workspace.siloDefinitions.filter((v) => (
                 v.name?.toLowerCase().includes(q)
-              )) || [])
+              )) || []) as SiloDefinition[])
             }
             id={(v) => v.id!}
             displayNode={dispNode}

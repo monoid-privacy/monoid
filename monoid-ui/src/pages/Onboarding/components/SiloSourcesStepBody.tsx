@@ -19,7 +19,7 @@ export default function SiloSourcesBody(props: {
   const { onSuccess, siloDefinitionId } = props;
   const {
     data, loading, error,
-  } = useQuery<{ siloDefinition: SiloDefinition }>(SILO_DATA_SOURCES, {
+  } = useQuery(SILO_DATA_SOURCES, {
     variables: {
       id: siloDefinitionId,
     },
@@ -101,7 +101,7 @@ export default function SiloSourcesBody(props: {
 
       {loading && <Spinner />}
       {!loading && error && <AlertRegion alertTitle="Error">{error.message}</AlertRegion>}
-      {!loading && !error && <DataSourcesTable siloDef={data?.siloDefinition} type="card" />}
+      {!loading && !error && <DataSourcesTable siloDef={data?.siloDefinition as SiloDefinition} type="card" />}
     </>
   );
 }

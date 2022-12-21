@@ -1,25 +1,25 @@
-import { gql, useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import React from 'react';
+import { gql } from '__generated__/gql';
 import AlertRegion from '../../../../../components/AlertRegion';
 import Badge, { BadgeColor } from '../../../../../components/Badge';
 import Spinner from '../../../../../components/Spinner';
-import { Category } from '../../../../../lib/models';
 
-const GET_CATEGORY = gql`
+const GET_CATEGORY = gql(`
   query GetCategory($id: ID!) {
     category(id: $id) {
       id
       name
     }
   }
-`;
+`);
 
 export default function CategoryBadge(props: {
   categoryID: string,
   color?: BadgeColor
 }) {
   const { categoryID, color } = props;
-  const { data, loading, error } = useQuery<{ category: Category }>(GET_CATEGORY, {
+  const { data, loading, error } = useQuery(GET_CATEGORY, {
     variables: {
       id: categoryID,
     },

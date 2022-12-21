@@ -1,6 +1,3 @@
-import {
-  gql,
-} from '@apollo/client';
 import React, { useContext, useEffect, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import dayjs from 'dayjs';
@@ -9,6 +6,7 @@ import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
 import { CheckCircleIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { gql } from '__generated__/gql';
 import useQuery from '../../../../../hooks/useQueryPatched';
 import AlertRegion from '../../../../../components/AlertRegion';
 import Card, { CardDivider, CardHeader } from '../../../../../components/Card';
@@ -27,7 +25,7 @@ dayjs.extend(updateLocale);
 dayjs.extend(duration);
 dayjs.extend(relativeTime);
 
-const GET_SCANS = gql`
+const GET_SCANS = gql(`
   query DiscoverJobs($workspaceId: ID!, $resourceId: ID!, $limit: Int!, $offset: Int!, $query: String) {
     workspace(id: $workspaceId) {
       id
@@ -48,7 +46,7 @@ const GET_SCANS = gql`
       }
     }
   }
-`;
+`);
 
 const limit = 10;
 
@@ -62,19 +60,12 @@ function JobList(props: {
 
   const {
     data, loading, error, fetchMore, refetch,
-  } = useQuery<{
-    workspace: {
-      jobs: {
-        jobs: Job[],
-        numJobs: number
-      }
-    }
-  }>(GET_SCANS, {
+  } = useQuery(GET_SCANS, {
     fetchPolicy: 'cache-and-network',
     nextFetchPolicy: () => 'cache-first',
     variables: {
-      resourceId: siloId,
-      workspaceId: id,
+      resourceId: siloId!,
+      workspaceId: id!,
       query: query.trim() !== '' ? query : undefined,
       limit,
       offset,
@@ -128,7 +119,7 @@ function JobList(props: {
       <ul className="divide-y divide-gray-200">
         {
           data?.workspace.jobs.jobs.map((j) => (
-            <JobRow key={j.id} job={j} openable />
+            <JobRow key={j.id} job={j as Job} openable />
           ))
         }
       </ul>

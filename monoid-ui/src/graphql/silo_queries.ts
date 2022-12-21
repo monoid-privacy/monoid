@@ -1,7 +1,7 @@
 /* eslint-disable import/prefer-default-export */
-import { gql } from '@apollo/client';
+import { gql } from '__generated__/gql';
 
-export const SILO_DATA_SOURCES = gql`
+export const SILO_DATA_SOURCES = gql(`
 query SiloDataSources($id: ID!) {
   siloDefinition(id: $id) {
     id
@@ -24,9 +24,9 @@ query SiloDataSources($id: ID!) {
     }
   }
 }
-`;
+`);
 
-export const GET_SILOS = gql`
+export const GET_SILOS = gql(`
   query GetSilos($id: ID!) {
     workspace(id: $id) {
       id
@@ -41,4 +41,4 @@ export const GET_SILOS = gql`
       }
     }
   }
-`;
+`);

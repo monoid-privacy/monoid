@@ -22,7 +22,7 @@ type Job {
 }
 
 type JobsResult {
-    jobs: [Job!]
+    jobs: [Job!]!
     numJobs: Int!
 }
 

@@ -1,15 +1,16 @@
-import { gql } from '@apollo/client';
+// import { TypedDocumentNode } from '@apollo/client';
+import { gql } from '__generated__/gql';
+// import * as types from '__generated__/graphql';
 
-export const DATA_SOURCE_FIELDS = gql`
+export const DATA_SOURCE_FIELDS = gql(`
   fragment DataSourceFields on DataSource {
     id
     name
     group
   }
-`;
+`);
 
-export const PROPERTY_FIELDS = gql`
-  ${DATA_SOURCE_FIELDS}
+export const PROPERTY_FIELDS = gql(`
   fragment PropertyFields on Property {
     id
     name
@@ -17,19 +18,16 @@ export const PROPERTY_FIELDS = gql`
       ...DataSourceFields
     }
   }
-`;
+`);
 
-export const CATEGORY_FIELDS = gql`
+export const CATEGORY_FIELDS = gql(`
   fragment CategoryFields on Category {
     id
     name
   }
-`;
+`);
 
-export const DISCOVERY_FIELDS = gql`
-  ${DATA_SOURCE_FIELDS}
-  ${PROPERTY_FIELDS}
-  ${CATEGORY_FIELDS}
+export const DISCOVERY_FIELDS = gql(`
   fragment DiscoveryFields on DataDiscovery {
     id
     type
@@ -87,10 +85,9 @@ export const DISCOVERY_FIELDS = gql`
       }
     }
   }
-`;
+`);
 
-export const GET_WORKSPACE_DISCOVERIES = gql`
-  ${DISCOVERY_FIELDS}
+export const GET_WORKSPACE_DISCOVERIES = gql(`
   query GetWorkspaceDiscoveries($workspaceId: ID!, $statuses: [DiscoveryStatus], $query: String, $limit: Int!, $offset: Int) {
     workspace(id: $workspaceId) {
       id
@@ -116,11 +113,9 @@ export const GET_WORKSPACE_DISCOVERIES = gql`
       }
     }
   }
-`;
+`);
 
-// eslint-disable-next-line import/prefer-default-export
-export const GET_DISCOVERIES = gql`
-  ${DISCOVERY_FIELDS}
+export const GET_DISCOVERIES = gql(`
   query GetDiscoveries($id: ID!, $limit: Int!, $offset: Int!, $query: String, $statuses: [DiscoveryStatus]) {
     siloDefinition(id: $id) {
       id
@@ -132,4 +127,4 @@ export const GET_DISCOVERIES = gql`
       }
     }
   }
-`;
+`);

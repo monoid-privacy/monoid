@@ -1,18 +1,20 @@
-import { ApolloError, gql, useMutation } from '@apollo/client';
+import { ApolloError, useMutation } from '@apollo/client';
 import { XCircleIcon } from '@heroicons/react/24/outline';
 import ToastContext from 'contexts/ToastContext';
 import React, { useContext } from 'react';
 import { Request } from 'lib/models';
 import { useParams } from 'react-router-dom';
+import { gql } from '__generated__/gql';
+import { UserDataRequestType, UserPrimaryKeyInput } from '__generated__/graphql';
 import RequestForm from './RequestForm';
 
-const CREATE_NEW_REQUEST = gql`
+const CREATE_NEW_REQUEST = gql(`
   mutation CreateRequest($input: UserDataRequestInput!) {
     createUserDataRequest(input: $input) {
       id
     }
   }
-`;
+`);
 
 export default function NewRequestForm(props: {
   onSuccess: (req: Request) => void,
@@ -30,13 +32,13 @@ export default function NewRequestForm(props: {
         createRequest({
           variables: {
             input: {
-              primaryKeys: req.primaryKeys,
-              workspaceId: id,
-              type: req.type,
+              primaryKeys: req.primaryKeys as UserPrimaryKeyInput[],
+              workspaceId: id!,
+              type: req.type! as UserDataRequestType,
             },
           },
         }).then(({ data }) => {
-          onSuccess(data.createUserDataRequest);
+          onSuccess(data?.createUserDataRequest as Request);
         }).catch((err: ApolloError) => {
           toastCtx.showToast(
             {

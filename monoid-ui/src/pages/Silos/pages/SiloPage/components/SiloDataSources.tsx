@@ -20,9 +20,9 @@ export default function SiloDataSources() {
   const { id, siloId } = useParams<{ id: string, siloId: string }>();
   const {
     data, loading, error, refetch,
-  } = useQuery<{ siloDefinition: SiloDefinition }>(SILO_DATA_SOURCES, {
+  } = useQuery(SILO_DATA_SOURCES, {
     variables: {
-      id: siloId,
+      id: siloId!,
     },
   });
 
@@ -68,7 +68,7 @@ export default function SiloDataSources() {
         </div>
       </CardHeader>
       {!loading
-        ? <DataSourcesTable siloDef={data?.siloDefinition} type="plain" />
+        ? <DataSourcesTable siloDef={data?.siloDefinition as SiloDefinition} type="plain" />
         : <Spinner />}
     </Card>
   );

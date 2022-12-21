@@ -1,6 +1,7 @@
-import { ApolloError, gql, useQuery } from '@apollo/client';
+import { ApolloError, useQuery } from '@apollo/client';
 import React, { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
+import { gql } from '__generated__/gql';
 import { Workspace } from '../lib/models';
 
 interface WorkspaceContextType {
@@ -18,7 +19,7 @@ const initVal: WorkspaceContextType = {
 const WorkspaceContext = React.createContext(initVal);
 export default WorkspaceContext;
 
-const WORKSPACE_QUERY = gql`
+const WORKSPACE_QUERY = gql(`
   query WorkspaceQuery($id: ID!) {
     workspace(id: $id) {
       id
@@ -26,19 +27,19 @@ const WORKSPACE_QUERY = gql`
       onboardingComplete
     }
   }
-`;
+`);
 
 export function WorkspaceProvider(props: { children: React.ReactNode }) {
   const { children } = props;
   const { id } = useParams<{ id: string }>();
-  const { data, loading, error } = useQuery<{ workspace: Workspace }>(WORKSPACE_QUERY, {
+  const { data, loading, error } = useQuery(WORKSPACE_QUERY, {
     variables: {
-      id,
+      id: id!,
     },
   });
 
   const providerVal = useMemo(() => ({
-    workspace: data?.workspace,
+    workspace: data?.workspace as Workspace,
     loading,
     error,
   }), [data, loading]);

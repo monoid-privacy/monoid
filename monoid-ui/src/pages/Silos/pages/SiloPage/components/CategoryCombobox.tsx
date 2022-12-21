@@ -1,16 +1,17 @@
 import {
-  gql, useLazyQuery, useMutation,
+  useLazyQuery, useMutation,
 } from '@apollo/client';
 import React, { useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { FormatOptionLabelMeta } from 'react-select';
+import { gql } from '__generated__/gql';
 import AlertRegion from '../../../../../components/AlertRegion';
 import MultiCombobox from '../../../../../components/MultiCombobox';
 import { Category } from '../../../../../lib/models';
 import Badge from '../../../../../components/Badge';
 
-const SILO_DATA_SOURCES = gql`
-  query SiloDataSources($workspaceId: ID!) {
+const WORKSPACE_CATEGORIES = gql(`
+  query WorkspaceCategories($workspaceId: ID!) {
     workspace(id: $workspaceId) {
       id
       categories {
@@ -19,9 +20,9 @@ const SILO_DATA_SOURCES = gql`
       }
     }
   }
-`;
+`);
 
-const UPDATE_CATEGORIES = gql`
+const UPDATE_CATEGORIES = gql(`
   mutation UpdateCategories($input: UpdatePropertyInput!) {
     updateProperty(input: $input) {
       __typename
@@ -32,7 +33,7 @@ const UPDATE_CATEGORIES = gql`
       }
     }
   }
-`;
+`);
 
 export default function CategoryCombobox(props: {
   value: string[],
@@ -43,11 +44,9 @@ export default function CategoryCombobox(props: {
   const [updateCat] = useMutation(UPDATE_CATEGORIES);
   const [loadData, {
     data, loading, called, error,
-  }] = useLazyQuery<{
-    workspace: { categories: Category[] }
-  }>(SILO_DATA_SOURCES, {
+  }] = useLazyQuery(WORKSPACE_CATEGORIES, {
     variables: {
-      workspaceId: id,
+      workspaceId: id!,
     },
   });
 

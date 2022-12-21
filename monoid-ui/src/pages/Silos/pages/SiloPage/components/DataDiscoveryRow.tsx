@@ -1,7 +1,7 @@
 import React, {
   ReactNode, useCallback, useState, useContext,
 } from 'react';
-import { useMutation, ApolloError, gql } from '@apollo/client';
+import { useMutation, ApolloError } from '@apollo/client';
 import {
   ChevronDownIcon, ChevronRightIcon, CheckCircleIcon, ExclamationCircleIcon,
   XCircleIcon, CircleStackIcon, FolderIcon,
@@ -14,6 +14,8 @@ import dayjs from 'dayjs';
 import updateLocale from 'dayjs/plugin/updateLocale';
 import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { gql } from '__generated__/gql';
+import { DiscoveryAction } from '__generated__/graphql';
 import ToastContext from '../../../../../contexts/ToastContext';
 import { DataDiscovery, NewDataSourceDiscoveryData, NewPropertyDiscoveryData } from '../../../../../lib/models';
 import Badge from '../../../../../components/Badge';
@@ -28,14 +30,14 @@ dayjs.extend(updateLocale);
 dayjs.extend(duration);
 dayjs.extend(relativeTime);
 
-const APPLY_DISCOVERY = gql`
+const APPLY_DISCOVERY = gql(`
   mutation ApplyDiscovery($input: HandleDiscoveryInput!) {
     handleDiscovery(input: $input) {
       id
       status
     }
   }
-`;
+`);
 
 function DataSourceBody(props: {
   dataSource: NewDataSourceDiscoveryData,
@@ -184,11 +186,11 @@ function DiscoveryItem(props: {
   const [applyDiscovery, applyDiscoveryRes] = useMutation(APPLY_DISCOVERY);
   const toastCtx = useContext(ToastContext);
 
-  const apply = useCallback((value: 'ACCEPT' | 'REJECT') => {
+  const apply = useCallback((value: DiscoveryAction) => {
     applyDiscovery({
       variables: {
         input: {
-          discoveryId: discovery.id,
+          discoveryId: discovery.id!,
           action: value,
         },
       },
@@ -374,7 +376,7 @@ function DiscoveryItem(props: {
                     size="sm"
                     onClick={(e) => {
                       e.stopPropagation();
-                      apply('ACCEPT');
+                      apply(DiscoveryAction.Accept);
                     }}
                   >
                     {applyDiscoveryRes.loading ? <Spinner />
@@ -385,7 +387,7 @@ function DiscoveryItem(props: {
                     size="sm"
                     onClick={(e) => {
                       e.stopPropagation();
-                      apply('REJECT');
+                      apply(DiscoveryAction.Reject);
                     }}
                   >
                     {applyDiscoveryRes.loading ? <Spinner /> : 'Reject'}

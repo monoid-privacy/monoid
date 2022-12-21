@@ -1,5 +1,5 @@
 import {
-  ApolloError, gql, useMutation, useQuery,
+  ApolloError, useMutation, useQuery,
 } from '@apollo/client';
 
 import React, {
@@ -11,12 +11,14 @@ import {
   CheckCircleIcon, XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { classNames } from 'utils/utils';
+import { gql } from '__generated__/gql';
+import { DiscoveryAction, DiscoveryStatus } from '__generated__/graphql';
 import useQueryPatched from '../../../../../hooks/useQueryPatched';
 import AlertRegion from '../../../../../components/AlertRegion';
 import Card, { CardHeader, CardDivider } from '../../../../../components/Card';
 import Spinner from '../../../../../components/Spinner';
 import {
-  DataDiscovery, SiloDefinition,
+  DataDiscovery,
 } from '../../../../../lib/models';
 import Badge from '../../../../../components/Badge';
 import Button from '../../../../../components/Button';
@@ -28,7 +30,7 @@ import Input from '../../../../../components/Input';
 import EmptyState from '../../../../../components/Empty';
 import ScanButtonRegion from './ScanButton';
 
-const GET_NUM_ACTIVE_DISCOVERIES = gql`
+const GET_NUM_ACTIVE_DISCOVERIES = gql(`
   query GetNumActiveDiscoveries($id: ID!) {
     siloDefinition(id: $id) {
       id
@@ -37,26 +39,24 @@ const GET_NUM_ACTIVE_DISCOVERIES = gql`
       }
     }
   }
-`;
+`);
 
-const APPLY_ALL_DISCOVERIES = gql`
+const APPLY_ALL_DISCOVERIES = gql(`
   mutation ApplyAllDiscoveries($input: HandleAllDiscoveriesInput!) {
     handleAllOpenDiscoveries(input: $input) {
       id
       status
     }
   }
-`;
+`);
 
 const limit = 10;
 
 export function SiloAlertsTabHeader() {
   const { siloId } = useParams<{ siloId: string }>();
-  const { data, loading, error } = useQuery<{
-    siloDefinition: SiloDefinition
-  }>(GET_NUM_ACTIVE_DISCOVERIES, {
+  const { data, loading, error } = useQuery(GET_NUM_ACTIVE_DISCOVERIES, {
     variables: {
-      id: siloId,
+      id: siloId!,
     },
   });
 
@@ -83,7 +83,7 @@ export function SiloAlertsTabHeader() {
 export function SiloAlertCardBody(props: {
   query?: string,
   siloId?: string,
-  statuses?: ('OPEN' | 'ACCEPTED' | 'REJECTED')[]
+  statuses?: DiscoveryStatus[]
   hideEmptyAction?: boolean,
   emptyMessage?: string,
 }) {
@@ -97,7 +97,7 @@ export function SiloAlertCardBody(props: {
 
   const [offset, setOffset] = useState(0);
   const vars = {
-    id: siloId,
+    id: siloId!,
     query: query && query.trim() !== '' ? query : undefined,
     statuses: statuses || [],
     limit,
@@ -105,7 +105,7 @@ export function SiloAlertCardBody(props: {
   };
   const {
     data, loading, error, fetchMore, refetch,
-  } = useQueryPatched<{ siloDefinition: SiloDefinition }>(GET_DISCOVERIES, {
+  } = useQueryPatched(GET_DISCOVERIES, {
     variables: vars,
     fetchPolicy: 'cache-and-network',
     nextFetchPolicy: () => 'cache-first',
@@ -123,7 +123,7 @@ export function SiloAlertCardBody(props: {
     );
   }
 
-  if (data?.siloDefinition?.discoveries?.discoveries.length === 0) {
+  if (data?.siloDefinition.discoveries.discoveries.length === 0) {
     return (
       <EmptyState
         icon={BellAlertIcon}
@@ -157,8 +157,8 @@ export function SiloAlertCardBody(props: {
     <>
       <ul className="divide-y divide-gray-200">
         {
-          data?.siloDefinition?.discoveries?.discoveries.map((d: DataDiscovery) => (
-            <DataDiscoveryRow key={d.id!} discovery={d} />
+          (data?.siloDefinition.discoveries.discoveries || []).map((d) => (
+            <DataDiscoveryRow key={d!.id} discovery={d as DataDiscovery} />
           ))
         }
       </ul>
@@ -202,9 +202,9 @@ export function ApplyAlertsButton(props: {
 
   const {
     data, loading, error, refetch,
-  } = useQuery<{ siloDefinition: SiloDefinition }>(GET_NUM_ACTIVE_DISCOVERIES, {
+  } = useQuery(GET_NUM_ACTIVE_DISCOVERIES, {
     variables: {
-      id: siloId,
+      id: siloId!,
       workspaceId: id,
     },
   });
@@ -212,12 +212,12 @@ export function ApplyAlertsButton(props: {
   const [handleDiscoveries, handleDiscoveriesRes] = useMutation(APPLY_ALL_DISCOVERIES, {
     variables: {
       input: {
-        siloId,
-        action: 'ACCEPT',
+        siloId: siloId!,
+        action: DiscoveryAction.Accept,
       },
     },
     update: (cache, res) => {
-      (res.data.handleAllOpenDiscoveries as DataDiscovery[]).forEach((v) => {
+      ((res.data?.handleAllOpenDiscoveries || []) as DataDiscovery[]).forEach((v) => {
         cache.modify({
           id: cache.identify(v),
           fields: {

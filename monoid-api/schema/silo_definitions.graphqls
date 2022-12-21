@@ -30,15 +30,15 @@ input CreateSiloDefinitionInput {
 }
 
 extend type Query {
-    siloDefinition(id: ID!): SiloDefinition
+    siloDefinition(id: ID!): SiloDefinition!
 }
 
 extend type Mutation {
-    createSiloDefinition(input: CreateSiloDefinitionInput): SiloDefinition
-    updateSiloDefinition(input: UpdateSiloDefinitionInput): SiloDefinition
-    deleteSiloDefinition(id: ID!): ID
+    createSiloDefinition(input: CreateSiloDefinitionInput): SiloDefinition!
+    updateSiloDefinition(input: UpdateSiloDefinitionInput): SiloDefinition!
+    deleteSiloDefinition(id: ID!): ID!
 }
 
 extend type Workspace {
-    siloDefinitions: [SiloDefinition!] @goField(forceResolver: true)
+    siloDefinitions: [SiloDefinition!]! @goField(forceResolver: true)
 }

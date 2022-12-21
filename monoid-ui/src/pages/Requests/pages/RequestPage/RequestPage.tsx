@@ -1,24 +1,24 @@
 /* eslint-disable no-nested-ternary */
 import {
-  gql, useQuery, useMutation, ApolloError,
+  useQuery, useMutation, ApolloError,
 } from '@apollo/client';
 import React, { useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { XCircleIcon } from '@heroicons/react/24/outline';
 import { EXECUTE_REQUEST } from 'graphql/requests_queries';
+import { gql } from '__generated__/gql';
 import AlertRegion from '../../../../components/AlertRegion';
 import PageHeader from '../../../../components/PageHeader';
 import Spinner from '../../../../components/Spinner';
 import Tabs from '../../../../components/Tabs';
 import Button from '../../../../components/Button';
-import { Request, Job } from '../../../../lib/models';
 import PrimaryKeyValues from './components/PrimaryKeyValues';
 import RequestStatuses from './components/RequestStatuses';
 import ToastContext from '../../../../contexts/ToastContext';
 import Badge from '../../../../components/Badge';
 import StepView from '../../../../components/Steps';
 
-const GET_REQUEST_METADATA = gql`
+const GET_REQUEST_METADATA = gql(`
   query GetRequestMetadata($id: ID!) {
     request(id: $id) {
       id
@@ -26,15 +26,15 @@ const GET_REQUEST_METADATA = gql`
       status
     }
   }
-`;
+`);
 
-const GET_REQUEST_FILE = gql`
+const GET_REQUEST_FILE = gql(`
   mutation GetRequestFile($id: ID!) {
     generateRequestDownloadLink(requestId: $id) {
       url
     }
   }
-`;
+`);
 
 export default function RequestPage(
   props: {
@@ -42,25 +42,19 @@ export default function RequestPage(
   },
 ) {
   const { tab } = props;
-  const [executeReq, executeReqRes] = useMutation<{ executeUserDataRequest: Job }>(EXECUTE_REQUEST);
+  const [executeReq, executeReqRes] = useMutation(EXECUTE_REQUEST);
 
   const navigate = useNavigate();
   const toastCtx = useContext(ToastContext);
   const { requestId } = useParams<{ requestId: string, id: string }>();
-  const { data, loading, error } = useQuery<{
-    request: Request
-  }>(GET_REQUEST_METADATA, {
+  const { data, loading, error } = useQuery(GET_REQUEST_METADATA, {
     variables: {
-      id: requestId,
+      id: requestId!,
     },
   });
-  const [getReqFile, reqFileRes] = useMutation<{
-    generateRequestDownloadLink: {
-      url: string
-    }
-  }>(GET_REQUEST_FILE, {
+  const [getReqFile, reqFileRes] = useMutation(GET_REQUEST_FILE, {
     variables: {
-      id: requestId,
+      id: requestId!,
     },
   });
 
@@ -97,7 +91,7 @@ export default function RequestPage(
                 <Button onClick={() => {
                   executeReq({
                     variables: {
-                      id: requestId,
+                      id: requestId!,
                     },
                   }).catch((err: ApolloError) => {
                     toastCtx.showToast({

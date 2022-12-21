@@ -9,19 +9,14 @@ import { useQuery } from '@apollo/client';
 
 import { useParams } from 'react-router-dom';
 import { GET_PRIMARY_KEYS } from 'graphql/requests_queries';
-import { UserPrimaryKey } from 'lib/models';
 
 export default function UserIdentifierStepBody(props: { onSuccess: () => void }) {
   const { onSuccess } = props;
   const toastCtx = useContext(ToastContext);
   const { id } = useParams<{ id: string }>();
-  const { data, loading, error } = useQuery<{
-    workspace: {
-      userPrimaryKeys: UserPrimaryKey[],
-    }
-  }>(GET_PRIMARY_KEYS, {
+  const { data, loading, error } = useQuery(GET_PRIMARY_KEYS, {
     variables: {
-      id,
+      id: id!,
     },
   });
 

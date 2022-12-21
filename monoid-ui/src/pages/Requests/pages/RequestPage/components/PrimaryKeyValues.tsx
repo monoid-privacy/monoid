@@ -1,13 +1,13 @@
 import React from 'react';
-import { gql, useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import { useParams } from 'react-router-dom';
+import { gql } from '__generated__/gql';
 import Table from '../../../../../components/Table';
 import Spinner from '../../../../../components/Spinner';
 import AlertRegion from '../../../../../components/AlertRegion';
-import { Request } from '../../../../../lib/models';
 
-const GET_REQUEST_DATA = gql`
-query GetRequestData($id: ID!) {
+const PRIMARY_KEY_VALUES = gql(`
+query GetPrimaryKeyValues($id: ID!) {
   request(id: $id) {
     id
     type
@@ -22,15 +22,13 @@ query GetRequestData($id: ID!) {
     }
   }
 }
-`;
+`);
 
 export default function PrimaryKeyValues() {
   const { requestId } = useParams<{ requestId: string, id: string }>();
-  const { data, loading, error } = useQuery<{
-    request: Request
-  }>(GET_REQUEST_DATA, {
+  const { data, loading, error } = useQuery(PRIMARY_KEY_VALUES, {
     variables: {
-      id: requestId,
+      id: requestId!,
     },
   });
 

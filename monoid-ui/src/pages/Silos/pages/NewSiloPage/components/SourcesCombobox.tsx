@@ -1,12 +1,13 @@
-import { gql, useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import React from 'react';
 import { useParams } from 'react-router-dom';
+import { gql } from '__generated__/gql';
 import Combobox from '../../../../../components/MultiCombobox';
 import Spinner from '../../../../../components/Spinner';
 import SVGText from '../../../../../components/SVGText';
 import { SiloSpec } from '../../../../../lib/models';
 
-const GET_SILO_SPECS = gql`
+const GET_SILO_SPECS = gql(`
   query GetSiloSpecs($workspaceId: ID!) {
     workspace(id: $workspaceId) {
       id
@@ -18,7 +19,7 @@ const GET_SILO_SPECS = gql`
       }
     }
   }
-`;
+`);
 
 export default function SourcesCombobox(props: {
   value: string | undefined,
@@ -26,11 +27,9 @@ export default function SourcesCombobox(props: {
 }) {
   const { value, setValue } = props;
   const { id } = useParams<{ id: string }>();
-  const { data, loading, error } = useQuery<{
-    workspace: { siloSpecifications: SiloSpec[] }
-  }>(GET_SILO_SPECS, {
+  const { data, loading, error } = useQuery(GET_SILO_SPECS, {
     variables: {
-      workspaceId: id,
+      workspaceId: id!,
     },
   });
 
@@ -62,11 +61,11 @@ export default function SourcesCombobox(props: {
 
   return (
     <Combobox<SiloSpec>
-      value={data!.workspace.siloSpecifications.find((ss: SiloSpec) => ss.id === value)}
+      value={data!.workspace.siloSpecifications.find((ss) => ss.id === value) as SiloSpec}
       onChange={(v) => { if (v) { setValue(v); } }}
       filter={(q) => Promise.resolve(data!.workspace.siloSpecifications.filter(
         (ss) => ss.name.toLowerCase().includes(q.toLowerCase()),
-      ))}
+      ) as SiloSpec[])}
       id={(ss) => ss.id}
       displayNode={displayNode}
       isMulti={false}

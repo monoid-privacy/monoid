@@ -12,14 +12,14 @@ type Workspace {
   name: String
   onboardingComplete: Boolean
   settings: Map! @goField(forceResolver: true)
-  siloSpecifications: [SiloSpecification!] @goField(forceResolver: true)
-  subjects: [Subject!]
-  categories: [Category!] @goField(forceResolver: true)
+  siloSpecifications: [SiloSpecification!]! @goField(forceResolver: true)
+  subjects: [Subject!]!
+  categories: [Category!]! @goField(forceResolver: true)
 }
 
 type Query {
-  workspaces: [Workspace]
-  workspace(id: ID!): Workspace
+  workspaces: [Workspace]!
+  workspace(id: ID!): Workspace!
 }
 
 input KVPair {
@@ -38,8 +38,8 @@ input UpdateWorkspaceSettingsInput {
 }
 
 extend type Mutation {
-  createWorkspace(input: CreateWorkspaceInput!): Workspace
-  updateWorkspaceSettings(input: UpdateWorkspaceSettingsInput!): Workspace
-  deleteWorkspace(id: ID!): ID
-  completeWorkspaceOnboarding(id: ID!): Workspace
+  createWorkspace(input: CreateWorkspaceInput!): Workspace!
+  updateWorkspaceSettings(input: UpdateWorkspaceSettingsInput!): Workspace!
+  deleteWorkspace(id: ID!): ID!
+  completeWorkspaceOnboarding(id: ID!): Workspace!
 }

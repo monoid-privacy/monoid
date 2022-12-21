@@ -1,9 +1,10 @@
 import {
-  ApolloError, gql, useMutation, useQuery,
+  ApolloError, useMutation, useQuery,
 } from '@apollo/client';
 import React, { useEffect, useState, useContext } from 'react';
 import { useParams } from 'react-router-dom';
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import { gql } from '__generated__/gql';
 import LoadingPage from '../../common/LoadingPage';
 import AlertRegion from '../../components/AlertRegion';
 import Card from '../../components/Card';
@@ -15,23 +16,23 @@ import Button from '../../components/Button';
 import Spinner from '../../components/Spinner';
 import ToastContext from '../../contexts/ToastContext';
 
-const GET_SETTINGS = gql`
+const GET_SETTINGS = gql(`
   query GetSettings($workspaceId: ID!) {
     workspace(id: $workspaceId) {
       id
       settings
     }
   }
-`;
+`);
 
-const UPDATE_SETTINGS = gql`
+const UPDATE_SETTINGS = gql(`
   mutation UpdateSettings($input: UpdateWorkspaceSettingsInput!) {
     updateWorkspaceSettings(input: $input) {
       id
       settings
     }
   }
-`;
+`);
 
 type Settings = {
   email: string,
@@ -97,7 +98,7 @@ function SettingsForm(props: {
           updateSettings({
             variables: {
               input: {
-                workspaceID: id,
+                workspaceID: id!,
                 settings: [
                   { key: 'email', value: settings.email },
                   { key: 'sendNews', value: settings.sendNews ? 't' : 'f' },
@@ -133,7 +134,7 @@ function SettingsFormWrapper() {
 
   const { data, loading, error } = useQuery(GET_SETTINGS, {
     variables: {
-      workspaceId: id,
+      workspaceId: id!,
     },
   });
 
@@ -145,7 +146,7 @@ function SettingsFormWrapper() {
     return <AlertRegion alertTitle="Error">{error.message}</AlertRegion>;
   }
 
-  return <SettingsForm defaultValues={data.workspace.settings} />;
+  return <SettingsForm defaultValues={data?.workspace.settings} />;
 }
 
 export default function SettingsPage() {

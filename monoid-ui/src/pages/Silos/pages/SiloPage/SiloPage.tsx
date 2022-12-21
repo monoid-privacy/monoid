@@ -1,18 +1,18 @@
-import { gql, useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { gql } from '__generated__/gql';
 import AlertRegion from '../../../../components/AlertRegion';
 import PageHeader from '../../../../components/PageHeader';
 import Spinner from '../../../../components/Spinner';
 import Tabs from '../../../../components/Tabs';
-import { SiloDefinition } from '../../../../lib/models';
 import SiloAlerts, { SiloAlertsTabHeader } from './components/SiloAlerts';
 import SiloConfig from './components/SiloConfig';
 import SiloDataSources from './components/SiloDataSources';
 import SiloScans from './components/SiloScans';
 import SVGText from '../../../../components/SVGText';
 
-const GET_SILO_TITLE_DATA = gql`
+const GET_SILO_TITLE_DATA = gql(`
   query GetSiloTitle($id: ID!) {
     siloDefinition(id: $id) {
       id
@@ -24,7 +24,7 @@ const GET_SILO_TITLE_DATA = gql`
       }
     }
   }
-`;
+`);
 
 export default function SiloPage(
   props: {
@@ -34,11 +34,9 @@ export default function SiloPage(
   const { tab } = props;
   const navigate = useNavigate();
   const { siloId } = useParams<{ siloId: string, id: string }>();
-  const { data, loading, error } = useQuery<{
-    siloDefinition: SiloDefinition
-  }>(GET_SILO_TITLE_DATA, {
+  const { data, loading, error } = useQuery(GET_SILO_TITLE_DATA, {
     variables: {
-      id: siloId,
+      id: siloId!,
     },
   });
 

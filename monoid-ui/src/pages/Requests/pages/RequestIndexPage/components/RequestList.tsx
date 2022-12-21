@@ -14,7 +14,6 @@ import useQuery from '../../../../../hooks/useQueryPatched';
 import AlertRegion from '../../../../../components/AlertRegion';
 import Spinner from '../../../../../components/Spinner';
 import Table from '../../../../../components/Table';
-import { Request } from '../../../../../lib/models';
 import Badge from '../../../../../components/Badge';
 import Pagination from '../../../../../components/Pagination';
 import { GET_REQUESTS } from '../../../../../graphql/requests_queries';
@@ -30,16 +29,9 @@ export default function RequestList() {
 
   const {
     data, loading, error, fetchMore,
-  } = useQuery<{
-    workspace: {
-      requests: {
-        requests: Request[],
-        numRequests: number
-      }
-    }
-  }>(GET_REQUESTS, {
+  } = useQuery(GET_REQUESTS, {
     variables: {
-      id,
+      id: id!,
       limit: 10,
       offset,
     },

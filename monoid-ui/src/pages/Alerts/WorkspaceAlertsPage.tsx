@@ -22,7 +22,7 @@ function AlertListCardBody(props: { query: string }) {
     data, loading, error, fetchMore,
   } = useQuery(GET_WORKSPACE_DISCOVERIES, {
     variables: {
-      workspaceId: id,
+      workspaceId: id!,
       query: query && query.trim() !== '' ? query : undefined,
       statuses: [],
       limit: 10,
@@ -44,7 +44,7 @@ function AlertListCardBody(props: { query: string }) {
     );
   }
 
-  if (!data.workspace.discoveries.discoveries.length) {
+  if (!data?.workspace.discoveries.discoveries.length) {
     return (
       <EmptyState
         icon={BellAlertIcon}
@@ -62,8 +62,8 @@ function AlertListCardBody(props: { query: string }) {
     <>
       <ul className="divide-y divide-gray-200">
         {
-          data.workspace.discoveries.discoveries.map((d: DataDiscovery) => (
-            <DataDiscoveryRow key={d.id!} discovery={d} showSiloDefinition />
+          data.workspace.discoveries.discoveries.map((d) => (
+            <DataDiscoveryRow key={d!.id} discovery={d as DataDiscovery} showSiloDefinition />
           ))
         }
       </ul>

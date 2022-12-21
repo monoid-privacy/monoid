@@ -40,13 +40,9 @@ export default function RequestForm(props: {
     onSubmit, formLoading, formError, actionName,
   } = props;
 
-  const { data, loading, error } = useQuery<{
-    workspace: {
-      userPrimaryKeys: UserPrimaryKey[],
-    },
-  }>(GET_PRIMARY_KEYS, {
+  const { data, loading, error } = useQuery(GET_PRIMARY_KEYS, {
     variables: {
-      id,
+      id: id!,
     },
   });
 
