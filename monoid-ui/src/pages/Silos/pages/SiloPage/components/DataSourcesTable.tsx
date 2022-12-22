@@ -10,7 +10,7 @@ import { DataSource, Property, SiloDefinition } from 'lib/models';
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { dedup } from 'utils/utils';
-import CategoryCombobox from './CategoryCombobox';
+import PropertyCategoryCombobox from './PropertyCategoryCombobox';
 import IdentifierSelect from './IdentifierSelect';
 
 function DataSourcesTable(props: { siloDef?: SiloDefinition, type: 'card' | 'plain' }) {
@@ -120,7 +120,7 @@ function DataSourcesTable(props: { siloDef?: SiloDefinition, type: 'card' | 'pla
                             {
                               key: 'cat',
                               content: (
-                                <CategoryCombobox
+                                <PropertyCategoryCombobox
                                   value={p.categories?.map((c) => c.id!) || []}
                                   propertyId={p.id!}
                                 />
@@ -161,12 +161,22 @@ function DataSourcesTable(props: { siloDef?: SiloDefinition, type: 'card' | 'pla
       <EmptyState
         icon={CircleStackIcon}
         title="No Data Sources"
-        subtitle="You can find data sources by running a scan and applying alerts."
-        action={(
-          <Button onClick={() => navigate('../alerts')}>
-            View Alerts
-          </Button>
-        )}
+        subtitle={
+          !siloDef?.siloSpecification!.manual
+            ? 'You can find data sources by running a scan and applying alerts.'
+            : 'Since this is a manual silo, you can create data sources manually.'
+        }
+        action={
+          !siloDef?.siloSpecification!.manual ? (
+            <Button onClick={() => navigate('../alerts')}>
+              View Alerts
+            </Button>
+          ) : (
+            <Button>
+              New Data Source
+            </Button>
+          )
+        }
         className="py-8"
       />
     </div>

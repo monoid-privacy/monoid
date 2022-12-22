@@ -25,7 +25,7 @@ const documents = {
     "\n  query GetPrimaryKeys($id: ID!) {\n    workspace(id: $id) {\n      id\n      userPrimaryKeys {\n        id\n        name\n        apiIdentifier\n      }\n    }\n  }\n": types.GetPrimaryKeysDocument,
     "\nquery GetRequests($id: ID!, $limit: Int!, $offset: Int) {\n  workspace(id: $id) {\n    id\n    requests(limit: $limit, offset: $offset) {\n      requests {\n        id\n        type\n        createdAt\n        status\n      }\n      numRequests\n    }\n  }\n}\n": types.GetRequestsDocument,
     "\n  mutation ExecuteRequest($id: ID!) {\n    executeUserDataRequest(requestId: $id) {\n      id\n      status\n    }\n  }\n": types.ExecuteRequestDocument,
-    "\nquery SiloDataSources($id: ID!) {\n  siloDefinition(id: $id) {\n    id\n    dataSources {\n      id\n      name\n      group\n      properties {\n        id\n        name\n        categories {\n          id\n          name\n        }\n        userPrimaryKey {\n          id\n          name\n        }\n      }\n    }\n  }\n}\n": types.SiloDataSourcesDocument,
+    "\nquery SiloDataSources($id: ID!) {\n  siloDefinition(id: $id) {\n    id\n    siloSpecification {\n      id\n      manual\n    }\n    dataSources {\n      id\n      name\n      group\n      properties {\n        id\n        name\n        categories {\n          id\n          name\n        }\n        userPrimaryKey {\n          id\n          name\n        }\n      }\n    }\n  }\n}\n": types.SiloDataSourcesDocument,
     "\n  query GetSilos($id: ID!) {\n    workspace(id: $id) {\n      id\n      siloDefinitions {\n        id\n        name\n        siloSpecification {\n          id\n          name\n          logo\n        }\n      }\n    }\n  }\n": types.GetSilosDocument,
     "\n  query DataMapQuery($workspaceId: ID!, $limit: Int!, $offset: Int, $query: DataMapQuery) {\n    workspace(id: $workspaceId) {\n      id\n      dataMap(limit: $limit, offset: $offset, query: $query) {\n        dataMapRows {\n          siloDefinition {\n            id\n            name\n            siloSpecification {\n              id\n              name\n              logo\n            }\n          }\n          property {\n            id\n            name\n            categories {\n              id\n              name\n            }\n          }\n          dataSource {\n            id\n            name\n          }\n        }\n        numRows\n      }\n    }\n  }\n": types.DataMapQueryDocument,
     "\n  query FilterOptionsQuery($workspaceId: ID!) {\n    workspace(id: $workspaceId) {\n      id\n      siloDefinitions {\n        id\n        name\n        siloSpecification {\n          id\n          logoUrl\n        }\n      }\n      categories {\n        id\n        name\n      }\n    }\n  }\n": types.FilterOptionsQueryDocument,
@@ -44,9 +44,9 @@ const documents = {
     "\n  query GetSettings($workspaceId: ID!) {\n    workspace(id: $workspaceId) {\n      id\n      settings\n    }\n  }\n": types.GetSettingsDocument,
     "\n  mutation UpdateSettings($input: UpdateWorkspaceSettingsInput!) {\n    updateWorkspaceSettings(input: $input) {\n      id\n      settings\n    }\n  }\n": types.UpdateSettingsDocument,
     "\n  mutation CreateSilo($input: CreateSiloDefinitionInput!) {\n    createSiloDefinition(input: $input) {\n      id\n    }\n  }\n": types.CreateSiloDocument,
-    "\n  query GetSiloSpec($id: ID!) {\n    siloSpecification(id: $id) {\n      id\n      schema\n    }\n  }\n": types.GetSiloSpecDocument,
+    "\n  query GetSiloSpec($id: ID!) {\n    siloSpecification(id: $id) {\n      id\n      schema\n      manual\n    }\n  }\n": types.GetSiloSpecDocument,
     "\n  query GetSiloSpecs($workspaceId: ID!) {\n    workspace(id: $workspaceId) {\n      id\n      siloSpecifications {\n        id\n        name\n        logo\n        schema\n      }\n    }\n  }\n": types.GetSiloSpecsDocument,
-    "\n  query GetSiloTitle($id: ID!) {\n    siloDefinition(id: $id) {\n      id\n      name\n      siloSpecification {\n        id\n        name\n        logo\n      }\n    }\n  }\n": types.GetSiloTitleDocument,
+    "\n  query GetSiloTitle($id: ID!) {\n    siloDefinition(id: $id) {\n      id\n      name\n      siloSpecification {\n        id\n        name\n        logo\n        manual\n      }\n    }\n  }\n": types.GetSiloTitleDocument,
     "\n  query GetCategory($id: ID!) {\n    category(id: $id) {\n      id\n      name\n    }\n  }\n": types.GetCategoryDocument,
     "\n  query WorkspaceCategories($workspaceId: ID!) {\n    workspace(id: $workspaceId) {\n      id\n      categories {\n        id\n        name\n      }\n    }\n  }\n": types.WorkspaceCategoriesDocument,
     "\n  mutation UpdateCategories($input: UpdatePropertyInput!) {\n    updateProperty(input: $input) {\n      __typename\n      id\n      categories {\n        id\n        name\n      }\n    }\n  }\n": types.UpdateCategoriesDocument,
@@ -113,7 +113,7 @@ export function gql(source: "\n  mutation ExecuteRequest($id: ID!) {\n    execut
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function gql(source: "\nquery SiloDataSources($id: ID!) {\n  siloDefinition(id: $id) {\n    id\n    dataSources {\n      id\n      name\n      group\n      properties {\n        id\n        name\n        categories {\n          id\n          name\n        }\n        userPrimaryKey {\n          id\n          name\n        }\n      }\n    }\n  }\n}\n"): (typeof documents)["\nquery SiloDataSources($id: ID!) {\n  siloDefinition(id: $id) {\n    id\n    dataSources {\n      id\n      name\n      group\n      properties {\n        id\n        name\n        categories {\n          id\n          name\n        }\n        userPrimaryKey {\n          id\n          name\n        }\n      }\n    }\n  }\n}\n"];
+export function gql(source: "\nquery SiloDataSources($id: ID!) {\n  siloDefinition(id: $id) {\n    id\n    siloSpecification {\n      id\n      manual\n    }\n    dataSources {\n      id\n      name\n      group\n      properties {\n        id\n        name\n        categories {\n          id\n          name\n        }\n        userPrimaryKey {\n          id\n          name\n        }\n      }\n    }\n  }\n}\n"): (typeof documents)["\nquery SiloDataSources($id: ID!) {\n  siloDefinition(id: $id) {\n    id\n    siloSpecification {\n      id\n      manual\n    }\n    dataSources {\n      id\n      name\n      group\n      properties {\n        id\n        name\n        categories {\n          id\n          name\n        }\n        userPrimaryKey {\n          id\n          name\n        }\n      }\n    }\n  }\n}\n"];
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -189,7 +189,7 @@ export function gql(source: "\n  mutation CreateSilo($input: CreateSiloDefinitio
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function gql(source: "\n  query GetSiloSpec($id: ID!) {\n    siloSpecification(id: $id) {\n      id\n      schema\n    }\n  }\n"): (typeof documents)["\n  query GetSiloSpec($id: ID!) {\n    siloSpecification(id: $id) {\n      id\n      schema\n    }\n  }\n"];
+export function gql(source: "\n  query GetSiloSpec($id: ID!) {\n    siloSpecification(id: $id) {\n      id\n      schema\n      manual\n    }\n  }\n"): (typeof documents)["\n  query GetSiloSpec($id: ID!) {\n    siloSpecification(id: $id) {\n      id\n      schema\n      manual\n    }\n  }\n"];
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -197,7 +197,7 @@ export function gql(source: "\n  query GetSiloSpecs($workspaceId: ID!) {\n    wo
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function gql(source: "\n  query GetSiloTitle($id: ID!) {\n    siloDefinition(id: $id) {\n      id\n      name\n      siloSpecification {\n        id\n        name\n        logo\n      }\n    }\n  }\n"): (typeof documents)["\n  query GetSiloTitle($id: ID!) {\n    siloDefinition(id: $id) {\n      id\n      name\n      siloSpecification {\n        id\n        name\n        logo\n      }\n    }\n  }\n"];
+export function gql(source: "\n  query GetSiloTitle($id: ID!) {\n    siloDefinition(id: $id) {\n      id\n      name\n      siloSpecification {\n        id\n        name\n        logo\n        manual\n      }\n    }\n  }\n"): (typeof documents)["\n  query GetSiloTitle($id: ID!) {\n    siloDefinition(id: $id) {\n      id\n      name\n      siloSpecification {\n        id\n        name\n        logo\n        manual\n      }\n    }\n  }\n"];
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

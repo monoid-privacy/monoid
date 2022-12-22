@@ -5,6 +5,10 @@ export const SILO_DATA_SOURCES = gql(`
 query SiloDataSources($id: ID!) {
   siloDefinition(id: $id) {
     id
+    siloSpecification {
+      id
+      manual
+    }
     dataSources {
       id
       name

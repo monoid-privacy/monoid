@@ -8,6 +8,7 @@ interface BaseComboboxProps<T> extends Omit<Omit<Omit<React.HTMLProps<HTMLDivEle
   id: (v: T) => string,
   displayNode: (v: T, meta: FormatOptionLabelMeta<T>) => React.ReactNode,
   menuPortalTarget?: HTMLElement | null
+  placeholder?: string,
 }
 
 type ComboboxProps<T> = ({
@@ -22,7 +23,8 @@ type ComboboxProps<T> = ({
 
 export default function Combobox<T>(props: ComboboxProps<T>) {
   const {
-    value, onChange, filter, id, displayNode, className, isMulti, menuPortalTarget,
+    value, onChange, filter, id, displayNode, placeholder,
+    className, isMulti, menuPortalTarget,
   } = props;
 
   if (isMulti) {
@@ -33,6 +35,7 @@ export default function Combobox<T>(props: ComboboxProps<T>) {
         }}
         loadOptions={filter}
         value={value}
+        placeholder={placeholder}
         formatOptionLabel={(v, meta) => displayNode(v, meta)}
         getOptionValue={(v) => id(v)}
         onChange={(v) => onChange(v)}
@@ -41,6 +44,15 @@ export default function Combobox<T>(props: ComboboxProps<T>) {
         isMulti
         defaultOptions
         styles={{
+          menuPortal: (base) => ({
+            ...base,
+            zIndex: 10000,
+          }),
+          placeholder: (base) => ({
+            ...base,
+            fontSize: '0.875rem',
+            color: 'rgb(156 163 175)',
+          }),
           option: (base, state) => ({
             ...base,
             backgroundColor: state.isFocused ? 'rgb(243 244 246)' : undefined,
@@ -61,11 +73,21 @@ export default function Combobox<T>(props: ComboboxProps<T>) {
       }}
       loadOptions={filter}
       value={value}
+      placeholder={placeholder}
       formatOptionLabel={(v, meta) => displayNode(v, meta)}
       getOptionValue={(v) => id(v)}
       onChange={(v) => onChange(v)}
       menuPortalTarget={menuPortalTarget}
       styles={{
+        menuPortal: (base) => ({
+          ...base,
+          zIndex: 10000,
+        }),
+        placeholder: (base) => ({
+          ...base,
+          fontSize: '0.875rem',
+          color: 'rgb(156 163 175)',
+        }),
         option: (base, state) => ({
           ...base,
           backgroundColor: state.isFocused ? 'rgb(243 244 246)' : undefined,
@@ -82,4 +104,5 @@ export default function Combobox<T>(props: ComboboxProps<T>) {
 
 Combobox.defaultProps = {
   menuPortalTarget: undefined,
+  placeholder: undefined,
 };

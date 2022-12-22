@@ -11,7 +11,7 @@ function Modal(props: {
 
   return (
     <Transition.Root show={open} as={Fragment}>
-      <Dialog as="div" className="relative z-10" onClose={setOpen}>
+      <Dialog as="div" className="relative z-20" onClose={setOpen}>
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"
@@ -24,8 +24,8 @@ function Modal(props: {
           <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
         </Transition.Child>
 
-        <div className="fixed z-10 inset-0 overflow-y-auto">
-          <div className="flex items-end sm:items-center justify-center
+        <div className="fixed z-20 inset-0 overflow-y-auto">
+          <div className="flex items-center justify-center
             min-h-full p-4 text-center sm:p-0"
           >
             <Transition.Child
@@ -39,7 +39,7 @@ function Modal(props: {
             >
               <Dialog.Panel className="relative bg-white rounded-lg px-4 pt-5 pb-4
                 text-left overflow-hidden shadow-xl transform transition-all sm:my-8
-                sm:max-w-xl sm:w-full sm:p-6"
+                sm:max-w-3xl w-full sm:p-6"
               >
                 {children}
               </Dialog.Panel>
@@ -98,7 +98,7 @@ export function ModalBodyComponent(props: ModalBodyComponentProps) {
     <div
       className={
         classNames(
-          'mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left',
+          'mt-3 sm:mt-0 text-left',
           className,
         )
       }

@@ -12,7 +12,20 @@ export default function SiloRoutes() {
       <Route path=":siloId">
         <Route index element={<Navigate to="data_sources" />} />
         <Route path="settings" element={<SiloPage tab="settings" />} />
-        <Route path="data_sources" element={<SiloPage tab="data_sources" />} />
+        <Route path="data_sources">
+          <Route index element={<SiloPage tab="data_sources" />} />
+          <Route
+            path="new"
+            element={(
+              <SiloPage
+                tab="data_sources"
+                tabData={{
+                  newOpen: true,
+                }}
+              />
+            )}
+          />
+        </Route>
         <Route path="scans" element={<SiloPage tab="scans" />} />
         <Route path="alerts" element={<SiloPage tab="alerts" />} />
       </Route>

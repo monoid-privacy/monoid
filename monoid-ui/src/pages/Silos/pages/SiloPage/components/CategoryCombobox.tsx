@@ -1,14 +1,12 @@
-import {
-  useLazyQuery, useMutation,
-} from '@apollo/client';
+import { useLazyQuery } from '@apollo/client';
+import AlertRegion from 'components/AlertRegion';
+import Badge from 'components/Badge';
+import MultiCombobox from 'components/MultiCombobox';
 import React, { useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { FormatOptionLabelMeta } from 'react-select';
+import { Category } from '__generated__/graphql';
 import { gql } from '__generated__/gql';
-import AlertRegion from '../../../../../components/AlertRegion';
-import MultiCombobox from '../../../../../components/MultiCombobox';
-import { Category } from '../../../../../lib/models';
-import Badge from '../../../../../components/Badge';
 
 const WORKSPACE_CATEGORIES = gql(`
   query WorkspaceCategories($workspaceId: ID!) {
@@ -22,26 +20,16 @@ const WORKSPACE_CATEGORIES = gql(`
   }
 `);
 
-const UPDATE_CATEGORIES = gql(`
-  mutation UpdateCategories($input: UpdatePropertyInput!) {
-    updateProperty(input: $input) {
-      __typename
-      id
-      categories {
-        id
-        name
-      }
-    }
-  }
-`);
-
 export default function CategoryCombobox(props: {
   value: string[],
-  propertyId: string,
+  onChange: (v: string[]) => void,
+  className?: string,
+  placeholder?: string,
 }) {
   const { id } = useParams<{ id: string }>();
-  const { value, propertyId } = props;
-  const [updateCat] = useMutation(UPDATE_CATEGORIES);
+  const {
+    value, onChange, className, placeholder,
+  } = props;
   const [loadData, {
     data, loading, called, error,
   }] = useLazyQuery(WORKSPACE_CATEGORIES, {
@@ -85,19 +73,14 @@ export default function CategoryCombobox(props: {
 
   return (
     <MultiCombobox<Category>
+      placeholder={placeholder}
+      className={className}
       value={value.map((v) => ({
         id: v,
         name: categoryMap[v] || '',
       }))}
       onChange={(v) => {
-        updateCat({
-          variables: {
-            input: {
-              id: propertyId,
-              categoryIDs: v.map((vl) => vl.id!),
-            },
-          },
-        });
+        onChange(v.map((vl) => vl.id!));
       }}
       filter={filter}
       id={(v) => `${v.id}`}
@@ -107,3 +90,8 @@ export default function CategoryCombobox(props: {
     />
   );
 }
+
+CategoryCombobox.defaultProps = {
+  className: undefined,
+  placeholder: undefined,
+};
