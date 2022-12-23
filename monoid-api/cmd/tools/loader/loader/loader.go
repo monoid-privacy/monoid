@@ -10,7 +10,7 @@ import (
 	"github.com/monoid-privacy/monoid/model"
 	"github.com/monoid-privacy/monoid/specimport"
 	"github.com/rs/zerolog/log"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 func LoadSpecs(conf *config.BaseConfig, configPath string) {
