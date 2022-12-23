@@ -5,6 +5,10 @@ import dayjs from 'dayjs';
 import updateLocale from 'dayjs/plugin/updateLocale';
 import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import EmptyState from 'components/Empty';
+import { InboxIcon } from '@heroicons/react/24/outline';
+import Button from 'components/Button';
+import Card from 'components/Card';
 import useQuery from '../../../../../hooks/useQueryPatched';
 
 import AlertRegion from '../../../../../components/AlertRegion';
@@ -56,6 +60,24 @@ export default function RequestList() {
 
   if (loading) {
     return <Spinner />;
+  }
+
+  if ((data?.workspace.requests.numRequests || 0) === 0) {
+    return (
+      <Card>
+        <EmptyState
+          icon={InboxIcon}
+          title="No Data Requests"
+          subtitle="Create a data request from the UI, or using the GraphQL API."
+          action={(
+            <Button to="new" type="link">
+              New Request
+            </Button>
+          )}
+          className="py-7"
+        />
+      </Card>
+    );
   }
 
   return (

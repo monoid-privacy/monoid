@@ -129,6 +129,7 @@ export function SiloAlertCardBody(props: {
         icon={BellAlertIcon}
         title="No Alerts"
         subtitle={emptyMessage || 'Alerts will be created when you run a scan.'}
+        className="py-7"
         action={!hideEmptyAction && (
           <ScanButtonRegion
             siloId={siloId!}

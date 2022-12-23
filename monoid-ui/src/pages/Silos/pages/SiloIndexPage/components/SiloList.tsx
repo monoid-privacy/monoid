@@ -8,6 +8,10 @@ import Table from 'components/Table';
 import { SiloDefinition } from 'lib/models';
 import SVGText from 'components/SVGText';
 import { GET_SILOS } from 'graphql/silo_queries';
+import Card from 'components/Card';
+import EmptyState from 'components/Empty';
+import { CloudIcon } from '@heroicons/react/24/outline';
+import Button from 'components/Button';
 
 export default function SiloList() {
   const { id } = useParams<{ id: string }>();
@@ -36,6 +40,20 @@ export default function SiloList() {
 
   if (loading) {
     return <Spinner />;
+  }
+
+  if ((data?.workspace.siloDefinitions.length || 0) === 0) {
+    return (
+      <Card>
+        <EmptyState
+          icon={CloudIcon}
+          title="No Data Silos"
+          subtitle="No data silos were found in this workspace."
+          className="py-7"
+          action={<Button type="link" to="new">New Data Silo</Button>}
+        />
+      </Card>
+    );
   }
 
   return (
