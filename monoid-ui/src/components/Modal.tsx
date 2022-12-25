@@ -5,9 +5,23 @@ import { classNames } from '../utils/utils';
 function Modal(props: {
   open: boolean,
   setOpen: (o: boolean) => void,
-  children: React.ReactNode
+  children: React.ReactNode,
+  size?: 'md' | 'lg',
 }) {
-  const { open, setOpen, children } = props;
+  const {
+    open, setOpen, children, size,
+  } = props;
+  let sizeCls = '';
+
+  switch (size) {
+    case 'lg':
+      sizeCls = 'sm:max-w-3xl';
+      break;
+    case 'md':
+    default:
+      sizeCls = 'sm:max-w-xl';
+      break;
+  }
 
   return (
     <Transition.Root show={open} as={Fragment}>
@@ -37,9 +51,14 @@ function Modal(props: {
               leaveFrom="opacity-100 translate-y-0 sm:scale-100"
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
-              <Dialog.Panel className="relative bg-white rounded-lg px-4 pt-5 pb-4
-                text-left overflow-hidden shadow-xl transform transition-all sm:my-8
-                sm:max-w-3xl w-full sm:p-6"
+              <Dialog.Panel className={
+                classNames(
+                  'relative bg-white rounded-lg px-4 pt-5 pb-4 text-left',
+                  'overflow-hidden shadow-xl transform transition-all sm:my-8',
+                  'w-full sm:p-6',
+                  sizeCls,
+                )
+              }
               >
                 {children}
               </Dialog.Panel>
@@ -50,6 +69,10 @@ function Modal(props: {
     </Transition.Root>
   );
 }
+
+Modal.defaultProps = {
+  size: 'md',
+};
 
 interface ModalImageComponentProps extends React.HTMLProps<HTMLDivElement> { }
 

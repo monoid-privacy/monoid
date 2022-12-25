@@ -222,13 +222,18 @@ const UPDATE_STATUS = gql(`
     updateRequestStatus(input: $input) {
       id
       status
+      queryResult {
+        id
+        records
+        resultType
+      }
     }
   }
 `);
 
 function StatusUpdateDropdown(props: { req: RequestStatus }) {
   const { req } = props;
-  const [updateStatus] = useMutation(UPDATE_STATUS);
+  const [updateStatus, updateStatusRes] = useMutation(UPDATE_STATUS);
   const [modalOpen, setModalOpen] = useState(false);
 
   const {
@@ -239,6 +244,8 @@ function StatusUpdateDropdown(props: { req: RequestStatus }) {
       'application/gzip': ['.tar.gz'],
     },
   });
+
+  const toastCtx = useContext(ToastContext);
 
   return (
     <>
@@ -266,7 +273,7 @@ function StatusUpdateDropdown(props: { req: RequestStatus }) {
                 </label>
                 <p className="pl-1">or drag and drop</p>
               </div>
-              <p className="text-xs text-gray-500">
+              <div className="text-xs text-gray-500">
 
                 {
                   // eslint-disable-next-line no-nested-ternary
@@ -275,7 +282,7 @@ function StatusUpdateDropdown(props: { req: RequestStatus }) {
                     : acceptedFiles.length === 0
                       ? (
                         <p>
-                          Select a tar.gz file to use as the result for
+                          Select a tar.gz file (up to 100 MB) to use as the result for
                           this data source request.
                         </p>
                       )
@@ -286,7 +293,7 @@ function StatusUpdateDropdown(props: { req: RequestStatus }) {
                         </div>
                       )
                 }
-              </p>
+              </div>
             </div>
           </div>
         </ModalBodyComponent>
@@ -301,10 +308,16 @@ function StatusUpdateDropdown(props: { req: RequestStatus }) {
                     resultData: acceptedFiles.length > 0 ? acceptedFiles[0] : undefined,
                   },
                 },
+              }).catch((err: ApolloError) => {
+                toastCtx.showToast({
+                  title: 'Error',
+                  message: err.message,
+                  icon: XCircleIcon,
+                });
               });
             }}
             >
-              Continue
+              {updateStatusRes.loading ? <Spinner /> : 'Continue'}
             </Button>
             <Button variant="danger" onClick={() => setModalOpen(false)}>
               Cancel

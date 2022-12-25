@@ -4,8 +4,13 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/handler/lru"
+
+	"github.com/99designs/gqlgen/graphql/handler/extension"
+	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gorilla/mux"
 	"github.com/monoid-privacy/monoid/cmd"
@@ -45,13 +50,34 @@ func main() {
 		return conf.PreFlightHandler(dataloader.Middleware(&conf, h))
 	})
 
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(
+	srv := handler.New(generated.NewExecutableSchema(
 		generated.Config{
 			Resolvers: &resolver.Resolver{
 				Conf: &conf,
 			},
 		},
 	))
+
+	srv.AddTransport(transport.Websocket{
+		KeepAlivePingInterval: 10 * time.Second,
+	})
+	srv.AddTransport(transport.Options{})
+	srv.AddTransport(transport.GET{})
+	srv.AddTransport(transport.POST{})
+
+	var mb int64 = 1 << 20
+
+	srv.AddTransport(transport.MultipartForm{
+		MaxUploadSize: 100 * mb,
+		MaxMemory:     100 * mb,
+	})
+
+	srv.SetQueryCache(lru.New(1000))
+
+	srv.Use(extension.Introspection{})
+	srv.Use(extension.AutomaticPersistedQuery{
+		Cache: lru.New(100),
+	})
 
 	dh := download.DownloadHandler{
 		Conf: &conf,

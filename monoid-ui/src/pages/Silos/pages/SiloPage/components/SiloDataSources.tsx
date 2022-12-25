@@ -112,7 +112,7 @@ export default function SiloDataSources(props: {
 
   return (
     <>
-      <Modal open={newOpen || false} setOpen={() => navigate('..')}>
+      <Modal open={newOpen || false} setOpen={() => navigate('..')} size="lg">
         <NewSourceModal />
       </Modal>
 
