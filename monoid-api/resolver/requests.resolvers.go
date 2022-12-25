@@ -126,7 +126,7 @@ func (r *mutationResolver) UpdateRequestStatus(ctx context.Context, input model.
 		}
 	}
 
-	newStatus := model.RequestStatusTypeCreated
+	var newStatus model.RequestStatusType
 	switch input.Status {
 	case model.UpdateRequestStatusTypeExecuted:
 		newStatus = model.RequestStatusTypeExecuted

@@ -20,12 +20,10 @@ func DataSourceUnscoped(ctx context.Context, id string) (*model.DataSource, erro
 
 // dataSources gets all the datasources in keys.
 func (c *Reader) dataSources(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	fn := loadData[*model.DataSource]
-
 	unscoped, ok := ctx.Value(UnscopedKey).(bool)
 	if ok && unscoped {
-		fn = loadDataUnscoped[*model.DataSource]
+		return loadDataUnscoped[*model.DataSource](ctx, c.conf.DB, false, keys)
 	}
 
-	return fn(ctx, c.conf.DB, false, keys)
+	return loadData[*model.DataSource](ctx, c.conf.DB, false, keys)
 }
