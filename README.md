@@ -26,13 +26,10 @@ See our [docs](https://docs.monoid.co) for a more thorough introduction to Monoi
 ### Option 1. Two-line deploy
 1. Generate an encryption key with `openssl rand -base64 32`.
 2. Run `ENCRYPTION_KEY=[key generated in the previous step] docker compose up`. 
-### Option 2: Production instance on your infrastructure
 
-Coming soon [ETA 12/12]! Contact jagath@monoid.co if you'd like to get started with this sooner.
+### Option 2: If you don't need to self-host
 
-### Option 3: If you don't need to self-host
-
-Monoid Cloud is in beta, and will be releasing publicly soon [ETA 12/15]! Contact jagath@monoid.co if you'd like to get started with this sooner.
+Monoid Cloud is available [here](https://app.monoid.co)! Contact jagath@monoid.co if you'd like any help getting set up.
 
 ### Support 
 
