@@ -69,8 +69,6 @@ func (r *mutationResolver) DeleteUserPrimaryKey(ctx context.Context, id string) 
 
 // UpdateRequestStatus is the resolver for the updateRequestStatus field.
 func (r *mutationResolver) UpdateRequestStatus(ctx context.Context, input model.UpdateRequestStatusInput) (*model.RequestStatus, error) {
-	fmt.Println("URS")
-
 	status := model.RequestStatus{}
 	if err := r.Conf.DB.Where(
 		"id = ?",
