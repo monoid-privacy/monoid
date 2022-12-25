@@ -10,6 +10,13 @@ type DataSource {
     siloDefinition: SiloDefinition! @goField(forceResolver: true)
     properties: [Property!] @goField(forceResolver: true)
     description: String
+
+    """
+    This field will ony be true if this is the result of the
+    requestStatuses query, and this data source was deleted after
+    the request was already created.
+    """
+    deleted: Boolean! @goField(forceResolver: true)
 }
 
 type Property {
@@ -55,8 +62,9 @@ input CreateSiloSpecificationInput {
 
 input CreateDataSourceInput {
     siloDefinitionID: ID!
-    description: String
-    propertyIDs: [ID!]
+    name: String!
+    group: String
+    properties: [PropertyInput!]!
 }
 
 input UpdateSiloSpecificationInput {
@@ -72,16 +80,19 @@ input UpdateDataSourceInput {
     description: String
 }
 
-input CreatePropertyInput {
+input PropertyInput {
+    name: String!
     categoryIDs: [ID!]
+}
+
+input CreatePropertyInput {
+    property: PropertyInput!
     dataSourceID: ID!
-    purposeIDs: [ID!]
 }
 
 input UpdatePropertyInput {
     id: ID!
     categoryIDs: [ID!]
-    purposeIDs: [ID!]
 }
 
 input CreateCategoryInput {
@@ -131,7 +142,7 @@ extend type Workspace {
 }
 
 extend type Mutation {
-    createDataSource(input: CreateDataSourceInput): DataSource
+    createDataSource(input: CreateDataSourceInput!): DataSource!
     createSiloSpecification(input: CreateSiloSpecificationInput): SiloSpecification
     createProperty(input: CreatePropertyInput): Property
     createSubject(input: CreateSubjectInput): Subject

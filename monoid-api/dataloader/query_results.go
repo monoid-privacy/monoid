@@ -20,6 +20,7 @@ func (c *Reader) queryResults(ctx context.Context, keys dataloader.Keys) []*data
 		c.conf.DB,
 		"request_status_id",
 		true,
+		false,
 		keys,
 	)
 }

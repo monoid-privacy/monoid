@@ -46,6 +46,15 @@ func (a *RequestActivity) processSiloDefStatuses(
 			continue
 		}
 
+		if siloDef.SiloSpecification.Manual {
+			resultMap[rs.ID] = RequestStatusItem{
+				RequestStatusID: rs.ID,
+				Manual:          true,
+			}
+
+			continue
+		}
+
 		handle := monoidprotocol.MonoidRequestHandle{}
 		if err := json.Unmarshal([]byte(rs.RequestHandle), &handle); err != nil {
 			resultMap[rs.ID] = RequestStatusItem{Error: &RequestStatusError{Message: err.Error()}}
@@ -59,61 +68,63 @@ func (a *RequestActivity) processSiloDefStatuses(
 		handles = append(handles, handle)
 	}
 
-	// Create a temporary directory that can be used by the docker container
-	dir, err := ioutil.TempDir(a.Conf.TempStorePath, "monoid")
-	if err != nil {
-		return nil, err
-	}
-
-	defer os.RemoveAll(dir)
-
-	protocol, err := a.Conf.ProtocolFactory.NewMonoidProtocol(
-		siloDef.SiloSpecification.DockerImage,
-		siloDef.SiloSpecification.DockerTag,
-		dir,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	defer protocol.Teardown(ctx)
-
-	if err := protocol.InitConn(ctx); err != nil {
-		return nil, err
-	}
-
-	logChan, err := protocol.AttachLogs(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	go func() {
-		for l := range logChan {
-			logger.Info("container-log", "log", l.Message)
-		}
-	}()
-
-	conf := map[string]interface{}{}
-	if err := json.Unmarshal([]byte(siloDef.Config), &conf); err != nil {
-		return nil, err
-	}
-	statCh, _, err := protocol.RequestStatus(ctx, conf, monoidprotocol.MonoidRequestsMessage{
-		Handles: handles,
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	for stat := range statCh {
-		stat := stat
-		requestID, ok := dataSourceMap[monoidactivity.NewDataSourceMatcher(stat.SchemaName, stat.SchemaGroup)]
-		if !ok {
-			logger.Error("Did not find schema", stat.SchemaName, stat.SchemaGroup)
+	if len(handles) != 0 {
+		// Create a temporary directory that can be used by the docker container
+		dir, err := ioutil.TempDir(a.Conf.TempStorePath, "monoid")
+		if err != nil {
+			return nil, err
 		}
 
-		resultMap[requestID] = RequestStatusItem{
-			RequestStatus: &stat,
+		defer os.RemoveAll(dir)
+
+		protocol, err := a.Conf.ProtocolFactory.NewMonoidProtocol(
+			siloDef.SiloSpecification.DockerImage,
+			siloDef.SiloSpecification.DockerTag,
+			dir,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		defer protocol.Teardown(ctx)
+
+		if err := protocol.InitConn(ctx); err != nil {
+			return nil, err
+		}
+
+		logChan, err := protocol.AttachLogs(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		go func() {
+			for l := range logChan {
+				logger.Info("container-log", "log", l.Message)
+			}
+		}()
+
+		conf := map[string]interface{}{}
+		if err := json.Unmarshal([]byte(siloDef.Config), &conf); err != nil {
+			return nil, err
+		}
+		statCh, _, err := protocol.RequestStatus(ctx, conf, monoidprotocol.MonoidRequestsMessage{
+			Handles: handles,
+		})
+
+		if err != nil {
+			return nil, err
+		}
+
+		for stat := range statCh {
+			stat := stat
+			requestID, ok := dataSourceMap[monoidactivity.NewDataSourceMatcher(stat.SchemaName, stat.SchemaGroup)]
+			if !ok {
+				logger.Error("Did not find schema", stat.SchemaName, stat.SchemaGroup)
+			}
+
+			resultMap[requestID] = RequestStatusItem{
+				RequestStatus: &stat,
+			}
 		}
 	}
 

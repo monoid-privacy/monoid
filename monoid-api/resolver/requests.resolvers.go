@@ -4,9 +4,12 @@ package resolver
 // will be copied through when generating and any unknown code will be moved to the end.
 
 import (
+	"archive/tar"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 
 	"github.com/google/uuid"
 	"github.com/monoid-privacy/monoid/dataloader"
@@ -62,6 +65,99 @@ func (r *mutationResolver) UpdateUserPrimaryKey(ctx context.Context, input model
 // DeleteUserPrimaryKey is the resolver for the deleteUserPrimaryKey field.
 func (r *mutationResolver) DeleteUserPrimaryKey(ctx context.Context, id string) (*string, error) {
 	return DeleteObjectByID[model.UserPrimaryKey](id, r.Conf.DB, "Error deleting user primary key.")
+}
+
+// UpdateRequestStatus is the resolver for the updateRequestStatus field.
+func (r *mutationResolver) UpdateRequestStatus(ctx context.Context, input model.UpdateRequestStatusInput) (*model.RequestStatus, error) {
+	fmt.Println("URS")
+
+	status := model.RequestStatus{}
+	if err := r.Conf.DB.Where(
+		"id = ?",
+		input.RequestStatusID,
+	).Preload("Request").Preload("Request.Job").Preload(
+		"DataSource",
+	).First(&status).Error; err != nil {
+		return nil, handleError(err, "Could not find request status.")
+	}
+
+	if input.ResultData != nil {
+		// Validate that the file is a tar.gz file
+		gr, err := gzip.NewReader(input.ResultData.File)
+		if err != nil {
+			return nil, handleError(err, "File must be a gzipped tar file.")
+		}
+
+		tr := tar.NewReader(gr)
+		if _, err = tr.Next(); err != nil {
+			return nil, handleError(err, "File must be a gzipped tar file.")
+		}
+
+		// Create a handle to write to the file store
+		wr, obj, err := r.Conf.FileStore.NewWriter(ctx, uuid.NewString(), false)
+		if err != nil {
+			return nil, handleError(err, "Could not upload file.")
+		}
+
+		// Reset the reader and write to the file store
+		if _, err := input.ResultData.File.Seek(0, io.SeekStart); err != nil {
+			return nil, handleError(err, "An unknown error occurred while reading the file.")
+		}
+
+		if _, err := io.Copy(wr, input.ResultData.File); err != nil {
+			return nil, handleError(err, "Error uploading file.")
+		}
+
+		// Get the secret to store as the query result
+		rec, err := json.Marshal(model.QueryResultFileData{
+			FilePath: obj,
+		})
+
+		if err != nil {
+			return nil, handleError(err, "An unknown error occurred.")
+		}
+
+		ss := model.SecretString(rec)
+		if err := r.Conf.DB.Create(&model.QueryResult{
+			ID:              uuid.NewString(),
+			ResultType:      model.ResultTypeFile,
+			RequestStatusID: status.ID,
+			Records:         &ss,
+		}).Error; err != nil {
+			return nil, handleError(err, "Error storing file.")
+		}
+	}
+
+	newStatus := model.RequestStatusTypeCreated
+	switch input.Status {
+	case model.UpdateRequestStatusTypeExecuted:
+		newStatus = model.RequestStatusTypeExecuted
+	case model.UpdateRequestStatusTypeFailed:
+		newStatus = model.RequestStatusTypeFailed
+	default:
+		newStatus = model.RequestStatusTypeCreated
+	}
+
+	if err := r.Conf.DB.Model(&status).Update("status", newStatus).Error; err != nil {
+		return nil, handleError(err, "Error updating status")
+	}
+
+	if status.Request.Job != nil {
+		if err := r.Conf.TemporalClient.SignalWorkflow(
+			ctx,
+			status.Request.Job.TemporalWorkflowID,
+			"",
+			requestworkflow.UpdateStatusSignalChannel,
+			requestworkflow.UpdateStatusSignal{
+				RequestStatusID:  status.ID,
+				SiloDefinitionID: status.DataSource.SiloDefinitionID,
+			},
+		); err != nil {
+			log.Err(err).Msg("Error signalling workflow.")
+		}
+	}
+
+	return &status, nil
 }
 
 // CreateUserDataRequest is the resolver for the createUserDataRequest field.
@@ -467,7 +563,10 @@ func (r *requestStatusResolver) Request(ctx context.Context, obj *model.RequestS
 
 // DataSource is the resolver for the dataSource field.
 func (r *requestStatusResolver) DataSource(ctx context.Context, obj *model.RequestStatus) (*model.DataSource, error) {
-	return dataloader.DataSource(ctx, obj.DataSourceID)
+	return dataloader.DataSource(
+		context.WithValue(ctx, dataloader.UnscopedKey, true),
+		obj.DataSourceID,
+	)
 }
 
 // QueryResult is the resolver for the queryResult field.

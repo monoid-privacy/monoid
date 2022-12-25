@@ -11,7 +11,8 @@ import (
 type ctxKey string
 
 const (
-	loadersKey = ctxKey("dataloaders")
+	loadersKey  = ctxKey("dataloaders")
+	UnscopedKey = ctxKey("unscopedLoad")
 )
 
 // Reader is the base class for any data loader readers

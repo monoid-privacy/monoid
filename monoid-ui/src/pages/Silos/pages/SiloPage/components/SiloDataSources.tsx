@@ -5,7 +5,7 @@ import {
   ExclamationCircleIcon,
 } from '@heroicons/react/24/outline';
 
-import { useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client';
 import AlertRegion from 'components/AlertRegion';
 import Spinner from 'components/Spinner';
 import { SiloDefinition, DataSource } from 'lib/models';
@@ -13,17 +13,39 @@ import { SILO_DATA_SOURCES } from 'graphql/silo_queries';
 import Button from 'components/Button';
 import Modal, { ModalBodyComponent, ModalFooterComponent } from 'components/Modal';
 import { Dialog } from '@headlessui/react';
+import { gql } from '__generated__';
 import ToastContext from '../../../../../contexts/ToastContext';
 import Card, { CardHeader } from '../../../../../components/Card';
 import ScanButtonRegion from './ScanButton';
 import DataSourcesTable from './DataSourcesTable';
 import DataSourceForm from './DataSourceForm';
 
+const CREATE_DATA_SOURCE = gql(`
+  mutation CreateDataSource($input: CreateDataSourceInput!) {
+    createDataSource(input: $input) {
+      id
+      name
+      group
+      properties {
+        id
+        name
+        categories {
+          id
+          name
+        }
+      }
+    }
+  }
+`);
+
 function NewSourceModal() {
   const [dataSource, setDataSource] = useState<DataSource>({
     name: '',
     properties: [],
   });
+  const { siloId } = useParams<{ siloId: string }>();
+
+  const [createDataSource, createDataSourceRes] = useMutation(CREATE_DATA_SOURCE);
 
   return (
     <>
@@ -36,8 +58,23 @@ function NewSourceModal() {
         </div>
       </ModalBodyComponent>
       <ModalFooterComponent>
-        <Button>
-          Submit
+        <Button onClick={() => {
+          createDataSource({
+            variables: {
+              input: {
+                siloDefinitionID: siloId!,
+                name: dataSource.name || '',
+                group: null,
+                properties: dataSource.properties?.map((p) => ({
+                  name: p.name!,
+                  categoryIDs: p.categories?.map((c) => c.id!) || [],
+                })) || [],
+              },
+            },
+          });
+        }}
+        >
+          {createDataSourceRes.loading ? <Spinner /> : 'Submit'}
         </Button>
       </ModalFooterComponent>
     </>

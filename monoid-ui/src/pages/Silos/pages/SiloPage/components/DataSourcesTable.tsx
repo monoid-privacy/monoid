@@ -1,4 +1,6 @@
-import { CircleStackIcon, FolderIcon } from '@heroicons/react/24/outline';
+import {
+  CircleStackIcon, FolderIcon, XCircleIcon, XMarkIcon,
+} from '@heroicons/react/24/outline';
 import Badge from 'components/Badge';
 import Button from 'components/Button';
 import { CardDivider } from 'components/Card';
@@ -7,11 +9,103 @@ import { MonoidA } from 'components/MonoidLink';
 import Table from 'components/Table';
 import Text from 'components/Text';
 import { DataSource, Property, SiloDefinition } from 'lib/models';
-import React from 'react';
+import React, { useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { dedup } from 'utils/utils';
+import ConfirmButton from 'components/ConfirmButton';
+import { gql } from '__generated__/gql';
+import { ApolloError, useMutation } from '@apollo/client';
+import ToastContext from 'contexts/ToastContext';
 import PropertyCategoryCombobox from './PropertyCategoryCombobox';
 import IdentifierSelect from './IdentifierSelect';
+
+const DELETE_DATA_SOURCE = gql(`
+  mutation DeleteDataSource($id: ID!) {
+    deleteDataSource(id: $id)
+  }
+`);
+
+const DELETE_PROPERTY = gql(`
+  mutation DeleteProperty($id: ID!) {
+    deleteProperty(id: $id)
+  }
+`);
+
+function DeleteDataSourceButton(props: {
+  ds: DataSource
+}) {
+  const { ds } = props;
+  const [deleteDataSource] = useMutation(DELETE_DATA_SOURCE, {
+    variables: {
+      id: ds.id!,
+    },
+    update(cache) {
+      const normalizedId = cache.identify({ id: ds.id!, __typename: 'DataSource' });
+      cache.evict({ id: normalizedId });
+      cache.gc();
+    },
+  });
+  const toastCtx = useContext(ToastContext);
+
+  return (
+    <ConfirmButton
+      onConfirm={(close) => {
+        deleteDataSource().catch((err: ApolloError) => {
+          toastCtx.showToast({
+            title: 'Error',
+            message: err.message,
+            icon: XCircleIcon,
+          });
+          close();
+        }).then(() => close());
+      }}
+      variant="outline-danger"
+      className="ml-auto px-2"
+      dialogTitle={`Confirm Delete Data Source: ${ds.name}`}
+      dialogBody="If you delete this data source, it will no longer be tracked, and any associated alerts will be removed."
+    >
+      <XMarkIcon className="w-4 h-4" />
+    </ConfirmButton>
+  );
+}
+
+function DeletePropertyButton(props: {
+  property: Property
+}) {
+  const { property } = props;
+  const [deleteProperty] = useMutation(DELETE_PROPERTY, {
+    variables: {
+      id: property.id!,
+    },
+    update(cache) {
+      const normalizedId = cache.identify({ id: property.id!, __typename: 'Property' });
+      cache.evict({ id: normalizedId });
+      cache.gc();
+    },
+  });
+  const toastCtx = useContext(ToastContext);
+
+  return (
+    <ConfirmButton
+      onConfirm={(close) => {
+        deleteProperty().catch((err: ApolloError) => {
+          toastCtx.showToast({
+            title: 'Error',
+            message: err.message,
+            icon: XCircleIcon,
+          });
+          close();
+        }).then(() => close());
+      }}
+      variant="outline-danger"
+      className="ml-auto px-2"
+      dialogTitle={`Confirm Delete Property: ${property.name}`}
+      dialogBody="If you delete this property, it will no longer be tracked, and any associated alerts will be removed."
+    >
+      <XMarkIcon className="w-4 h-4" />
+    </ConfirmButton>
+  );
+}
 
 function DataSourcesTable(props: { siloDef?: SiloDefinition, type: 'card' | 'plain' }) {
   const { siloDef, type } = props;
@@ -46,6 +140,7 @@ function DataSourcesTable(props: { siloDef?: SiloDefinition, type: 'card' | 'pla
             ),
             key: 'purposes',
           },
+          { key: 'actions', header: '' },
         ]}
         tableRows={siloDef?.dataSources?.map((ds: DataSource) => ({
           key: ds.id!,
@@ -56,10 +151,12 @@ function DataSourcesTable(props: { siloDef?: SiloDefinition, type: 'card' | 'pla
                 <div className="flex flex-col items-start">
                   <div>
                     <div>{ds.name}</div>
-                    <Text size="xs" em="light" className="flex items-center">
-                      <FolderIcon className="w-3 h-3 mr-1" />
-                      {ds.group}
-                    </Text>
+                    {ds.group && (
+                      <Text size="xs" em="light" className="flex items-center">
+                        <FolderIcon className="w-3 h-3 mr-1" />
+                        {ds.group}
+                      </Text>
+                    )}
                   </div>
                 </div>
               ),
@@ -67,19 +164,29 @@ function DataSourcesTable(props: { siloDef?: SiloDefinition, type: 'card' | 'pla
             {
               key: 'properties',
               content: (
-                <div className="space-x-2">
-                  {
-                    dedup(
-                      // Get all the categories that are listed under the properties for
-                      // the data source.
-                      ds.properties?.flatMap((p) => p.categories || []) || [],
-                      (c) => c.id!,
-                    ).map((c) => (
-                      <Badge key={c.id} color="blue">
-                        {c.name}
-                      </Badge>
-                    ))
-                  }
+                <div className="flex flex-col space-y-1">
+                  <div>
+                    {ds.properties?.length || 0}
+                    {' '}
+                    {ds.properties?.length !== 1 ? 'Properties' : 'Property'}
+                  </div>
+                  {(ds.properties?.flatMap((p) => p.categories || []).length || 0) !== 0
+                    && (
+                      <div className="space-x-2">
+                        {
+                          dedup(
+                            // Get all the categories that are listed under the properties for
+                            // the data source.
+                            ds.properties?.flatMap((p) => p.categories || []) || [],
+                            (c) => c.id!,
+                          ).map((c) => (
+                            <Badge key={c.id} color="blue">
+                              {c.name}
+                            </Badge>
+                          ))
+                        }
+                      </div>
+                    )}
                 </div>
               ),
             },
@@ -87,11 +194,19 @@ function DataSourcesTable(props: { siloDef?: SiloDefinition, type: 'card' | 'pla
               key: 'purposes',
               content: null,
             },
+            {
+              key: 'actions',
+              content: (
+                <div className="flex w-full">
+                  <DeleteDataSourceButton ds={ds} />
+                </div>
+              ),
+            },
           ],
 
           nestedComponent: (
             <tr>
-              <td colSpan={4} className="p-0">
+              <td colSpan={5} className="p-0">
                 <div>
                   <Table
                     tableCols={[{
@@ -103,6 +218,9 @@ function DataSourcesTable(props: { siloDef?: SiloDefinition, type: 'card' | 'pla
                     }, {
                       header: 'User Identifier',
                       key: 'user_identifier',
+                    }, {
+                      header: '',
+                      key: 'actions',
                     }]}
                     tableRows={
                       ds.properties?.map(
@@ -134,6 +252,14 @@ function DataSourcesTable(props: { siloDef?: SiloDefinition, type: 'card' | 'pla
                                   workspaceId={id!}
                                   propertyId={p.id!}
                                 />
+                              ),
+                            },
+                            {
+                              key: 'actions',
+                              content: (
+                                <div className="flex w-full">
+                                  <DeletePropertyButton property={p} />
+                                </div>
                               ),
                             },
                           ],

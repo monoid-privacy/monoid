@@ -51,6 +51,9 @@ type RequestStatusItem struct {
 	// to use to run a request)
 	FullyComplete bool `json:"fullyComplete"`
 
+	// Manual is true if this is a manual silo.
+	Manual bool `json:"manual"`
+
 	// RequestStatus is non-empty if FullyComplete is false. It is
 	// an encrypted JSON blob of the request status
 	RequestStatus *monoidprotocol.MonoidRequestStatus `json:"requestStatus"`
@@ -95,6 +98,22 @@ func (a *RequestActivity) StartSiloRequestActivity(
 		args.RequestID,
 	).First(&siloDef).Error; err != nil {
 		return RequestStatusResult{}, err
+	}
+
+	if siloDef.SiloSpecification.Manual {
+		statuses := make([]RequestStatusItem, 0, len(siloDef.DataSources))
+
+		for _, ds := range siloDef.DataSources {
+			if len(ds.RequestStatuses) != 0 {
+				statuses = append(statuses, RequestStatusItem{
+					FullyComplete:   ds.RequestStatuses[0].Status == model.RequestStatusTypeExecuted,
+					RequestStatusID: ds.RequestStatuses[0].ID,
+					Manual:          true,
+				})
+			}
+		}
+
+		return RequestStatusResult{ResultItems: statuses}, nil
 	}
 
 	if err := a.Conf.DB.Where(

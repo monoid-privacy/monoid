@@ -37,7 +37,26 @@ export default function DataSourceForm(props: {
           {
             value.properties?.map((p) => (
               <div className="flex space-x-2">
-                <Input key={p.id} placeholder="Property Name" />
+                <Input
+                  key={p.id}
+                  placeholder="Property Name"
+                  value={p.name!}
+                  onChange={(e) => {
+                    onChange({
+                      ...value,
+                      properties: value.properties?.map((prop) => {
+                        if (p.id !== prop.id) {
+                          return prop;
+                        }
+
+                        return {
+                          ...prop,
+                          name: e.target.value,
+                        };
+                      }),
+                    });
+                  }}
+                />
                 <CategoryCombobox
                   className="w-full"
                   placeholder="Categories"

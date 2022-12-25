@@ -16,6 +16,13 @@ type ExecuteRequestArgs struct {
 	WorkspaceID string
 }
 
+type UpdateStatusSignal struct {
+	RequestStatusID  string
+	SiloDefinitionID string
+}
+
+const UpdateStatusSignalChannel = "silo-update-status"
+
 func (w *RequestWorkflow) ExecuteRequestWorkflow(
 	ctx workflow.Context,
 	args ExecuteRequestArgs,
@@ -66,14 +73,27 @@ func (w *RequestWorkflow) ExecuteRequestWorkflow(
 
 	ctx = workflow.WithChildOptions(ctx, workflow.ChildWorkflowOptions{})
 	sel := workflow.NewSelector(ctx)
+	silosComplete := 0
+
+	childExecutions := map[string]workflow.Execution{}
 
 	for i, silo := range silos {
 		i := i
 
-		sel.AddFuture(workflow.ExecuteChildWorkflow(ctx, w.ExecuteSiloRequestWorkflow, SiloRequestArgs{
+		future := workflow.ExecuteChildWorkflow(ctx, w.ExecuteSiloRequestWorkflow, SiloRequestArgs{
 			RequestID:        args.RequestID,
 			SiloDefinitionID: silo.ID,
-		}), func(f workflow.Future) {
+		})
+
+		ce := workflow.Execution{}
+		if err := future.GetChildWorkflowExecution().Get(ctx, &ce); err != nil {
+			logger.Error("Error starting workflow", "silo_id", silo.ID)
+			continue
+		}
+
+		childExecutions[silo.ID] = ce
+
+		sel.AddFuture(future, func(f workflow.Future) {
 			res := ExecuteSiloRequestResult{}
 
 			if err := f.Get(ctx, &res); err != nil {
@@ -93,10 +113,28 @@ func (w *RequestWorkflow) ExecuteRequestWorkflow(
 			case model.FullRequestStatusExecuted:
 				hasSuccess = true
 			}
+
+			silosComplete += 1
 		})
 	}
 
-	for range silos {
+	signalChan := workflow.GetSignalChannel(ctx, UpdateStatusSignalChannel)
+	var signal UpdateStatusSignal
+	sel.AddReceive(signalChan, func(c workflow.ReceiveChannel, more bool) {
+		c.Receive(ctx, &signal)
+		wf, ok := childExecutions[signal.SiloDefinitionID]
+		if !ok {
+			return
+		}
+
+		if err := workflow.SignalExternalWorkflow(ctx, wf.ID, "", SiloUpdateStatusSignalChannel, SiloUpdateStatusSignal{
+			RequestStatusID: signal.RequestStatusID,
+		}).Get(ctx, nil); err != nil {
+			logger.Error("Error sending external signal")
+		}
+	})
+
+	for silosComplete < len(silos) {
 		sel.Select(ctx)
 	}
 

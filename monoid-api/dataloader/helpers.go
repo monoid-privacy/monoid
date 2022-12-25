@@ -30,7 +30,11 @@ func getData[T loaderable](ctx context.Context, id string, loader *dataloader.Lo
 // loadData is a helper that collects keys from a dataloader and
 // runs the query
 func loadData[T loaderable](ctx context.Context, db *gorm.DB, emptyError bool, keys dataloader.Keys) []*dataloader.Result {
-	return loadDataField[T](ctx, db, "id", emptyError, keys)
+	return loadDataField[T](ctx, db, "id", emptyError, false, keys)
+}
+
+func loadDataUnscoped[T loaderable](ctx context.Context, db *gorm.DB, emptyError bool, keys dataloader.Keys) []*dataloader.Result {
+	return loadDataField[T](ctx, db, "id", emptyError, true, keys)
 }
 
 // loadDataField is a helper that collects keys from a dataloader and
@@ -40,6 +44,7 @@ func loadDataField[T loaderable](
 	db *gorm.DB,
 	field string,
 	emptyError bool,
+	unscoped bool,
 	keys dataloader.Keys,
 ) []*dataloader.Result {
 	// read all requested users in a single query
@@ -50,7 +55,13 @@ func loadDataField[T loaderable](
 
 	resArr := []T{}
 
-	if err := db.Where(
+	qdb := db.Session(&gorm.Session{})
+
+	if unscoped {
+		qdb = qdb.Unscoped()
+	}
+
+	if err := qdb.Where(
 		fmt.Sprintf("%s IN ?", field),
 		ids,
 	).Find(&resArr).Error; err != nil {
