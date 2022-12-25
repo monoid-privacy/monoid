@@ -5,7 +5,6 @@ import useQuery from 'hooks/useQueryPatched';
 import AlertRegion from 'components/AlertRegion';
 import Spinner from 'components/Spinner';
 import Table from 'components/Table';
-import { SiloDefinition } from 'lib/models';
 import SVGText from 'components/SVGText';
 import { GET_SILOS } from 'graphql/silo_queries';
 import Card from 'components/Card';
@@ -15,13 +14,9 @@ import Button from 'components/Button';
 
 export default function SiloList() {
   const { id } = useParams<{ id: string }>();
-  const { data, loading, error } = useQuery<{
-    workspace: {
-      siloDefinitions: SiloDefinition[]
-    }
-  }>(GET_SILOS, {
+  const { data, loading, error } = useQuery(GET_SILOS, {
     variables: {
-      id,
+      id: id!,
     },
     fetchPolicy: 'cache-and-network',
     nextFetchPolicy: () => 'cache-first',

@@ -3,6 +3,7 @@ import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import EmptyState from 'components/Empty';
 import { BellAlertIcon } from '@heroicons/react/24/outline';
+import { DiscoveryStatus } from '__generated__/graphql';
 import AlertRegion from '../../../components/AlertRegion';
 import Button from '../../../components/Button';
 
@@ -16,8 +17,8 @@ function AlertsCardBody() {
   const { id } = useParams<{ id: string }>();
   const { data, loading, error } = useQuery(GET_WORKSPACE_DISCOVERIES, {
     variables: {
-      workspaceId: id,
-      statuses: ['OPEN'],
+      workspaceId: id!,
+      statuses: [DiscoveryStatus.Open],
       limit: 5,
       offset: 0,
     },
@@ -36,7 +37,7 @@ function AlertsCardBody() {
     );
   }
 
-  if ((data.workspace.discoveries.numDiscoveries || 0) === 0) {
+  if ((data?.workspace.discoveries.numDiscoveries || 0) === 0) {
     return (
       <EmptyState
         icon={BellAlertIcon}
@@ -51,7 +52,7 @@ function AlertsCardBody() {
   return (
     <ul className="divide-y divide-gray-200 overflow-scroll flex-1">
       {
-        (data.workspace.discoveries.discoveries as DataDiscovery[]).map((d) => (
+        (data?.workspace.discoveries.discoveries as DataDiscovery[]).map((d) => (
           <DataDiscoveryRow
             key={d.id!}
             discovery={d}

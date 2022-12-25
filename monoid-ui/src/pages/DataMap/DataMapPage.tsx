@@ -1,9 +1,10 @@
-import { gql, useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import { CircleStackIcon, PlusIcon } from '@heroicons/react/24/outline';
 import Card from 'components/Card';
 import EmptyState from 'components/Empty';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
+import { gql } from '__generated__/gql';
 import AlertRegion from '../../components/AlertRegion';
 import Badge from '../../components/Badge';
 import FilterRegion, { FilterValue } from '../../components/FilterRegion';
@@ -14,7 +15,7 @@ import SVGText from '../../components/SVGText';
 import Table from '../../components/Table';
 import { Category, SiloDefinition } from '../../lib/models';
 
-const DATA_MAP_QUERY = gql`
+const DATA_MAP_QUERY = gql(`
   query DataMapQuery($workspaceId: ID!, $limit: Int!, $offset: Int, $query: DataMapQuery) {
     workspace(id: $workspaceId) {
       id
@@ -46,9 +47,9 @@ const DATA_MAP_QUERY = gql`
       }
     }
   }
-`;
+`);
 
-const FILTER_OPTIONS_QUERY = gql`
+const FILTER_OPTIONS_QUERY = gql(`
   query FilterOptionsQuery($workspaceId: ID!) {
     workspace(id: $workspaceId) {
       id
@@ -66,7 +67,8 @@ const FILTER_OPTIONS_QUERY = gql`
       }
     }
   }
-`;
+`);
+
 function DataMapList(props: { filters: FilterValue[] }) {
   const [offset, setOffset] = useState(0);
   const { filters } = props;
@@ -108,7 +110,7 @@ function DataMapList(props: { filters: FilterValue[] }) {
     variables: {
       query: dataMapVars,
       limit: 10,
-      workspaceId: id,
+      workspaceId: id!,
       offset,
     },
   });
@@ -121,7 +123,7 @@ function DataMapList(props: { filters: FilterValue[] }) {
     return <AlertRegion alertTitle="Error">{error.message}</AlertRegion>;
   }
 
-  if ((data.workspace.dataMap.numRows || 0) === 0) {
+  if ((data?.workspace.dataMap.numRows || 0) === 0) {
     return (
       <Card>
         <EmptyState
@@ -156,7 +158,7 @@ function DataMapList(props: { filters: FilterValue[] }) {
         },
       ]}
       tableRows={
-        data.workspace.dataMap.dataMapRows.map((r: any) => ({
+        data!.workspace.dataMap!.dataMapRows!.map((r: any) => ({
           key: r.dataSource.id + r.property.id,
           columns: [{
             content: (
@@ -207,7 +209,7 @@ function DataMapList(props: { filters: FilterValue[] }) {
               setOffset(o);
             });
           }}
-          totalCount={data.workspace.dataMap.numRows}
+          totalCount={data!.workspace!.dataMap.numRows}
         />
       )}
     />
@@ -276,12 +278,7 @@ function DataMapFilterRegion(props: {
   value: FilterValue[],
 }) {
   const { id } = useParams<{ id: string }>();
-  const { data, loading, error } = useQuery<{
-    workspace: {
-      categories: Category[],
-      siloDefinitions: SiloDefinition[]
-    }
-  }>(FILTER_OPTIONS_QUERY, {
+  const { data, loading, error } = useQuery(FILTER_OPTIONS_QUERY, {
     variables: {
       workspaceId: id!,
     },
@@ -301,7 +298,10 @@ function DataMapFilterRegion(props: {
   );
 
   const siloDefFormat = (v: FilterValue) => (
-    <SiloDefTag siloDefs={data?.workspace.siloDefinitions || []} value={v} />
+    <SiloDefTag
+      siloDefs={(data?.workspace.siloDefinitions || []) as SiloDefinition[]}
+      value={v}
+    />
   );
 
   return (
@@ -325,7 +325,7 @@ function DataMapFilterRegion(props: {
         formatTag: categoryFormat,
       }, {
         name: 'Data Silos',
-        options: data?.workspace.siloDefinitions.map((d: SiloDefinition) => ({
+        options: (data?.workspace.siloDefinitions as SiloDefinition[]).map((d: SiloDefinition) => ({
           key: d.id!,
           content: d.name,
         })) || [],

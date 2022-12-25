@@ -24,7 +24,7 @@ function RequestsCardBody() {
   const { id } = useParams<{ id: string }>();
   const { data, loading, error } = useQuery(GET_REQUESTS, {
     variables: {
-      id,
+      id: id!,
       limit: 5,
       offset: 0,
     },

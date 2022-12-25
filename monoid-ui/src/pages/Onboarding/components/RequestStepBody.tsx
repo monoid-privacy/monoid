@@ -4,11 +4,10 @@ import PageHeader from 'components/PageHeader';
 import { EXECUTE_REQUEST } from 'graphql/requests_queries';
 import NewRequestForm from 'pages/Requests/pages/NewRequestPage/components/NewRequestForm';
 import Text from 'components/Text';
-import { Job } from 'lib/models';
 import React from 'react';
 
 export default function RequestBody(props: { onSuccess: (reqId: string) => void }) {
-  const [executeReq] = useMutation<{ executeUserDataRequest: Job }>(EXECUTE_REQUEST);
+  const [executeReq] = useMutation(EXECUTE_REQUEST);
   const { onSuccess } = props;
 
   return (
@@ -26,7 +25,7 @@ export default function RequestBody(props: { onSuccess: (reqId: string) => void 
           onSuccess={(req) => {
             executeReq({
               variables: {
-                id: req.id,
+                id: req.id!,
               },
             }).then(() => {
               onSuccess(req.id!);

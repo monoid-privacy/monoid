@@ -1,12 +1,12 @@
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client';
 import React from 'react';
+import { gql } from '__generated__/gql';
 import AlertRegion from '../../../../../components/AlertRegion';
-import { UserPrimaryKey } from '../../../../../lib/models';
 
 import { GET_PRIMARY_KEYS } from '../../../../../graphql/requests_queries';
 import Select from '../../../../../components/Select';
 
-const LINK_PROPERTY = gql`
+const LINK_PROPERTY = gql(`
   mutation LinkKey($propertyId: ID!, $userPrimaryKeyId: ID) {
     linkPropertyToPrimaryKey(propertyId: $propertyId, userPrimaryKeyId: $userPrimaryKeyId) {
       id
@@ -16,7 +16,7 @@ const LINK_PROPERTY = gql`
       }
     }
   }
-`;
+`);
 
 export default function IdentifierSelect(props: {
   value: string | undefined,
@@ -25,9 +25,7 @@ export default function IdentifierSelect(props: {
 }) {
   const { workspaceId, propertyId, value } = props;
   const [linkProperty] = useMutation(LINK_PROPERTY);
-  const { data, loading, error } = useQuery<{
-    workspace: { userPrimaryKeys: UserPrimaryKey[] }
-  }>(GET_PRIMARY_KEYS, {
+  const { data, loading, error } = useQuery(GET_PRIMARY_KEYS, {
     variables: {
       id: workspaceId,
     },

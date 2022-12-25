@@ -60,7 +60,7 @@ type DataDiscovery {
 }
 
 type DataDiscoveriesListResult {
-    discoveries: [DataDiscovery]
+    discoveries: [DataDiscovery]!
     numDiscoveries: Int!
 }
 

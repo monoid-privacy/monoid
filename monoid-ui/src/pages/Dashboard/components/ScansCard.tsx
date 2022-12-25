@@ -15,7 +15,7 @@ function ScansCardBody() {
   const { id } = useParams<{ id: string }>();
   const { data, loading, error } = useQuery(GET_ALL_SCANS, {
     variables: {
-      workspaceId: id,
+      workspaceId: id!,
       status: [],
       limit: 5,
       offset: 0,
@@ -35,7 +35,7 @@ function ScansCardBody() {
     );
   }
 
-  if ((data.workspace.jobs.numJobs || 0) === 0) {
+  if ((data?.workspace.jobs.numJobs || 0) === 0) {
     return (
       <EmptyState
         icon={MagnifyingGlassIcon}
@@ -50,7 +50,7 @@ function ScansCardBody() {
   return (
     <ul className="divide-y divide-gray-200 overflow-scroll flex-1">
       {
-        (data.workspace.jobs.jobs as Job[]).map((j) => (
+        (data?.workspace.jobs.jobs as Job[]).map((j) => (
           <JobRow
             key={j.id!}
             job={j}

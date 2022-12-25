@@ -1,17 +1,18 @@
-import { ApolloError, gql, useMutation } from '@apollo/client';
+import { ApolloError, useMutation } from '@apollo/client';
 import Card from 'components/Card';
 import { SiloDefinition } from 'lib/models';
 import React, { useRef } from 'react';
 import { useParams } from 'react-router-dom';
+import { gql } from '__generated__/gql';
 import SiloForm from './SiloForm';
 
-const CREATE_NEW_SILO = gql`
+const CREATE_NEW_SILO = gql(`
   mutation CreateSilo($input: CreateSiloDefinitionInput!) {
     createSiloDefinition(input: $input) {
       id
     }
   }
-`;
+`);
 
 export default function NewSiloForm(props: {
   onSuccess: (sd: SiloDefinition) => void,
@@ -44,12 +45,12 @@ export default function NewSiloForm(props: {
             variables: {
               input: {
                 name: silo.name,
-                siloSpecificationID: silo.siloSpec?.id,
-                workspaceID: id,
+                siloSpecificationID: silo.siloSpec!.id,
+                workspaceID: id!,
                 siloData: JSON.stringify(silo.siloData),
               },
             },
-          }).then(({ data }) => onSuccess(data.createSiloDefinition)).catch(
+          }).then(({ data }) => onSuccess(data?.createSiloDefinition as SiloDefinition)).catch(
             (err: ApolloError) => { onError(err); },
           );
         }}

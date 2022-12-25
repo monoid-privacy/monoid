@@ -10,17 +10,12 @@ import PageHeader from '../../../../components/PageHeader';
 import Spinner from '../../../../components/Spinner';
 import Table from '../../../../components/Table';
 import { GET_PRIMARY_KEYS } from '../../../../graphql/requests_queries';
-import { UserPrimaryKey } from '../../../../lib/models';
 
 function UserIdentifiersBody() {
   const { id } = useParams<{ id: string }>();
-  const { data, loading, error } = useQuery<{
-    workspace: {
-      userPrimaryKeys: UserPrimaryKey[],
-    },
-  }>(GET_PRIMARY_KEYS, {
+  const { data, loading, error } = useQuery(GET_PRIMARY_KEYS, {
     variables: {
-      id,
+      id: id!,
     },
     fetchPolicy: 'cache-and-network',
   });

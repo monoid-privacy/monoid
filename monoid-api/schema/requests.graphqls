@@ -57,11 +57,11 @@ type RequestStatusListResult {
 
 type Request {
     id: ID!
-    primaryKeyValues: [PrimaryKeyValue!] @goField(forceResolver: true)
+    primaryKeyValues: [PrimaryKeyValue!]! @goField(forceResolver: true)
     requestStatuses(query: RequestStatusQuery, offset: Int, limit: Int!): RequestStatusListResult!
     type: UserDataRequestType!
     status: FullRequestStatus! @goField(forceResolver: true)
-    createdAt: Time
+    createdAt: Time!
 }
 
 enum FullRequestStatus {
@@ -100,10 +100,10 @@ type QueryResult {
 }
 
 extend type Query {
-    userPrimaryKey(id: ID!): UserPrimaryKey
-    requestStatus(id: ID!): RequestStatus
-    primaryKeyValue(id: ID!): PrimaryKeyValue
-    request(id: ID!): Request
+    userPrimaryKey(id: ID!): UserPrimaryKey!
+    requestStatus(id: ID!): RequestStatus!
+    primaryKeyValue(id: ID!): PrimaryKeyValue!
+    request(id: ID!): Request!
 }
 
 type DownloadLink {
@@ -125,17 +125,17 @@ extend type Mutation {
 }
 
 type RequestsResult {
-    requests: [Request!]
+    requests: [Request!]!
     numRequests: Int!
 }
 
 extend type Workspace {
     requests(offset: Int, limit: Int!): RequestsResult!
-    userPrimaryKeys: [UserPrimaryKey!]
+    userPrimaryKeys: [UserPrimaryKey!]!
 }
 
 extend type DataSource {
-    requestStatuses: [RequestStatus!] @goField(forceResolver: true)
+    requestStatuses: [RequestStatus!]! @goField(forceResolver: true)
 }
 
 extend type Property {

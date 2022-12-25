@@ -7,9 +7,10 @@ import dayjs from 'dayjs';
 import updateLocale from 'dayjs/plugin/updateLocale';
 import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { gql, useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import { useParams } from 'react-router-dom';
 import { Virtuoso } from 'react-virtuoso';
+import { gql } from '__generated__/gql';
 import Text from '../../../../../components/Text';
 import Spinner from '../../../../../components/Spinner';
 import { Job } from '../../../../../lib/models';
@@ -21,7 +22,7 @@ dayjs.extend(updateLocale);
 dayjs.extend(duration);
 dayjs.extend(relativeTime);
 
-const GET_JOB = gql`
+const GET_JOB = gql(`
   query GetJob($workspaceId: ID!, $id: ID!) {
     workspace(id: $workspaceId) {
       job(
@@ -32,7 +33,7 @@ const GET_JOB = gql`
       }
     }
   }
-`;
+`);
 
 function JobLogs(props: {
   id: string
@@ -42,7 +43,7 @@ function JobLogs(props: {
   const { data, loading, error } = useQuery(GET_JOB, {
     variables: {
       id,
-      workspaceId,
+      workspaceId: workspaceId!,
     },
   });
 
@@ -58,7 +59,7 @@ function JobLogs(props: {
     );
   }
 
-  if (data.workspace.job.logs.length === 0) {
+  if ((data?.workspace.job.logs?.length || 0) === 0) {
     return (
       <div className="bg-gray-100 text-sm py-3">
         No logs found
@@ -69,13 +70,13 @@ function JobLogs(props: {
   const itemContent = (i: number) => (
     <div className="flex hover:bg-gray-200">
       <code className="w-10 flex-shrink-0">{i}</code>
-      <pre>{data.workspace.job.logs[i]}</pre>
+      <pre>{(data?.workspace.job.logs || [])[i]}</pre>
     </div>
   );
 
   return (
     <Virtuoso
-      totalCount={data.workspace.job.logs.length}
+      totalCount={data?.workspace.job.logs?.length || 0}
       itemContent={itemContent}
       style={{ height: '400px' }}
       className="text-xs"

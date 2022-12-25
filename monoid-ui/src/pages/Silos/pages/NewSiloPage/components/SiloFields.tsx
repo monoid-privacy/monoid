@@ -1,7 +1,7 @@
-import { gql, useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import React, { useEffect, useMemo } from 'react';
+import { gql } from '__generated__/gql';
 import Spinner from '../../../../../components/Spinner';
-import { SiloSpec } from '../../../../../lib/models';
 import Input, { InputLabel } from '../../../../../components/Input';
 import { MonoidJSONSchema } from '../../../../../lib/types';
 import Toggle from '../../../../../components/Toggle';
@@ -9,14 +9,14 @@ import TextMultiInput from '../../../../../components/TextMultiInput';
 import BorderedRegion from '../../../../../components/BorderedRegion';
 import Button from '../../../../../components/Button';
 
-const GET_SILO_DATA = gql`
-  query GetSiloSpecs($id: ID!) {
+const SILO_SPECIFICATION = gql(`
+  query GetSiloSpec($id: ID!) {
     siloSpecification(id: $id) {
       id
       schema
     }
   }
-`;
+`);
 
 const cmp = (v1?: number, v2?: number) => {
   const v1c = v1 === undefined ? 1000 : v1;
@@ -240,20 +240,23 @@ export default function SiloFields(props: {
   const {
     siloID, siloData, setSiloData, prefilled,
   } = props;
-  const { data, loading, error } = useQuery<{ siloSpecification: SiloSpec }>(GET_SILO_DATA, {
+  const { data, loading, error } = useQuery(SILO_SPECIFICATION, {
     variables: {
       id: siloID,
     },
   });
 
   const jsonSchema = useMemo(() => {
-    if (!data?.siloSpecification) {
+    if (!data?.siloSpecification.schema) {
       return undefined;
     }
 
-    const schema = JSON.parse(data.siloSpecification.schema) as MonoidJSONSchema;
-
-    return schema;
+    try {
+      const schema = JSON.parse(data?.siloSpecification.schema) as MonoidJSONSchema;
+      return schema;
+    } catch {
+      return undefined;
+    }
   }, [data?.siloSpecification]);
 
   useEffect(() => {

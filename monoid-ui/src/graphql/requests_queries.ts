@@ -1,6 +1,6 @@
-import { gql } from '@apollo/client';
+import { gql } from '__generated__/gql';
 
-export const GET_PRIMARY_KEYS = gql`
+export const GET_PRIMARY_KEYS = gql(`
   query GetPrimaryKeys($id: ID!) {
     workspace(id: $id) {
       id
@@ -11,9 +11,9 @@ export const GET_PRIMARY_KEYS = gql`
       }
     }
   }
-`;
+`);
 
-export const GET_REQUESTS = gql`
+export const GET_REQUESTS = gql(`
 query GetRequests($id: ID!, $limit: Int!, $offset: Int) {
   workspace(id: $id) {
     id
@@ -28,13 +28,13 @@ query GetRequests($id: ID!, $limit: Int!, $offset: Int) {
     }
   }
 }
-`;
+`);
 
-export const EXECUTE_REQUEST = gql`
+export const EXECUTE_REQUEST = gql(`
   mutation ExecuteRequest($id: ID!) {
     executeUserDataRequest(requestId: $id) {
       id
       status
     }
   }
-`;
+`);

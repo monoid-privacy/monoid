@@ -1,6 +1,5 @@
-import { gql, useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import PageHeader from 'components/PageHeader';
-import { Job } from 'lib/models';
 import { ApplyAlertsButton, SiloAlertCardBody } from 'pages/Silos/pages/SiloPage/components/SiloAlerts';
 import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
@@ -10,8 +9,10 @@ import Button from 'components/Button';
 import Card from 'components/Card';
 import Spinner from 'components/Spinner';
 import AlertRegion from 'components/AlertRegion';
+import { gql } from '__generated__/gql';
+import { DiscoveryStatus } from '__generated__/graphql';
 
-const GET_JOB = gql`
+const GET_JOB = gql(`
   query GetJobStatus($workspaceId: ID!, $id: ID!) {
     workspace(id: $workspaceId) {
       job(
@@ -22,7 +23,7 @@ const GET_JOB = gql`
       }
     }
   }
-`;
+`);
 
 export default function AlertStepBody(props: {
   siloId: string,
@@ -34,10 +35,10 @@ export default function AlertStepBody(props: {
 
   const {
     data, loading, error, stopPolling,
-  } = useQuery<{ workspace: { job: Job } }>(GET_JOB, {
+  } = useQuery(GET_JOB, {
     variables: {
       id: jobId,
-      workspaceId: id,
+      workspaceId: id!,
     },
     pollInterval: 1000,
   });
@@ -97,7 +98,7 @@ export default function AlertStepBody(props: {
         }
         {scanFinished && (
           <SiloAlertCardBody
-            statuses={['OPEN']}
+            statuses={[DiscoveryStatus.Open]}
             query=""
             siloId={siloId}
             hideEmptyAction

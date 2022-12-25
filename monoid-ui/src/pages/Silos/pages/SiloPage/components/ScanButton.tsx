@@ -1,25 +1,25 @@
 import {
-  ApolloError, gql, useApolloClient, useMutation, useQuery,
+  ApolloError, useApolloClient, useMutation, useQuery,
 } from '@apollo/client';
 import { XCircleIcon } from '@heroicons/react/24/outline';
 import React, { useContext, useEffect } from 'react';
 import { RUN_SOURCE_SCAN } from 'graphql/jobs_queries';
+import { gql } from '__generated__/gql';
 import ToastContext from '../../../../../contexts/ToastContext';
 import AlertRegion from '../../../../../components/AlertRegion';
 import Button from '../../../../../components/Button';
 import Spinner from '../../../../../components/Spinner';
-import { Job } from '../../../../../lib/models';
 
-const CANCEL_JOB = gql`
+const CANCEL_JOB = gql(`
   mutation CancelJob($id: ID!) {
     cancelJob(id: $id) {
       id
       status
     }
   }
-`;
+`);
 
-const RUNNING_DETECT_SILO_JOBS = gql`
+const RUNNING_DETECT_SILO_JOBS = gql(`
   query RunningDiscoverJobs($workspaceId: ID!, $resourceId: ID!) {
     workspace(id: $workspaceId) {
       id
@@ -32,7 +32,7 @@ const RUNNING_DETECT_SILO_JOBS = gql`
       }
     }
   }
-`;
+`);
 
 type CoreScanButtonProps = {
   siloId: string,
@@ -41,7 +41,7 @@ type CoreScanButtonProps = {
 };
 
 function CoreScanButton({ siloId, workspaceId, children }: CoreScanButtonProps) {
-  const [runScan, runScanRes] = useMutation<{ detectSiloSources: Job }>(RUN_SOURCE_SCAN);
+  const [runScan, runScanRes] = useMutation(RUN_SOURCE_SCAN);
   const client = useApolloClient();
   const toastCtx = useContext(ToastContext);
 
@@ -100,7 +100,7 @@ function ScanButtonRegion(props: {
     loading,
     refetch,
     error,
-  } = useQuery<{ workspace: { jobs: { jobs: Job[] } } }>(RUNNING_DETECT_SILO_JOBS, {
+  } = useQuery(RUNNING_DETECT_SILO_JOBS, {
     variables: {
       workspaceId,
       resourceId: siloId,

@@ -1,15 +1,16 @@
 import React, { useContext, useMemo, useState } from 'react';
 import {
-  ApolloError, gql, useMutation, useQuery,
+  ApolloError, useMutation, useQuery,
 } from '@apollo/client';
 import { useParams, useSearchParams } from 'react-router-dom';
 import {
   CircleStackIcon, FolderIcon, PlusIcon, XCircleIcon,
 } from '@heroicons/react/24/outline';
+import { gql } from '__generated__/gql';
 import Table from '../../../../../components/Table';
 import Spinner from '../../../../../components/Spinner';
 import AlertRegion from '../../../../../components/AlertRegion';
-import { QueryResult, Request, SiloDefinition } from '../../../../../lib/models';
+import { QueryResult, SiloDefinition } from '../../../../../lib/models';
 import Badge, { BadgeColor } from '../../../../../components/Badge';
 import SVGText from '../../../../../components/SVGText';
 import Pagination from '../../../../../components/Pagination';
@@ -18,7 +19,7 @@ import { SiloDefTag } from '../../../../DataMap/DataMapPage';
 import Button from '../../../../../components/Button';
 import ToastContext from '../../../../../contexts/ToastContext';
 
-const FILTER_OPTIONS_QUERY = gql`
+const FILTER_OPTIONS_QUERY = gql(`
   query RequestFilterOptionsQuery($workspaceId: ID!) {
     workspace(id: $workspaceId) {
       id
@@ -32,9 +33,9 @@ const FILTER_OPTIONS_QUERY = gql`
       }
     }
   }
-`;
+`);
 
-const GET_REQUEST_DATA = gql`
+const GET_REQUEST_DATA = gql(`
 query GetRequestData($id: ID!, $limit: Int!, $offset: Int!, $query: RequestStatusQuery!) {
   request(id: $id) {
     id
@@ -67,15 +68,15 @@ query GetRequestData($id: ID!, $limit: Int!, $offset: Int!, $query: RequestStatu
     }
   }
 }
-`;
+`);
 
-const GET_QUERY_RESULT_FILE = gql`
+const GET_QUERY_RESULT_FILE = gql(`
   mutation GetQueryResultFile($id: ID!) {
     generateQueryResultDownloadLink(queryResultId: $id) {
       url
     }
   }
-`;
+`);
 
 export function StatusBadge({ status }: { status: string }) {
   let disp = status;
@@ -115,7 +116,7 @@ function Filters(props: {
   const { id } = useParams<{ id: string }>();
   const { data, loading, error } = useQuery(FILTER_OPTIONS_QUERY, {
     variables: {
-      workspaceId: id,
+      workspaceId: id!,
     },
   });
 
@@ -132,14 +133,14 @@ function Filters(props: {
   }
 
   const siloDefFormat = (v: FilterValue) => (
-    <SiloDefTag siloDefs={data?.workspace.siloDefinitions || []} value={v} />
+    <SiloDefTag siloDefs={(data?.workspace.siloDefinitions || []) as SiloDefinition[]} value={v} />
   );
 
   return (
     <FilterRegion
       filterOptions={[{
         name: 'Data Silos',
-        options: data?.workspace.siloDefinitions.map((d: SiloDefinition) => ({
+        options: data?.workspace.siloDefinitions.map((d) => ({
           key: d.id!,
           content: d.name,
         })) || [],
@@ -164,7 +165,7 @@ function RecordCell(props: { queryResult: QueryResult }) {
   const toastCtx = useContext(ToastContext);
   const [genLink, genLinkRes] = useMutation(GET_QUERY_RESULT_FILE, {
     variables: {
-      id: queryResult.id,
+      id: queryResult.id!,
     },
   });
 
@@ -257,11 +258,9 @@ export default function RequestStatuses() {
 
   const {
     data, loading, error, fetchMore,
-  } = useQuery<{
-    request: Request
-  }>(GET_REQUEST_DATA, {
+  } = useQuery(GET_REQUEST_DATA, {
     variables: {
-      id: requestId,
+      id: requestId!,
       limit: 10,
       offset,
       query,
@@ -306,7 +305,7 @@ export default function RequestStatuses() {
           key: req.id!,
           nestedComponent: req.queryResult && (
             <tr>
-              <RecordCell queryResult={req.queryResult} />
+              <RecordCell queryResult={req.queryResult as QueryResult} />
             </tr>
           ),
           columns: [
@@ -323,7 +322,7 @@ export default function RequestStatuses() {
                       />
                     )}
                   <div>
-                    {req?.dataSource?.siloDefinition?.name}
+                    {req?.dataSource.siloDefinition.name}
                   </div>
                 </div>
               ),
@@ -334,13 +333,13 @@ export default function RequestStatuses() {
                 <div className="flex flex-col space-y-1">
                   <div className="flex items-center space-x-1">
                     <CircleStackIcon className="w-4 h-4" />
-                    <div>{req.dataSource?.name}</div>
+                    <div>{req.dataSource.name}</div>
                   </div>
-                  {req.dataSource?.group
+                  {req.dataSource.group
                     && (
                       <div className="flex items-center space-x-1 text-xs text-gray-400">
                         <FolderIcon className="w-4 h-4" />
-                        <div>{req.dataSource?.group}</div>
+                        <div>{req.dataSource.group}</div>
                       </div>
                     )}
                 </div>
@@ -375,7 +374,7 @@ export default function RequestStatuses() {
                 setOffset(o);
               });
             }}
-            totalCount={request?.requestStatuses?.numStatuses || 0}
+            totalCount={request?.requestStatuses.numStatuses || 0}
           />
         )}
       />

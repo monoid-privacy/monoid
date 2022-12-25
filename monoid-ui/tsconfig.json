@@ -22,6 +22,7 @@
     "baseUrl": "src"
   },
   "include": [
-    "src"
+    "src",
+    "codegen.ts"
   ]
 }

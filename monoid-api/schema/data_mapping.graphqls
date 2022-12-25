@@ -118,11 +118,11 @@ type DataMapResult {
 }
 
 extend type Query {
-    dataSource(id: ID!): DataSource
-    siloSpecification(id: ID!): SiloSpecification
-    category(id: ID!): Category
-    subject(id: ID!): Subject
-    property(id: ID!): Property
+    dataSource(id: ID!): DataSource!
+    siloSpecification(id: ID!): SiloSpecification!
+    category(id: ID!): Category!
+    subject(id: ID!): Subject!
+    property(id: ID!): Property!
 }
 
 extend type Workspace {

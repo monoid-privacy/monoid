@@ -1,7 +1,8 @@
 import React, { useContext, useState } from 'react';
-import { gql, useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { XCircleIcon } from '@heroicons/react/24/outline';
+import { gql } from '__generated__/gql';
 import Button from '../../components/Button';
 import { H2 } from '../../components/Headers';
 import Input, { InputLabel } from '../../components/Input';
@@ -13,13 +14,13 @@ import PageCenter from '../../components/PageCenter';
 import Spinner from '../../components/Spinner';
 import ToastContext from '../../contexts/ToastContext';
 
-const CREATE_WORKSPACE = gql`
+const CREATE_WORKSPACE = gql(`
   mutation CreateWorkspace($input: CreateWorkspaceInput!) {
     createWorkspace(input: $input) {
       id
     }
   }
-`;
+`);
 
 export default function OnboardingForm() {
   const [formData, setFormData] = useState({
@@ -114,7 +115,7 @@ export default function OnboardingForm() {
                   },
                 },
               }).then(({ data }) => {
-                navigate(`/workspaces/${data.createWorkspace.id}`);
+                navigate(`/workspaces/${data?.createWorkspace.id}`);
               }).catch((err) => {
                 toastCtx.showToast(
                   {

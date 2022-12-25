@@ -24,7 +24,7 @@ function ScansListCardBody(props: { query: string }) {
     fetchPolicy: 'cache-and-network',
     nextFetchPolicy: () => 'cache-first',
     variables: {
-      workspaceId: id,
+      workspaceId: id!,
       status: [],
       limit: 10,
       offset,
@@ -44,7 +44,7 @@ function ScansListCardBody(props: { query: string }) {
     );
   }
 
-  if (!data.workspace.jobs.jobs.length) {
+  if (!data?.workspace.jobs.jobs.length) {
     return (
       <EmptyState
         icon={MagnifyingGlassIcon}
@@ -62,7 +62,7 @@ function ScansListCardBody(props: { query: string }) {
     <>
       <ul className="divide-y divide-gray-200">
         {
-          data.workspace.jobs.jobs.map((j: Job) => (
+          (data?.workspace.jobs.jobs as Job[]).map((j: Job) => (
             <JobRow key={j.id!} job={j} showSiloDefinition />
           ))
         }

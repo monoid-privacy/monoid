@@ -177,15 +177,15 @@ func (r *mutationResolver) UpdateSiloDefinition(ctx context.Context, input *mode
 }
 
 // DeleteSiloDefinition is the resolver for the deleteSiloDefinition field.
-func (r *mutationResolver) DeleteSiloDefinition(ctx context.Context, id string) (*string, error) {
+func (r *mutationResolver) DeleteSiloDefinition(ctx context.Context, id string) (string, error) {
 	siloDefinition := &model.SiloDefinition{}
 
 	if err := r.Conf.DB.Where("id = ?", id).Preload("Subjects").Preload("DataSources").First(siloDefinition).Error; err != nil {
-		return nil, handleError(err, "Error finding silo definition.")
+		return "", handleError(err, "Error finding silo definition.")
 	}
 
 	if err := r.Conf.DB.Delete(siloDefinition).Error; err != nil {
-		return nil, handleError(err, "Error deleting silo definition.")
+		return "", handleError(err, "Error deleting silo definition.")
 	}
 
 	r.Conf.AnalyticsIngestor.Track("siloAction", nil, map[string]interface{}{
@@ -195,7 +195,7 @@ func (r *mutationResolver) DeleteSiloDefinition(ctx context.Context, id string) 
 
 	// TODO: Check that deletes properly cascade to subjects (m2m) and datasources (12m)
 
-	return &id, nil
+	return id, nil
 }
 
 // SiloDefinition is the resolver for the siloDefinition field.

@@ -9,22 +9,23 @@ import Text from 'components/Text';
 import { BristA } from 'components/Link';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import Button from 'components/Button';
-import { ApolloError, gql, useMutation } from '@apollo/client';
+import { ApolloError, useMutation } from '@apollo/client';
 import ToastContext from 'contexts/ToastContext';
+import { gql } from '__generated__/gql';
 import UserIdentifierStepBody from './components/UserIdentifierStepBody';
 import CreateSiloDefBody from './components/CreateSiloDefBody';
 import AlertStepBody from './components/AlertStepBody';
 import RequestBody from './components/RequestStepBody';
 import SiloSourcesBody from './components/SiloSourcesStepBody';
 
-const COMPLETE_ONBOARDING = gql`
+const COMPLETE_ONBOARDING = gql(`
   mutation CompleteOnboarding($id: ID!) {
     completeWorkspaceOnboarding(id: $id) {
       id
       onboardingComplete
     }
   }
-`;
+`);
 
 export default function OnboardingFlow() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -32,7 +33,7 @@ export default function OnboardingFlow() {
 
   const [completeOnboarding] = useMutation(COMPLETE_ONBOARDING, {
     variables: {
-      id,
+      id: id!,
     },
   });
 
