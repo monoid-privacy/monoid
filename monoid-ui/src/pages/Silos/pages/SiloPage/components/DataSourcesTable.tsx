@@ -298,7 +298,7 @@ function DataSourcesTable(props: { siloDef?: SiloDefinition, type: 'card' | 'pla
               View Alerts
             </Button>
           ) : (
-            <Button>
+            <Button to="new" type="link">
               New Data Source
             </Button>
           )
