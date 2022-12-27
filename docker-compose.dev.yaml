@@ -118,7 +118,7 @@ services:
     build:
       dockerfile: cmd/tools/loader/Dockerfile
       context: ./monoid-api
-    command: /app/config-data
+    command: /config-data
     environment:
       - DB_USER=${DATABASE_USER}
       - DB_PASS=${DATABASE_PASSWORD}
@@ -132,6 +132,8 @@ services:
         condition: service_healthy
     networks:
       - monoid-network
+    volumes:
+      - ./monoid-api/config-data:/config-data
   worker:
     build:
       dockerfile: Dockerfile.dev

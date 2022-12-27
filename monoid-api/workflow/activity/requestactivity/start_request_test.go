@@ -74,7 +74,7 @@ func (s *startRequestTestSuite) teardownDB() {
 
 	s.db.Transaction(func(tx *gorm.DB) error {
 		for _, m := range models {
-			s.db.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&m)
+			s.db.Unscoped().Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&m)
 		}
 
 		return nil

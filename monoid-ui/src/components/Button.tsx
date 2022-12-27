@@ -2,9 +2,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { classNames } from '../utils/utils';
 
+export type ButtonVariant = 'primary' | 'white' | 'outline-white' | 'danger' | 'outline-danger';
+
 interface ButtonProps extends Omit<React.HTMLProps<HTMLButtonElement>, 'size'> {
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl',
-  variant?: 'primary' | 'white' | 'outline-white' | 'danger',
+  variant?: ButtonVariant,
   type?: 'button' | 'link',
   to?: string
 }
@@ -45,6 +47,17 @@ export default function Button(props: ButtonProps) {
 
       if (disabled) {
         colorClasses = 'border border-gray-100 bg-white text-gray-200';
+      }
+
+      classes = classNames(classes, colorClasses);
+
+      break;
+    }
+    case 'outline-danger': {
+      let colorClasses = 'border border-gray-300 bg-white text-red-700 hover:bg-red-50';
+
+      if (disabled) {
+        colorClasses = 'border border-red-700 bg-white text-red-200';
       }
 
       classes = classNames(classes, colorClasses);

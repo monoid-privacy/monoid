@@ -21,17 +21,23 @@ const GET_SILO_TITLE_DATA = gql(`
         id
         name
         logo
+        manual
       }
     }
   }
 `);
 
+type SiloDataSourcesTabData = {
+  newOpen: boolean
+};
+
 export default function SiloPage(
   props: {
-    tab: 'settings' | 'data_sources' | 'alerts' | 'scans'
+    tab: 'settings' | 'data_sources' | 'alerts' | 'scans',
+    tabData?: SiloDataSourcesTabData | null
   },
 ) {
-  const { tab } = props;
+  const { tab, tabData } = props;
   const navigate = useNavigate();
   const { siloId } = useParams<{ siloId: string, id: string }>();
   const { data, loading, error } = useQuery(GET_SILO_TITLE_DATA, {
@@ -79,21 +85,21 @@ export default function SiloPage(
           {
             tabName: 'Data Sources',
             tabKey: 'data_sources',
-            tabBody: <SiloDataSources />,
+            tabBody: <SiloDataSources newOpen={tabData?.newOpen || false} />,
           }, {
             tabName: 'Silo Settings',
             tabKey: 'settings',
             tabBody: <SiloConfig />,
-          }, {
+          }, !siloDef?.siloSpecification?.manual && {
             tabName: 'Scans',
             tabKey: 'scans',
             tabBody: <SiloScans />,
-          }, {
+          }, !siloDef?.siloSpecification?.manual && {
             tabName: <SiloAlertsTabHeader />,
             tabKey: 'alerts',
             tabBody: <SiloAlerts />,
           },
-        ]}
+        ].filter(Boolean) as { tabName: string, tabKey: string, tabBody: React.ReactNode }[]}
         current={tab}
         setCurrent={(c) => {
           navigate(`../${c}`);
@@ -104,3 +110,7 @@ export default function SiloPage(
     </>
   );
 }
+
+SiloPage.defaultProps = {
+  tabData: undefined,
+};

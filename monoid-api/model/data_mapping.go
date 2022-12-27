@@ -3,6 +3,8 @@ package model
 import (
 	"fmt"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // SiloSpecification is the information about all silos that have
@@ -13,6 +15,7 @@ type SiloSpecification struct {
 	LogoURL         *string
 	WorkspaceID     *string
 	Workspace       *Workspace `gorm:"constraint:OnDelete:CASCADE;"`
+	Manual          bool       `gorm:"default:false"`
 	DockerImage     string
 	DockerTag       string
 	Schema          *string
@@ -58,6 +61,94 @@ type DataSource struct {
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt
+}
+
+func DeleteProperty(propID string, db *gorm.DB) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		prop := Property{}
+		if err := tx.Where(
+			"id = ?",
+			propID,
+		).Preload("DataSource").First(&prop).Error; err != nil {
+			return err
+		}
+
+		if err := deleteProperties(
+			prop.DataSource.SiloDefinitionID,
+			[]string{propID},
+			db,
+		); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func deleteProperties(siloID string, propIDs []string, db *gorm.DB) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&DataDiscovery{}).Where(
+			"silo_definition_id = ?",
+			siloID,
+		).Where(
+			"data->>'propertyId' IN (?)",
+			propIDs,
+		).Delete(nil).Error; err != nil {
+			return err
+		}
+
+		// Soft delete any properties that are associated with this data source
+		if err := tx.Model(&Property{}).Where(
+			"id IN (?)",
+			propIDs,
+		).Delete(nil).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func DeleteDataSource(dsid string, db *gorm.DB) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		dataSource := &DataSource{}
+
+		if err := tx.Where(
+			"id = ?",
+			dsid,
+		).Preload("Properties").First(dataSource).Error; err != nil {
+			return err
+		}
+
+		propertyIDs := make([]string, len(dataSource.Properties))
+
+		for i, p := range dataSource.Properties {
+			propertyIDs[i] = p.ID
+		}
+
+		// Soft delete the data source
+		if err := tx.Delete(dataSource).Error; err != nil {
+			return err
+		}
+
+		// Hard delete any discoveries that reference this data source
+		if err := tx.Model(&DataDiscovery{}).Where(
+			"silo_definition_id = ?",
+			dataSource.SiloDefinitionID,
+		).Where(
+			"data->>'dataSourceId' = ?",
+			dataSource.ID,
+		).Delete(nil).Error; err != nil {
+			return err
+		}
+
+		if err := deleteProperties(dataSource.SiloDefinitionID, propertyIDs, tx); err != nil {
+			return err
+		}
+
+		return nil
+	})
 }
 
 func (ds *DataSource) KeyField(field string) (string, error) {
@@ -80,6 +171,7 @@ type Property struct {
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt
 }
 
 type Subject struct {

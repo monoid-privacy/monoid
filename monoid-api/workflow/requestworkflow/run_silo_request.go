@@ -35,6 +35,12 @@ type ExecuteSiloRequestResult struct {
 	Status model.FullRequestStatus
 }
 
+type SiloUpdateStatusSignal struct {
+	RequestStatusID string
+}
+
+const SiloUpdateStatusSignalChannel = "silo-update-status"
+
 func (w *RequestWorkflow) ExecuteSiloRequestWorkflow(
 	ctx workflow.Context,
 	args SiloRequestArgs,
@@ -47,6 +53,7 @@ func (w *RequestWorkflow) ExecuteSiloRequestWorkflow(
 		},
 	}
 
+	signalChan := workflow.GetSignalChannel(ctx, SiloUpdateStatusSignalChannel)
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	ac := requestactivity.RequestActivity{}
@@ -99,11 +106,22 @@ func (w *RequestWorkflow) ExecuteSiloRequestWorkflow(
 			// If the request was already completed, without needing any processing, then mark it as
 			// executed.
 			if res.FullyComplete {
+				// Since this request was successful, the full request result is, at worst partial failed.
 				requestRes.Status = model.FullRequestStatusPartialFailed
 
 				if terr := updateRequest(ctx, res.RequestStatusID, model.RequestStatusTypeExecuted); terr != nil {
 					logger.Error("Error updating request", terr)
 				}
+
+				continue
+			}
+
+			if res.Manual {
+				if terr := updateRequest(ctx, res.RequestStatusID, model.RequestStatusTypeManualNeeded); terr != nil {
+					logger.Error("Error updating request", terr)
+				}
+
+				newProcessing = append(newProcessing, res)
 
 				continue
 			}
@@ -180,15 +198,87 @@ func (w *RequestWorkflow) ExecuteSiloRequestWorkflow(
 			break
 		}
 
-		// Sleep before getting the new statuses, so we aren't hitting apis too frequently.
-		if err := workflow.Sleep(ctx, pollTime); err != nil {
-			return ExecuteSiloRequestResult{}, err
+		selector := workflow.NewSelector(ctx)
+		timerTriggered := false
+		var signal SiloUpdateStatusSignal
+
+		selector.AddReceive(signalChan, func(c workflow.ReceiveChannel, more bool) {
+			c.Receive(ctx, &signal)
+		})
+
+		timer := workflow.NewTimer(ctx, pollTime)
+		selector.AddFuture(timer, func(f workflow.Future) {
+			timerTriggered = true
+		})
+
+		selector.Select(ctx)
+
+		for !timerTriggered {
+			filteredProcessing := make([]requestactivity.RequestStatusItem, 0, len(newProcessing))
+
+			for _, r := range newProcessing {
+				if r.RequestStatusID == signal.RequestStatusID {
+					res := requestactivity.RequestStatusResult{}
+
+					if err := workflow.ExecuteActivity(ctx, ac.RequestStatusActivity, requestactivity.RequestStatusArgs{
+						RequestStatusIDs: []string{r.RequestStatusID},
+					}).Get(ctx, &res); err != nil {
+						return requestRes, err
+					}
+
+					if len(res.ResultItems) != 1 {
+						continue
+					}
+
+					if res.ResultItems[0].Error != nil {
+						hasFailures = true
+
+						if terr := updateRequest(ctx, res.ResultItems[0].RequestStatusID, model.RequestStatusTypeFailed); terr != nil {
+							logger.Error("Error updating request", terr)
+						}
+
+						continue
+					}
+
+					// If the request was already completed, without needing any processing, then mark it as
+					// executed.
+					if res.ResultItems[0].FullyComplete {
+						// Since this request was successful, the full request result is, at worst partial failed.
+						requestRes.Status = model.FullRequestStatusPartialFailed
+
+						if terr := updateRequest(ctx, res.ResultItems[0].RequestStatusID, model.RequestStatusTypeExecuted); terr != nil {
+							logger.Error("Error updating request", terr)
+						}
+
+						continue
+					}
+
+					filteredProcessing = append(filteredProcessing, res.ResultItems[0])
+
+					continue
+				}
+
+				filteredProcessing = append(filteredProcessing, r)
+			}
+
+			newProcessing = filteredProcessing
+
+			if len(newProcessing) == 0 {
+				break
+			}
+
+			selector.Select(ctx)
 		}
 
 		// Run another request to get the status, and process again.
 		statusIDs := make([]string, 0, len(newProcessing))
 		for _, r := range newProcessing {
 			statusIDs = append(statusIDs, r.RequestStatusID)
+		}
+
+		if len(newProcessing) == 0 {
+			processing = newProcessing
+			continue
 		}
 
 		res := requestactivity.RequestStatusResult{}

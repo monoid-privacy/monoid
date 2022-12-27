@@ -30,26 +30,50 @@ func (r *dataSourceResolver) Properties(ctx context.Context, obj *model.DataSour
 	return dataloader.DataSourceProperties(ctx, obj.ID)
 }
 
+// Deleted is the resolver for the deleted field.
+func (r *dataSourceResolver) Deleted(ctx context.Context, obj *model.DataSource) (bool, error) {
+	return obj.DeletedAt.Valid, nil
+}
+
 // CreateDataSource is the resolver for the createDataSource field.
-func (r *mutationResolver) CreateDataSource(ctx context.Context, input *model.CreateDataSourceInput) (*model.DataSource, error) {
+func (r *mutationResolver) CreateDataSource(ctx context.Context, input model.CreateDataSourceInput) (*model.DataSource, error) {
 	dataSource := model.DataSource{
 		ID:               uuid.NewString(),
 		SiloDefinitionID: input.SiloDefinitionID,
-		Description:      input.Description,
+		Name:             input.Name,
+		Group:            input.Group,
 	}
 
-	if err := r.Conf.DB.Create(&dataSource).Error; err != nil {
-		return nil, handleError(err, "Error creating dataSource.")
-	}
+	if err := r.Conf.DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(&dataSource).Error; err != nil {
+			return err
+		}
 
-	properties := []model.Property{}
+		properties := []model.Property{}
 
-	if err := r.Conf.DB.Where("id IN ?", input.PropertyIDs).Find(&properties).Error; err != nil {
-		return nil, handleError(err, "Error finding properties.")
-	}
+		for _, pr := range input.Properties {
+			fmt.Println("Cat", pr.CategoryIDs)
 
-	if err := r.Conf.DB.Model(&dataSource).Association("Properties").Append(properties); err != nil {
-		return nil, handleError(err, "Error creating properties")
+			cats := make([]*model.Category, len(pr.CategoryIDs))
+			for i, c := range pr.CategoryIDs {
+				cats[i] = &model.Category{ID: c}
+			}
+
+			properties = append(properties, model.Property{
+				ID:           uuid.NewString(),
+				Name:         pr.Name,
+				Categories:   cats,
+				DataSourceID: dataSource.ID,
+			})
+		}
+
+		if err := tx.Create(properties).Error; err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
+		return nil, handleError(err, "Error creating data source.")
 	}
 
 	return &dataSource, nil
@@ -78,6 +102,7 @@ func (r *mutationResolver) CreateProperty(ctx context.Context, input *model.Crea
 	property := model.Property{
 		ID:           uuid.NewString(),
 		DataSourceID: input.DataSourceID,
+		Name:         input.Property.Name,
 	}
 
 	if err := r.Conf.DB.Create(&property).Error; err != nil {
@@ -86,22 +111,12 @@ func (r *mutationResolver) CreateProperty(ctx context.Context, input *model.Crea
 
 	categories := []model.Category{}
 
-	if err := r.Conf.DB.Where("id IN ?", input.CategoryIDs).Find(&categories).Error; err != nil {
+	if err := r.Conf.DB.Where("id IN ?", input.Property.CategoryIDs).Find(&categories).Error; err != nil {
 		return nil, handleError(err, "Error finding categories.")
 	}
 
 	if err := r.Conf.DB.Model(&property).Association("Categories").Append(categories); err != nil {
 		return nil, handleError(err, "Error creating categories.")
-	}
-
-	purposes := []model.Purpose{}
-
-	if err := r.Conf.DB.Where("id IN ?", input.PurposeIDs).Find(&purposes).Error; err != nil {
-		return nil, handleError(err, "Error finding purposes.")
-	}
-
-	if err := r.Conf.DB.Model(&property).Association("Purposes").Append(purposes); err != nil {
-		return nil, handleError(err, "Error creating purposes.")
 	}
 
 	return &property, nil
@@ -164,19 +179,6 @@ func (r *mutationResolver) UpdateProperty(ctx context.Context, input *model.Upda
 		return nil, handleError(err, "Error finding property.")
 	}
 
-	// Updating purposes
-	if input.PurposeIDs != nil {
-		purposes := []model.Purpose{}
-
-		if err := r.Conf.DB.Where("id IN ?", input.PurposeIDs).Find(&purposes).Error; err != nil {
-			return nil, handleError(err, "Error updating property.")
-		}
-
-		if err := r.Conf.DB.Model(&property).Association("Purposes").Replace(&purposes); err != nil {
-			return nil, handleError(err, "Error updating property.")
-		}
-	}
-
 	// Updating categories
 	if input.CategoryIDs != nil {
 		categories := []model.Category{}
@@ -204,17 +206,9 @@ func (r *mutationResolver) UpdateSubject(ctx context.Context, input *model.Updat
 
 // DeleteDataSource is the resolver for the deleteDataSource field.
 func (r *mutationResolver) DeleteDataSource(ctx context.Context, id string) (*string, error) {
-	dataSource := &model.DataSource{}
-
-	if err := r.Conf.DB.Where("id = ?", id).First(dataSource).Error; err != nil {
-		return nil, handleError(err, "Error finding data source.")
-	}
-
-	if err := r.Conf.DB.Delete(dataSource).Error; err != nil {
+	if err := model.DeleteDataSource(id, r.Conf.DB); err != nil {
 		return nil, handleError(err, "Error deleting data source.")
 	}
-
-	// TODO: Ensure that deletes cascade to properties (and purposes, categories for properties)
 
 	return &id, nil
 }
@@ -238,7 +232,11 @@ func (r *mutationResolver) DeleteSiloSpecification(ctx context.Context, id strin
 
 // DeleteProperty is the resolver for the deleteProperty field.
 func (r *mutationResolver) DeleteProperty(ctx context.Context, id string) (*string, error) {
-	return DeleteObjectByID[model.Property](id, r.Conf.DB, "Error deleting property.")
+	if err := model.DeleteProperty(id, r.Conf.DB); err != nil {
+		return nil, handleError(err, "Error deleting property.")
+	}
+
+	return &id, nil
 }
 
 // DeleteSubject is the resolver for the deleteSubject field.
@@ -320,7 +318,7 @@ func (r *propertyResolver) Categories(ctx context.Context, obj *model.Property) 
 // DataSource is the resolver for the dataSource field.
 func (r *propertyResolver) DataSource(ctx context.Context, obj *model.Property) (*model.DataSource, error) {
 	ds := model.DataSource{}
-	if err := r.Conf.DB.Model(obj).Association("DataSource").Find(&ds); err != nil {
+	if err := r.Conf.DB.Unscoped().Model(obj).Association("DataSource").Find(&ds); err != nil {
 		return nil, err
 	}
 
@@ -387,7 +385,7 @@ func (r *workspaceResolver) DataMap(ctx context.Context, obj *model.Workspace, q
 		"data_sources.name",
 		"properties.name",
 	).Table("silo_definitions").Joins(
-		"LEFT JOIN data_sources ON data_sources.silo_definition_id = silo_definitions.id",
+		"LEFT JOIN data_sources ON data_sources.silo_definition_id = silo_definitions.id AND data_sources.deleted_at is NULL",
 	).Joins(
 		"LEFT JOIN properties ON properties.data_source_id = data_sources.id",
 	).Joins(

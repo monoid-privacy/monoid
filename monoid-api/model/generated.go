@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+
+	"github.com/99designs/gqlgen/graphql"
 )
 
 type CategoryQuery struct {
@@ -20,15 +22,15 @@ type CreateCategoryInput struct {
 }
 
 type CreateDataSourceInput struct {
-	SiloDefinitionID string   `json:"siloDefinitionID"`
-	Description      *string  `json:"description"`
-	PropertyIDs      []string `json:"propertyIDs"`
+	SiloDefinitionID string           `json:"siloDefinitionID"`
+	Name             string           `json:"name"`
+	Group            *string          `json:"group"`
+	Properties       []*PropertyInput `json:"properties"`
 }
 
 type CreatePropertyInput struct {
-	CategoryIDs  []string `json:"categoryIDs"`
-	DataSourceID string   `json:"dataSourceID"`
-	PurposeIDs   []string `json:"purposeIDs"`
+	Property     *PropertyInput `json:"property"`
+	DataSourceID string         `json:"dataSourceID"`
 }
 
 type CreateSiloDefinitionInput struct {
@@ -109,6 +111,11 @@ type MonoidRecordResponse struct {
 	SchemaName  string  `json:"SchemaName"`
 }
 
+type PropertyInput struct {
+	Name        string   `json:"name"`
+	CategoryIDs []string `json:"categoryIDs"`
+}
+
 type RequestStatusListResult struct {
 	RequestStatusRows []*RequestStatus `json:"requestStatusRows"`
 	NumStatuses       int              `json:"numStatuses"`
@@ -135,7 +142,12 @@ type UpdateDataSourceInput struct {
 type UpdatePropertyInput struct {
 	ID          string   `json:"id"`
 	CategoryIDs []string `json:"categoryIDs"`
-	PurposeIDs  []string `json:"purposeIDs"`
+}
+
+type UpdateRequestStatusInput struct {
+	RequestStatusID string                  `json:"requestStatusId"`
+	Status          UpdateRequestStatusType `json:"status"`
+	ResultData      *graphql.Upload         `json:"resultData"`
 }
 
 type UpdateSiloDefinitionInput struct {
@@ -407,22 +419,24 @@ func (e JobStatus) MarshalGQL(w io.Writer) {
 type RequestStatusType string
 
 const (
-	RequestStatusTypeCreated    RequestStatusType = "CREATED"
-	RequestStatusTypeInProgress RequestStatusType = "IN_PROGRESS"
-	RequestStatusTypeExecuted   RequestStatusType = "EXECUTED"
-	RequestStatusTypeFailed     RequestStatusType = "FAILED"
+	RequestStatusTypeCreated      RequestStatusType = "CREATED"
+	RequestStatusTypeInProgress   RequestStatusType = "IN_PROGRESS"
+	RequestStatusTypeManualNeeded RequestStatusType = "MANUAL_NEEDED"
+	RequestStatusTypeExecuted     RequestStatusType = "EXECUTED"
+	RequestStatusTypeFailed       RequestStatusType = "FAILED"
 )
 
 var AllRequestStatusType = []RequestStatusType{
 	RequestStatusTypeCreated,
 	RequestStatusTypeInProgress,
+	RequestStatusTypeManualNeeded,
 	RequestStatusTypeExecuted,
 	RequestStatusTypeFailed,
 }
 
 func (e RequestStatusType) IsValid() bool {
 	switch e {
-	case RequestStatusTypeCreated, RequestStatusTypeInProgress, RequestStatusTypeExecuted, RequestStatusTypeFailed:
+	case RequestStatusTypeCreated, RequestStatusTypeInProgress, RequestStatusTypeManualNeeded, RequestStatusTypeExecuted, RequestStatusTypeFailed:
 		return true
 	}
 	return false
@@ -446,6 +460,47 @@ func (e *RequestStatusType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e RequestStatusType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type UpdateRequestStatusType string
+
+const (
+	UpdateRequestStatusTypeExecuted UpdateRequestStatusType = "EXECUTED"
+	UpdateRequestStatusTypeFailed   UpdateRequestStatusType = "FAILED"
+)
+
+var AllUpdateRequestStatusType = []UpdateRequestStatusType{
+	UpdateRequestStatusTypeExecuted,
+	UpdateRequestStatusTypeFailed,
+}
+
+func (e UpdateRequestStatusType) IsValid() bool {
+	switch e {
+	case UpdateRequestStatusTypeExecuted, UpdateRequestStatusTypeFailed:
+		return true
+	}
+	return false
+}
+
+func (e UpdateRequestStatusType) String() string {
+	return string(e)
+}
+
+func (e *UpdateRequestStatusType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = UpdateRequestStatusType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid UpdateRequestStatusType", str)
+	}
+	return nil
+}
+
+func (e UpdateRequestStatusType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

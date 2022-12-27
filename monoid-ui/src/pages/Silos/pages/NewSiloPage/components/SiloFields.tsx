@@ -14,6 +14,7 @@ const SILO_SPECIFICATION = gql(`
     siloSpecification(id: $id) {
       id
       schema
+      manual
     }
   }
 `);
@@ -277,8 +278,20 @@ export default function SiloFields(props: {
     );
   }
 
-  if (loading || !jsonSchema) {
+  if (loading) {
     return <Spinner />;
+  }
+
+  if (data?.siloSpecification.manual) {
+    return (
+      null
+    );
+  }
+
+  if (!jsonSchema) {
+    return (
+      <> No Schema </>
+    );
   }
 
   return (

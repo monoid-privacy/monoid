@@ -1,3 +1,5 @@
+scalar Upload
+
 type MonoidRecordResponse {
     data: String!
     SchemaGroup: String
@@ -75,6 +77,7 @@ enum FullRequestStatus {
 enum RequestStatusType {
     CREATED
     IN_PROGRESS
+    MANUAL_NEEDED
     EXECUTED
     FAILED
 }
@@ -110,11 +113,23 @@ type DownloadLink {
     url: String!
 }
 
+enum UpdateRequestStatusType {
+    EXECUTED
+    FAILED
+}
+
+input UpdateRequestStatusInput {
+    requestStatusId: ID!
+    status: UpdateRequestStatusType!
+    resultData: Upload
+}
+
 extend type Mutation {
     createUserPrimaryKey(input: CreateUserPrimaryKeyInput!): UserPrimaryKey
     updateUserPrimaryKey(input: UpdateUserPrimaryKeyInput!): UserPrimaryKey
     deleteUserPrimaryKey(id: ID!): ID
 
+    updateRequestStatus(input: UpdateRequestStatusInput!): RequestStatus!
 
     createUserDataRequest(input: UserDataRequestInput): Request
     executeUserDataRequest(requestId: ID!): Request

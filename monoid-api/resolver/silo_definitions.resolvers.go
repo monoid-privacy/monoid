@@ -38,27 +38,28 @@ func (r *mutationResolver) CreateSiloDefinition(ctx context.Context, input *mode
 	}
 
 	siloDefinition.SiloSpecification = siloSpec
-
-	res, err := r.validateSiloDef(
-		ctx,
-		fmt.Sprintf("ws-%s/silo-%s-%s", input.WorkspaceID, siloSpec.DockerImage, siloDefinition.ID),
-		siloDefinition,
-	)
-
 	analyticsData := map[string]interface{}{
 		"action": "create",
 		"siloId": siloDefinition.ID,
 	}
 
-	if err != nil {
-		return nil, handleError(err, "Error validating silo definition")
-	}
+	if !siloSpec.Manual {
+		res, err := r.validateSiloDef(
+			ctx,
+			fmt.Sprintf("ws-%s/silo-%s-%s", input.WorkspaceID, siloSpec.DockerImage, siloDefinition.ID),
+			siloDefinition,
+		)
 
-	if !res.success {
-		analyticsData["action"] = "create_validate_failed"
-		r.Conf.AnalyticsIngestor.Track("siloAction", nil, analyticsData)
+		if err != nil {
+			return nil, handleError(err, "Error validating silo definition")
+		}
 
-		return nil, gqlerror.Errorf(res.message)
+		if !res.success {
+			analyticsData["action"] = "create_validate_failed"
+			r.Conf.AnalyticsIngestor.Track("siloAction", nil, analyticsData)
+
+			return nil, gqlerror.Errorf(res.message)
+		}
 	}
 
 	if err := r.Conf.DB.Create(&siloDefinition).Error; err != nil {

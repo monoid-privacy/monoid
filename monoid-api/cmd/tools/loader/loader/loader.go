@@ -28,6 +28,7 @@ func LoadSpecs(conf *config.BaseConfig, configPath string) {
 		schema, err := json.Marshal(s.Spec)
 		if err != nil {
 			fmt.Printf("Error registering %s: %v\n", s.Name, err)
+			break
 		}
 
 		schemaStr := string(schema)
@@ -45,6 +46,7 @@ func LoadSpecs(conf *config.BaseConfig, configPath string) {
 			DockerImage: s.DockerImage,
 			DockerTag:   s.DockerTag,
 			Schema:      &schemaStr,
+			Manual:      s.Manual,
 		}
 
 		siloSpec := model.SiloSpecification{}
