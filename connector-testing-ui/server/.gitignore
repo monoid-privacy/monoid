@@ -1,0 +1,11 @@
+# ignore secrets and tmp directories
+secrets/
+tmp/
+
+# ignore Python bytecode files
+*.pyc
+__pycache__/
+
+# ignore log files
+*.log
+
