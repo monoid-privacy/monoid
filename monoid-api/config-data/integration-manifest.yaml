@@ -32,3 +32,9 @@
   id: f04a477d-9112-4c07-9e98-23615118f307
   manual: true
   logo: monoid.svg
+- name: Mixpanel
+  id: c67f04e0-9063-4a90-9555-17bde7554d5e
+  documentationUrl: https://docs.monoid.co
+  dockerImage: monoidco/monoid-mixpanel
+  dockerTag: 0.0.1
+  logo: mixpanel.svg
