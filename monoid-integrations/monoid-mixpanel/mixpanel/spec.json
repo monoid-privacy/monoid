@@ -40,12 +40,20 @@
         "title": "GDPR OAuth Secret",
         "order": 5,
         "description": "The Mixpanel GDPR OAuth secret"
+      }, 
+      "api_secret": {
+        "type": "string",
+        "secret": true,
+        "title": "API Secret",
+        "order": 6,
+        "description": "The Project's API secret"
       }
     },
     "required": [
         "project_name", 
         "project_token", 
-        "oauth_secret"
+        "oauth_secret", 
+        "api_secret"
     ]
   }
 }

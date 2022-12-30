@@ -332,11 +332,17 @@
   spec:
     $schema: http://json-schema.org/draft-07/schema#
     properties:
+        api_secret:
+            description: The Project's API secret
+            order: 6
+            secret: true
+            title: API Secret
+            type: string
         oauth_secret:
             description: The Mixpanel GDPR OAuth secret
             order: 5
             secret: true
-            title: Password
+            title: GDPR OAuth Secret
             type: string
         project_id:
             description: The ID of the Mixpanel project
@@ -368,4 +374,5 @@
         - project_name
         - project_token
         - oauth_secret
+        - api_secret
     type: object

@@ -1,8 +1,15 @@
 from typing import Dict, Any, Iterable, Optional, Tuple
 from enum import Enum
 from abc import ABC, abstractmethod
+import zipfile
+import tarfile 
+import os
+import urllib.parse
+import uuid
 from monoid_pydev.silos.db_data_store import DataStore
 import requests
+import zipfile 
+import tarfile
 from monoid_pydev.models import (
     MonoidRecord, MonoidSchema, MonoidQueryIdentifier, RequestStatus, DataType,
     MonoidRequestHandle, MonoidRequestResult, RequestType, MonoidRequestStatus, MonoidPersistenceConfig, RecordType
@@ -34,7 +41,7 @@ def switch_request_status(request_status: str) -> RequestType:
 
 class MixpanelDataStore(DataStore):
     def __init__(self, project_name: str, project_token: str, oauth_secret: str, project_id: int, \
-    store_type: MixpanelStoreType, service_account_username: str, service_account_password: str):
+    store_type: MixpanelStoreType, service_account_username: str, service_account_password: str, api_secret: str):
         self._project_name = project_name 
         self._project_id = project_id
         self._project_token = project_token
@@ -42,6 +49,7 @@ class MixpanelDataStore(DataStore):
         self._store_type = store_type
         self._service_account_username = service_account_username
         self._service_account_password = service_account_password
+        self._api_secret = api_secret
 
     def to_brist_schema(self):
         return MonoidSchema(
@@ -339,12 +347,17 @@ class MixpanelUserActivityStore(MixpanelDataStore):
             status = r["results"]["status"]
             request_status = switch_request_status(status)
             if request_status == RequestStatus.COMPLETE:
-                record = MonoidRecord(
-                    record_type=RecordType.FILE, 
-                    schema_name=self.name(), 
-                    schema_group=self.group(), 
-                    file=r["results"]["result"]
-                )
+                file_url = r["results"]["result"]
+                downloaded_file = self._download_and_decrypt_file(persistence_conf, file_url)
+                if downloaded_file is None: 
+                    request_status = RequestStatus.FAILED
+                else:
+                    record = MonoidRecord(
+                        record_type=RecordType.FILE, 
+                        schema_name=self.name(), 
+                        schema_group=self.group(), 
+                        file=downloaded_file
+                    )
 
         return MonoidRequestStatus(
             schema_group=self.group(),
@@ -352,7 +365,38 @@ class MixpanelUserActivityStore(MixpanelDataStore):
             request_status=request_status,
             data_type=DataType.FILE,
         ), record
-        
+    
+
+
+    def _download_file(self, url, filename):
+        r = requests.get(url, stream=True)
+        with open(filename, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                if chunk:  # filter out keep-alive new chunks
+                    f.write(chunk)
+
+
+    def _download_and_decrypt_file(
+        self, 
+        persistence_conf: MonoidPersistenceConfig,
+        file_url: str
+    ) -> Optional[str]:
+        """
+        Downloads and decrypts a file
+        """
+        id = str(uuid.uuid4())
+        dir = f'{persistence_conf.temp_store}/{id}'
+        filename = f'{persistence_conf.temp_store}/{id}.out'
+        file_url = file_url.strip().strip("\"")
+        self._download_file(file_url, filename)
+        os.mkdir(dir)
+        with zipfile.ZipFile(filename, 'r') as zip_ref:
+            zip_ref.extractall(path=dir, pwd=self._api_secret.encode())
+        with tarfile.open(f'{persistence_conf.temp_store}/{id}.tar.gz', 'w:gz') as tar:
+            tar.add(dir)
+        return f'{persistence_conf.temp_store}/{id}.tar.gz'
+
+
     def request_results(
         self,
         persistence_conf: MonoidPersistenceConfig,
@@ -365,7 +409,6 @@ class MixpanelUserActivityStore(MixpanelDataStore):
         if handle.request_type == RequestType.QUERY: 
             _, record = self._query_request_status(persistence_conf, handle)
             if record is not None: 
-                print(record)
                 return [record]
         return []
     

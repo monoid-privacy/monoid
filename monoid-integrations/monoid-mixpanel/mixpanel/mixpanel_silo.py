@@ -15,6 +15,7 @@ class MixpanelSilo(AbstractSilo):
             project_id=conf["project_id"], 
             service_account_username=conf["service_account_username"],
             service_account_password=conf["service_account_password"],
+            api_secret=conf["api_secret"],
             store_type=MixpanelStoreType.USER_ACTIVITY
         ), 
         MixpanelUserStore(
@@ -24,6 +25,7 @@ class MixpanelSilo(AbstractSilo):
         oauth_secret=conf["oauth_secret"], 
         service_account_username=conf["service_account_username"],
         service_account_password=conf["service_account_password"],
+        api_secret=conf["api_secret"],
         store_type=MixpanelStoreType.USER)]
 
 
