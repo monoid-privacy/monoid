@@ -247,8 +247,7 @@ class MixpanelUserActivityStore(MixpanelDataStore):
         request_status = RequestStatus.FAILED
         handle = ""
         if r.get("status") == "ok":
-            print(r)
-            request_status = RequestStatus.COMPLETE
+            request_status = RequestStatus.PROGRESS
             handle = r["results"]["task_id"]
 
         return MonoidRequestResult(
@@ -342,7 +341,6 @@ class MixpanelUserActivityStore(MixpanelDataStore):
         r = requests.get(url, headers=headers).json()
         request_status = RequestStatus.FAILED
         record = None
-        print(r)
         if r.get("status") == "ok":
             status = r["results"]["status"]
             request_status = switch_request_status(status)
