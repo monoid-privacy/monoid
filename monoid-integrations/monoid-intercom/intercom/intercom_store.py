@@ -39,17 +39,17 @@ class IntercomDataStore(DataStore):
             json_schema=self.json_schema()
         )
 
-    def name(self) -> str:
-        """
-        Get the name of the datastore.
-        """
-        return self._store_type.value
-
     def group(self) -> Optional[str]:
         """
         Get the group of the datastore.
         """
         return self._workspace
+
+    @abstractmethod
+    def name(self) -> str:
+        """
+        Get the name of the datastore.
+        """
 
     @abstractmethod
     def json_schema(self) -> Dict[str, Any]:
@@ -104,7 +104,7 @@ class IntercomDataStore(DataStore):
         schema: MonoidSchema,
     ) -> Iterable[MonoidRecord]:
         """
-        No-op for User Activity
+        Samples records from the datastore
         """
 
 class IntercomContactStore(IntercomDataStore): 
@@ -112,16 +112,294 @@ class IntercomContactStore(IntercomDataStore):
         """
         Returns the JSON schema of the data store.
         """
+
         return {
             "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "http://example.com/example.json",
             "type": "object",
+            "title": "Contact",
             "properties": {
-                "user_id": {
+                "type": {
                     "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "workspace_id": {
+                    "type": "string"
+                },
+                "external_id": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "avatar": {
+                    "type": "string"
+                },
+                "owner_id": {
+                    "type": "number"
+                },
+                "social_profiles": {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "type": "string"
+                        },
+                        "data": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "type": {
+                                        "type": "string"
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "url": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "has_hard_bounced": {
+                    "type": "boolean"
+                },
+                "marked_email_as_spam": {
+                    "type": "boolean"
+                },
+                "unsubscribed_from_emails": {
+                    "type": "boolean"
+                },
+                "created_at": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "integer"
+                },
+                "signed_up_at": {
+                    "type": "integer"
+                },
+                "last_seen_at": {
+                    "type": "integer"
+                },
+                "last_replied_at": {
+                    "type": "integer"
+                },
+                "last_contacted_at": {
+                    "type": "integer"
+                },
+                "last_email_opened_at": {
+                    "type": "integer"
+                },
+                "last_email_clicked_at": {
+                    "type": "integer"
+                },
+                "language_override": {
+                    "type": ["string", "null"]
+                },
+                "browser": {
+                    "type": "string"
+                },
+                "browser_version": {
+                    "type": "string"
+                },
+                "browser_language": {
+                    "type": "string"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "type": "string"
+                        },
+                        "country": {
+                            "type": "string"
+                        },
+                        "region": {
+                            "type": "string"
+                        },
+                        "city": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "android_app_name": {
+                    "type": ["string", "null"]
+                },
+                "android_app_version": {
+                    "type": ["string", "null"]
+                },
+                "android_device": {
+                    "type": ["string", "null"]
+                },
+                "android_os_version": {
+                    "type": ["string", "null"]
+                },
+                "android_sdk_version": {
+                    "type": ["string", "null"]
+                },
+                "android_last_seen_at": {
+                    "type": ["integer", "null"]
+                },
+                "ios_app_name": {
+                    "type": ["string", "null"]
+                },
+                "ios_app_version": {
+                    "type": ["string", "null"]
+                },
+                "ios_device": {
+                    "type": ["string", "null"]
+                },
+                "ios_os_version": {
+                    "type": ["string", "null"]
+                },
+                "ios_sdk_version": {
+                    "type": ["string", "null"]
+                },
+                "ios_last_seen_at": {
+                    "type": ["integer", "null"]
+                },
+                "custom_attributes": {
+                    "type": "object",
+                    "properties": {
+                        "paid_subscriber": {
+                            "type": "boolean"
+                        },
+                        "monthly_spend": {
+                            "type": "number"
+                        },
+                        "team_mates": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "tags": {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "type": "string"
+                        },
+                        "data": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "type": {
+                                        "type": "string"
+                                    },
+                                    "id": {
+                                        "type": "string"
+                                    },
+                                    "url": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "url": {
+                            "type": "string"
+                        },
+                        "total_count": {
+                            "type": "number"
+                        },
+                        "has_more": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "notes": {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "type": "string"
+                        },
+                        "data": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "type": {
+                                        "type": "string"
+                                    },
+                                    "id": {
+                                        "type": "string"
+                                    },
+                                    "url": {
+                                        "type": "string"
+                                    },
+                                }
+                            }
+                        },
+
+                        "url": {
+                            "type": "string"
+                        },
+                        "total_count": {
+                            "type": "number"
+                        },
+                        "has_more": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "opted_out_subscription_types": {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "type": "string"
+                        },
+                        "data": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "id": {
+                                        "type": "string"
+                                    },
+                                    "type": {
+                                        "type": "string"
+                                    },
+                                    "url": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "url": {
+                            "type": "string"
+                        },
+                        "total_count": {
+                            "type": "number"
+                        },
+                        "has_more": {
+                            "type": "boolean"
+                        }
+                    }
                 }
             }
         }
 
+    def name(self) -> str:
+        """
+        Get the name of the datastore.
+        """
+        return IntercomStoreType.CONTACT.value
 
     def run_query_request(
         self,
@@ -186,13 +464,132 @@ class IntercomConversationStore(IntercomDataStore):
     def json_schema(self) -> Dict[str, Any]: 
         return {
             "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "http://example.com/example.json",
             "type": "object",
+            "title": "Conversation",
             "properties": {
-                "user_id": {
+                "type": {
                     "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "integer"
+                },
+                "source": {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "type": "string"
+                        },
+                        "id": {
+                            "type": "string"
+                        },
+                        "delivered_as": {
+                            "type": "string"
+                        },
+                        "subject": {
+                            "type": "string"
+                        },
+                        "body": {
+                            "type": "string"
+                        },
+                        "author": {
+                            "type": "object"
+                        },
+                        "attachments": {
+                            "type": "array",
+                            "items": {
+                                "type": "object"
+                            }
+                        },
+                        "url": {
+                            "type": "string"
+                        },
+                        "redacted": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "contacts": {
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    }
+                },
+                "teammates": {
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "admin_assignee_id": {
+                    "type": ["integer", "null"]
+                },
+                "team_assignee_id": {
+                    "type": ["string", "null"]
+                },
+                "custom_attributes": {
+                    "type": "object"
+                },
+                "open": {
+                    "type": "boolean"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "read": {
+                    "type": "boolean"
+                },
+                "waiting_since": {
+                    "type": ["integer", "null"]
+                },
+                "snoozed_until": {
+                    "type": ["integer", "null"]
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    }
+                },
+                "first_contact_reply": {
+                    "type": "object"
+                },
+                "priority": {
+                    "type": "string"
+                },
+                "sla_applied": {
+                    "type": "object"
+                },
+                "conversation_rating": {
+                    "type": "object"
+                },
+                "statistics": {
+                    "type": "object"
+                },
+                "conversation_parts": {
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    }
                 }
             }
         }
+
+
+    def name(self) -> str:
+        """
+        Get the name of the datastore.
+        """
+        return IntercomStoreType.CONVERSATION.value
     
     def run_query_request(
         self,
@@ -260,17 +657,42 @@ class IntercomConversationStore(IntercomDataStore):
         return []
 
 class IntercomEventStore(IntercomDataStore): 
-    def json_schema(self) -> Dict[str, Any]: 
+    def json_schema(self) -> Dict[str, Any]:
         return {
-            "$schema": "http://json-schema.org/draft-07/schema#",
             "type": "object",
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "http://example.com/example.json",
+
+            "title": "Data Event",
+            "required": ["event_name", "created_at"],
             "properties": {
-                "user_id": {
+                "event_name": {
                     "type": "string"
+                },
+                "created_at": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": ["string", "null"]
+                },
+                "id": {
+                    "type": ["string", "null"]
+                },
+                "email": {
+                    "type": ["string", "null"]
+                },
+                "metadata": {
+                    "type": ["object", "null"]
                 }
             }
         }
-    
+
+    def name(self) -> str:
+        """
+        Get the name of the datastore.
+        """
+        return IntercomStoreType.EVENT.value
+
     def run_query_request(
         self,
         persistence_conf: MonoidPersistenceConfig,
