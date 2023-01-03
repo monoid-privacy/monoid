@@ -27,10 +27,14 @@ def switch_request_status(request_status: str) -> RequestType:
         return RequestStatus.FAILED
     return RequestStatus.PROGRESS
 
+
 class IntercomDataStore(DataStore):
     def __init__(self, access_token: str, workspace: str):
         self._access_token = access_token
         self._workspace = workspace
+
+    def _get_request_headers(self) -> Dict[str, str]:
+        return { "Authorization": f"Bearer {self._access_token}" }
 
     def to_brist_schema(self):
         return MonoidSchema(
@@ -39,11 +43,60 @@ class IntercomDataStore(DataStore):
             json_schema=self.json_schema()
         )
 
+    def _get_intercom_id(self, query: MonoidQueryIdentifier) -> Optional[Iterable[str]]:
+        """
+        Get the intercom id from the query.
+        """
+        identifier = query.identifier
+        if identifier == "id":
+            return query.identifier_query
+        else:
+            url = f"https://api.intercom.io/contacts/search"
+            query_filter = {
+                "query": {
+                    "field": identifier,
+                    "operator": "=",
+                    "value": query.identifier_query
+                }
+            }
+            r = requests.post(url, json=query_filter, headers=self._get_request_headers())
+            response = r.json()
+            if r.status_code == 200: 
+                ids = [] 
+                for contact in response["data"]:
+                    ids.append(contact["id"])
+                # TODO: handle multiple ids
+                return ids[0]
+            else:
+                return None
+        
+
     def group(self) -> Optional[str]:
         """
         Get the group of the datastore.
         """
         return self._workspace
+
+    def request_status(
+        self,
+        persistence_conf: MonoidPersistenceConfig,
+        handle: MonoidRequestHandle
+    ) -> MonoidRequestStatus:
+        """
+        Gets the status of a request
+        """
+        if handle.request_type == RequestType.QUERY:
+            data_type = DataType.RECORDS
+        elif handle.request_type == RequestType.DELETE:
+            data_type = DataType.NONE
+        else:
+            raise ValueError(f"Unknown request type: {handle.request_type}")
+        return MonoidRequestStatus(
+            schema_group=self.group(),
+            schema_name=self.name(),
+            request_status=RequestStatus.COMPLETE,
+            data_type=data_type
+        )
 
     @abstractmethod
     def name(self) -> str:
@@ -77,16 +130,6 @@ class IntercomDataStore(DataStore):
         Starts a delete request
         """
         
-    @abstractmethod
-    def request_status(
-        self,
-        persistence_conf: MonoidPersistenceConfig,
-        handle: MonoidRequestHandle
-    ) -> MonoidRequestStatus:
-        """
-        Gets the status of a request
-        """
-
     @abstractmethod
     def request_results(
         self,
@@ -406,30 +449,96 @@ class IntercomContactStore(IntercomDataStore):
         persistence_conf: MonoidPersistenceConfig,
         query: MonoidQueryIdentifier,
     ) -> MonoidRequestResult:
-        pass
+        query_filter = {
+            "query": {
+                "field": query.identifier, 
+                "operator": "=",
+                "value": query.identifier_query,
+            }
+        }
+        url = f"https://api.intercom.io/contacts/search"
+        print(query_filter)
+        r = requests.post(url, json=query_filter, headers=self._get_request_headers())
+        request_status = RequestStatus.FAILED
+        response = r.json()
+        if r.status_code == 200:
+            request_status = RequestStatus.COMPLETE
+
+        return MonoidRequestResult(
+            status=MonoidRequestStatus(
+                schema_group=self.group(),
+                schema_name=self.name(),
+                request_status=request_status,
+                data_type=DataType.RECORDS,
+            ),
+            handle=MonoidRequestHandle(
+                schema_group=self.group(),
+                schema_name=self.name(),
+                request_type=RequestType.QUERY,
+                data={
+                    "response": response,
+                }
+            )
+        )
 
     def run_delete_request(
         self,
         persistence_conf: MonoidPersistenceConfig,
         query: MonoidQueryIdentifier,
     ) -> MonoidRequestResult:
-        pass
-        
-    def request_status(
-        self,
-        persistence_conf: MonoidPersistenceConfig,
-        handle: MonoidRequestHandle
-    ) -> MonoidRequestStatus:
-        """
-        No-op for User silo (handled by User Activity)
-        """
-        pass
+        intercom_id = self._get_intercom_id(query)
+        request_status = RequestStatus.FAILED
+        response = None
+        if intercom_id is not None: 
+            url = f"https://api.intercom.io/contacts/{intercom_id}"
+            r = requests.delete(url, headers=self._get_request_headers())
+            if r.status_code == 200:
+                request_status = RequestStatus.COMPLETE
+                response = r.json()
+                return MonoidRequestResult(
+                    status=MonoidRequestStatus(
+                        schema_group=self.group(),
+                        schema_name=self.name(),
+                        request_status=request_status,
+                        data_type=DataType.NONE, 
+                    ),
+                    handle=MonoidRequestHandle(
+                        schema_group=self.group(),
+                        schema_name=self.name(),
+                        request_type=RequestType.DELETE,
+                        data={
+                            "response": response,
+                        }
+                    )
+                )
+        return MonoidRequestResult(
+            status=MonoidRequestStatus(
+                schema_group=self.group(),
+                schema_name=self.name(),
+                request_status=RequestStatus.FAILED,
+                data_type=DataType.NONE,
+            ),
+            handle=MonoidRequestHandle(
+                schema_group=self.group(),
+                schema_name=self.name(),
+                request_type=RequestType.DELETE,
+                data={
+                    "response": response,
+                }
+            )
+        )
         
     def request_results(
         self,
         persistence_conf: MonoidPersistenceConfig,
         handle: MonoidRequestHandle
     ) -> Iterable[MonoidRecord]:
+        if handle.request_type == RequestType.QUERY:
+            return [MonoidRecord(
+                schema_group=self.group(),
+                schema_name=self.name(),
+                data=handle.data.get("response")
+            )]
         return []
 
     def scan_records(
@@ -440,24 +549,14 @@ class IntercomContactStore(IntercomDataStore):
         """
         Sample records from table
         """
-        query_cols = [f for f in schema.json_schema["properties"]]
-        url = f"https://mixpanel.com/api/2.0/engage?project_id={self._project_id}"
-
-        headers = {
-            "authorization": f"Basic {self._service_account_username}:{self._service_account_password}"
-        }
-
-        response = requests.get(url, headers=headers).json()
-        if response.get("status") == "ok": 
-            results = response.get("results")
-            for i in range(5): 
-                flattened_datum = results[i].get("$properties")
-                flattened_datum["$distinct_id"] = results[i].get("$distinct_id")
-                yield MonoidRecord(
-                    schema_name=self.name(), 
-                    schema_group=self.group(), 
-                    data={k:v for (k,v) in flattened_datum.items() if k in query_cols}
-                )
+        url = f"https://api.intercom.io/contacts"
+        r = requests.get(url, headers=self._get_request_headers())
+        if r.status_code == 200:
+            return [MonoidRecord(
+                schema_group=self.group(),
+                schema_name=self.name(),
+                data=r.json()
+            )]
         return []
 
 class IntercomConversationStore(IntercomDataStore): 
