@@ -334,7 +334,6 @@
         workspace:
             description: Your Intercom Workspace
             order: 1
-            secret: true
             title: Workspace Name
             type: string
     required:

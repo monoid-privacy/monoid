@@ -251,7 +251,7 @@ class IntercomContactStore(IntercomDataStore):
                     "type": "integer"
                 },
                 "language_override": {
-                    "type": ["string", "null"]
+                    "type": "string"
                 },
                 "browser": {
                     "type": "string"
@@ -283,40 +283,40 @@ class IntercomContactStore(IntercomDataStore):
                     }
                 },
                 "android_app_name": {
-                    "type": ["string", "null"]
+                    "type": "string"
                 },
                 "android_app_version": {
-                    "type": ["string", "null"]
+                    "type": "string"
                 },
                 "android_device": {
-                    "type": ["string", "null"]
+                    "type": "string"
                 },
                 "android_os_version": {
-                    "type": ["string", "null"]
+                    "type": "string"
                 },
                 "android_sdk_version": {
-                    "type": ["string", "null"]
+                    "type": "string"
                 },
                 "android_last_seen_at": {
-                    "type": ["integer", "null"]
+                    "type": "integer"
                 },
                 "ios_app_name": {
-                    "type": ["string", "null"]
+                    "type": "string"
                 },
                 "ios_app_version": {
-                    "type": ["string", "null"]
+                    "type": "string"
                 },
                 "ios_device": {
-                    "type": ["string", "null"]
+                    "type": "string"
                 },
                 "ios_os_version": {
-                    "type": ["string", "null"]
+                    "type": "string"
                 },
                 "ios_sdk_version": {
-                    "type": ["string", "null"]
+                    "type": "string"
                 },
                 "ios_last_seen_at": {
-                    "type": ["integer", "null"]
+                    "type": "integer"
                 },
                 "custom_attributes": {
                     "type": "object",
@@ -457,7 +457,6 @@ class IntercomContactStore(IntercomDataStore):
             }
         }
         url = f"https://api.intercom.io/contacts/search"
-        print(query_filter)
         r = requests.post(url, json=query_filter, headers=self._get_request_headers())
         request_status = RequestStatus.FAILED
         response = r.json()
@@ -555,6 +554,7 @@ class IntercomContactStore(IntercomDataStore):
             return [MonoidRecord(
                 schema_group=self.group(),
                 schema_name=self.name(),
+                record_type=RecordType.RECORD,
                 data=r.json()
             )]
         return []
@@ -630,10 +630,10 @@ class IntercomConversationStore(IntercomDataStore):
                     "type": "string"
                 },
                 "admin_assignee_id": {
-                    "type": ["integer", "null"]
+                    "type": "integer"
                 },
                 "team_assignee_id": {
-                    "type": ["string", "null"]
+                    "type": "string"
                 },
                 "custom_attributes": {
                     "type": "object"
@@ -648,10 +648,10 @@ class IntercomConversationStore(IntercomDataStore):
                     "type": "boolean"
                 },
                 "waiting_since": {
-                    "type": ["integer", "null"]
+                    "type": "integer"
                 },
                 "snoozed_until": {
-                    "type": ["integer", "null"]
+                    "type": "integer"
                 },
                 "tags": {
                     "type": "array",
@@ -690,6 +690,13 @@ class IntercomConversationStore(IntercomDataStore):
         """
         return IntercomStoreType.CONVERSATION.value
     
+    def _get_single_conversation(self, conversation_id: str) -> Dict[str, Any]:
+        url = f"https://api.intercom.io/conversations/{conversation_id}"
+        r = requests.get(url, headers=self._get_request_headers())
+        if r.status_code == 200:
+            return r.json()
+        return {}
+
     def run_query_request(
         self,
         persistence_conf: MonoidPersistenceConfig,
@@ -698,7 +705,48 @@ class IntercomConversationStore(IntercomDataStore):
         """
         Starts a query request
         """
-        pass
+        print("Running query request in IntercomConversationStore")
+        intercom_id = self._get_intercom_id(query)
+        request_status = RequestStatus.FAILED
+        response = None
+        if intercom_id:
+            query = {
+                "query": {
+                    "field": "source.author.id",
+                    "operator": "=",
+                    "value": intercom_id
+                }
+            }
+            url = f"https://api.intercom.io/conversations/search"
+            r = requests.post(url, headers=self._get_request_headers(), json=query)
+            if r.status_code == 200:
+                conversations = r.json().get("conversations")
+                conversation_ids = []
+                if conversations:
+                    for conversation in conversations:
+                        conversation_id = conversation["id"]
+                        conversation_ids.append(conversation_id)
+                response = { "conversations": []}
+                for conversation_id in conversation_ids:
+                    conversation = self._get_single_conversation(conversation_id)
+                    if conversation:
+                        response["conversations"].append(conversation)
+                request_status = RequestStatus.COMPLETE
+        return MonoidRequestResult(
+            status=MonoidRequestStatus(
+                schema_group=self.group(),
+                schema_name=self.name(),
+                request_status=request_status,
+                data_type=DataType.RECORDS,
+            ),
+            handle=MonoidRequestHandle(
+                schema_group=self.group(),
+                schema_name=self.name(),
+                request_type=RequestType.QUERY,
+                data={"response": response}
+            )
+        )
+        
     
     def run_delete_request(
         self,
@@ -706,26 +754,22 @@ class IntercomConversationStore(IntercomDataStore):
         query: MonoidQueryIdentifier,
     ) -> MonoidRequestResult:
         """
-        Starts a delete request
+        Conversation deletion is handled by Contact deletion
         """
-        pass
-
-    def _deletion_request_status(
-        self, 
-        persistence_conf: MonoidPersistenceConfig, 
-        handle: MonoidRequestHandle
-    ) -> MonoidRequestStatus: 
-        """
-        Gets the status of a deletion request
-        """
-        pass
-
-    def _query_request_status(
-        self, 
-        persistence_conf: MonoidPersistenceConfig, 
-        handle: MonoidRequestHandle
-    ) -> Optional[Tuple[MonoidRequestStatus, MonoidRecord]]: 
-        pass
+        return MonoidRequestResult(
+            status=MonoidRequestStatus(
+                schema_group=self.group(),
+                schema_name=self.name(),
+                request_status=RequestStatus.COMPLETE,
+                data_type=DataType.RECORDS,
+            ),
+            handle=MonoidRequestHandle(
+                schema_group=self.group(),
+                schema_name=self.name(),
+                request_type=RequestType.DELETE,
+                data={}
+            )
+        )
 
     def request_results(
         self,
@@ -735,17 +779,15 @@ class IntercomConversationStore(IntercomDataStore):
         """
         Gets the result of a request
         """
+        print("in the request results for conversation")
+        print(handle.data["response"])
+        if handle.request_type == RequestType.QUERY:
+            return [MonoidRecord(
+                schema_group=self.group(),
+                schema_name=self.name(),
+                data=handle.data.get("response")
+            )]
         return []
-    
-    def request_status(
-    self,
-    persistence_conf: MonoidPersistenceConfig,
-    handle: MonoidRequestHandle
-) -> MonoidRequestStatus:
-        """
-        Gets the status of a request
-        """
-        pass
 
     def scan_records(
         self,
@@ -753,7 +795,18 @@ class IntercomConversationStore(IntercomDataStore):
         schema: MonoidSchema,
     ):
         # No-op for User Activity 
-        return []
+        url = f"https://api.intercom.io/conversations"
+        r = requests.get(url, headers=self._get_request_headers())
+        if r.status_code == 200:
+            return [MonoidRecord(
+                schema_group=self.group(),
+                schema_name=self.name(),
+                record_type=RecordType.RECORD,
+                data=r.json()
+            )]
+        else:
+            # raise Exception(f"Failed to get conversations: {r.text}")
+            return []
 
 class IntercomEventStore(IntercomDataStore): 
     def json_schema(self) -> Dict[str, Any]:
@@ -772,16 +825,16 @@ class IntercomEventStore(IntercomDataStore):
                     "type": "integer"
                 },
                 "user_id": {
-                    "type": ["string", "null"]
+                    "type": "string"
                 },
                 "id": {
-                    "type": ["string", "null"]
+                    "type": "string"
                 },
                 "email": {
-                    "type": ["string", "null"]
+                    "type": "string"
                 },
                 "metadata": {
-                    "type": ["object", "null"]
+                    "type": "object"
                 }
             }
         }
@@ -800,7 +853,55 @@ class IntercomEventStore(IntercomDataStore):
         """
         Starts a query request
         """
-        pass
+        request_status = RequestStatus.FAILED
+        response = None
+        intercom_id = self._get_intercom_id(query)
+        if intercom_id is None:
+            return MonoidRequestResult(
+                status=MonoidRequestStatus(
+                    schema_group=self.group(),
+                    schema_name=self.name(),
+                    request_status=request_status,
+                    data_type=DataType.RECORDS,
+                ),
+                handle=MonoidRequestHandle(
+                    schema_group=self.group(),
+                    schema_name=self.name(),
+                    request_type=RequestType.QUERY,
+                    data={"response": {
+                        "Error": "No Intercom ID found for this user"
+                    }}
+                )
+            )
+        url = f"https://api.intercom.io/events?type=user&intercom_user_id={intercom_id}"
+        # if query.identifier == "email":
+        #     url_encoded_email = urllib.parse.quote(query.identifier_query)
+        #     url = f"https://api.intercom.io/events?type=user&email={url_encoded_email}"
+        # elif query.identifier == "user_id":
+        #     url = f"https://api.intercom.io/events?type=user&user_id={query.identifier_query}"
+        # elif query.identifier == "id":
+        #     url = f"https://api.intercom.io/events?type=user&intercom_user_id={query.identifier_query}"
+        # else:
+        #     print("bad things happened")
+        #     raise Exception(f"Invalid identifier: {query.identifier}")
+        r = requests.get(url, headers=self._get_request_headers())
+        if r.status_code == 200:
+            request_status = RequestStatus.COMPLETE
+            response = r.json()
+        return MonoidRequestResult(
+            status=MonoidRequestStatus(
+                schema_group=self.group(),
+                schema_name=self.name(),
+                request_status=request_status,
+                data_type=DataType.RECORDS,
+            ),
+            handle=MonoidRequestHandle(
+                schema_group=self.group(),
+                schema_name=self.name(),
+                request_type=RequestType.QUERY,
+                data={"response": response}
+            )
+        )
     
     def run_delete_request(
         self,
@@ -808,26 +909,22 @@ class IntercomEventStore(IntercomDataStore):
         query: MonoidQueryIdentifier,
     ) -> MonoidRequestResult:
         """
-        Starts a delete request
+        Conversation deletion is handled by Contact deletion
         """
-        pass
-
-    def _deletion_request_status(
-        self, 
-        persistence_conf: MonoidPersistenceConfig, 
-        handle: MonoidRequestHandle
-    ) -> MonoidRequestStatus: 
-        """
-        Gets the status of a deletion request
-        """
-        pass
-
-    def _query_request_status(
-        self, 
-        persistence_conf: MonoidPersistenceConfig, 
-        handle: MonoidRequestHandle
-    ) -> Optional[Tuple[MonoidRequestStatus, MonoidRecord]]: 
-        pass
+        return MonoidRequestResult(
+            status=MonoidRequestStatus(
+                schema_group=self.group(),
+                schema_name=self.name(),
+                request_status=RequestStatus.COMPLETE,
+                data_type=DataType.RECORDS,
+            ),
+            handle=MonoidRequestHandle(
+                schema_group=self.group(),
+                schema_name=self.name(),
+                request_type=RequestType.DELETE,
+                data={}
+            )
+        )
 
     def request_results(
         self,
@@ -837,17 +934,13 @@ class IntercomEventStore(IntercomDataStore):
         """
         Gets the result of a request
         """
+        if handle.request_type == RequestType.QUERY:
+            return [MonoidRecord(
+                schema_group=self.group(),
+                schema_name=self.name(),
+                data=handle.data.get("response")
+            )]
         return []
-    
-    def request_status(
-    self,
-    persistence_conf: MonoidPersistenceConfig,
-    handle: MonoidRequestHandle
-) -> MonoidRequestStatus:
-        """
-        Gets the status of a request
-        """
-        pass
 
     def scan_records(
         self,
@@ -855,7 +948,18 @@ class IntercomEventStore(IntercomDataStore):
         schema: MonoidSchema,
     ):
         # No-op for User Activity 
-        return []
+        url = f"https://api.intercom.io/events"
+        r = requests.get(url, headers=self._get_request_headers())
+        if r.status_code == 200:
+            return [MonoidRecord(
+                schema_group=self.group(),
+                schema_name=self.name(),
+                record_type=RecordType.RECORD,
+                data=r.json()
+            )]
+        else:
+            # raise Exception(f"Failed to get events: {r.text}")
+            return []
 
 
 

@@ -5,7 +5,6 @@
     "properties": {
         "workspace": {
           "type": "string",
-          "secret": true,
           "title": "Workspace Name",
           "order": 1,
           "description": "Your Intercom Workspace"
