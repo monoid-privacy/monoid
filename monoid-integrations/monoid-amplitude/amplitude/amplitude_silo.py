@@ -11,7 +11,7 @@ class AmplitudeSilo(AbstractSilo):
         return [AmplitudeDataStore(
             secret_key=conf["secret_key"],
             project_name=conf["project_name"],
-            start_date=conf["start_data"],
+            start_date=conf["start_date"],
             owner_email=conf["owner_email"], 
             api_key=conf["api_key"],
         )]

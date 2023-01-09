@@ -36,7 +36,7 @@ class AmplitudeDataStore(DataStore):
         """
         Get the name of the datastore.
         """
-        return "user_activity"
+        return "User Activity"
 
     def group(self) -> Optional[str]:
         """
@@ -48,6 +48,7 @@ class AmplitudeDataStore(DataStore):
         """
         Returns the JSON schema of the data store.
         """
+        # TODO: Use an actual retrieved user for these fields? 
         return {
             "$schema": "http://json-schema.org/draft-07/schema#",
             "type": "object",
@@ -60,14 +61,6 @@ class AmplitudeDataStore(DataStore):
                 }
             }
         }
-
-
-# class MonoidQueryIdentifier(BaseModel):
-#     schema_name: str
-#     schema_group: Optional[str] = None
-#     identifier: str
-#     identifier_query: Union[str, int]
-#     json_schema: Dict[str, Any]
 
     # TODO: do we just use the CCPA query endpoint for all query requests? 
     def run_query_request(

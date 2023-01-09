@@ -3,25 +3,40 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
     "properties": {
-      "project_name": {
+      "secret_key": {
         "type": "string",
         "title": "Project Name",
         "order": 0,
-        "description": "The name of the Mixpanel project"
+        "description": "The Amplitude Secret Key"
       },
-      "project_token": {
+      "project_name": {
         "type": "string",
         "title": "Project Token",
         "order": 1,
-        "description": "The token for the Mixpanel project"
+        "description": "The name of the Amplitude project"
       },
-      "oauth_secret": {
+      "start_date": {
         "type": "string",
         "secret": true,
         "title": "Password",
-        "description": "The Mixpanel GDPR OAuth secret",
+        "description": "The start date for all user data requests; format YYYY-MM-DD",
         "order": 2
+      }, 
+      "owner_email": {
+        "type": "string",
+        "secret": true,
+        "title": "Password",
+        "description": "The email of the Amplitude project owner",
+        "order": 3
+      }, 
+      "api_key": {
+        "type": "string",
+        "secret": true,
+        "title": "Password",
+        "description": "The Amplitude GDPR API Key",
+        "order": 4
       }
+
     },
     "required": [
         "project_name", 
