@@ -48,7 +48,7 @@ class IntercomDataStore(DataStore):
         Get the intercom id from the query.
         """
         identifier = query.identifier
-        if identifier == "id":
+        if identifier == "id" or identifier == "user_id":
             return query.identifier_query
         else:
             url = f"https://api.intercom.io/contacts/search"
@@ -573,6 +573,9 @@ class IntercomConversationStore(IntercomDataStore):
                 "id": {
                     "type": "string"
                 },
+                "user_id": {
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "integer"
                 },
@@ -705,7 +708,6 @@ class IntercomConversationStore(IntercomDataStore):
         """
         Starts a query request
         """
-        print("Running query request in IntercomConversationStore")
         intercom_id = self._get_intercom_id(query)
         request_status = RequestStatus.FAILED
         response = None
@@ -779,8 +781,6 @@ class IntercomConversationStore(IntercomDataStore):
         """
         Gets the result of a request
         """
-        print("in the request results for conversation")
-        print(handle.data["response"])
         if handle.request_type == RequestType.QUERY:
             return [MonoidRecord(
                 schema_group=self.group(),
@@ -874,16 +874,6 @@ class IntercomEventStore(IntercomDataStore):
                 )
             )
         url = f"https://api.intercom.io/events?type=user&intercom_user_id={intercom_id}"
-        # if query.identifier == "email":
-        #     url_encoded_email = urllib.parse.quote(query.identifier_query)
-        #     url = f"https://api.intercom.io/events?type=user&email={url_encoded_email}"
-        # elif query.identifier == "user_id":
-        #     url = f"https://api.intercom.io/events?type=user&user_id={query.identifier_query}"
-        # elif query.identifier == "id":
-        #     url = f"https://api.intercom.io/events?type=user&intercom_user_id={query.identifier_query}"
-        # else:
-        #     print("bad things happened")
-        #     raise Exception(f"Invalid identifier: {query.identifier}")
         r = requests.get(url, headers=self._get_request_headers())
         if r.status_code == 200:
             request_status = RequestStatus.COMPLETE
