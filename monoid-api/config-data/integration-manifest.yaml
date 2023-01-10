@@ -43,4 +43,4 @@
   documentationUrl: https://docs.monoid.co
   dockerImage: monoidco/monoid-mysql
   dockerTag: 0.0.1
-  logo: mariadb.svg
+  logo: microsoft_sql_server.svg
