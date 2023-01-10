@@ -28,6 +28,12 @@
   dockerImage: monoidco/monoid-snowflake
   dockerTag: 0.0.1
   logo: snowflake.svg
+- name: Intercom
+  id: 0ba2ffc8-07a6-4e04-86ad-45e81f098697
+  documentationUrl: https://docs.monoid.co
+  dockerImage: monoidco/monoid-intercom
+  dockerTag: 0.0.1
+  logo: intercom.svg
 - name: Manual
   id: f04a477d-9112-4c07-9e98-23615118f307
   manual: true

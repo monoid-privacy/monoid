@@ -1,0 +1,25 @@
+{
+  "spec": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "workspace": {
+          "type": "string",
+          "title": "Workspace Name",
+          "order": 1,
+          "description": "Your Intercom Workspace"
+        },
+      "access_token": {
+        "type": "string",
+        "secret": true,
+        "title": "Access Token",
+        "order": 2,
+        "description": "Your Intercom Access Token"
+      } 
+    },
+    "required": [
+        "access_token", 
+        "workspace"
+    ]
+  }
+}
