@@ -36,9 +36,9 @@ type ProcessRequestResult struct {
 func copyMap[M map[string]interface{} | monoidprotocol.MonoidRecordData](m M) M {
 	newMap := M{}
 	for k, v := range m {
-		switch v.(type) {
+		switch v := v.(type) {
 		case M:
-			newMap[k] = copyMap(v.(M))
+			newMap[k] = copyMap(v)
 		default:
 			newMap[k] = v
 		}
