@@ -289,7 +289,6 @@ class MixpanelUserActivityStore(MixpanelDataStore):
         if r.get("status") == "ok":
             request_status = RequestStatus.COMPLETE
             handle = r["results"]["task_id"]
-
         return MonoidRequestResult(
             status=MonoidRequestStatus(
                 schema_group=self.group(),
@@ -390,9 +389,12 @@ class MixpanelUserActivityStore(MixpanelDataStore):
         os.mkdir(dir)
         with zipfile.ZipFile(filename, 'r') as zip_ref:
             zip_ref.extractall(path=dir, pwd=self._api_secret.encode())
+        files_to_add = os.listdir(dir)
         with tarfile.open(f'{persistence_conf.temp_store}/{id}.tar.gz', 'w:gz') as tar:
-            tar.add(dir)
-        return f'{persistence_conf.temp_store}/{id}.tar.gz'
+            for file in files_to_add: 
+                tarinfo = tar.gettarinfo(f"{dir}/{file}", arcname=file)
+                tar.addfile(tarinfo, open(f"{dir}/{file}", "rb"))
+        return f'{id}.tar.gz'
 
 
     def request_results(
