@@ -45,6 +45,17 @@ def run_request_results():
         subprocess.call(f'docker run -v {absolute_path}:/secrets {docker_image} request-results -c /secrets/config.json -r /secrets/handle.json -p /secrets/persistence_config.json', shell=True, stdout=output, stderr=output)
     return 'Success'
 
+@app.route('/request_status', methods=['POST'])
+def run_request_status():
+    print("running request status")
+    req = request.get_json()
+    docker_image = req['docker_image']
+    print(docker_image)
+    with open("tmp/output.log", "w") as output:
+        absolute_path = os.path.abspath("secrets")
+        subprocess.call(f'docker run -v {absolute_path}:/secrets {docker_image} request-status -c /secrets/config.json -r /secrets/handle.json -p /secrets/persistence_config.json', shell=True, stdout=output, stderr=output)
+    return 'Success'
+
 # run_query because query is already an endpoint
 @app.route('/run_query', methods=['POST'])
 def run_query():

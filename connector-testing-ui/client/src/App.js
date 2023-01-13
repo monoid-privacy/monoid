@@ -281,6 +281,7 @@ function App() {
                     <option value="validate">Validate</option>
                     <option value="run_query">Query</option>
                     <option value="delete">Delete</option>
+                    <option value="request_status">Request Status</option>
                     <option value="request_results">Request Results</option>
                 </select>
                 <button onClick={() => {
