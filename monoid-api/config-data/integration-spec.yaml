@@ -315,6 +315,31 @@
         - schemas
         - database
     type: object
+- id: 0ba2ffc8-07a6-4e04-86ad-45e81f098697
+  name: Intercom
+  documentationUrl: https://docs.monoid.co
+  dockerImage: monoidco/monoid-intercom
+  dockerTag: 0.0.1
+  logo: intercom.svg
+  manual: false
+  spec:
+    $schema: http://json-schema.org/draft-07/schema#
+    properties:
+        access_token:
+            description: Your Intercom Access Token
+            order: 2
+            secret: true
+            title: Access Token
+            type: string
+        workspace:
+            description: Your Intercom Workspace
+            order: 1
+            title: Workspace Name
+            type: string
+    required:
+        - access_token
+        - workspace
+    type: object
 - id: f04a477d-9112-4c07-9e98-23615118f307
   name: Manual
   documentationUrl: ""

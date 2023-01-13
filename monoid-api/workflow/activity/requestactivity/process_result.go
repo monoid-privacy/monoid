@@ -33,6 +33,20 @@ type ProcessRequestResult struct {
 	ResultItems []ProcessRequestItem
 }
 
+func copyMap[M map[string]interface{} | monoidprotocol.MonoidRecordData](m M) M {
+	newMap := M{}
+	for k, v := range m {
+		switch v := v.(type) {
+		case M:
+			newMap[k] = copyMap(v)
+		default:
+			newMap[k] = v
+		}
+	}
+
+	return newMap
+}
+
 func (a *RequestActivity) copyTarGzToStorage(
 	ctx context.Context,
 	sourcePath string,
@@ -93,7 +107,7 @@ func (a *RequestActivity) ProcessRequestResults(
 		Preload("DataSource.SiloDefinition").
 		Preload("DataSource.SiloDefinition.SiloSpecification").
 		Preload("Request").
-		Where("id IN ?", args.RequestStatusIDs).First(&requestStatuses).Error; err != nil {
+		Where("id IN ?", args.RequestStatusIDs).Find(&requestStatuses).Error; err != nil {
 		return ProcessRequestResult{}, err
 	}
 
@@ -110,6 +124,7 @@ func (a *RequestActivity) ProcessRequestResults(
 	handles := make([]monoidprotocol.MonoidRequestHandle, 0, len(requestStatuses))
 
 	for _, rs := range requestStatuses {
+
 		dsm := monoidactivity.NewDataSourceMatcher(
 			rs.DataSource.Name,
 			rs.DataSource.Group,
@@ -323,7 +338,9 @@ func (a *RequestActivity) ProcessRequestResults(
 					continue
 				}
 
-				queryResults[rs.ID].data = append(data, &record.Data)
+				copiedData := copyMap(record.Data)
+				queryResults[rs.ID].data = append(data, &copiedData)
+
 				resultMutex.Unlock()
 			}
 		}
