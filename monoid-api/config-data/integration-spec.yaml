@@ -347,6 +347,60 @@
   dockerTag: ""
   logo: monoid.svg
   manual: true
+- id: c67f04e0-9063-4a90-9555-17bde7554d5e
+  name: Mixpanel
+  documentationUrl: https://docs.monoid.co
+  dockerImage: monoidco/monoid-mixpanel
+  dockerTag: 0.0.1
+  logo: mixpanel.svg
+  manual: false
+  spec:
+    $schema: http://json-schema.org/draft-07/schema#
+    properties:
+        api_secret:
+            description: The Project's API secret
+            order: 6
+            secret: true
+            title: API Secret
+            type: string
+        oauth_secret:
+            description: The Mixpanel GDPR OAuth secret
+            order: 5
+            secret: true
+            title: GDPR OAuth Secret
+            type: string
+        project_id:
+            description: The ID of the Mixpanel project
+            order: 2
+            title: Project ID
+            type: string
+        project_name:
+            description: The name of the Mixpanel project
+            order: 0
+            title: Project Name
+            type: string
+        project_token:
+            description: The token for the Mixpanel project
+            order: 1
+            title: Project Token
+            type: string
+        service_account_password:
+            description: The password for the Mixpanel service account
+            order: 4
+            secret: true
+            title: Service Account Password
+            type: string
+        service_account_username:
+            description: The username for the Mixpanel service account
+            order: 3
+            title: Service Account Username
+            type: string
+    required:
+        - project_name
+        - project_token
+        - oauth_secret
+        - api_secret
+    type: object
 - id: 5ca5915b-047e-4a97-bd38-14266a43cc32
   name: MariaDB
   documentationUrl: https://docs.monoid.co

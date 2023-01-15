@@ -1,4 +1,4 @@
-INTEGRATIONS = monoid-bigquery monoid-mysql monoid-postgres monoid-redshift monoid-snowflake
+INTEGRATIONS = monoid-bigquery monoid-mysql monoid-postgres monoid-redshift monoid-snowflake monoid-mixpanel
 
 DOCKER_BUILD_TARGETS = $(foreach fd, $(INTEGRATIONS), $(fd)/docker-build)
 DOCKER_PUSH_TARGETS = $(foreach fd, $(INTEGRATIONS), $(fd)/docker-push)
