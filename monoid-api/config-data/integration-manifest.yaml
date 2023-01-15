@@ -28,6 +28,12 @@
   dockerImage: monoidco/monoid-snowflake
   dockerTag: 0.0.1
   logo: snowflake.svg
+- name: Intercom
+  id: 0ba2ffc8-07a6-4e04-86ad-45e81f098697
+  documentationUrl: https://docs.monoid.co
+  dockerImage: monoidco/monoid-intercom
+  dockerTag: 0.0.1
+  logo: intercom.svg
 - name: Manual
   id: f04a477d-9112-4c07-9e98-23615118f307
   manual: true
@@ -38,3 +44,15 @@
   dockerImage: monoidco/monoid-mixpanel
   dockerTag: 0.0.1
   logo: mixpanel.svg
+- name: MariaDB
+  id: 5ca5915b-047e-4a97-bd38-14266a43cc32
+  documentationUrl: https://docs.monoid.co
+  dockerImage: monoidco/monoid-mysql
+  dockerTag: 0.0.1
+  logo: mariadb.svg
+- name: Microsoft SQL Server
+  id: c748cae7-f22b-4d44-9c96-7d3509a293d4
+  documentationUrl: https://docs.monoid.co
+  dockerImage: monoidco/monoid-mysql
+  dockerTag: 0.0.1
+  logo: microsoft_sql_server.svg
