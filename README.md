@@ -61,7 +61,7 @@ Automate user data deletion/export requests across all silos.
 
 Documentation is available [here](https://docs.monoid.co).
 
-Join our [Slack community](https://join.slack.com/t/monoidworkspace/shared_invite/zt-1jvlndiw6-l9~KhMXhG35OOgRqFGXnGg) if you need help, want to chat, or are thinking of a new feature. We're here to help - and to make Monoid even better.
+Join our [Slack community](https://join.slack.com/t/monoidworkspace/shared_invite/zt-1nlqb5si8-JXLu9sJuZBwgMr3YsXnyLw) if you need help, want to chat, or are thinking of a new feature. We're here to help - and to make Monoid even better.
 
 ## Philosophy
 
