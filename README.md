@@ -8,7 +8,7 @@
 <p align="center">
  
   <a href='http://makeapullrequest.com'><img alt='PRs Welcome' src='https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=shields'/></a>
-  <a href='https://join.slack.com/t/monoidworkspace/shared_invite/zt-1jvlndiw6-l9~KhMXhG35OOgRqFGXnGg'><img alt="Join Slack Community" src="https://img.shields.io/badge/slack%20community-join-blue"/></a>
+  <a href='https://join.slack.com/t/monoidworkspace/shared_invite/zt-1nlqb5si8-JXLu9sJuZBwgMr3YsXnyLw'><img alt="Join Slack Community" src="https://img.shields.io/badge/slack%20community-join-blue"/></a>
 
 </p>
 
