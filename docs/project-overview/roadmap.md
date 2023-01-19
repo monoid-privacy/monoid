@@ -6,10 +6,8 @@ Properly structuring the Monoid roadmap is still a WIP (in fact, it's on the roa
 
 ### Analytics Tools
 
-* Mixpanel (in testing, not yet public)
 * Amplitude (in testing, not yet public)
 * Segment (in testing, not yet public)
-* Google Analytics (in testing, not yet public)
 
 ### CRMs
 
@@ -17,7 +15,6 @@ Properly structuring the Monoid roadmap is still a WIP (in fact, it's on the roa
 * Hubspot
 * Outreach.io
 * Braze
-* Intercom
 * Customer.io
 
 ### Databases
@@ -25,7 +22,6 @@ Properly structuring the Monoid roadmap is still a WIP (in fact, it's on the roa
 * MongoDB (in testing, not yet public)
 * Firebase (in testing, not yet public)
 * SingleStore 
-* Microsoft SQL Server (in testing, not yet public)
 * Cassandra
 
 ### Ads

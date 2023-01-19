@@ -8,15 +8,15 @@ slug: /
 
 ### For Monoid cloud users
 
-Monoid's cloud offering (and associated docs) will be publicly available on 11/30. Please [email us](mailto:jagath@monoid.co) if you'd like to get started sooner!
+Monoid Cloud is now available - you can get started [here](https://app.monoid.co).
 
 ### For Monoid Open Source users
 
-Check out the [Monoid Open Source QuickStart](monoid-open-source-quick-start/deploy-monoid.md) to get up-and-running. Then learn how to [deploy](/category/deploy-monoid-open-source) Monoid Open Source in your cloud infrastructure (deployment guides and one-click deploy for major providers are currently in development -- ETA 12/8).
+Check out the [Monoid Open Source QuickStart](monoid-open-source-quick-start/deploy-monoid.md) to get up-and-running. Then learn how to [deploy](/category/deploy-monoid-open-source) Monoid Open Source in your cloud infrastructure (deployment guides and one-click deploy for major providers are currently in development).
 
 Browse the [connector catalog](/category/connector-catalog) to find the connector you want. If the connector is not yet supported on Monoid Open Source, [build your own connector](/category/build-a-connector), submit an issue, or [sign up for a Monoid Cloud](https://monoid.co) to get custom connectors from the Monoid Team.
 
-To get help with Monoid deployments, [email us](mailto:jagath@monoid.co) or join our [Slack](https://join.slack.com/t/monoidworkspace/shared_invite/zt-1jvlndiw6-l9~KhMXhG35OOgRqFGXnGg).
+To get help with Monoid deployments, [email us](mailto:jagath@monoid.co) or join our [Slack](https://join.slack.com/t/monoidworkspace/shared_invite/zt-1nlqb5si8-JXLu9sJuZBwgMr3YsXnyLw).
 
 ### For Monoid contributors
 
