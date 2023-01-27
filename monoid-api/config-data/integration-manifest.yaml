@@ -47,7 +47,7 @@
 - name: MariaDB
   id: 5ca5915b-047e-4a97-bd38-14266a43cc32
   documentationUrl: https://docs.monoid.co
-  dockerImage: monoidco/monoid-mysql
+  dockerImage: monoidco/monoid-mariadb
   dockerTag: 0.0.1
   logo: mariadb.svg
 - name: Microsoft SQL Server
