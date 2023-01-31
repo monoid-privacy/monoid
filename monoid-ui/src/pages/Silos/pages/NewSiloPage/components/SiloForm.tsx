@@ -95,7 +95,14 @@ export default function SiloForm(props: {
         error && (
           <div>
             <AlertRegion alertTitle="Error Connecting Silo">
-              {error.message}
+              <div>{error.message}</div>
+              <div className="mt-2 italic">
+                If you&apos;re having issues connecting this silo, you can check out
+                {' '}
+                <a className="underline font-semibold" href="https://join.slack.com/t/monoidworkspace/shared_invite/zt-1jvlndiw6-l9~KhMXhG35OOgRqFGXnGg">our Slack</a>
+                {' '}
+                for instant support.
+              </div>
             </AlertRegion>
           </div>
         )
