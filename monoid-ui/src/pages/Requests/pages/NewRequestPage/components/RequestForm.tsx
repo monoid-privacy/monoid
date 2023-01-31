@@ -128,7 +128,7 @@ export default function RequestForm(props: {
       {
         formError && (
           <div>
-            <AlertRegion alertTitle="Error Connecting Silo">
+            <AlertRegion alertTitle="Error">
               {formError?.message}
             </AlertRegion>
           </div>
