@@ -1,0 +1,8 @@
+ruleGroup: segment_ignore
+action: ignore
+languages:
+  - java
+rules:
+  - id: segment_ignore
+    name: Segment Ignore
+    regex: ^(?:com.segment.analytics)\.(?:messages.IdentifyMessage|Analytics.builder)

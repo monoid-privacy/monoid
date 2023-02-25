@@ -1,0 +1,7 @@
+mutation CreateCodescanResult($input: CreateCodescanResultInput!) {
+    createCodescanResult(input: $input) {
+        codescanRepo {
+            id
+        }
+    }
+}

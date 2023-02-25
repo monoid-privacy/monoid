@@ -1,0 +1,11 @@
+ruleGroup: spring_ignore
+action: ignore
+languages:
+  - java
+rules:
+  - id: web
+    name: Web
+    regex: ^(?:org.springframework)\.(?:web|validation|util|samples)
+  - id: unk
+    name: Unknown
+    regex: ^(?:UNKNOWN|T|Pet)\..*

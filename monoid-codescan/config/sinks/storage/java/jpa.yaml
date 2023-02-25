@@ -1,0 +1,10 @@
+ruleGroup: jpa
+languages:
+  - java
+rules:
+  - id: jpa_write
+    name: DB Write (JPA)
+    regex: ^jakarta.persistence.EntityManager.(?:persist|merge)$
+  - id: jpa_read
+    name: DB Read (JPA)
+    regex: ^jakarta.persistence.EntityManager.(?:find)$

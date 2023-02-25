@@ -1,0 +1,7 @@
+ruleGroup: gorm
+languages:
+  - go
+rules:
+  - id: gorm
+    name: DB Write (GORM)
+    regex: ^gorm.io/gorm.DB.(?:Create|Update|Updates)$

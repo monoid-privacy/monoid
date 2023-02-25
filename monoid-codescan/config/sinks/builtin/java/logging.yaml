@@ -1,0 +1,10 @@
+ruleGroup: logging
+languages:
+  - java
+rules:
+  - id: print
+    name: Print
+    regex: ^(?:java.io.PrintStream).(?:print|println)$
+  - id: logging
+    name: Logging
+    regex: ^(?:java.util.logging.Logger)\.(?:log|info|warning|error|severe|throwing)
