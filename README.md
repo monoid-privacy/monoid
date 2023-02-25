@@ -31,7 +31,10 @@ See our [docs](https://docs.monoid.co) for a more thorough introduction to Monoi
 
 Monoid Cloud is available [here](https://app.monoid.co)! Contact jagath@monoid.co if you'd like any help getting set up.
 
-### Support 
+## Code Scanning
+Monoid supports static analysis to detect privacy violations at the code-level. Check out the docs in the [monoid-codescan directory](monoid-codescan/README.md).
+
+## Support 
 
 Sign up for a paid plan to get white-glove support, regardless of how you choose to deploy. Contact jagath@monoid.co for more information.
 
