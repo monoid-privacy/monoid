@@ -17,6 +17,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build
-        run: make docker-build
+        run: make docker-build docker-build-codescan
       - name: Push
-        run: make docker-push
+        run: make docker-push docker-push-codescan

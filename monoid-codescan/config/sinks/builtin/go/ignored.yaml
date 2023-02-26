@@ -1,0 +1,8 @@
+ruleGroup: system
+languages:
+  - go
+action: ignore
+rules:
+  - id: system_libraries
+    name: System Libraries
+    regex: ^(?i)encoding/json|sync|strconv|net/http|context|os|bytes|io|path

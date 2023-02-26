@@ -1,6 +1,7 @@
 TEST_SUBDIRS = monoid-api
 BUILD_SUBDIRS = monoid-api
 INTEGRATIONS_DIR = monoid-integrations
+CODESCAN_VERSION = 0.0.1
 
 TEST_TARGETS = $(foreach fd, $(TEST_SUBDIRS), $(fd)/test)
 BUILD_TARGETS = $(foreach fd, $(BUILD_SUBDIRS), $(fd)/build)
@@ -15,6 +16,12 @@ $(BUILD_TARGETS):
 
 test: $(TEST_TARGETS) 
 build: $(BUILD_TARGETS)
+
+docker-build-codescan:
+	cd monoid-codescan && docker build -t monoidco/monoid-codescan:${CODESCAN_VERSION} .
+
+docker-push-codescan:
+	docker push monoidco/monoid-codescan:${CODESCAN_VERSION}
 
 docker-build: 
 	docker compose -f docker-compose.build.yaml build

@@ -1,0 +1,691 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+"Marks the field, argument, input field or enum value as deprecated"
+directive @deprecated(
+    "The reason for the deprecation"
+    reason: String = "No longer supported"
+  ) on FIELD_DEFINITION | ARGUMENT_DEFINITION | ENUM_VALUE | INPUT_FIELD_DEFINITION
+
+directive @goField(forceResolver: Boolean, name: String) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+
+"Directs the executor to include this field or fragment only when the `if` argument is true"
+directive @include(
+    "Included when true."
+    if: Boolean!
+  ) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+
+"Directs the executor to skip this field or fragment when the `if` argument is true."
+directive @skip(
+    "Skipped when true."
+    if: Boolean!
+  ) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+
+"Exposes a URL that specifies the behaviour of this scalar."
+directive @specifiedBy(
+    "The URL that specifies the behaviour of this scalar."
+    url: String!
+  ) on SCALAR
+
+union DataDiscoveryData = DataSourceMissingDiscovery | NewCategoryDiscovery | NewDataSourceDiscovery | NewPropertyDiscovery | PropertyMissingDiscovery
+
+union ScanRepoPayload = GitScanRepoPayload
+
+union ScanResultPayload = CodescanGitResultPayload
+
+type AuthPayload {
+  token: String!
+  user: User!
+}
+
+type Category {
+  id: ID!
+  name: String!
+}
+
+type CodeLocation {
+  filePath: String!
+  fromCol: Int!
+  fromLine: Int!
+  toCol: Int!
+  toLine: Int!
+}
+
+type CodescanDataDest {
+  connectedSourceTypes: [CodescanDataSourceType!]!
+  destName: String!
+  destUid: String
+  id: String!
+}
+
+type CodescanDataDestListResult {
+  dataDests: [CodescanDataDest!]!
+  numDataDests: Int!
+}
+
+type CodescanDataFlowsListResult {
+  dataFlows: [DataFlowPath!]!
+  numDataFlows: Int!
+}
+
+type CodescanDataSourceType {
+  category: String
+  connectedDests: [CodescanDataDest!]!
+  id: String!
+  name: String!
+  typeUid: String!
+}
+
+type CodescanDataSourceTypeListResult {
+  numSourceTypes: Int!
+  sourceTypes: [CodescanDataSourceType!]!
+}
+
+type CodescanGitResultPayload {
+  commitHash: String!
+}
+
+type CodescanRepo {
+  id: String!
+  lastScanned: Time
+  name: String!
+  scanRepoPayload: ScanRepoPayload
+  scanRepoType: CodescanRepoType!
+  scanResult(id: ID): CodescanResult!
+  scanResults: [CodescanResult]!
+}
+
+type CodescanReposResult {
+  numRepos: Int!
+  repos: [CodescanRepo!]!
+}
+
+type CodescanResult {
+  codescanRepo: CodescanRepo!
+  dataDests(
+    "Ignored if empty"
+    filters: CodescanDataDestFilters,
+    limit: Int!,
+    offset: Int
+  ): CodescanDataDestListResult!
+  dataFlows(destFilters: CodescanDataDestFilters, limit: Int!, offset: Int, sourceTypeFilters: CodescanSourceTypeFilters): CodescanDataFlowsListResult!
+  id: String!
+  scanResultPayload: ScanResultPayload
+  sourceTypes(
+    "Ignored if empty"
+    filters: CodescanSourceTypeFilters,
+    limit: Int!,
+    offset: Int
+  ): CodescanDataSourceTypeListResult!
+}
+
+type DataDiscoveriesListResult {
+  discoveries: [DataDiscovery]!
+  numDiscoveries: Int!
+}
+
+type DataDiscovery {
+  createdAt: Time!
+  data: DataDiscoveryData!
+  id: ID!
+  siloDefinition: SiloDefinition!
+  siloDefinitionID: ID!
+  status: DiscoveryStatus!
+  type: DiscoveryType!
+}
+
+type DataFlowPath {
+  backtrace: [CodeLocation!]
+  dataDest: CodescanDataDest!
+  dataSourceType: CodescanDataSourceType!
+  destLocation: CodeLocation
+  sourceLocation: CodeLocation
+}
+
+type DataMapResult {
+  dataMapRows: [DataMapRow!]
+  numRows: Int!
+}
+
+type DataMapRow {
+  dataSource: DataSource!
+  property: Property!
+  siloDefinition: SiloDefinition!
+}
+
+type DataSource {
+  """
+  This field will ony be true if this is the result of the
+  requestStatuses query, and this data source was deleted after
+  the request was already created.
+  """
+  deleted: Boolean!
+  description: String
+  group: String
+  id: ID!
+  name: String!
+  properties: [Property!]
+  requestStatuses: [RequestStatus!]!
+  siloDefinition: SiloDefinition!
+}
+
+type DataSourceMissingDiscovery {
+  dataSource: DataSource
+  id: String!
+}
+
+type DownloadLink {
+  url: String!
+}
+
+type GitScanRepoPayload {
+  origin: String!
+}
+
+type Job {
+  createdAt: Time!
+  id: ID!
+  jobType: String!
+  logs: [String!]
+  resourceId: ID!
+  siloDefinition: SiloDefinition!
+  status: JobStatus!
+  updatedAt: Time!
+}
+
+type JobsResult {
+  jobs: [Job!]!
+  numJobs: Int!
+}
+
+type MonoidRecordResponse {
+  SchemaGroup: String
+  SchemaName: String!
+  data: String!
+}
+
+type Mutation {
+  cancelJob(id: ID!): Job
+  completeWorkspaceOnboarding(id: ID!): Workspace!
+  createCodescanRepo(input: CreateCodescanRepoInput!): CodescanRepo!
+  createCodescanResult(input: CreateCodescanResultInput!): CodescanResult!
+  createDataSource(input: CreateDataSourceInput!): DataSource!
+  createProperty(input: CreatePropertyInput): Property
+  createSiloDefinition(input: CreateSiloDefinitionInput): SiloDefinition!
+  createSiloSpecification(input: CreateSiloSpecificationInput): SiloSpecification
+  createSubject(input: CreateSubjectInput): Subject
+  createUserDataRequest(input: UserDataRequestInput): Request
+  createUserPrimaryKey(input: CreateUserPrimaryKeyInput!): UserPrimaryKey
+  createWorkspace(input: CreateWorkspaceInput!): Workspace!
+  deleteDataSource(id: ID!): ID
+  deleteProperty(id: ID!): ID
+  deleteSiloDefinition(id: ID!): ID!
+  deleteSiloSpecification(id: ID!): ID
+  deleteSubject(id: ID!): ID
+  deleteUserPrimaryKey(id: ID!): ID
+  deleteWorkspace(id: ID!): ID!
+  detectSiloSources(id: ID!, workspaceId: ID!): Job!
+  executeUserDataRequest(requestId: ID!): Request
+  generateQueryResultDownloadLink(queryResultId: ID!): DownloadLink!
+  generateRequestDownloadLink(requestId: ID!): DownloadLink!
+  handleAllOpenDiscoveries(input: HandleAllDiscoveriesInput): [DataDiscovery]
+  handleDiscovery(input: HandleDiscoveryInput): DataDiscovery
+  inviteWorkspaceMember(email: String!, workspaceId: ID!): User!
+  linkPropertyToPrimaryKey(propertyId: ID!, userPrimaryKeyId: ID): Property
+  login(input: LoginInput!): AuthPayload
+  removeWorkspaceMember(userId: ID!, workspaceId: ID!): String!
+  signUp(input: SignUpInput!): AuthPayload
+  updateDataSource(input: UpdateDataSourceInput): DataSource
+  updateProperty(input: UpdatePropertyInput): Property
+  updateRequestStatus(input: UpdateRequestStatusInput!): RequestStatus!
+  updateSiloDefinition(input: UpdateSiloDefinitionInput): SiloDefinition!
+  updateSiloSpecification(input: UpdateSiloSpecificationInput): SiloSpecification
+  updateSubject(input: UpdateSubjectInput): Subject
+  updateUserPrimaryKey(input: UpdateUserPrimaryKeyInput!): UserPrimaryKey
+  updateWorkspaceSettings(input: UpdateWorkspaceSettingsInput!): Workspace!
+}
+
+type NewCategoryDiscovery {
+  category: Category!
+  categoryId: String!
+  property: Property
+  propertyId: String
+}
+
+type NewDataSourceDiscovery {
+  group: String
+  name: String!
+  properties: [NewPropertyDiscovery]
+}
+
+type NewPropertyDiscovery {
+  categories: [NewCategoryDiscovery]
+  dataSource: DataSource
+  dataSourceId: String
+  name: String!
+}
+
+type PrimaryKeyValue {
+  id: ID!
+  request: Request!
+  userPrimaryKey: UserPrimaryKey!
+  value: String!
+}
+
+type Property {
+  categories: [Category!]
+  dataSource: DataSource!
+  id: ID!
+  name: String!
+  userPrimaryKey: UserPrimaryKey
+}
+
+type PropertyMissingDiscovery {
+  id: String!
+  property: Property
+}
+
+type Query {
+  category(id: ID!): Category!
+  codescanRepo(id: ID!): CodescanRepo!
+  currentUser: User!
+  dataSource(id: ID!): DataSource!
+  primaryKeyValue(id: ID!): PrimaryKeyValue!
+  property(id: ID!): Property!
+  request(id: ID!): Request!
+  requestStatus(id: ID!): RequestStatus!
+  siloDefinition(id: ID!): SiloDefinition!
+  siloSpecification(id: ID!): SiloSpecification!
+  subject(id: ID!): Subject!
+  userPrimaryKey(id: ID!): UserPrimaryKey!
+  workspace(id: ID!): Workspace!
+  workspaces: [Workspace]!
+}
+
+type QueryResult {
+  id: ID!
+  records: String
+  requestStatus: RequestStatus!
+  resultType: ResultType!
+}
+
+type Request {
+  createdAt: Time!
+  id: ID!
+  primaryKeyValues: [PrimaryKeyValue!]!
+  requestStatuses(limit: Int!, offset: Int, query: RequestStatusQuery): RequestStatusListResult!
+  status: FullRequestStatus!
+  type: UserDataRequestType!
+}
+
+type RequestStatus {
+  dataSource: DataSource!
+  id: ID!
+  queryResult: QueryResult
+  request: Request!
+  status: RequestStatusType!
+}
+
+type RequestStatusListResult {
+  numStatuses: Int!
+  requestStatusRows: [RequestStatus!]
+}
+
+type RequestsResult {
+  numRequests: Int!
+  requests: [Request!]!
+}
+
+type SiloDefinition {
+  dataSources: [DataSource!]
+  description: String
+  """
+  List the discoveries for a silo. If a query is specified, it is used to look up
+  a discovery by ID.
+  """
+  discoveries(limit: Int!, offset: Int!, query: String, statuses: [DiscoveryStatus]): DataDiscoveriesListResult!
+  id: ID!
+  name: String!
+  siloConfig: Map
+  siloSpecification: SiloSpecification
+  subjects: [Subject!]
+}
+
+type SiloSpecification {
+  dockerImage: String!
+  id: ID!
+  logo: String
+  logoUrl: String
+  manual: Boolean!
+  name: String!
+  schema: String
+}
+
+type Subject {
+  id: ID!
+  name: String!
+}
+
+type TeamResult {
+  numUsers: Int!
+  users: [User]
+}
+
+type User {
+  email: String!
+  id: ID!
+}
+
+type UserPrimaryKey {
+  apiIdentifier: String!
+  id: ID!
+  name: String!
+  properties: [Property!]
+  workspaceId: ID!
+}
+
+type Workspace {
+  categories: [Category!]!
+  codescanRepos(limit: Int!, offset: Int): CodescanReposResult!
+  dataMap(limit: Int!, offset: Int, query: DataMapQuery): DataMapResult!
+  discoveries(limit: Int!, offset: Int, query: String, statuses: [DiscoveryStatus]): DataDiscoveriesListResult!
+  id: ID!
+  job(id: ID!): Job!
+  jobs(jobType: String!, limit: Int!, offset: Int!, query: String, resourceId: ID, status: [JobStatus]): JobsResult!
+  name: String
+  onboardingComplete: Boolean
+  requests(limit: Int!, offset: Int): RequestsResult!
+  settings: Map!
+  siloDefinitions: [SiloDefinition!]!
+  siloSpecifications: [SiloSpecification!]!
+  subjects: [Subject!]!
+  team(limit: Int!, offset: Int!): TeamResult!
+  userPrimaryKeys: [UserPrimaryKey!]!
+}
+
+enum CodescanRepoType {
+  BASIC
+  GIT_REPO
+}
+
+enum DiscoveryAction {
+  ACCEPT
+  REJECT
+}
+
+enum DiscoveryStatus {
+  ACCEPTED
+  OPEN
+  REJECTED
+}
+
+enum DiscoveryType {
+  CATEGORY_FOUND
+  DATA_SOURCE_FOUND
+  DATA_SOURCE_MISSING
+  PROPERTY_FOUND
+  PROPERTY_MISSING
+}
+
+enum FullRequestStatus {
+  CREATED
+  EXECUTED
+  FAILED
+  IN_PROGRESS
+  PARTIAL_FAILED
+}
+
+enum JobStatus {
+  COMPLETED
+  FAILED
+  PARTIAL_FAILED
+  QUEUED
+  RUNNING
+}
+
+enum RequestStatusType {
+  CREATED
+  EXECUTED
+  FAILED
+  IN_PROGRESS
+  MANUAL_NEEDED
+}
+
+enum ResultType {
+  FILE
+  RECORDS_JSON
+}
+
+enum UpdateRequestStatusType {
+  EXECUTED
+  FAILED
+}
+
+enum UserDataRequestType {
+  DELETE
+  QUERY
+}
+
+scalar Map
+
+scalar Time
+
+scalar Upload
+
+input CategoryQuery {
+  anyCategory: Boolean
+  categoryIDs: [ID!]
+  noCategory: Boolean
+}
+
+input CodeLocationInput {
+  filePath: String!
+  fromCol: Int!
+  fromLine: Int!
+  toCol: Int!
+  toLine: Int!
+}
+
+input CodescanDataDestFilters {
+  ids: [ID!]
+  taggedOnly: Boolean
+}
+
+input CodescanSourceTypeFilters {
+  ids: [ID!]
+}
+
+input CreateCategoryInput {
+  name: String!
+  workspaceID: ID!
+}
+
+input CreateCodescanRepoInput {
+  codescanRepoName: String!
+  codescanRepoType: CodescanRepoType!
+  gitMetadata: GitScanRepoMetadata
+  workspaceId: String!
+}
+
+input CreateCodescanResultInput {
+  codescanRepoId: String!
+  dests: [DestInput!]!
+  flows: [FlowInput!]!
+  gitMetadata: GitScanResultMetadata
+  sourceTypes: [SourceTypeInput!]!
+}
+
+input CreateDataSourceInput {
+  group: String
+  name: String!
+  properties: [PropertyInput!]!
+  siloDefinitionID: ID!
+}
+
+input CreatePropertyInput {
+  dataSourceID: ID!
+  property: PropertyInput!
+}
+
+input CreateSiloDefinitionInput {
+  description: String
+  name: String!
+  siloData: String
+  siloSpecificationID: ID!
+  subjectIDs: [ID!]
+  workspaceID: ID!
+}
+
+input CreateSiloSpecificationInput {
+  dockerImage: String!
+  logoURL: String
+  name: String!
+  schema: String
+  workspaceID: ID!
+}
+
+input CreateSubjectInput {
+  name: String!
+  workspaceID: ID!
+}
+
+input CreateUserPrimaryKeyInput {
+  apiIdentifier: String!
+  name: String!
+  workspaceId: ID!
+}
+
+input CreateWorkspaceInput {
+  name: String!
+  settings: [KVPair]
+}
+
+input DataMapQuery {
+  categories: CategoryQuery
+  siloDefinitions: [ID!]
+}
+
+input DestInput {
+  destId: String
+  destName: String!
+}
+
+input FlowInput {
+  backtrace: [CodeLocationInput!]!
+  destIndex: Int!
+  destLocation: CodeLocationInput!
+  sourceIndex: Int!
+  sourceLocation: CodeLocationInput!
+}
+
+input GitScanRepoMetadata {
+  origin: String!
+}
+
+input GitScanResultMetadata {
+  commitHash: String!
+}
+
+input HandleAllDiscoveriesInput {
+  action: DiscoveryAction!
+  siloId: ID!
+}
+
+input HandleDiscoveryInput {
+  action: DiscoveryAction!
+  discoveryId: ID!
+}
+
+input KVPair {
+  key: String!
+  value: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+input PropertyInput {
+  categoryIDs: [ID!]
+  name: String!
+}
+
+input RequestStatusQuery {
+  siloDefinitions: [ID!]
+}
+
+input SignUpInput {
+  confirmPassword: String!
+  email: String!
+  password: String!
+}
+
+input SourceTypeInput {
+  category: String
+  id: String!
+  name: String!
+}
+
+input UpdateCategoryInput {
+  name: String
+}
+
+input UpdateDataSourceInput {
+  description: String
+  id: ID!
+}
+
+input UpdatePropertyInput {
+  categoryIDs: [ID!]
+  id: ID!
+}
+
+input UpdateRequestStatusInput {
+  requestStatusId: ID!
+  resultData: Upload
+  status: UpdateRequestStatusType!
+}
+
+input UpdateSiloDefinitionInput {
+  description: String
+  id: ID!
+  name: String
+  siloData: String
+  subjectIDs: [ID!]
+}
+
+input UpdateSiloSpecificationInput {
+  dockerImage: String
+  id: ID!
+  logoUrl: String
+  name: String
+  schema: String
+}
+
+input UpdateSubjectInput {
+  name: String
+}
+
+input UpdateUserPrimaryKeyInput {
+  id: ID!
+  name: String!
+}
+
+input UpdateWorkspaceSettingsInput {
+  settings: [KVPair]
+  workspaceID: ID!
+}
+
+input UserDataRequestInput {
+  primaryKeys: [UserPrimaryKeyInput!]
+  type: UserDataRequestType!
+  workspaceId: ID!
+}
+
+input UserPrimaryKeyInput {
+  apiIdentifier: String!
+  value: String!
+}

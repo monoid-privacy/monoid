@@ -1,0 +1,8 @@
+ruleGroup: java-system
+languages:
+  - java
+action: ignore
+rules:
+  - id: java_system_libraries
+    name: System Libraries
+    regex: ^(?i)java\..*

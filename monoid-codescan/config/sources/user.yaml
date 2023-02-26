@@ -1,0 +1,17 @@
+ruleGroup: user
+rules:
+  - name: Email
+    regex: (?i)email
+    id: email
+  - name: First Name
+    regex: (?i)first.*name
+    id: first_name
+  - name: Last Name
+    regex: (?i)last.*name
+    id: last_name
+  - name: Full Name
+    regex: (?i)(?!last|first).*name
+    id: full_name
+  - name: Phone Number
+    regex: (?i)(?:tele)?phone
+    id: phone_number

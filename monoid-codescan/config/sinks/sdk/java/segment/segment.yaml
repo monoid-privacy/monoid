@@ -1,0 +1,7 @@
+ruleGroup: segment
+languages:
+  - java
+rules:
+  - id: segment
+    name: Segment
+    regex: ^(?:com.segment.analytics.Analytics)\.(?:enqueue)

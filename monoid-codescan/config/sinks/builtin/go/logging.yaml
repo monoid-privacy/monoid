@@ -1,0 +1,10 @@
+ruleGroup: logging
+languages:
+  - go
+rules:
+  - id: log
+    name: Logging
+    regex: ^(?:log|log.Logger).(?:Fatal|Fatalf|Fatalln|Panic|Panicf|Panicln|Print|Println|Printf)$
+  - id: print
+    name: Print
+    regex: ^fmt\.(?:Println|Printf)

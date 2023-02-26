@@ -1,0 +1,8 @@
+ruleGroup: logging
+languages:
+  - go
+action: ignore
+rules:
+  - id: zerolog
+    name: Logging (Zerolog)
+    regex: ^(?i)github.com/rs/zerolog.Event.Msg
