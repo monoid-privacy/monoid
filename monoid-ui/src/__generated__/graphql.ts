@@ -51,7 +51,6 @@ export type CreateSiloDefinitionInput = {
   name: Scalars['String'];
   siloData?: InputMaybe<Scalars['String']>;
   siloSpecificationID: Scalars['ID'];
-  subjectIDs?: InputMaybe<Array<Scalars['ID']>>;
   workspaceID: Scalars['ID'];
 };
 
@@ -60,11 +59,6 @@ export type CreateSiloSpecificationInput = {
   logoURL?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
   schema?: InputMaybe<Scalars['String']>;
-  workspaceID: Scalars['ID'];
-};
-
-export type CreateSubjectInput = {
-  name: Scalars['String'];
   workspaceID: Scalars['ID'];
 };
 
@@ -227,7 +221,6 @@ export type Mutation = {
   createProperty?: Maybe<Property>;
   createSiloDefinition: SiloDefinition;
   createSiloSpecification?: Maybe<SiloSpecification>;
-  createSubject?: Maybe<Subject>;
   createUserDataRequest?: Maybe<Request>;
   createUserPrimaryKey?: Maybe<UserPrimaryKey>;
   createWorkspace: Workspace;
@@ -235,7 +228,6 @@ export type Mutation = {
   deleteProperty?: Maybe<Scalars['ID']>;
   deleteSiloDefinition: Scalars['ID'];
   deleteSiloSpecification?: Maybe<Scalars['ID']>;
-  deleteSubject?: Maybe<Scalars['ID']>;
   deleteUserPrimaryKey?: Maybe<Scalars['ID']>;
   deleteWorkspace: Scalars['ID'];
   detectSiloSources: Job;
@@ -250,7 +242,6 @@ export type Mutation = {
   updateRequestStatus: RequestStatus;
   updateSiloDefinition: SiloDefinition;
   updateSiloSpecification?: Maybe<SiloSpecification>;
-  updateSubject?: Maybe<Subject>;
   updateUserPrimaryKey?: Maybe<UserPrimaryKey>;
   updateWorkspaceSettings: Workspace;
 };
@@ -286,11 +277,6 @@ export type MutationCreateSiloSpecificationArgs = {
 };
 
 
-export type MutationCreateSubjectArgs = {
-  input?: InputMaybe<CreateSubjectInput>;
-};
-
-
 export type MutationCreateUserDataRequestArgs = {
   input?: InputMaybe<UserDataRequestInput>;
 };
@@ -322,11 +308,6 @@ export type MutationDeleteSiloDefinitionArgs = {
 
 
 export type MutationDeleteSiloSpecificationArgs = {
-  id: Scalars['ID'];
-};
-
-
-export type MutationDeleteSubjectArgs = {
   id: Scalars['ID'];
 };
 
@@ -403,11 +384,6 @@ export type MutationUpdateSiloSpecificationArgs = {
 };
 
 
-export type MutationUpdateSubjectArgs = {
-  input?: InputMaybe<UpdateSubjectInput>;
-};
-
-
 export type MutationUpdateUserPrimaryKeyArgs = {
   input: UpdateUserPrimaryKeyInput;
 };
@@ -478,7 +454,6 @@ export type Query = {
   requestStatus: RequestStatus;
   siloDefinition: SiloDefinition;
   siloSpecification: SiloSpecification;
-  subject: Subject;
   userPrimaryKey: UserPrimaryKey;
   workspace: Workspace;
   workspaces: Array<Maybe<Workspace>>;
@@ -521,11 +496,6 @@ export type QuerySiloDefinitionArgs = {
 
 
 export type QuerySiloSpecificationArgs = {
-  id: Scalars['ID'];
-};
-
-
-export type QuerySubjectArgs = {
   id: Scalars['ID'];
 };
 
@@ -615,7 +585,6 @@ export type SiloDefinition = {
   name: Scalars['String'];
   siloConfig?: Maybe<Scalars['Map']>;
   siloSpecification?: Maybe<SiloSpecification>;
-  subjects?: Maybe<Array<Subject>>;
 };
 
 
@@ -635,12 +604,6 @@ export type SiloSpecification = {
   manual: Scalars['Boolean'];
   name: Scalars['String'];
   schema?: Maybe<Scalars['String']>;
-};
-
-export type Subject = {
-  __typename?: 'Subject';
-  id: Scalars['ID'];
-  name: Scalars['String'];
 };
 
 export type UpdateCategoryInput = {
@@ -673,7 +636,6 @@ export type UpdateSiloDefinitionInput = {
   id: Scalars['ID'];
   name?: InputMaybe<Scalars['String']>;
   siloData?: InputMaybe<Scalars['String']>;
-  subjectIDs?: InputMaybe<Array<Scalars['ID']>>;
 };
 
 export type UpdateSiloSpecificationInput = {
@@ -682,10 +644,6 @@ export type UpdateSiloSpecificationInput = {
   logoUrl?: InputMaybe<Scalars['String']>;
   name?: InputMaybe<Scalars['String']>;
   schema?: InputMaybe<Scalars['String']>;
-};
-
-export type UpdateSubjectInput = {
-  name?: InputMaybe<Scalars['String']>;
 };
 
 export type UpdateUserPrimaryKeyInput = {
@@ -737,7 +695,6 @@ export type Workspace = {
   settings: Scalars['Map'];
   siloDefinitions: Array<SiloDefinition>;
   siloSpecifications: Array<SiloSpecification>;
-  subjects: Array<Subject>;
   userPrimaryKeys: Array<UserPrimaryKey>;
 };
 

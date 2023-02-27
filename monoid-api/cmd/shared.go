@@ -48,7 +48,6 @@ var Models = []interface{}{
 	model.Purpose{},
 	model.SiloDefinition{},
 	model.SiloSpecification{},
-	model.Subject{},
 	model.Property{},
 	model.UserPrimaryKey{},
 	model.Job{},

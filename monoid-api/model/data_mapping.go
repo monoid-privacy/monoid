@@ -40,7 +40,6 @@ type SiloDefinition struct {
 	SiloSpecificationID string
 	SiloSpecification   SiloSpecification `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	DataSources         []*DataSource
-	Subjects            []Subject `gorm:"many2many:silo_definition_subjects;"`
 	Config              SecretString
 	DataDiscoveries     []DataDiscovery
 
@@ -172,13 +171,6 @@ type Property struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt
-}
-
-type Subject struct {
-	ID          string
-	Name        string
-	WorkspaceID string
-	Workspace   Workspace `gorm:"constraint:OnDelete:CASCADE;"`
 }
 
 type Category struct {
