@@ -13,7 +13,6 @@ type Workspace {
   onboardingComplete: Boolean
   settings: Map! @goField(forceResolver: true)
   siloSpecifications: [SiloSpecification!]! @goField(forceResolver: true)
-  subjects: [Subject!]!
   categories: [Category!]! @goField(forceResolver: true)
 }
 

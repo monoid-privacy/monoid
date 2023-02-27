@@ -122,11 +122,6 @@ func (r *mutationResolver) CreateProperty(ctx context.Context, input *model.Crea
 	return &property, nil
 }
 
-// CreateSubject is the resolver for the createSubject field.
-func (r *mutationResolver) CreateSubject(ctx context.Context, input *model.CreateSubjectInput) (*model.Subject, error) {
-	panic(fmt.Errorf("not implemented: CreateSubject - createSubject"))
-}
-
 // UpdateDataSource is the resolver for the updateDataSource field.
 func (r *mutationResolver) UpdateDataSource(ctx context.Context, input *model.UpdateDataSourceInput) (*model.DataSource, error) {
 	dataSource := model.DataSource{}
@@ -199,11 +194,6 @@ func (r *mutationResolver) UpdateProperty(ctx context.Context, input *model.Upda
 	return &property, nil
 }
 
-// UpdateSubject is the resolver for the updateSubject field.
-func (r *mutationResolver) UpdateSubject(ctx context.Context, input *model.UpdateSubjectInput) (*model.Subject, error) {
-	panic(fmt.Errorf("not implemented: UpdateSubject - updateSubject"))
-}
-
 // DeleteDataSource is the resolver for the deleteDataSource field.
 func (r *mutationResolver) DeleteDataSource(ctx context.Context, id string) (*string, error) {
 	if err := model.DeleteDataSource(id, r.Conf.DB); err != nil {
@@ -237,11 +227,6 @@ func (r *mutationResolver) DeleteProperty(ctx context.Context, id string) (*stri
 	}
 
 	return &id, nil
-}
-
-// DeleteSubject is the resolver for the deleteSubject field.
-func (r *mutationResolver) DeleteSubject(ctx context.Context, id string) (*string, error) {
-	return DeleteObjectByID[model.Subject](id, r.Conf.DB, "Error deleting subject.")
 }
 
 // DetectSiloSources is the resolver for the detectSiloSources field.
@@ -342,11 +327,6 @@ func (r *queryResolver) SiloSpecification(ctx context.Context, id string) (*mode
 // Category is the resolver for the category field.
 func (r *queryResolver) Category(ctx context.Context, id string) (*model.Category, error) {
 	return findObjectByID[model.Category](id, r.Conf.DB, "Error finding category.")
-}
-
-// Subject is the resolver for the subject field.
-func (r *queryResolver) Subject(ctx context.Context, id string) (*model.Subject, error) {
-	return findObjectByID[model.Subject](id, r.Conf.DB, "Error finding subject.")
 }
 
 // Property is the resolver for the property field.

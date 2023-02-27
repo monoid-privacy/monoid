@@ -34,12 +34,11 @@ type CreatePropertyInput struct {
 }
 
 type CreateSiloDefinitionInput struct {
-	Description         *string  `json:"description"`
-	SiloSpecificationID string   `json:"siloSpecificationID"`
-	WorkspaceID         string   `json:"workspaceID"`
-	SubjectIDs          []string `json:"subjectIDs"`
-	SiloData            *string  `json:"siloData"`
-	Name                string   `json:"name"`
+	Description         *string `json:"description"`
+	SiloSpecificationID string  `json:"siloSpecificationID"`
+	WorkspaceID         string  `json:"workspaceID"`
+	SiloData            *string `json:"siloData"`
+	Name                string  `json:"name"`
 }
 
 type CreateSiloSpecificationInput struct {
@@ -48,11 +47,6 @@ type CreateSiloSpecificationInput struct {
 	LogoURL     *string `json:"logoURL"`
 	DockerImage string  `json:"dockerImage"`
 	Schema      *string `json:"schema"`
-}
-
-type CreateSubjectInput struct {
-	Name        string `json:"name"`
-	WorkspaceID string `json:"workspaceID"`
 }
 
 type CreateUserPrimaryKeyInput struct {
@@ -151,11 +145,10 @@ type UpdateRequestStatusInput struct {
 }
 
 type UpdateSiloDefinitionInput struct {
-	ID          string   `json:"id"`
-	Name        *string  `json:"name"`
-	Description *string  `json:"description"`
-	SubjectIDs  []string `json:"subjectIDs"`
-	SiloData    *string  `json:"siloData"`
+	ID          string  `json:"id"`
+	Name        *string `json:"name"`
+	Description *string `json:"description"`
+	SiloData    *string `json:"siloData"`
 }
 
 type UpdateSiloSpecificationInput struct {
@@ -164,10 +157,6 @@ type UpdateSiloSpecificationInput struct {
 	Schema      *string `json:"schema"`
 	Name        *string `json:"name"`
 	LogoURL     *string `json:"logoUrl"`
-}
-
-type UpdateSubjectInput struct {
-	Name *string `json:"name"`
 }
 
 type UpdateUserPrimaryKeyInput struct {

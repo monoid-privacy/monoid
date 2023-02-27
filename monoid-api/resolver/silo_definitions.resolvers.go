@@ -66,16 +66,6 @@ func (r *mutationResolver) CreateSiloDefinition(ctx context.Context, input *mode
 		return nil, handleError(err, "Error creating silo definition.")
 	}
 
-	subjects := []model.Subject{}
-
-	if err := r.Conf.DB.Where("id IN ?", input.SubjectIDs).Find(&subjects).Error; err != nil {
-		return nil, handleError(err, "Error finding subjects.")
-	}
-
-	if err := r.Conf.DB.Model(&siloDefinition).Association("Subjects").Append(subjects); err != nil {
-		return nil, handleError(err, "Error creating subjects.")
-	}
-
 	r.Conf.AnalyticsIngestor.Track("siloAction", nil, analyticsData)
 
 	return &siloDefinition, nil
@@ -129,14 +119,6 @@ func (r *mutationResolver) UpdateSiloDefinition(ctx context.Context, input *mode
 		}
 	}
 
-	subjects := []model.Subject{}
-
-	if err := r.Conf.DB.Where("id IN ?", input.SubjectIDs).Where(
-		"workspace_id = ?", siloDefinition.WorkspaceID,
-	).Find(&subjects).Error; err != nil {
-		return nil, handleError(err, "Error updating silo definition.")
-	}
-
 	analyticsData := map[string]interface{}{
 		"action": "update",
 		"siloId": siloDefinition.ID,
@@ -164,11 +146,7 @@ func (r *mutationResolver) UpdateSiloDefinition(ctx context.Context, input *mode
 		return nil, gqlerror.Errorf(res.message)
 	}
 
-	if err := r.Conf.DB.Model(&siloDefinition).Association("Subjects").Replace(subjects); err != nil {
-		return nil, handleError(err, "Error updating silo definition.")
-	}
-
-	if err := r.Conf.DB.Omit("Subjects").Updates(&siloDefinition).Error; err != nil {
+	if err := r.Conf.DB.Updates(&siloDefinition).Error; err != nil {
 		return nil, handleError(err, "Error updating silo definition.")
 	}
 
@@ -181,7 +159,7 @@ func (r *mutationResolver) UpdateSiloDefinition(ctx context.Context, input *mode
 func (r *mutationResolver) DeleteSiloDefinition(ctx context.Context, id string) (string, error) {
 	siloDefinition := &model.SiloDefinition{}
 
-	if err := r.Conf.DB.Where("id = ?", id).Preload("Subjects").Preload("DataSources").First(siloDefinition).Error; err != nil {
+	if err := r.Conf.DB.Where("id = ?", id).Preload("DataSources").First(siloDefinition).Error; err != nil {
 		return "", handleError(err, "Error finding silo definition.")
 	}
 
@@ -194,7 +172,7 @@ func (r *mutationResolver) DeleteSiloDefinition(ctx context.Context, id string) 
 		"siloId": id,
 	})
 
-	// TODO: Check that deletes properly cascade to subjects (m2m) and datasources (12m)
+	// TODO: Check that deletes properly cascade to datasources (12m)
 
 	return id, nil
 }

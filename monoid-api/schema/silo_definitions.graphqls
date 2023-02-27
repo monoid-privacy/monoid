@@ -6,7 +6,6 @@ input UpdateSiloDefinitionInput {
     name: String
     description: String
 
-    subjectIDs: [ID!]
     siloData: String
 }
 
@@ -16,7 +15,6 @@ type SiloDefinition {
     description: String
     siloSpecification: SiloSpecification @goField(forceResolver: true)
     dataSources: [DataSource!] @goField(forceResolver: true)
-    subjects: [Subject!]
     siloConfig: Map
 }
 
@@ -24,7 +22,6 @@ input CreateSiloDefinitionInput {
     description: String
     siloSpecificationID: ID!
     workspaceID: ID!
-    subjectIDs: [ID!]
     siloData: String
     name: String!
 }

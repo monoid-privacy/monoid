@@ -36,11 +36,6 @@ type SiloSpecification {
     manual: Boolean!
 }
 
-type Subject {
-    id: ID!
-    name: String!
-}
-
 type Category {
     id: ID!
     name: String!
@@ -100,16 +95,7 @@ input CreateCategoryInput {
     workspaceID: ID!
 }
 
-input CreateSubjectInput {
-    name: String!
-    workspaceID: ID!
-}
-
 input UpdateCategoryInput {
-    name: String
-}
-
-input UpdateSubjectInput {
     name: String
 }
 
@@ -133,7 +119,6 @@ extend type Query {
     dataSource(id: ID!): DataSource!
     siloSpecification(id: ID!): SiloSpecification!
     category(id: ID!): Category!
-    subject(id: ID!): Subject!
     property(id: ID!): Property!
 }
 
@@ -145,18 +130,15 @@ extend type Mutation {
     createDataSource(input: CreateDataSourceInput!): DataSource!
     createSiloSpecification(input: CreateSiloSpecificationInput): SiloSpecification
     createProperty(input: CreatePropertyInput): Property
-    createSubject(input: CreateSubjectInput): Subject
 
     updateDataSource(input: UpdateDataSourceInput): DataSource
     updateSiloSpecification(input: UpdateSiloSpecificationInput): SiloSpecification
 
     updateProperty(input: UpdatePropertyInput): Property
-    updateSubject(input: UpdateSubjectInput): Subject
 
     deleteDataSource(id: ID!): ID
     deleteSiloSpecification(id: ID!): ID
     deleteProperty(id: ID!): ID
-    deleteSubject(id: ID!): ID
 
     detectSiloSources(workspaceId: ID!, id: ID!): Job!
 }

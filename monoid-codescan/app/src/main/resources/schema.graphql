@@ -215,7 +215,6 @@ type Mutation {
   createProperty(input: CreatePropertyInput): Property
   createSiloDefinition(input: CreateSiloDefinitionInput): SiloDefinition!
   createSiloSpecification(input: CreateSiloSpecificationInput): SiloSpecification
-  createSubject(input: CreateSubjectInput): Subject
   createUserDataRequest(input: UserDataRequestInput): Request
   createUserPrimaryKey(input: CreateUserPrimaryKeyInput!): UserPrimaryKey
   createWorkspace(input: CreateWorkspaceInput!): Workspace!
@@ -223,7 +222,6 @@ type Mutation {
   deleteProperty(id: ID!): ID
   deleteSiloDefinition(id: ID!): ID!
   deleteSiloSpecification(id: ID!): ID
-  deleteSubject(id: ID!): ID
   deleteUserPrimaryKey(id: ID!): ID
   deleteWorkspace(id: ID!): ID!
   detectSiloSources(id: ID!, workspaceId: ID!): Job!
@@ -242,7 +240,6 @@ type Mutation {
   updateRequestStatus(input: UpdateRequestStatusInput!): RequestStatus!
   updateSiloDefinition(input: UpdateSiloDefinitionInput): SiloDefinition!
   updateSiloSpecification(input: UpdateSiloSpecificationInput): SiloSpecification
-  updateSubject(input: UpdateSubjectInput): Subject
   updateUserPrimaryKey(input: UpdateUserPrimaryKeyInput!): UserPrimaryKey
   updateWorkspaceSettings(input: UpdateWorkspaceSettingsInput!): Workspace!
 }
@@ -298,7 +295,6 @@ type Query {
   requestStatus(id: ID!): RequestStatus!
   siloDefinition(id: ID!): SiloDefinition!
   siloSpecification(id: ID!): SiloSpecification!
-  subject(id: ID!): Subject!
   userPrimaryKey(id: ID!): UserPrimaryKey!
   workspace(id: ID!): Workspace!
   workspaces: [Workspace]!
@@ -350,7 +346,6 @@ type SiloDefinition {
   name: String!
   siloConfig: Map
   siloSpecification: SiloSpecification
-  subjects: [Subject!]
 }
 
 type SiloSpecification {
@@ -361,11 +356,6 @@ type SiloSpecification {
   manual: Boolean!
   name: String!
   schema: String
-}
-
-type Subject {
-  id: ID!
-  name: String!
 }
 
 type TeamResult {
@@ -400,7 +390,6 @@ type Workspace {
   settings: Map!
   siloDefinitions: [SiloDefinition!]!
   siloSpecifications: [SiloSpecification!]!
-  subjects: [Subject!]!
   team(limit: Int!, offset: Int!): TeamResult!
   userPrimaryKeys: [UserPrimaryKey!]!
 }
@@ -534,7 +523,6 @@ input CreateSiloDefinitionInput {
   name: String!
   siloData: String
   siloSpecificationID: ID!
-  subjectIDs: [ID!]
   workspaceID: ID!
 }
 
@@ -543,11 +531,6 @@ input CreateSiloSpecificationInput {
   logoURL: String
   name: String!
   schema: String
-  workspaceID: ID!
-}
-
-input CreateSubjectInput {
-  name: String!
   workspaceID: ID!
 }
 
@@ -654,7 +637,6 @@ input UpdateSiloDefinitionInput {
   id: ID!
   name: String
   siloData: String
-  subjectIDs: [ID!]
 }
 
 input UpdateSiloSpecificationInput {
@@ -663,10 +645,6 @@ input UpdateSiloSpecificationInput {
   logoUrl: String
   name: String
   schema: String
-}
-
-input UpdateSubjectInput {
-  name: String
 }
 
 input UpdateUserPrimaryKeyInput {

@@ -14,7 +14,6 @@ type Workspace struct {
 	OnboardingComplete bool `default:"false"`
 	SiloSpecifications []SiloSpecification
 	SiloDefinitions    []SiloDefinition
-	Subjects           []Subject
 	Purposes           []Purpose
 	Categories         []Category
 	Requests           []Request
